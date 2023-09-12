@@ -1,0 +1,157 @@
+:host {
+    /* border: 3px solid transparent; */
+    place-items: center stretch;
+    place-content: center;
+    padding: 20px !important;
+    margin: 5px !important;
+    --c1: #948064;
+    --c2: #B49F81;
+    --c3: #0E0D0CF2;
+    /* ☆边框☆ 废弃 */
+    /* --t: 0 -3px var(--c1); */
+    /* background-color: var(--c3);
+    box-shadow:
+        6px 0 var(--t), 6px 3px var(--t), 0 6px var(--t), 3px 6px var(--t),
+        -6px 0 var(--t), -6px -3px var(--t), 0 -6px var(--t), -3px -6px var(--t),
+        3px 0 var(--c2), 0 3px var(--c2), 3px 3px var(--c2),
+        -3px 0 var(--c2), 0 -3px var(--c2), -3px -3px var(--c2); */
+    --bg1: linear-gradient(var(--c1), var(--c1));
+    --bg2: linear-gradient(var(--c2), var(--c2));
+    --bg3: linear-gradient(var(--c3), var(--c3));
+    --h1: 3px calc(100% - 9px) no-repeat;
+    --v1: calc(100% - 9px) 3px no-repeat;
+    --h2: 3px calc(100% - 3px) no-repeat;
+    --v2: calc(100% - 3px) 3px no-repeat;
+    background:
+        var(--bg1) left top 3px/var(--h1), var(--bg1) left 3px top/var(--v1),
+        var(--bg1) right bottom 3px/var(--h1), var(--bg1) right 3px bottom/var(--v1),
+        var(--bg2) left top/var(--h2), var(--bg2) left top/var(--v2),
+        var(--bg2) right bottom/var(--h2), var(--bg2) right bottom/var(--v2),
+        var(--bg3) center/calc(100% - 6px) calc(100% - 6px) no-repeat;
+    /* transition: all 100ms linear; */
+}
+
+:host(:hover),
+:host(:focus-within) {
+    --c1: #EDA949;
+    --c2: #C98930;
+    --c3: #000000DC;
+}
+
+:host>canvas {
+    grid-area: icon;
+}
+
+h1 {
+    grid-area: name;
+    color: #cfcfcf;
+    line-height: 30px;
+}
+
+table {
+    border-collapse: collapse;
+}
+
+section:not([hidden]) {
+    display: grid;
+    grid-template-columns: 1fr;
+    place-content: center;
+    place-items: center stretch;
+    gap: 14px;
+}
+
+.attr-area {
+    grid-area: attr;
+}
+
+:where(th, td)>canvas {
+    width: 14px;
+    height: 14px;
+    margin-right: 8px;
+}
+
+th {
+    width: 160px;
+}
+
+td {
+    width: auto;
+}
+
+td.unlimited {
+    color: #339933;
+}
+
+td.never-unlimited {
+    color: #993333;
+}
+
+th,
+td {
+    text-align: left;
+    height: 30px;
+    line-height: 30px;
+    border-radius: 3px;
+    white-space: nowrap;
+}
+
+data {
+    cursor: pointer;
+    margin-right: 6px;
+    padding: 4px;
+    transition: all 300ms linear 0ms;
+    border-radius: 2px;
+    --lg: linear-gradient(var(--mark-color), var(--mark-color));
+}
+
+data.selected {
+    ---foucs-bg1:
+        var(--lg) left top/6px 2px no-repeat,
+        var(--lg) left top/2px 6px no-repeat,
+        var(--lg) left bottom/6px 2px no-repeat,
+        var(--lg) left bottom/2px 6px no-repeat,
+        var(--lg) right top/6px 2px no-repeat,
+        var(--lg) right top/2px 6px no-repeat,
+        var(--lg) right bottom/6px 2px no-repeat,
+        var(--lg) right bottom/2px 6px no-repeat,
+        var(---foucs-bg);
+}
+
+data.unselected {
+    color: #999999;
+    ---foucs-bg1:
+        var(--lg) center bottom/10% 4px no-repeat,
+        var(---foucs-bg);
+}
+
+data.in-cast-state {
+    --mark-color: #339933;
+}
+
+data.not-in-cast-state {
+    --mark-color: #993333;
+}
+
+
+
+data[tabindex]:is(:focus-visible, :hover) {
+    --lg: linear-gradient(#00000000, #00000000);
+}
+
+:is(data, td, h1)[tabindex] {
+    --focus-scale: 0;
+    --focus-color: #00000000;
+    background: var(---foucs-bg1, var(---foucs-bg));
+    transition: all 0.2s linear;
+    will-change: contents;
+}
+
+:is(data, td, h1)[tabindex]:is(:focus-visible, :hover) {
+    --focus-scale: 2;
+    --focus-color: var(--mark-color, #FFFFFF);
+    text-align: center;
+    /* 居然不能这么用 */
+    /* padding: inherit 12px; */
+    padding-left: 12px;
+    padding-right: 12px;
+}

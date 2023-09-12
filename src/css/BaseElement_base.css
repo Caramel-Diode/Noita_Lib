@@ -1,0 +1,52 @@
+@property --font-size {
+    syntax: "<lenth>";
+    inherits: true;
+    initial-value: 18px;
+}
+
+@property --font-weight {
+    syntax: "<integer>";
+    inherits: true;
+    initial-value: 700;
+}
+
+*,
+:host {
+    position: relative;
+    /* vertical-align: middle; */
+    color: white;
+    /*
+     * 使用 --font-size 来设定字体大小
+     * 使用 --font-weight 来设定字重
+     * 避免被外部修改
+     */
+    font-size: var(--font-size, 18px) !important;
+    font-weight: var(--font-weight, 700) !important;
+    padding: 0;
+    margin: 0;
+    outline-style: none;
+    font-family: sans-serif;
+    text-align: left;
+    box-sizing: border-box;
+    image-rendering: pixelated;
+    --focus-box-shadow: 0 0 0 2px #FF77A3, 0 0 0 3px #AAAAAA;
+    --focus-scale: 1;
+    --focus-color: #FFFFFF;
+    --foucs-base: linear-gradient(to right, var(--focus-color), var(--focus-color)) center;
+    --foucs-lw: calc(var(--focus-scale) * 1px);
+    --foucs-l1: 1px / var(--foucs-lw) calc(6px * var(--focus-scale)) no-repeat;
+    --foucs-l2: calc(var(--foucs-lw) + 1px)/ var(--foucs-lw) calc(4px * var(--focus-scale)) no-repeat;
+    --foucs-l3: calc(var(--foucs-lw) * 2 + 1px)/ var(--foucs-lw) calc(2px * var(--focus-scale)) no-repeat;
+    ---foucs-bg:
+        var(--foucs-base) left var(--foucs-l1),
+        var(--foucs-base) left var(--foucs-l2),
+        var(--foucs-base) left var(--foucs-l3),
+        var(--foucs-base) right var(--foucs-l1),
+        var(--foucs-base) right var(--foucs-l2),
+        var(--foucs-base) right var(--foucs-l3);
+}
+
+:host {
+    display: inline-grid;
+    margin: 3px;
+}

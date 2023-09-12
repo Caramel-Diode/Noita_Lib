@@ -1,0 +1,184 @@
+:host {
+    grid-template: 'main' 40px/40px;
+    height: 40px;
+    width: 40px;
+    overflow: hidden;
+}
+
+canvas {
+    height: 32px;
+    width: 32px;
+}
+
+@keyframes carousel {
+    0% {
+        transform: translate(0, 0);
+    }
+
+    100% {
+        transform: translate(0, -100%);
+    }
+}
+
+/* 剩余次数 */
+data {
+    grid-area: main;
+    --font-size: 16px;
+    --font-weight: 800;
+    display: grid;
+    place-content: start;
+}
+
+/* 轮播胶卷 */
+ol {
+    grid-area: main;
+    display: flex;
+    list-style: none;
+    flex-direction: column;
+    flex-wrap: nowrap;
+    width: 40px;
+    height: calc(var(--amount) * 40px);
+    animation-name: carousel;
+    animation-timing-function: steps(var(--amount));
+    animation-duration: calc(var(--amount) * 1s);
+    animation-iteration-count: infinite;
+    animation-play-state: running;
+}
+
+/* 轮播项 */
+li {
+    display: grid;
+    height: 40px;
+    width: 40px;
+    place-content: center;
+    place-items: center;
+    --c3: color-mix(in srgb, var(--c1), #00000000);
+    --c4: color-mix(in srgb, var(--c2), #00000000);
+    --bg1: linear-gradient(var(--c1, #000000), var(--c1, #000000));
+    --bg2: linear-gradient(var(--c2, #000000), var(--c2, #000000));
+    --bg3: linear-gradient(var(--c3, #000000), var(--c3, #000000));
+    --bg4: linear-gradient(var(--c4, #000000), var(--c4, #000000));
+    --h1: 2px calc(100% - 6px) no-repeat;
+    --v1: calc(100% - 6px) 2px no-repeat;
+    --p: 2px 2px no-repeat;
+    --bb: #00000000;
+    --b: radial-gradient(var(--c5, var(--bb)), var(--c6, var(--bb))) center/calc(100% - 8px) calc(100% - 8px) no-repeat;
+    background:
+        /* 实边 */
+        var(--bg1) left top 4px/var(--h1),
+        var(--bg1) right 4px bottom/var(--v1),
+        var(--bg1) right bottom 4px/var(--h1),
+        var(--bg1) left 4px top/var(--v1),
+        var(--bg2) left 2px top 2px/var(--h1),
+        var(--bg2) left 2px top 2px/var(--v1),
+        var(--bg2) right 2px bottom 2px/var(--h1),
+        var(--bg2) right 2px bottom 2px/var(--v1),
+        /* 半透明点 */
+        var(--bg3) left 2px top/ var(--p),
+        var(--bg3) right top/ var(--p),
+        var(--bg3) right bottom 2px/ var(--p),
+        var(--bg3) left 2px bottom 2px/ var(--p),
+        var(--bg4) left top 2px/ var(--p),
+        var(--bg4) right 2px top 2px/ var(--p),
+        var(--bg4) right 2px bottom/ var(--p),
+        var(--bg4) left bottom/ var(--p),
+        /* 底色 */
+        var(--b);
+}
+
+:host(.no-border) li{
+    background: none;
+}
+
+/* 轮播项 Tab聚焦 */
+:host(:focus-visible) li {
+    --bg5: linear-gradient(#EDA949, #EDA949);
+    --bg6: linear-gradient(#C98930, #C98930);
+    --bg7: linear-gradient(#493414C5, #493414C5);
+    --bg8: linear-gradient(#49341426, #49341426);
+    --h2: calc(100% - 8px) 2px no-repeat;
+    --v2: 2px calc(100% - 8px) no-repeat;
+    --bb: #49341426;
+    background:
+        /* 高亮点 */
+        var(--bg5) left 2px top/var(--p),
+        var(--bg5) right 2px top/var(--p),
+        var(--bg5) left top 2px/var(--p),
+        var(--bg5) right top 2px/var(--p),
+        var(--bg5) left 2px bottom/var(--p),
+        var(--bg5) right 2px bottom/var(--p),
+        var(--bg5) left bottom 2px/var(--p),
+        var(--bg5) right bottom 2px/var(--p),
+        /* 实边 */
+        var(--bg6) left 4px top/var(--h2),
+        var(--bg6) left top 4px/var(--v2),
+        var(--bg6) left 4px bottom/var(--h2),
+        var(--bg6) right top 4px/var(--v2),
+        /* 虚边 */
+        var(--bg7) left 2px top 2px/var(--v1),
+        var(--bg7) left 2px top 4px/var(--h1),
+        var(--bg7) left 4px bottom 2px/var(--v1),
+        var(--bg7) right 2px top 2px/var(--h1),
+        /* 底色 */
+        var(--b) !important;
+}
+
+:host(:hover) li {
+    --c5: var(--c3);
+    --c6: var(--c4);
+}
+
+/* 轮播胶卷 鼠标悬停 */
+:host(:hover) ol {
+    animation-play-state: paused;
+}
+
+/* 投射物 */
+li.projectile {
+    --c1: #5A2323;
+    --c2: #411919;
+}
+
+/* 静态投射物 */
+li.staticProjectile {
+    --c1: #8D3F18;
+    --c2: #553422;
+}
+
+/* 修正 */
+li.modifier {
+    --c1: #2D3A72;
+    --c2: #202952;
+}
+
+/* 材料 */
+li.material {
+    --c1: #356F44;
+    --c2: #2F4836;
+}
+
+/* 多重 */
+li.drawMany {
+    --c1: #1C6D73;
+    --c2: #214346;
+}
+
+/* 其他 */
+li.other {
+    --c1: #714B33;
+    --c2: #49392E;
+}
+
+/* 实用 */
+li.utility {
+    --c1: #7B2A74;
+    --c2: #4D2A4A;
+}
+
+/* 被动 */
+li.passive {
+    --c1: #212F26;
+    --c2: #18211B;
+    --c3: #212F2680;
+    --c4: #18211B80;
+}

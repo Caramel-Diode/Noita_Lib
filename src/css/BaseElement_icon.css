@@ -1,0 +1,16 @@
+:host {
+    overflow: hidden;
+}
+
+/* 图标模式下用于搜索文本 */
+code {
+    position: absolute;
+    display: grid;
+    place-content: center;
+    color: #00000000;
+    user-select: none;
+    width: 200%;
+    height: 200%;
+    transform: scale(0.5);
+    --font-size: large;
+}
