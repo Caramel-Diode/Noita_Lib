@@ -2,7 +2,6 @@ component.base = class extends HTMLElement {
     static observedAttributes = ["display"];
 
     static {
-        
         /** @type {CSSStyleSheet} */
         const styleSheet_base = gss(`"BaseElement_base.css"`);
         this.prototype.publicStyleSheets = {
