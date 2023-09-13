@@ -1,6 +1,18 @@
 # NoitaLib
 基于Web Component技术构建的Noita 游戏UI元素工具库
+目前法术数据已经跟进至beta版
+
 ---
+## 引入
+### 通过html scrpt元素引入
+```html
+<script src="noitaLib"></script>
+```
+### 通过js impot语句引入
+```js
+// ES6 module
+import noitaLib from "noitaLib";
+```
 ## 在`html` 中使用
 ### 法术
 ```html
