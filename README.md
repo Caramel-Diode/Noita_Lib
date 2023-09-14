@@ -6,13 +6,21 @@
 ## 引入
 ### 通过html scrpt元素引入
 ```html
-<script src="noitaLib"></script>
+<script src="noitaLib.js"></script>
 ```
 ### 通过js impot语句引入
+* 使用index.mjs的版本
+* 或者在普通版本的`"use strict";`后加上`export `
 ```js
 // ES6 module
-import noitaLib from "noitaLib";
+import noitaLib from "noitaLib.js";
 ```
+
+## 构建
+需要预先安装node环境, 在vscode调试中运行build即可
+也可以手动执行build.js
+在`out`目录会生成`index.js`和`index.mjs`(es6模块)
+
 ## 在`html` 中使用
 ### 法术
 ```html
@@ -109,6 +117,112 @@ import noitaLib from "noitaLib";
 ```js
 noitaLib.spell.queryById("BOMB") //spellData Obj {id: "BOMB", name: "炸弹", description: "召唤一枚对地形破坏力极大的炸弹" ...}
 ```
+## 法术查询表达式
+### Token
+* 法术ID
+  ```regex
+  [A-Z_]+[0-9A-Z_]*
+  ```
+* 法术标签
+  ```regex
+  #[0-9A-Za-z_]*
+  ```
+* 集合运算符 **并**
+  ```regex
+  |
+  ```
+* 集合运算符 **交**
+  ```regex
+  &
+  ```
+* 集合运算符 **补**
+  ```regex
+  !
+  ```
+* 优先级运算符 左括号
+  ```regex
+  \(
+  ```
+* 优先级运算符 右括号
+  ```regex
+  \)
+  ```
+### 语法
+* **`法术ID`** 与 **`法术标签`** 均表示法术集合 **`法术ID`** 为单个法术构成的法术集合
+* **`集合运算符`** 表示集合之间的运算
+* **`法术ID`** 与 **`法术标签`** 之前使用逻辑运算符进行连接
+* 通过 **`优先级运算符`** 来控制优先级
 
-法术查询表达式语法和法术序列语法后续补充
-未完成 待续...
+### 示例
+```
+#type_projectile|RESET
+```
+所有投射物法术加`魔杖刷新`
+```
+#type_modifier&#mana_0
+```
+所有蓝耗为0的修正法术
+```
+DIGGER|POWERDIGGER|CHAINSAW
+```
+`挖掘魔弹`、`挖掘爆破` 和 `链锯`
+## 法术序列表达式
+
+### Token
+* 法术ID
+  ```regex
+  [A-Z_]+[0-9A-Z_]*
+  ```
+* 法术重复次数
+  ```regex
+  [-0-9]+
+  ```
+* 法术剩余次数
+  ```regex
+  [-0-9]+
+  ```
+* 可替换法术起始符
+  ```regex
+  \[
+  ```
+* 可替换法术终结符
+  ```regex
+  \]
+  ```
+* 法术查询表达式
+  ```regex
+  [ #a-zA-Z0-9|&!()]+
+  ```
+* 法术剩余次数声明符
+  ```regex
+  \^
+  ```
+* 法术重复次数声明符
+  ```regex
+  :
+  ```
+### 语法
+* 可替换法术使用`[]`包裹`法术查询表达式`构成 表示此处有多个可替换的法术(表现为轮播)
+* 固定法术由法术ID构成 表示该位置仅允许此法术
+* 使用`^`拼接`法术剩余次数` 表示该法术的剩余次数 默认为无限
+* 使用`:`拼接`法术重复次数` 表示该法术在序列中向右重复的次数 负数则代表此法术为非必要法术(表现为闪烁) 默认为1
+* 法术序列由`可替换法术`和`固定法术`及其附加信息构成
+
+### 示例
+```
+BURST_2 LIGHT_BULLET CHAINSAW
+```
+![](img/spell%20sequenced.webp)
+tips: 链锯在施法块最后预载可以将施法块释放延迟归零
+```
+RESET [ #type_passive]:3
+```
+![](img/spell%20sequenced2.webp)
+tips: 一般情况下将被动法术置于`魔杖刷新`之后将免于耗蓝
+```
+LIGHT_BULLET_TRIGGER [HOMING_SHORT|HOMING]:-1 [LASER_EMITTER|LASER_EMITTER_FOUR|LASER_EMITTER_CUTTER]
+```
+![](img/spell%20sequenced3.webp)
+tips: 使用`电浆`可以有效快速的击杀`独眼` 使用`触发弹`施放它可以免于`电浆`对自己造成伤害 使用`追踪`修正以保证电浆命中的稳定性(当然这不是必须的)
+
+未成待续...

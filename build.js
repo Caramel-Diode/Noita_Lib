@@ -396,9 +396,12 @@ const main = async () => {
     }
     // 将css嵌入到js文件
     mainJsData = u.embed_files(mainJsData, cssData);
+    /** @type {String} */
     const result = mainJsData[0].data;
+    const result_module = result.replace(`"use strict";`,`"use strict";export `);
     addLog("sum", result.length);
     fs.writeFile(`${outPath}/index.js`, result, _ => 0);
+    fs.writeFile(`${outPath}/index.mjs`, result_module, _ => 0);
     fs.writeFile(`${outPath2}/noitaLib.js`, result, _ => 0);
     fs.writeFile(`${outPath}/build.log`, genLog(), _ => 0);
     console.log("构建完成");

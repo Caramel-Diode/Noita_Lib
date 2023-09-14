@@ -188,7 +188,7 @@ DB.wand = class {
                             currentToken.push(char);
                         } else {
                             consoleError(`不合法的字符: "${char}"`, i, currentToken);
-                            console.log("逻辑运算符必须出现在法术查询表达式中");
+                            console.log("集合运算符必须出现在法术查询表达式中");
                             return [];
                         }
                     } else if (Token.regs.blank.test(char)) {
@@ -198,6 +198,19 @@ DB.wand = class {
                                 tokens.push(currentToken);
                                 currentToken = undefined;
                             }
+                        }
+                    } else if(char === "#") {
+                        if (currentToken === undefined) {
+                            if (tokens.at(-1)?.type === "BRACKET_SQUARE_LEFT") {
+                                currentToken = new Token(tokenEnum.RSE);
+                            }
+                            currentToken.push(char);
+                        } else if (currentToken.type === "REPLACEABLE_SPELL_EXPRESSION") {
+                            currentToken.push(char);
+                        } else {
+                            consoleError(`不合法的字符: "${char}"`, i, currentToken);
+                            console.log("法术标签必须出现在法术查询表达式中");
+                            return [];
                         }
                     }
                     else {// 遇到以下字符需要结束当前token

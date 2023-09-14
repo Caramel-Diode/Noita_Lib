@@ -231,7 +231,6 @@ component.base = class extends HTMLElement {
                 let valueFrame;
                 let permanentFlag = false;
                 if (type === "lifetime") {
-                    console.log(value);
                     if(typeof value === "number") {
                         if(needSign) {
                             valueSecond = `${aps(fts(value))}s`;
