@@ -212,17 +212,17 @@ DIGGER|POWERDIGGER|CHAINSAW
 ```
 BURST_2 LIGHT_BULLET CHAINSAW
 ```
-![](img/spell%20sequenced.webp)
+![](img/spell%20sequenced.webp)  
 tips: 链锯在施法块最后预载可以将施法块释放延迟归零
 ```
 RESET [ #type_passive]:3
 ```
-![](img/spell%20sequenced2.webp)
+![](img/spell%20sequenced2.webp)  
 tips: 一般情况下将被动法术置于`魔杖刷新`之后将免于耗蓝
 ```
 LIGHT_BULLET_TRIGGER [HOMING_SHORT|HOMING]:-1 [LASER_EMITTER|LASER_EMITTER_FOUR|LASER_EMITTER_CUTTER]
 ```
-![](img/spell%20sequenced3.webp)
+![](img/spell%20sequenced3.webp)  
 tips: 使用`电浆`可以有效快速的击杀`独眼` 使用`触发弹`施放它可以免于`电浆`对自己造成伤害 使用`追踪`修正以保证电浆命中的稳定性(当然这不是必须的)
 
 未成待续...
