@@ -1,7 +1,7 @@
-2023/9/14 19:25:00
-#sum: 429869
+2023/9/17 00:04:45
+#sum: 430064
 js:
-    #all: 70737
+    #all: 70930
     index: 2252
     db/entity: 4377
     db/material: 150
@@ -9,8 +9,8 @@ js:
     db/wand: 7367
     component/base: 9185
     component/entity: 4789
-    component/spell: 10175
-    component/wand: 4642
+    component/spell: 10363
+    component/wand: 4647
     other/consoleCSS: 303
     other/damageData: 1477
     other/runtimeEnvironment: 55
@@ -26,8 +26,8 @@ css:
     SpellElement_panel: 1215
     WandElement_panel: 1578
 json:
-    #all: 127219
-    entityData: 19068
+    #all: 127221
+    entityData: 19070
     spellData: 76119
     wandTemplateData: 32032
 base64:

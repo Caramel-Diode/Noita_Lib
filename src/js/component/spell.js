@@ -26,7 +26,8 @@ component.spell = class extends component.base {
         ["passive", ["被动", "🟤"]]
     ]);
 
-    displayMode = undefined;
+    #displayMode = undefined;
+    #needDefaultFn = true;
 
     /** @type {Array<SpellData>} */
     spellDatas = [];
@@ -57,6 +58,8 @@ component.spell = class extends component.base {
                 this.setAttribute("spell.name", option.name);
             } else if (option.expression) {
                 this.setAttribute("spell.expression", option.expression);
+            } else if (option.needDefaultFn === false) {
+                this.#needDefaultFn = false;
             } else if (option.datas) {
                 this.spellDatas = option.datas;
             }
@@ -226,7 +229,9 @@ component.spell = class extends component.base {
             this.#shadowRoot.append(fragment);
             this.setAttribute("role", "button");
             this.setAttribute("tabindex", "0");
-            this.addEventListener("click", this.#IconClickFn);
+            if(this.#needDefaultFn) {
+                this.addEventListener("click", this.#IconClickFn);
+            }
         }
     };
 
@@ -318,10 +323,10 @@ component.spell = class extends component.base {
         this.#shadowRoot.innerHTML = "";
         this.#shadowRoot.adoptedStyleSheets = [];
         const displayMode = this.getAttribute("display");
-        if (displayMode) this.displayMode = displayMode;
+        if (displayMode) this.#displayMode = displayMode;
         else {
             this.setAttribute("display", "icon");
-            this.displayMode = "icon";
+            this.#displayMode = "icon";
         }
         const spellId = this.getAttribute("spell.id");
         if (spellId) this.spellDatas = [DB.spell.queryById(spellId)];
@@ -334,7 +339,10 @@ component.spell = class extends component.base {
                 if (this.spellDatas.length === 0) this.spellDatas = [DB.spell.$NULL];
             }
         }
-        if (this.displayMode === "panel") this.#loadPanelContent();
+        if(this.hasAttribute("no-default-click-fn")) {
+            this.#needDefaultFn = false;
+        }
+        if (this.#displayMode === "panel") this.#loadPanelContent();
         else this.#loadIconContent();
     }
 
@@ -358,9 +366,9 @@ component.spell = class extends component.base {
                     this.spellDatas = [];
                     this.#currentDataIndex = -1;
                     break;
-                case "display": this.displayMode = undefined;
+                case "display": this.#displayMode = undefined;
             }
             this.contentUpdate();
         }
     };
-}
+};

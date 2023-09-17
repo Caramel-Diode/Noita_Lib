@@ -4,7 +4,7 @@ component.wand = class extends component.base {
 
     static observedAttributes = [...super.observedAttributes];
 
-    displayMode = undefined;
+    #displayMode = undefined;
 
     /** @type {DataWand} */
     wandData = undefined;
@@ -52,10 +52,10 @@ component.wand = class extends component.base {
                 this.#shadowRoot.adoptedStyleSheets = [];
 
                 let displayMode = this.getAttribute("display");
-                if (displayMode) this.displayMode = displayMode;
+                if (displayMode) this.#displayMode = displayMode;
                 else {
                     this.setAttribute("display", "panel");
-                    this.displayMode = "panel";
+                    this.#displayMode = "panel";
                 }
                 const wandTemplate = this.getAttribute("wand.template");
                 if (wandTemplate) {
@@ -78,7 +78,7 @@ component.wand = class extends component.base {
                         this.getAttribute("wand.dynamic-spells") ?? ""
                     ]);
                 };
-                if (this.displayMode === "panel") this.#loadPanelContent(this);
+                if (this.#displayMode === "panel") this.#loadPanelContent(this);
                 else this.#loadIconContent(this);
             };
         })();
@@ -198,7 +198,7 @@ component.wand = class extends component.base {
         else if (newValue === oldValue) return;
         else {
             if (name === "data-type") this.wandData = undefined;
-            else if (name === "data-display") this.displayMode = undefined;
+            else if (name === "data-display") this.#displayMode = undefined;
             this.contentUpdate();
         }
     };
