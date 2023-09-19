@@ -1,11 +1,11 @@
-2023/9/17 00:04:45
-#sum: 430064
+2023/9/19 17:03:30
+#sum: 430083
 js:
-    #all: 70930
+    #all: 70949
     index: 2252
     db/entity: 4377
     db/material: 150
-    db/spell: 19540
+    db/spell: 19559
     db/wand: 7367
     component/base: 9185
     component/entity: 4789

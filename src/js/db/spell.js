@@ -509,7 +509,7 @@ DB.spell = class {
         /**
          * 根据AST获取法术数据数组
          * @param {{type: String, data: String, data1: String|undefined, data2: String|undefined}} expression 
-         * @returns {Set<SpellData>}
+         * @returns {Set<DB.sepll>}
          */
         const getSpellDatas = expression => {
             switch (expression.type) {
@@ -567,24 +567,15 @@ DB.spell = class {
                             //取交集
                             const s1 = getSpellDatas(expression.data1);
                             const a2 = Array.from(getSpellDatas(expression.data2));
+                            /** @type {Set<DB.spell>} */
+                            const s3 = new Set();
                             const l = a2.length;
-                            for (let i = 0; i < l; i++) if (s1.has(a2[i])) s1.add(a2[i]);
-                            return s1;
-
-                            // const arr1 = getSpellDatas(expression.data1);
-                            // const arr2 = getSpellDatas(expression.data2);
-                            // const result = [];
-                            // for (let i = 0; i < arr1.length; i++) if (arr2.includes(arr1[i])) result.push(arr1[i]);
-                            // return result;
+                            for (let i = 0; i < l; i++) if (s1.has(a2[i])) s3.add(a2[i]);
+                            return s3;
                         }
                         case "OR": {
                             //取并集
                             return new Set([...getSpellDatas(expression.data1), ...getSpellDatas(expression.data2)]);
-                            // const arr1 = getSpellDatas(expression.data1);
-                            // const arr2 = getSpellDatas(expression.data2);
-                            // const result = [...arr1];
-                            // for (let i = 0; i < arr2.length; i++) if (!arr1.includes(arr2[i])) result.push(arr2[i]);
-                            // return result;
                         }
                         case "NOT": {
                             //取补集
@@ -594,12 +585,6 @@ DB.spell = class {
                             const l = a2.length;
                             for (let i = 0; i < l; i++) if (!all.has(a2[i])) result.add(a2[i]);
                             return result;
-
-                            // const all = this.data.all;
-                            // const arr2 = getSpellDatas(expression.data2);
-                            // const result = [];
-                            // for (let i = 0; i < all.length; i++) if (!arr2.includes(all[i])) result.push(all[i]);
-                            // return result;
                         }
                     }
             }
