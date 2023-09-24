@@ -4,7 +4,7 @@
 
 ---
 ## 引入
-### 通过html scrpt元素引入
+### 通过html script元素引入
 ```html
 <script src="noitaLib.js"></script>
 ```
