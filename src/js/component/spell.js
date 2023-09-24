@@ -29,7 +29,7 @@ component.spell = class extends component.base {
     #displayMode = undefined;
     #needDefaultFn = true;
 
-    /** @type {Array<SpellData>} */
+    /** @type {Array<DB.spell>} */
     spellDatas = [];
     /** @type {Number} */
     #currentDataIndex = -1;
@@ -67,6 +67,7 @@ component.spell = class extends component.base {
                 this.setAttribute("display", option.display);
             }
             if (option.instanceData) {
+                this.setAttribute("spell.remain",option.instanceData.remain.toString());
                 this.instanceData = option.instanceData;
             }
         }
@@ -339,6 +340,10 @@ component.spell = class extends component.base {
                 if (this.spellDatas.length === 0) this.spellDatas = [DB.spell.$NULL];
             }
         }
+        const spellRemain = this.getAttribute("spell.remain");
+        if(spellRemain !== null && spellRemain !== "") {
+            this.instanceData.remain = Number(spellRemain);
+        }
         if(this.hasAttribute("no-default-click-fn")) {
             this.#needDefaultFn = false;
         }
@@ -351,7 +356,12 @@ component.spell = class extends component.base {
     };
 
     toString() {
-        return `[obejct HTMLNoitaSpellElement #${this.spellData.id}]`;
+        const datas = [];
+        for (let i = 0; i < this.spellDatas.length; i++) {
+            const spell = this.spellDatas[i];
+            datas.push(spell.id);
+        }
+        return `[obejct HTMLNoitaSpellElement #${datas.join[","]}]`;
     };
 
     attributeChangedCallback(name, oldValue, newValue) {

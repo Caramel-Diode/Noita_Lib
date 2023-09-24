@@ -20,19 +20,20 @@ const noitaLib = (() => {
      * @namespace
      * `📁 数据库` 
      */
-    const DB = { };
+    const DB = {};
     DB.base = class { static panelAttrIcons = utilities.base64ToImg("panelAttrIcon.png"); };
     DB.state = class { };
     "db/material.js";
     "db/entity.js";
     "db/spell.js";
     "db/wand.js";
-    DB.perk = class { };
+    "db/perk.js";
     DB.orb = class { };
 
     DB.entity.init();
     DB.spell.init();
     DB.wand.init();
+    DB.perk.init();
     /**
      * @global
      * @namespace
@@ -47,6 +48,8 @@ const noitaLib = (() => {
     "component/spell.js";
     /** [法杖元素](component/wand.js) */
     "component/wand.js";
+    /** [天赋元素](component/perk.js) */
+    "component/perk.js";
 
     /** document.createElement (简写) */
     const dc = (tagName, options) => document.createElement(tagName, options);
@@ -96,13 +99,18 @@ const noitaLib = (() => {
              */
             HTMLElement: component.spell
         },
-        //#region 暂未开始...
         /** # [`🪄 魔杖`](https://noita.wiki.gg/zh/wiki/法杖) */
-        wand: {},
+        wand: {
+            HTMLElement: component.wand
+        },
         /** # [`🎲 道具`](https://noita.wiki.gg/zh/wiki/道具) */
         item: {},
         /** # [`🛡️ 天赋`](https://noita.wiki.gg/zh/wiki/天赋) */
-        perk: {},
+        perk: {
+            queryById: DB.perk.queryById,
+            queryByName: DB.perk.queryByName,
+            HTMLElement: component.perk
+        },
         /** # [`👿 敌人`](https://noita.wiki.gg/zh/wiki/敌人) */
         enemy: {},
         /** # [`🔮 真理魔球`](https://noita.wiki.gg/zh/wiki/真理魔球) */

@@ -9,11 +9,13 @@
         "src/js/db/material.js",
         "src/js/db/spell.js",
         "src/js/db/wand.js",
+        "src/js/db/perk.js",
 
         "src/js/component/base.js",
         "src/js/component/entity.js",
         "src/js/component/spell.js",
         "src/js/component/wand.js",
+        "src/js/component/perk.js",
         
         "src/js/other/consoleCSS.js",
         "src/js/other/damageData.js",

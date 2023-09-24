@@ -1,4 +1,3 @@
-
 component.entity = class extends component.base {
     #shadowRoot = this.attachShadow({ mode: "closed" });
 

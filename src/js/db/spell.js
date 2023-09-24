@@ -190,8 +190,8 @@ DB.spell = class {
     };
 
     static data = {
-        /** @type {Map<String,DB.spell>} id  data */id_Map: new Map(),
-        /** @type {Map<String,DB.spell>} */name_Map: new Map(),
+        /** @type {Map<String,DB.spell>} id  data */id_map: new Map(),
+        /** @type {Map<String,DB.spell>} */name_map: new Map(),
 
         /** @type {Set<DB.spell>} 所有法术 */all: new Set(),
 
@@ -257,9 +257,10 @@ DB.spell = class {
      */
     static $NULL;
     /** @type {Number} 辅助变量 用于记录法术图标索引 */
-    static #count = 0;
+    static #index = 0;
     static #typeList = ["null", "projectile", "staticProjectile", "modifier", "drawMany", "material", "other", "utility", "passive"];
     //#region 成员...
+    /** @type {Number} 图标索引 */#_index;
     /** @type {String} `★主键` 法术标识符 */id;
     /** @type {String} 中文译名 */name;
     /** @type {String} 基础描述 */description;
@@ -272,7 +273,6 @@ DB.spell = class {
     /** @type {Number} 售价 */price;
     /** @type {Array<DB.spell.OfferedProjectileData>} 提供投射物 */offeredProjectiles;
     /** @type {String} 被动效果 */passiveEffect;
-    /** @type {Number} 图标索引 */index;
     /** @type {DrawingData} 提供抽取数 */draw;
     /** @type {Number} 施放延迟 */fireRateWait;
     /** @type {Number} 暴击率 */damageCriticalChance;
@@ -306,6 +306,9 @@ DB.spell = class {
     constructor(dataArray) {
         /** @type {typeof DB.spell} */
         const _ = this.constructor;
+        /** @type {Number} 图标索引 */
+        this.#_index = _.#index;
+        _.#index++;
         this.id = dataArray[0];
         this.name = dataArray[1];
         this.description = dataArray[2];
@@ -318,8 +321,6 @@ DB.spell = class {
         this.price = dataArray[10];
         this.offeredProjectiles = _.offeredProjectileData.createDatas(dataArray[11]);
         this.passiveEffect = dataArray[12];
-        this.index = _.#count;
-        _.#count++;
         this.draw = new _.drawingData(dataArray[13]);
         this.fireRateWait = dataArray[14];
         this.damageCriticalChance = dataArray[15];
@@ -356,7 +357,7 @@ DB.spell = class {
         canvas.setAttribute("aria-label", `法术图标:${this.name}`);// 无障碍标注
         canvas.width = 16;
         canvas.height = 16;
-        canvas.getContext("2d").drawImage(await this.constructor.iconImage, (this.index - 1) * 16, 0, 16, 16, 0, 0, 16, 16);
+        canvas.getContext("2d").drawImage(await this.constructor.iconImage, (this.#_index - 1) * 16, 0, 16, 16, 0, 0, 16, 16);
         return canvas;
     }
 
@@ -366,7 +367,7 @@ DB.spell = class {
      * @returns {SpellData} 法术数据
      */
     static queryById = id => {
-        const result = this.data.id_Map.get(id);
+        const result = this.data.id_map.get(id);
         if (result) return result;
         else return this.$NULL;
     };
@@ -376,7 +377,7 @@ DB.spell = class {
      * @returns {SpellData} 法术数据
      */
     static queryByName = name => {
-        const result = this.data.name_Map.get(name);
+        const result = this.data.name_map.get(name);
         if (result) return result;
         else return this.$NULL;
     };
@@ -878,8 +879,8 @@ DB.spell = class {
             const data = Object.freeze(new this(datas[i]));
             const storage = this.data;
             storage.all.add(data);
-            storage.id_Map.set(data.id, data);
-            storage.name_Map.set(data.name, data);
+            storage.id_map.set(data.id, data);
+            storage.name_map.set(data.name, data);
             switch (data.type) {
                 case "projectile": storage.type_projectile.add(data); break;
                 case "staticProjectile": storage.type_staticProjectile.add(data); break;

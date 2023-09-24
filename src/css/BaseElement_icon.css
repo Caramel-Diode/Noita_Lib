@@ -1,5 +1,6 @@
 :host {
     overflow: hidden;
+    vertical-align: bottom;
 }
 
 /* 图标模式下用于搜索文本 */
