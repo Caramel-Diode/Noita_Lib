@@ -1,6 +1,7 @@
 # NoitaLib
+![](img/logo.webp)
 基于Web Component技术构建的Noita 游戏UI元素工具库
-目前法术数据已经跟进至beta版
+目前法术数据已经跟进至==beta版==
 
 ---
 ## 引入
