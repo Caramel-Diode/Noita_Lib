@@ -1,14 +1,15 @@
-2023/9/23 00:15:45
-#sum: 458733
+2023/9/29 00:10:48
+#sum: 461547
 js:
-    #all: 76073
-    index: 2396
+    #all: 77293
+    index: 2484
     db/entity: 4377
     db/material: 150
     db/perk: 1946
     db/spell: 19565
     db/wand: 7367
     component/base: 9185
+    component/cursor: 1132
     component/entity: 4789
     component/perk: 2709
     component/spell: 10682
@@ -19,15 +20,16 @@ js:
     other/save: 2526
     other/utilities: 3899
 css:
-    #all: 12299
+    #all: 13933
     BaseElement_base: 1172
     BaseElement_icon: 198
-    BaseElement_panel: 2476
+    BaseElement_panel: 2499
+    CursorElement: 1588
     EntityElement_panel: 135
     PerkElement_icon: 2303
     PerkElement_panel: 0
     SpellElement_icon: 3222
-    SpellElement_panel: 1215
+    SpellElement_panel: 1238
     WandElement_panel: 1578
 json:
     #all: 136021

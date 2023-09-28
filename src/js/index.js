@@ -40,6 +40,8 @@ const noitaLib = (() => {
      * `📦️ 组件`
      */
     const component = {};
+    /** [基本元素](component/cursor.js) */
+    "component/cursor.js";
     /** [基本元素](component/base.js) */
     "component/base.js";
     /** [实体元素](component/entity.js) */
@@ -117,6 +119,10 @@ const noitaLib = (() => {
         orb: {/*D:\Project\Noita Mod\原版拆包数据\data_wak\items_gfx\orbs*/ },
         //#endregion
         save: save,
+        cursor: {
+            add: () => NoitaCursor.add(),
+            remove: () => NoitaCursor.remove()
+        }
     };
     lib.version();
     Object.setPrototypeOf(lib, null);

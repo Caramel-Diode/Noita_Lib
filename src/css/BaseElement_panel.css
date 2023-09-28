@@ -97,6 +97,7 @@ td {
 
 data {
     cursor: pointer;
+    --noita-cursor: pointer;
     margin-right: 6px;
     padding: 4px;
     transition: all 300ms linear 0ms;

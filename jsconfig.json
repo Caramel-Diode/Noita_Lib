@@ -11,6 +11,7 @@
         "src/js/db/wand.js",
         "src/js/db/perk.js",
 
+        "src/js/component/cursor.js",
         "src/js/component/base.js",
         "src/js/component/entity.js",
         "src/js/component/spell.js",
