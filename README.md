@@ -1,5 +1,7 @@
 # NoitaLib
-![](img/logo.webp)
+<!-- ![](img/logo.webp) -->
+<img src="img/Logo.svg" height="128" width="160" alt="noitaLib logo">
+
 基于[`Web Component`](https://developer.mozilla.org/zh-CN/docs/Web/API/Web_components)技术构建的 [**Noita**](https://noitagame.com/) 游戏UI元素工具库
 目前法术数据已经跟进至**beta版**[^1]
 [^1]: master build-Aug 29 2023.
