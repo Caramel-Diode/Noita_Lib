@@ -1,7 +1,11 @@
 # NoitaLib
 ![](img/logo.webp)
-基于Web Component技术构建的Noita 游戏UI元素工具库
-目前法术数据已经跟进至==beta版==
+基于[`Web Component`](https://developer.mozilla.org/zh-CN/docs/Web/API/Web_components)技术构建的 [**Noita**](https://noitagame.com/) 游戏UI元素工具库
+目前法术数据已经跟进至**beta版**[^1]
+[^1]: master build-Aug 29 2023.
+
+![Version](https://img.shields.io/badge/version-1.0.0__beta-brightgreen)
+![法术数据进度](https://img.shields.io/badge/Spell-413/413-ad71f2) ![天赋精粹数据进度](https://img.shields.io/badge/Perk-102+5/102+5-e4b53a) ![实体数据进度](https://img.shields.io/badge/Enyity-242/unknow-eeeeee)
 
 ---
 ## 引入
@@ -227,3 +231,4 @@ LIGHT_BULLET_TRIGGER [HOMING_SHORT|HOMING]:-1 [LASER_EMITTER|LASER_EMITTER_FOUR|
 tips: 使用`电浆`可以有效快速的击杀`独眼` 使用`触发弹`施放它可以免于`电浆`对自己造成伤害 使用`追踪`修正以保证电浆命中的稳定性(当然这不是必须的)
 
 未完待续...
+
