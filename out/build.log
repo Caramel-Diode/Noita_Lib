@@ -1,15 +1,15 @@
-2023/9/29 00:10:48
-#sum: 461547
+2023/10/1 23:22:11
+#sum: 462169
 js:
-    #all: 77293
+    #all: 77915
     index: 2484
     db/entity: 4377
     db/material: 150
     db/perk: 1946
-    db/spell: 19565
+    db/spell: 20167
     db/wand: 7367
     component/base: 9185
-    component/cursor: 1132
+    component/cursor: 1152
     component/entity: 4789
     component/perk: 2709
     component/spell: 10682
