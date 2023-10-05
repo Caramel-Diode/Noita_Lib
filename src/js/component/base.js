@@ -160,6 +160,8 @@ component.base = class extends HTMLElement {
                 draw_death: new this(44, "抽取|失效触发"),
                 // neverUnlimited: new this(45, "?"),
                 infinite: new this(46, "无限"),
+                maxStack: new this(47, "堆叠极限"),
+                maxInPool: new this(48, "池最大含量"),
             };
         };
 

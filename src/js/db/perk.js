@@ -19,6 +19,10 @@ DB.perk = class {
     /** @type {String} 中文译名 */name;
     /** @type {String} 基础描述 */description;
     /** @type {String} 类型 [特殊,普通,一次性,精粹] */type;
+    /** @type {Number} 堆叠极限 */maxStack;
+    /** @type {Number} 天赋池允许存在的最大数量 */maxInPool;
+    /** @type {String} 游戏效果 */gameEffect;
+    /** @type {Boolean} 敌人能否使用 */usableByEnemies;
     //#endregion
 
     constructor(dataArray) {
@@ -35,8 +39,14 @@ DB.perk = class {
             case 1: this.type = "common"; break; //普通
             case 2: this.type = "disposable"; break; //一次性
             case 3: this.type = "essence"; break; //精粹
-            default: console.error("未知的天赋类型"); this.type = "common"; break;
+            default:
+                console.error("未知的天赋类型");
+                this.type = "undefined";
         }
+        this.maxStack = dataArray[4];
+        this.maxInPool = dataArray[5];
+        this.gameEffect = dataArray[6];
+        this.usableByEnemies = dataArray[7] === 1;
 
     };
 
@@ -52,7 +62,6 @@ DB.perk = class {
 
     static queryById = id => {
         const result = this.data.id_map.get(id);
-        console.trace(id);
         if (result) return result;
         else return this.$NULL;
     };
@@ -65,7 +74,7 @@ DB.perk = class {
 
     /** 初始化数据库 */
     static init() {
-        this.$NULL = Object.freeze(new this(["_NULL", "空白", "NULL"]));
+        this.$NULL = Object.freeze(new this(["_NULL", "空白", "NULL", 0, 128, 0, "", 0]));
         // data : 嵌入天赋数据
         /** @type {Array} */
         const datas = "perkData.jsonc";
@@ -76,7 +85,7 @@ DB.perk = class {
             storage.name_map.set(data.name, data);
         }
         // 特殊天赋 --- 贪婪诅咒
-        const greedCurse = new this(["GREED_CURSE", "贪婪诅咒", "敌人会掉落3倍的黄金，但你要承受恐怖的诅咒！", 0]);
+        const greedCurse = new this(["GREED_CURSE", "贪婪诅咒", "敌人会掉落3倍的黄金，但你要承受恐怖的诅咒！", 0, 128, 0, "", 0]);
         this.#index --;
         greedCurse.getIcon = async () => {
             const canvas = document.createElement("canvas");

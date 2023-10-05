@@ -44,6 +44,19 @@ component.perk = class extends component.base {
         }
     };
 
+    /**
+     * 获取天赋数据表
+     * @param {DB.perk} perkData 天赋数据
+     * @returns {HTMLTableElement} 数据表
+     */
+    static getDataTable = perkData => {
+        const table = document.createElement("table");
+        table.className = "attr-area";
+        super.loadPanelAttr("maxStack", perkData.maxStack, table); //堆叠极限
+        super.loadPanelAttr("maxInPool", perkData.maxInPool, table); //天赋池最大数量
+        return table;
+    };
+
     async #loadIconContent() {
         const fragment = document.createDocumentFragment();
         this.#shadowRoot.adoptedStyleSheets = this.publicStyleSheets.icon;
@@ -61,7 +74,23 @@ component.perk = class extends component.base {
     };
 
     async #loadPanelContent() {
-
+        const fragment = document.createDocumentFragment();
+        this.#shadowRoot.adoptedStyleSheets = this.publicStyleSheets.panel;
+        const pd = this.perkData;
+        const h1 = document.createElement("h1");//名称
+        h1.setAttribute("switch.id", pd.id);
+        h1.setAttribute("switch.name", pd.name);
+        h1.setAttribute("tabindex", "0");// 无障碍 允许tab聚焦 
+        h1.addEventListener("click", super.constructor.panelTitleSwitchFn.byMouse);
+        h1.addEventListener("keydown", super.constructor.panelTitleSwitchFn.byKeyboard);
+        h1.innerText = pd.name;
+        const p = document.createElement("p");//描述
+        //#region 属性
+        const table = this.constructor.getDataTable(pd);
+        //#endregion
+        p.append(pd.description);
+        fragment.append(h1, p, table);
+        this.#shadowRoot.append(fragment);
     };
 
     contentUpdate() {

@@ -1,17 +1,17 @@
-2023/10/1 23:22:11
-#sum: 462169
+2023/10/5 17:52:37
+#sum: 461916
 js:
-    #all: 77915
+    #all: 79002
     index: 2484
     db/entity: 4377
     db/material: 150
-    db/perk: 1946
+    db/perk: 2117
     db/spell: 20167
     db/wand: 7367
-    component/base: 9185
+    component/base: 9245
     component/cursor: 1152
     component/entity: 4789
-    component/perk: 2709
+    component/perk: 3565
     component/spell: 10682
     component/wand: 4647
     other/consoleCSS: 303
@@ -20,26 +20,26 @@ js:
     other/save: 2526
     other/utilities: 3899
 css:
-    #all: 13933
+    #all: 14085
     BaseElement_base: 1172
     BaseElement_icon: 198
     BaseElement_panel: 2499
     CursorElement: 1588
     EntityElement_panel: 135
     PerkElement_icon: 2303
-    PerkElement_panel: 0
+    PerkElement_panel: 152
     SpellElement_icon: 3222
     SpellElement_panel: 1238
     WandElement_panel: 1578
 json:
-    #all: 136021
+    #all: 134517
     entityData: 19070
-    perkData: 8800
+    perkData: 7296
     spellData: 76119
     wandTemplateData: 32032
 base64:
-    #all: 234980
-    panelAttrIcon: 548
+    #all: 234992
+    panelAttrIcon: 560
     perkIcon: 12204
     perkIcon_greedCurse: 328
     spellIcon: 57908

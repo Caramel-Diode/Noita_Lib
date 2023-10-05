@@ -1,0 +1,12 @@
+:host {
+    grid-template:
+        'name' 30px
+        'description' auto
+        '.' 14px
+        'attr' auto
+        /auto;
+    place-items: center stretch;
+    place-content: center;
+    min-width: 250px;
+    min-height: 100px;
+}
