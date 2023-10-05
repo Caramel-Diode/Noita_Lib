@@ -67,7 +67,7 @@ DB.perk = class {
     };
 
     static queryByName = name => {
-        const result = this.data.id_map.get(name);
+        const result = this.data.name_map.get(name);
         if (result) return result;
         else return this.$NULL;
     };
