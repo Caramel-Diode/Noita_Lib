@@ -2,7 +2,7 @@ const fs = require("fs");
 const srcPath = "./src";
 const outPath = "./out";
 const outPath2 = "D:/Project/Web/NoitaTest/js";
-const readFileopt = { encoding: 'utf8', flag: 'r' };
+const readFileopt = { encoding: "utf8", flag: "r" };
 const config = {
     embedImage: true,
     embedJson: true,
@@ -398,7 +398,7 @@ const main = async () => {
     mainJsData = u.embed_files(mainJsData, cssData);
     /** @type {String} */
     const result = mainJsData[0].data;
-    const result_module = result.replace(`"use strict";`,`"use strict";export `);
+    const result_module = result.replace(`"use strict";`, `"use strict";export `);
     addLog("sum", result.length);
     fs.writeFile(`${outPath}/index.js`, result, _ => 0);
     fs.writeFile(`${outPath}/index.mjs`, result_module, _ => 0);
