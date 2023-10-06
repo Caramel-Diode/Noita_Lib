@@ -1,12 +1,24 @@
 :host {
     grid-template:
-        'name' 30px
-        'description' auto
-        '.' 14px
-        'attr' auto
-        /auto;
+        'name . icon' 30px
+        'description . icon' auto
+        '. . icon' 14px
+        'attr . icon' auto
+        /auto 20px 60px;
     place-items: center stretch;
     place-content: center;
     min-width: 250px;
     min-height: 100px;
+}
+
+:host>canvas {
+    grid-area: icon;
+    height: 60px;
+    width: 60px;
+}
+
+p {
+    line-height: 30px;
+    grid-area: description;
+    max-width: 400px;
 }

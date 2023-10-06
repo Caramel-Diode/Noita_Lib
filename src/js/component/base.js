@@ -83,6 +83,7 @@ component.base = class extends HTMLElement {
         };
     })();
 
+    //// !: 函数拆分
     /**
      * 加载面板属性
      * @param {String} type 属性类型
@@ -125,20 +126,35 @@ component.base = class extends HTMLElement {
                 reloadTime: new this(11, "充能时间"),
                 spreadDegrees: new this(12, "散射"),
                 projectileDamage: new this(13, "投射物伤害"),
+                projectileDamageMultiplier: new this(13, "投射物承伤"),
                 fireDamage: new this(14, "火焰伤害"),
+                fireDamageMultiplier: new this(14, "火焰承伤"),
                 iceDamage: new this(15, "冰冻伤害"),
+                iceDamageMultiplier: new this(15, "冰冻承伤"),
                 explosionDamage: new this(16, "爆炸伤害"),
+                explosionDamageMultiplier: new this(16, "爆炸承伤"),
                 sliceDamage: new this(17, "切割伤害"),
+                sliceDamageMultiplier: new this(17, "切割承伤"),
                 drillDamage: new this(18, "穿凿伤害"),
+                drillDamageMultiplier: new this(18, "穿凿承伤"),
                 electricityDamage: new this(19, "雷电伤害"),
+                electricityDamageMultiplier: new this(19, "雷电承伤"),
                 healingDamage: new this(20, "治疗伤害"),
+                healingDamageMultiplier: new this(20, "治疗承伤"),
                 meleeDamage: new this(21, "近战伤害"),
+                meleeDamageMultiplier: new this(21, "近战承伤"),
                 curseDamage: new this(22, "诅咒伤害"),
+                curseDamageMultiplier: new this(22, "诅咒承伤"),
                 holyDamage: new this(23, "神圣伤害"),
+                holyDamageMultiplier: new this(23, "神圣承伤"),
                 overeatingDamage: new this(24, "吃撑伤害"),
+                overeatingMultiplier: new this(24, "吃撑伤害"),
                 physicsHitDamage: new this(25, "物理伤害"),
+                physicsHitDamageMultiplier: new this(25, "物理承伤"),
                 poisonDamage: new this(26, "剧毒伤害"),
+                poisonDamageMultiplier: new this(26, "剧毒承伤"),
                 radioactiveDamage: new this(27, "辐射伤害"),
+                radioactiveDamageMultiplier: new this(27, "辐射承伤"),
                 damageCriticalChance: new this(28, "暴击率"),
                 speed: new this(29, "投射速度"),
                 speedMultiplier: new this(29, "投射速度倍数"),
@@ -150,7 +166,7 @@ component.base = class extends HTMLElement {
                 projectilesUsed: new this(34, "使用投射物"),
                 // lifetime:new this( 35, "被动效果"),
                 // lifetime:new this( 36, "友军伤害"),
-                // lifetime:new this( 37, "生命值"),
+                maxHp: new this(37, "生命值"),
                 // lifetime:new this( 38, "免疫能力"),
                 // lifetime:new this( 39, "承伤系数"),
                 recoilKnockback: new this(40, "后座力"),
@@ -233,8 +249,8 @@ component.base = class extends HTMLElement {
                 let valueFrame;
                 let permanentFlag = false;
                 if (type === "lifetime") {
-                    if(typeof value === "number") {
-                        if(needSign) {
+                    if (typeof value === "number") {
+                        if (needSign) {
                             valueSecond = `${aps(fts(value))}s`;
                             valueFrame = `${aps(value)}f`;
                         } else {
@@ -431,4 +447,4 @@ component.base = class extends HTMLElement {
     toString() {
         return "[Obejct HTMLNoitaElement]";
     }
-}
+};

@@ -124,30 +124,29 @@ DB.entity = class {
     /** 伤害模型组件 */
     static damageModelComponent = class {
         /** @type {Number} 最大生命 */maxHp;
-        /** @type {Number} 呼吸需求 */airNeed;
-        /** @type {Number} 氧气储备 */airInLungsMax;
+        // /** @type {Number} 呼吸需求 */airNeed;
+        /** @type {Number} 氧气储备 */airInLungsMax;/* -1 代表无需呼吸 */
         /** @type {Array<String>} 有害材料 */damageMaterialList;
         /** @type {String} 血液材料[受伤] */bloodMaterial_die;/* blood_fading */
         /** @type {String} 血液材料[死亡] */bloodMaterial_hurt;/* blood_fading */
         /** @type {String} 尸体材料 */corpseMaterial;/* meat */
         /** @type {DamageData} 承伤倍率 */damageMultipler;
-        /** @param {Array<String>} bloodMaterial */
         constructor(
-            max_hp,
-            airNeed,
+            maxHp,
             airInLungsMax,
-            damageMaterial,
+            damageMaterialList,
             bloodMaterial,
+            corpseMaterial,
             damageMultipler
         ) {
-            this.maxHp = max_hp;
-            this.airNeed = airNeed;
+            this.maxHp = maxHp;
             this.airInLungsMax = airInLungsMax;
             this.damageMaterialList = damageMaterialList;
             const bloodMaterialList = bloodMaterial.split(" ");
             this.bloodMaterial_die = bloodMaterialList[0];
-            this.bloodMaterial_hurt = bloodMaterialList[1];
-            this.damageMultipler = damageMultipler;
+            this.bloodMaterial_hurt = bloodMaterialList[1] ?? this.bloodMaterial_die;
+            this.corpseMaterial = corpseMaterial;
+            this.damageMultipler = new DamageData(damageMultipler);
         }
     };
     /** 动物行为组件 */
@@ -173,7 +172,7 @@ DB.entity = class {
     };
     /** @type {String} `★主键` 实体标识符 */id;
     /** @type {String} 名称 */name;
-    /** @type {typeof DB.entity.projectileComponent} 投射物组件 */projectileComponent;
+    /** @type {DB.entity.projectileComponent} 投射物组件 */projectileComponent;
     /** @type {DB.entity.damageModelComponent} 伤害模型组件 */damageModelComponent;
     /** @type {DB.entity.animalAIComponent} 伤害模型组件 */animalAIComponent;
 
@@ -204,19 +203,19 @@ DB.entity = class {
                     dataArray[i + 16],
                     dataArray[i + 17]
                 ));
-                i += 18;
+                i += 17;
             }
             else if (dataArray[i] === "DMC") {
+                console.log(dataArray[i + 7]);
                 this.damageModelComponent = Object.freeze(new _.damageModelComponent(
                     dataArray[i + 1],
                     dataArray[i + 2],
                     dataArray[i + 3],
                     dataArray[i + 4],
                     dataArray[i + 5],
-                    dataArray[i + 6],
-                    dataArray[i + 7]
+                    dataArray[i + 6]
                 ));
-                i += 8;
+                i += 6;
             }
             i++;
         }
@@ -241,4 +240,4 @@ DB.entity = class {
         }
         // console.log(this.data.projectile.usedBySpell);
     }
-}
+};

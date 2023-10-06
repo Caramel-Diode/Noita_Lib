@@ -89,7 +89,7 @@ component.perk = class extends component.base {
         const table = this.constructor.getDataTable(pd);
         //#endregion
         p.append(pd.description);
-        fragment.append(h1, p, table);
+        fragment.append(await pd.getIcon(), h1, p, table);
         this.#shadowRoot.append(fragment);
     };
 
