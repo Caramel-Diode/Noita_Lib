@@ -123,20 +123,21 @@ component.wand = class extends component.base {
             const tbody = document.createElement("tbody");
             /** @type {DataWand} */
             const wd = wandData;
-            loadAttr("shuffle", wd.shuffle ? "是" : "否", tbody);
-            loadAttr("draw", wd.draw, tbody);
-            loadAttr("fireRateWait", wd.fireRateWait, tbody);
-            loadAttr("reloadTime", wd.reloadTime, tbody);
-            loadAttr("manaMax", wd.manaMax, tbody);
-            loadAttr("manaChargeSpeed", wd.manaChargeSpeed, tbody);
-            loadAttr("capacity", wd.capacity, tbody);
-            if (wd.spreadDegrees !== 0) loadAttr("spreadDegrees", wd.spreadDegrees, tbody);
-            if (wd.speedMultiplier !== 1) loadAttr("speedMultiplier", wd.speedMultiplier, tbody);
+            loadAttr.setContainer(tbody);
+            loadAttr._default("shuffle", wd.shuffle ? "是" : "否");
+            loadAttr._draw("draw", wd.draw);
+            loadAttr._castCD("fireRateWait", wd.fireRateWait);
+            loadAttr._castCD("reloadTime", wd.reloadTime);
+            loadAttr._manaMaxOrCapacity("manaMax", wd.manaMax);
+            loadAttr._manaChargeSpeed("manaChargeSpeed", wd.manaChargeSpeed);
+            loadAttr._manaMaxOrCapacity("capacity", wd.capacity);
+            if (!wd.spreadDegrees) loadAttr._spreadDegrees("spreadDegrees", wd.spreadDegrees);
+            if (wd.speedMultiplier) loadAttr._speed("speedMultiplier", wd.speedMultiplier);
             if (wd.staticSpells.length > 0) {
                 const staticSpellList = document.createElement("ol");
                 staticSpellList.className = "static-spells";//标记为始终法术列表
                 this.#loadSpellListItems(staticSpellList, wd.staticSpells);
-                await super.loadPanelAttr("staticSpells", staticSpellList, tbody);
+                loadAttr._custom("staticSpells", [staticSpellList]);
             }
             table.append(tbody);
             return table;
@@ -202,4 +203,4 @@ component.wand = class extends component.base {
             this.contentUpdate();
         }
     };
-}
+};

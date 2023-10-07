@@ -18,24 +18,32 @@ header {
     overflow: auto;
 }
 
-ol {
+ol,
+ul {
     display: flex;
-    max-height: 60px;
-    width: fit-content;
-    place-content: center;
     list-style: none;
     gap: 5px;
+    width: fit-content;
+    place-content: center;
 }
 
 li {
+    display: flex;
+    width: fit-content;
+    place-content: center;
+    place-items: center;
+    gap: 3px;
+}
+
+.spells-tabpanel {
+    max-height: 60px;
+}
+
+.spells-tabpanel>li {
     --line-color: #00000000;
     --font-size: 16px;
     --font-weight: 400;
-    display: flex;
     min-height: 20px;
-    width: fit-content;
-    place-content: center;
-    place-items: left;
     padding: 0 3px 6px 3px;
     margin: 0 0 10px 0;
     background: linear-gradient(to right, var(--line-color), var(--line-color)) left bottom/ 100% 2px no-repeat;
@@ -48,25 +56,23 @@ li {
     content-visibility: auto;
 }
 
-li:focus-within,
-li.selected:focus-within {
+.spells-tabpanel>li:is(:focus-within, .selected:focus-within) {
     --line-color: #FFFF55;
 }
 
-li:where(:hover, :focus-within) {
+.spells-tabpanel>li:where(:hover, :focus-within) {
     color: #FFFF55;
 }
 
-li.selected {
+.spells-tabpanel>li.selected {
     --line-color: #EEEEEE;
     --font-size: 0px;
     padding: 0 6px 6px 6px;
 }
 
-li>canvas {
+.spells-tabpanel>li>canvas {
     height: 16px;
     width: 16px;
-    margin: 0 2px;
 }
 
 main {

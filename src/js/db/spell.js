@@ -106,7 +106,7 @@ DB.spell = class {
         common;
         /** @type {Number} */
         hit;
-        /** @type {{count:Number,time:Number}} */
+        /** @type {{count:Number,delay:Number}} */
         timer;
         /** @type {Number} */
         death;
@@ -115,25 +115,25 @@ DB.spell = class {
          * @param {String} dataStr 
          */
         constructor(dataStr) {
-            let C = [], H = [], T_count = [], T_time = [], D = [];
+            let C = [], H = [], T_count = [], T_delay = [], D = [];
             let current = C;
             for (let char of dataStr) switch (char) {
                 case "H": current = H; break;
                 case "T": current = T_count; break;
-                case ":": current = T_time; break;
+                case ":": current = T_delay; break;
                 case "D": current = D; break;
                 default: current.push(char);
             }
             C = Number(C.join(""));
             H = Number(H.join(""));
             T_count = Number(T_count.join(""));
-            T_time = Number(T_time.join(""));
+            T_delay = Number(T_delay.join(""));
             D = Number(D.join(""));
             this.common = Number.isNaN(C) ? 0 : C;
             this.hit = Number.isNaN(H) ? 0 : H;
             this.timer = {
                 count: Number.isNaN(T_count) ? 0 : T_count,
-                time: Number.isNaN(T_time) ? 0 : T_time
+                delay: Number.isNaN(T_delay) ? 0 : T_delay
             };
             this.death = Number.isNaN(D) ? 0 : D;
         };

@@ -14,11 +14,11 @@ component.base = class extends HTMLElement {
         const main = event => {
             const forceToHidden = event.target.classList.contains("selected");// 再次点击已选中的target时强制隐藏
             const relatedSectionElements = event.target.relatedSectionElements;
-            const relatedDataElements = event.target.relatedDataElements;
+            const relatedLiElements = event.target.relatedLiElements;
             for (let element of relatedSectionElements) {
-                element.hidden = element.getAttribute("related-id") !== event.target.value || forceToHidden;
+                element.hidden = element.getAttribute("related-id") !== event.target.getAttribute("related-id") || forceToHidden;
             }
-            for (let element of relatedDataElements) {
+            for (let element of relatedLiElements) {
                 element.classList.replace("selected", "unselected");
                 // element.setAttribute("aria-selected", "false");// 无障碍标注
             }
@@ -83,13 +83,8 @@ component.base = class extends HTMLElement {
         };
     })();
 
-    //// !: 函数拆分
-    /**
+    /** 
      * 加载面板属性
-     * @param {String} type 属性类型
-     * @param {any} value 属性值
-     * @param {HTMLTableSectionElement} container 载入容器
-     * @param {Boolean} [needSign=false] 需要符号
      */
     static loadPanelAttr = (() => {
         /** @borrows utilities.frameToSecond as fts */
@@ -98,6 +93,7 @@ component.base = class extends HTMLElement {
         const aps = utilities.addPlusSign;
         /** @borrows utilities.getExactDegree as ged */
         const ged = utilities.getExactDegree;
+        const panelInfoSwitchFn = this.panelInfoSwitchFn;
         class panelAttrInfo {
             /** @type {Number} */
             iconIndex;
@@ -112,73 +108,74 @@ component.base = class extends HTMLElement {
                 this.iconIndex = iconIndex;
                 this.name = name;
             };
-            static datas = {
-                type: new this(1, "法术类型"),
-                shuffle: new this(2, "乱序"),
-                draw: new this(3, "抽取数"),
-                capacity: new this(4, "容量"),
-                staticSpells: new this(5, "始终施放"),
-                manaMax: new this(6, "法力上限"),
-                manaChargeSpeed: new this(7, "法力恢复速度"),
-                manaDrain: new this(8, "法力消耗"),
-                maxUse: new this(9, "最大使用次数"),
-                fireRateWait: new this(10, "施放延迟"),
-                reloadTime: new this(11, "充能时间"),
-                spreadDegrees: new this(12, "散射"),
-                projectileDamage: new this(13, "投射物伤害"),
-                projectileDamageMultiplier: new this(13, "投射物承伤"),
-                fireDamage: new this(14, "火焰伤害"),
-                fireDamageMultiplier: new this(14, "火焰承伤"),
-                iceDamage: new this(15, "冰冻伤害"),
-                iceDamageMultiplier: new this(15, "冰冻承伤"),
-                explosionDamage: new this(16, "爆炸伤害"),
-                explosionDamageMultiplier: new this(16, "爆炸承伤"),
-                sliceDamage: new this(17, "切割伤害"),
-                sliceDamageMultiplier: new this(17, "切割承伤"),
-                drillDamage: new this(18, "穿凿伤害"),
-                drillDamageMultiplier: new this(18, "穿凿承伤"),
-                electricityDamage: new this(19, "雷电伤害"),
-                electricityDamageMultiplier: new this(19, "雷电承伤"),
-                healingDamage: new this(20, "治疗伤害"),
-                healingDamageMultiplier: new this(20, "治疗承伤"),
-                meleeDamage: new this(21, "近战伤害"),
-                meleeDamageMultiplier: new this(21, "近战承伤"),
-                curseDamage: new this(22, "诅咒伤害"),
-                curseDamageMultiplier: new this(22, "诅咒承伤"),
-                holyDamage: new this(23, "神圣伤害"),
-                holyDamageMultiplier: new this(23, "神圣承伤"),
-                overeatingDamage: new this(24, "吃撑伤害"),
-                overeatingMultiplier: new this(24, "吃撑伤害"),
-                physicsHitDamage: new this(25, "物理伤害"),
-                physicsHitDamageMultiplier: new this(25, "物理承伤"),
-                poisonDamage: new this(26, "剧毒伤害"),
-                poisonDamageMultiplier: new this(26, "剧毒承伤"),
-                radioactiveDamage: new this(27, "辐射伤害"),
-                radioactiveDamageMultiplier: new this(27, "辐射承伤"),
-                damageCriticalChance: new this(28, "暴击率"),
-                speed: new this(29, "投射速度"),
-                speedMultiplier: new this(29, "投射速度倍数"),
-                explosionRadius: new this(30, "爆炸半径"),
-                bounces: new this(31, "弹跳次数"),
-                knockbackForce: new this(32, "击退"),
-                lifetime: new this(33, "存在时间"),
-                projectilesProvided: new this(34, "提供投射物"),
-                projectilesUsed: new this(34, "使用投射物"),
-                // lifetime:new this( 35, "被动效果"),
-                // lifetime:new this( 36, "友军伤害"),
-                maxHp: new this(37, "生命值"),
-                // lifetime:new this( 38, "免疫能力"),
-                // lifetime:new this( 39, "承伤系数"),
-                recoilKnockback: new this(40, "后座力"),
-                draw_common: new this(41, "抽取|普通"),
-                draw_hit: new this(42, "抽取|碰撞触发"),
-                draw_timer: new this(43, "抽取|定时触发"),
-                draw_death: new this(44, "抽取|失效触发"),
+            static datas = new Map([
+                ["type", new this(1, "法术类型")],
+                ["shuffle", new this(2, "乱序")],
+                ["draw", new this(3, "抽取数")],
+                ["capacity", new this(4, "容量")],
+                ["staticSpells", new this(5, "始终施放")],
+                ["manaMax", new this(6, "法力上限")],
+                ["manaChargeSpeed", new this(7, "法力恢复速度")],
+                ["manaDrain", new this(8, "法力消耗")],
+                ["maxUse", new this(9, "最大使用次数")],
+                ["remainingUse", new this(9, "剩余使用次数")],
+                ["fireRateWait", new this(10, "施放延迟")],
+                ["reloadTime", new this(11, "充能时间")],
+                ["spreadDegrees", new this(12, "散射")],
+                ["projectileDamage", new this(13, "投射物伤害")],
+                ["projectileDamageMultiplier", new this(13, "投射物承伤")],
+                ["fireDamage", new this(14, "火焰伤害")],
+                ["fireDamageMultiplier", new this(14, "火焰承伤")],
+                ["iceDamage", new this(15, "冰冻伤害")],
+                ["iceDamageMultiplier", new this(15, "冰冻承伤")],
+                ["explosionDamage", new this(16, "爆炸伤害")],
+                ["explosionDamageMultiplier", new this(16, "爆炸承伤")],
+                ["sliceDamage", new this(17, "切割伤害")],
+                ["sliceDamageMultiplier", new this(17, "切割承伤")],
+                ["drillDamage", new this(18, "穿凿伤害")],
+                ["drillDamageMultiplier", new this(18, "穿凿承伤")],
+                ["electricityDamage", new this(19, "雷电伤害")],
+                ["electricityDamageMultiplier", new this(19, "雷电承伤")],
+                ["healingDamage", new this(20, "治疗伤害")],
+                ["healingDamageMultiplier", new this(20, "治疗承伤")],
+                ["meleeDamage", new this(21, "近战伤害")],
+                ["meleeDamageMultiplier", new this(21, "近战承伤")],
+                ["curseDamage", new this(22, "诅咒伤害")],
+                ["curseDamageMultiplier", new this(22, "诅咒承伤")],
+                ["holyDamage", new this(23, "神圣伤害")],
+                ["holyDamageMultiplier", new this(23, "神圣承伤")],
+                ["overeatingDamage", new this(24, "吃撑伤害")],
+                ["overeatingMultiplier", new this(24, "吃撑伤害")],
+                ["physicsHitDamage", new this(25, "物理伤害")],
+                ["physicsHitDamageMultiplier", new this(25, "物理承伤")],
+                ["poisonDamage", new this(26, "剧毒伤害")],
+                ["poisonDamageMultiplier", new this(26, "剧毒承伤")],
+                ["radioactiveDamage", new this(27, "辐射伤害")],
+                ["radioactiveDamageMultiplier", new this(27, "辐射承伤")],
+                ["damageCriticalChance", new this(28, "暴击率")],
+                ["speed", new this(29, "投射速度")],
+                ["speedMultiplier", new this(29, "投射速度倍数")],
+                ["explosionRadius", new this(30, "爆炸半径")],
+                ["bounces", new this(31, "弹跳次数")],
+                ["knockbackForce", new this(32, "击退")],
+                ["lifetime", new this(33, "存在时间")],
+                ["projectilesProvided", new this(34, "提供投射物")],
+                ["projectilesUsed", new this(34, "使用投射物")],
+                // ( 35, "被动效果"),
+                // ( 36, "友军伤害"),
+                ["maxHp", new this(37, "生命值")],
+                // ( 38, "免疫能力"),
+                // ( 39, "承伤系数"),
+                ["recoilKnockback", new this(40, "后座力")],
+                ["draw_common", new this(41, "抽取|普通")],
+                ["draw_hit", new this(42, "抽取|碰撞触发")],
+                ["draw_timer", new this(43, "抽取|定时触发")],
+                ["draw_death", new this(44, "抽取|失效触发")],
                 // neverUnlimited: new this(45, "?"),
-                infinite: new this(46, "无限"),
-                maxStack: new this(47, "堆叠极限"),
-                maxInPool: new this(48, "池最大含量"),
-            };
+                ["infinite", new this(46, "无限")],
+                ["maxStack", new this(47, "堆叠极限")],
+                ["maxInPool", new this(48, "池最大含量")],
+            ]);
         };
 
         const unitConvert = (() => {
@@ -226,215 +223,333 @@ component.base = class extends HTMLElement {
             return canvas;
         };
 
+        /** @type {HTMLElement} */
+        let container = undefined;
         /**
-        * @param {String} type 属性类型
-        * @param {String|Number|{min:Number|undefined,max:Number|undefined,base:Number|undefined,fluctuation:Number|undefined}} value 属性数据
-        * @param {Boolean} [needSign=false] 是否需要前缀符号
-        */
-        const main = async (type, value, container, needSign = false) => {
+         * 加载面板属性表行
+         * @param {"type"|"shuffle"|"draw"|"capacity"|"staticSpells"|"manaMax"|"manaChargeSpeed"|"manaDrain"|"maxUse"|"remainingUse"|"fireRateWait"|"reloadTime"|"spreadDegrees"|"projectileDamage"|"projectileDamageMultiplier"|"fireDamage"|"fireDamageMultiplier"|"iceDamage"|"iceDamageMultiplier"|"explosionDamage"|"explosionDamageMultiplier"|"sliceDamage"|"sliceDamageMultiplier"|"drillDamage"|"drillDamageMultiplier"|"electricityDamage"|"electricityDamageMultiplier"|"healingDamage"|"healingDamageMultiplier"|"meleeDamage"|"meleeDamageMultiplier"|"curseDamage"|"curseDamageMultiplier"|"holyDamage"|"holyDamageMultiplier"|"overeatingDamage"|"overeatingMultiplier"|"physicsHitDamage"|"physicsHitDamageMultiplier"|"poisonDamage"|"poisonDamageMultiplier"|"radioactiveDamage"|"radioactiveDamageMultiplier"|"damageCriticalChance"|"speed"|"speedMultiplier"|"explosionRadius"|"bounces"|"knockbackForce"|"lifetime"|"projectilesProvided"|"projectilesUsed"|"maxHp"|"recoilKnockback"|"draw_common"|"draw_hit"|"draw_timer"|"draw_death"|"infinite"|"maxStack"|"maxInPool"} type 面板信息
+         * @param {String|Node|{second:String,frame:String}} content 内容值
+         */
+        const loadTr = async (type, content) => {
             const tr = document.createElement("tr");
-            //#region <th>生成
             const th = document.createElement("th");
-            /** @type {panelAttrInfo} */
-            let attrInfo = panelAttrInfo.datas[type];
-            th.append(await getPanelAttrIcon(attrInfo), attrInfo.name);
-            //#endregion
-
-            //#region <td>生成
             const td = document.createElement("td");
-            let displayValue = value;
-            // 时间类型判断 需要单位转换功能
-            if (type === "fireRateWait" || type === "reloadTime" || type === "lifetime") {
-                let valueSecond;
-                let valueFrame;
-                let permanentFlag = false;
-                if (type === "lifetime") {
-                    if (typeof value === "number") {
-                        if (needSign) {
-                            valueSecond = `${aps(fts(value))}s`;
-                            valueFrame = `${aps(value)}f`;
-                        } else {
-                            valueSecond = `${fts(value)}s`;
-                            valueFrame = `${value}f`;
-                        }
-                    } else if (value.fluctuation === 0) {
-                        if (needSign) {
-                            valueSecond = `${aps(fts(value.base))}s`;
-                            valueFrame = `${aps(value.base)}f`;
-                        } else {
-                            valueSecond = `${fts(value.base)}s`;
-                            valueFrame = `${value.base}f`;
-                        }
-                        if (value.base === -1) {
-                            valueSecond = `永久`;
-                            valueFrame = `-1`;
-                        }
-                    } else {
-                        const min = value.base - value.fluctuation;
-                        const max = value.base + value.fluctuation;
-                        if (needSign) {
-                            valueSecond = `${aps(fts(min))}s ~ ${aps(fts(max))}s`;
-                            valueFrame = `${aps(min)}f ~ ${aps(max)}f`;
-                        } else {
-                            valueSecond = `${fts(min)}s ~ ${fts(max)}s`;
-                            valueFrame = `${min}f ~ ${max}f`;
-                        }
-                    }
-                } else {
-                    if (typeof value === "number") {
-                        valueSecond = fts(value);
-                        valueFrame = value;
-                        if (needSign) {
-                            valueSecond = aps(valueSecond);
-                            valueFrame = aps(valueFrame);
-                        }
-                        valueSecond = `${valueSecond}s`;
-                        valueFrame = `${valueFrame}f`;
-                    } else if (typeof value === "object") {
-                        if (value.min === -Infinity) {
-                            if (needSign) {
-                                valueSecond = `≤ ${aps(fts(value.max))}s`;
-                                valueFrame = `≤ ${aps(value.max)}f`;
-                            } else {
-                                valueSecond = `≤ ${fts(value.max)}s`;
-                                valueFrame = `≤ ${value.max}f`;
-                            }
-                        } else if (value.max === Infinity) {
-                            if (needSign) {
-                                valueSecond = `≥ ${aps(fts(value.min))}s`;
-                                valueFrame = `≥ ${aps(value.min)}f`;
-                            } else {
-                                valueSecond = `≥ ${fts(value.min)}s`;
-                                valueFrame = `≥ ${value.min}f`;
-                            }
-                        } else if (needSign) {
-                            valueSecond = `${aps(fts(value.min))}s ~ ${aps(fts(value.max))}s`;
-                            valueFrame = `${aps(value.min)}f ~ ${aps(value.max)}f`;
-                        } else {
-                            valueSecond = `${fts(value.min)}s ~ ${fts(value.max)}s`;
-                            valueFrame = `${value.min}f ~ ${value.max}f`;
-                        }
-                    }
-                }
-
-                td.setAttribute("tabindex", "0");// 无障碍 可被键盘聚焦
-                td.setAttribute("value.second", valueSecond);
-                td.setAttribute("value.frame", valueFrame);
-                td.setAttribute("display", "SECOND");
-                displayValue = valueSecond;//默认展示以秒作为单位的值
-                td.addEventListener("click", unitConvert.byMouse);
-                td.addEventListener("keydown", unitConvert.byKeyboard);
-            }
-            else if (type === "manaChargeSpeed") {
-                let valueSecond;
-                let valueFrame;
-                if (typeof value === "number") {
-                    valueSecond = `${value}/s`;
-                    valueFrame = `${fts(value)}/f`;
-                } else {
-                    if (value.min === -Infinity) {
-                        valueSecond = `≤ ${fts(value.max)}/s`;
-                        valueFrame = `≤ ${value.max}/f`;
-                    } else if (value.max === Infinity) {
-                        valueSecond = `≥ ${fts(value.min)}/s`;
-                        valueFrame = `≥ ${value.min}/f`;
-                    } else {
-                        valueSecond = `${fts(value.min)}/s ~ ${fts(value.max)}/s`;
-                        valueFrame = `${value.min}/f ~ ${value.max}/f`;
-                    }
-                }
-                td.setAttribute("tabindex", "0");// 无障碍 可被键盘聚焦
-                td.setAttribute("value.second", valueSecond);
-                td.setAttribute("value.frame", valueFrame);
-                td.setAttribute("display", "SECOND");
-                displayValue = valueSecond;//默认展示以秒作为单位的值
-                td.addEventListener("click", unitConvert.byMouse);
-                td.addEventListener("keydown", unitConvert.byKeyboard);
-            }
-            else if (type === "spreadDegrees") {// 角度类型判断
-                if (typeof value === "number") {
-                    displayValue = ged(value, needSign);
-                } else if (typeof value === "object") {
-                    if (value.min === -Infinity) {
-                        displayValue = `≤ ${ged(value.max, needSign)}`;
-                    } else if (value.max === Infinity) {
-                        displayValue = `≥ ${ged(value.min, needSign)}`;
-                    } else {
-                        displayValue = `${ged(value.min, needSign)} ~ ${ged(value.max, needSign)}`;
-                    }
+            /** @type {panelAttrInfo} */
+            let attrInfo = panelAttrInfo.datas.get(type);
+            th.append(await getPanelAttrIcon(attrInfo), attrInfo.name);
+            const contentType = typeof content;
+            if (contentType === "string") {
+                td.append(content);
+            } else if (contentType === "object") {
+                if (content instanceof Node) {// html节点 直接插入
+                    td.append(content);
+                } else {// 单位换算信息 默认显示`秒`
+                    td.setAttribute("tabindex", "0");// 无障碍 可被键盘聚焦
+                    td.addEventListener("click", unitConvert.byMouse);
+                    td.addEventListener("keydown", unitConvert.byKeyboard);
+                    td.setAttribute("display", "SECOND");
+                    td.setAttribute("value.second", content.second);
+                    td.setAttribute("value.frame", content.frame);
+                    td.append(content.second);
                 }
             }
-            else if (type === "speed" || type === "speedMultiplier") {// 速度类型判断 为修正属性时需要前缀符号× 为投射物属性时可能为范围值
-                if (typeof value === "object") {
-                    if (value.min === -Infinity) displayValue = `≤ ${value.max}`;
-                    else if (value.max === Infinity) displayValue = `≥ ${value.min}`;
-                    else if (value.min !== value.max) displayValue = `${value.min} ~ ${value.max}`;
-                    else displayValue = value.min;
-                }
-                if (needSign) displayValue = `\u00d7${displayValue}`;
-            }
-            else if (type === "damageCriticalChance") {// 暴击率类型判断 需要后置符号% 强制前缀符号
-                displayValue = `${aps(value)}%`;
-            }
-            else if (type === "maxUse") {
-                /** @type {DocumentFragment} */
-                displayValue = document.createDocumentFragment();
-                displayValue.append(value.times);
-                if (value.neverUnlimited) {
-                    td.classList.add("never-unlimited");
-                    td.title = "不可无限化";
-                } else {
-                    td.classList.add("unlimited");
-                    td.title = "可无限化";
-                }
-            }
-            else if (type === "draw") {
-                if (typeof value === "number") {
-                    displayValue = value;
-                } else if (typeof value === "object") {
-                    if (value.min !== undefined) {//法杖不定数量抽取
-                        displayValue = `${value.min} ~ ${value.max}`;
-                    } else { //法术多类型抽取
-                        displayValue = document.createDocumentFragment();
-                        if (value.common) displayValue.append(await getPanelAttrIcon(panelAttrInfo.datas.draw_common), value.common);
-                        if (value.hit) displayValue.append(await getPanelAttrIcon(panelAttrInfo.datas.draw_hit), value.hit);
-                        if (value.timer.count) {
-                            displayValue.append(await getPanelAttrIcon(panelAttrInfo.datas.draw_timer), value.timer.count);
-                            if (value.timer.time) {
-                                displayValue.append("(", value.timer.time, "f)");
-                                td.title = `定时:${value.timer.time}f`;
-                            }
-                        }
-                        if (value.death) displayValue.append(await getPanelAttrIcon(panelAttrInfo.datas.draw_death), value.death);
-                    }
-
-                }
-            }
-            else if (type === "manaMax" || type === "capacity") {
-                if (typeof value === "object") {
-                    if (value.min === -Infinity) displayValue = `≤ ${value.max}`;
-                    else if (value.max === Infinity) displayValue = `≥ ${value.min}`;
-                    else displayValue = `${value.min} ~ ${value.max}`;
-                }
-            }
-            else { //投射物本体伤害/伤害修正 等...
-                if (typeof value !== "object") {
-                    if (needSign) displayValue = `${aps(value)}`;
-                } else {
-                    if (needSign) console.warn("意外的数据类型!", value);
-                    else if (value instanceof Array) { //传入数组时直接将数组内容添加到td中作为数据(一般情况下数组元素为Element)
-                        displayValue = document.createDocumentFragment();
-                        displayValue.append(...value);
-                        td.setAttribute("roles", "tablist");// 无障碍标注
-                    }
-                }
-            }
-            td.append(displayValue);
-            //#endregion
             tr.append(th, td);
             container.append(tr);
         };
-        return main;
+
+        return {
+            /**
+             * 设置目标容器
+             * @param {HTMLElement} traget 目标容器
+             */
+            setContainer(traget) {
+                container = traget;
+            },
+            /**
+             * 加载`施放延迟`|`充能时间`面板属性
+             * @param {"fireRateWait"|"lifetime"} type CD类型
+             * @param {Number|{min:Number,max:Number}} value 
+             * @param {Boolean} [needSign] 
+             */
+            async _castCD(type, value, needSign = false) {
+                let unitConvertData = { second: "", frame: "" };
+                if (typeof value === "number") {
+                    unitConvertData.second = fts(value);
+                    unitConvertData.frame = value;
+                    if (needSign) {
+                        unitConvertData.second = aps(unitConvertData.second);
+                        unitConvertData.frame = aps(unitConvertData.frame);
+                    }
+                    unitConvertData.second = `${unitConvertData.second}s`;
+                    unitConvertData.frame = `${unitConvertData.frame}f`;
+                } else if (typeof value === "object") {
+                    if (value.min === -Infinity) {
+                        if (needSign) {
+                            unitConvertData.second = `≤ ${aps(fts(value.max))}s`;
+                            unitConvertData.frame = `≤ ${aps(value.max)}f`;
+                        } else {
+                            unitConvertData.second = `≤ ${fts(value.max)}s`;
+                            unitConvertData.frame = `≤ ${value.max}f`;
+                        }
+                    } else if (value.max === Infinity) {
+                        if (needSign) {
+                            unitConvertData.second = `≥ ${aps(fts(value.min))}s`;
+                            unitConvertData.frame = `≥ ${aps(value.min)}f`;
+                        } else {
+                            unitConvertData.second = `≥ ${fts(value.min)}s`;
+                            unitConvertData.frame = `≥ ${value.min}f`;
+                        }
+                    } else if (needSign) {
+                        unitConvertData.second = `${aps(fts(value.min))}s ~ ${aps(fts(value.max))}s`;
+                        unitConvertData.frame = `${aps(value.min)}f ~ ${aps(value.max)}f`;
+                    } else {
+                        unitConvertData.second = `${fts(value.min)}s ~ ${fts(value.max)}s`;
+                        unitConvertData.frame = `${value.min}f ~ ${value.max}f`;
+                    }
+                }
+                await loadTr(type, unitConvertData);
+            },
+            /**
+             * 加载`存在时间`面板属性
+             * @param {Number|{base:Number,fluctuation:Number}} value 
+             * @param {Boolean} [needSign] 
+             */
+            async _lifetime(value, needSign = false) {
+                let unitConvertData = { second: "", frame: "" };
+                if (typeof value === "number") {
+                    if (needSign) {
+                        unitConvertData.second = `${aps(fts(value))}s`;
+                        unitConvertData.frame = `${aps(value)}f`;
+                    } else {
+                        unitConvertData.second = `${fts(value)}s`;
+                        unitConvertData.frame = `${value}f`;
+                    }
+                } else if (value.fluctuation === 0) {
+                    if (needSign) {
+                        unitConvertData.second = `${aps(fts(value.base))}s`;
+                        unitConvertData.frame = `${aps(value.base)}f`;
+                    } else {
+                        unitConvertData.second = `${fts(value.base)}s`;
+                        unitConvertData.frame = `${value.base}f`;
+                    }
+                    if (value.base === -1) {
+                        unitConvertData.second = `永久`;
+                        unitConvertData.frame = `-1`;
+                    }
+                } else {
+                    const min = value.base - value.fluctuation;
+                    const max = value.base + value.fluctuation;
+                    if (needSign) {
+                        unitConvertData.second = `${aps(fts(min))}s ~ ${aps(fts(max))}s`;
+                        unitConvertData.frame = `${aps(min)}f ~ ${aps(max)}f`;
+                    } else {
+                        unitConvertData.second = `${fts(min)}s ~ ${fts(max)}s`;
+                        unitConvertData.frame = `${min}f ~ ${max}f`;
+                    }
+                }
+                await loadTr("lifetime", unitConvertData);
+            },
+            /**
+             * 加载`法力恢复速度`面板属性
+             * @param {Number|{min:Number,max:Number}} value 
+             */
+            async _manaChargeSpeed(value) {
+                let unitConvertData = { second: "", frame: "" };
+                if (typeof value === "number") {
+                    unitConvertData.second = `${value}/s`;
+                    unitConvertData.frame = `${fts(value)}/f`;
+                } else {
+                    if (value.min === -Infinity) {
+                        unitConvertData.second = `≤ ${fts(value.max)}/s`;
+                        unitConvertData.frame = `≤ ${value.max}/f`;
+                    } else if (value.max === Infinity) {
+                        unitConvertData.second = `≥ ${fts(value.min)}/s`;
+                        unitConvertData.frame = `≥ ${value.min}/f`;
+                    } else {
+                        unitConvertData.second = `${fts(value.min)}/s ~ ${fts(value.max)}/s`;
+                        unitConvertData.frame = `${value.min}/f ~ ${value.max}/f`;
+                    }
+                }
+                await loadTr("manaChargeSpeed", unitConvertData);
+            },
+            /**
+             * 加载`散射角度`面板属性
+             * @param {Number|{min:Number,max:Number}} value 
+             * @param {Boolean} [needSign] 
+             */
+            async _spreadDegrees(value, needSign = false) {
+                let content;
+                if (typeof value === "number") {
+                    content = ged(value, needSign);
+                } else if (typeof value === "object") {
+                    if (value.min === -Infinity) {
+                        content = `≤ ${ged(value.max, needSign)}`;
+                    } else if (value.max === Infinity) {
+                        content = `≥ ${ged(value.min, needSign)}`;
+                    } else {
+                        content = `${ged(value.min, needSign)} ~ ${ged(value.max, needSign)}`;
+                    }
+                }
+                await loadTr("spreadDegrees", content);
+            },
+            /**
+             * 加载`投射物速度`|`投射物速度倍数`面板属性
+             * @param {"speed"|"speedMultiplier"} type 
+             * @param {Number|{min:Number,max:Number}} value 
+             * @param {Boolean} [needSign] 
+             */
+            async _speed(type, value, needSign = false) {
+                let content;
+                if (typeof value === "object") {
+                    if (value.min === -Infinity) content = `≤ ${value.max}`;
+                    else if (value.max === Infinity) content = `≥ ${value.min}`;
+                    else if (value.min !== value.max) content = `${value.min} ~ ${value.max}`;
+                    else content = `${value.min}`;
+                }
+                if (needSign) content = `× ${content}`;
+                await loadTr(type, content);
+            },
+            /**
+             * 加载`暴击率`面板属性
+             * @param {Number} value 
+             */
+            async _damageCriticalChance(value) {
+                await loadTr("damageCriticalChance", `${aps(value)}%`);
+            },
+            /**
+             * 加载`最大使用次数`|`剩余使用次数`面板属性
+             * @param {"maxUse"|"remainingUse"} type 
+             * @param {{max:Number,remaining:Number?,neverUnlimited:Boolean}} value 
+             */
+            async _timesUsed(type, value) {
+                const content = document.createElement("data");
+                if (value.neverUnlimited) {
+                    content.classList.add("never-unlimited");
+                    content.title = "不可无限化";
+                } else {
+                    content.classList.add("unlimited");
+                    content.title = "可无限化";
+                }
+                if (type === "remainingUse") {
+                    content.append(`${value.remaining}/`);
+                }
+                content.append(`${value.max}`);
+                await loadTr(type, content);
+            },
+            /**
+             * 加载`抽取数`面板属性
+             * @param {Number|{min:Number?,max:Number?,common:Number?,hit:Number?,timer:{count:Number,delay:Number}?,death:Number?}} [value] 
+             */
+            async _draw(value = 1) {
+                /** @type {DocumentFragment|String} */
+                let content;
+                if (typeof value === "number") {
+                    content = value;//法杖固定抽取数
+                } else if (typeof value === "object") {
+                    if (value.min !== undefined) {//法杖不定数量抽取
+                        content = `${value.min} ~ ${value.max}`;
+                    } else { //法术多类型抽取
+                        const ul = document.createElement("ul");
+                        if (value.common) { // 普通抽取
+                            const li = document.createElement("li");
+                            li.append(await getPanelAttrIcon(panelAttrInfo.datas.get("draw_common")), value.common);
+                            ul.append(li);
+                        }
+                        if (value.hit) { // 碰撞抽取
+                            const li = document.createElement("li");
+                            li.append(await getPanelAttrIcon(panelAttrInfo.datas.get("draw_hit")), value.hit);
+                            li.title = "碰撞触发抽取";
+                            ul.append(li);
+                        }
+                        if (value.timer.count) { // 定时抽取
+                            const li = document.createElement("li");
+                            li.append(await getPanelAttrIcon(panelAttrInfo.datas.get("draw_timer")), `${value.timer.count} (${value.timer.delay}f)`);
+                            li.title = `定时触发抽取\n延迟:${value.timer.delay}f`;
+                            ul.append(li);
+                        }
+                        if (value.death) {
+                            const li = document.createElement("li");
+                            li.append(await getPanelAttrIcon(panelAttrInfo.datas.get("draw_death")), value.death);
+                            li.title = "失效触发抽取";
+                            ul.append(li);
+                        }
+                        content = ul;
+                    }
+
+                }
+                await loadTr("draw", content);
+            },
+            /**
+             * 加载`最大法力值`|`容量`面板属性
+             * @param {"manaMax"|"capacity"} type 
+             * @param {Number|{min:Number,max:Number}} value 
+             */
+            async _manaMaxOrCapacity(type, value) {
+                let content;
+                if (typeof value === "object") {
+                    if (value.min === -Infinity) content = `≤ ${value.max}`;
+                    else if (value.max === Infinity) content = `≥ ${value.min}`;
+                    else content = `${value.min} ~ ${value.max}`;
+                } else {
+                    content = `${value}`;
+                }
+                await loadTr(type, content);
+            },
+            /**
+             * 加载`伤害`|`承伤`面板属性
+             * @param {"projectileDamage"|"projectileDamageMultiplier"|"fireDamage"|"fireDamageMultiplier"|"iceDamage"|"iceDamageMultiplier"|"explosionDamage"|"explosionDamageMultiplier"|"sliceDamage"|"sliceDamageMultiplier"|"drillDamage"|"drillDamageMultiplier"|"electricityDamage"|"electricityDamageMultiplier"|"healingDamage"|"healingDamageMultiplier"|"meleeDamage"|"meleeDamageMultiplier"|"curseDamage"|"curseDamageMultiplier"|"holyDamage"|"holyDamageMultiplier"|"overeatingDamage"|"overeatingMultiplier"|"physicsHitDamage"|"physicsHitDamageMultiplier"|"poisonDamage"|"poisonDamageMultiplier"|"radioactiveDamage"|"radioactiveDamageMultiplier"} type 
+             * @param {Number|Array<Node>} value 
+             * @param {Boolean} [needSign] 
+             */
+            async _damage(type, value, needSign = false) {
+                let content;
+                if (needSign) content = `${aps(value)}`;  // 伤害修正
+                else content = `${value}`;//投射物本体伤害/承伤系数
+                await loadTr(type, content);
+            },
+            /**
+             * 加载`提供投射物`|`使用投射物`属性
+             * @param {"projectilesProvided"|"projectilesUsed"} type 
+             * @param {Array<Node>} value 
+             */
+            async _offerEntity(type, value) {
+                const ul = document.createElement("ul");
+                for (let i = 0; i < value.length; i++) {
+                    const li = value[i];
+                    li.setAttribute("tabindex", "0");// 无障碍 允许tab聚焦
+                    li.setAttribute("roles", "tab");
+                    li.addEventListener("click", panelInfoSwitchFn.byMouse);
+                    li.addEventListener("keydown", panelInfoSwitchFn.byKeyboard);
+                    ul.append(li);
+                }
+                value[0].click();//提供的数据会全部展示 此处点击以实现仅显示首个投射物信息
+                ul.className = "entities-tabpanel";
+                ul.setAttribute("roles", "tablist");// 无障碍标注
+                await loadTr(type, ul);
+            },
+            /**
+             * 加载自定义面板属性 内容自定义
+             * @param {"type"|"shuffle"|"draw"|"capacity"|"staticSpells"|"manaMax"|"manaChargeSpeed"|"manaDrain"|"maxUse"|"remainingUse"|"fireRateWait"|"reloadTime"|"spreadDegrees"|"projectileDamage"|"projectileDamageMultiplier"|"fireDamage"|"fireDamageMultiplier"|"iceDamage"|"iceDamageMultiplier"|"explosionDamage"|"explosionDamageMultiplier"|"sliceDamage"|"sliceDamageMultiplier"|"drillDamage"|"drillDamageMultiplier"|"electricityDamage"|"electricityDamageMultiplier"|"healingDamage"|"healingDamageMultiplier"|"meleeDamage"|"meleeDamageMultiplier"|"curseDamage"|"curseDamageMultiplier"|"holyDamage"|"holyDamageMultiplier"|"overeatingDamage"|"overeatingMultiplier"|"physicsHitDamage"|"physicsHitDamageMultiplier"|"poisonDamage"|"poisonDamageMultiplier"|"radioactiveDamage"|"radioactiveDamageMultiplier"|"damageCriticalChance"|"speed"|"speedMultiplier"|"explosionRadius"|"bounces"|"knockbackForce"|"lifetime"|"projectilesProvided"|"projectilesUsed"|"maxHp"|"recoilKnockback"|"draw_common"|"draw_hit"|"draw_timer"|"draw_death"|"infinite"|"maxStack"|"maxInPool"} type 
+             * @param {Array<Node>} value 
+             */
+            async _custom(type, value) {
+                const content = document.createDocumentFragment();
+                content.append(...value);
+                await loadTr(type, content);
+            },
+            /**
+             * 加载无需特殊处理的面板属性
+             * @param {"type"|"shuffle"|"draw"|"capacity"|"staticSpells"|"manaMax"|"manaChargeSpeed"|"manaDrain"|"maxUse"|"remainingUse"|"fireRateWait"|"reloadTime"|"spreadDegrees"|"projectileDamage"|"projectileDamageMultiplier"|"fireDamage"|"fireDamageMultiplier"|"iceDamage"|"iceDamageMultiplier"|"explosionDamage"|"explosionDamageMultiplier"|"sliceDamage"|"sliceDamageMultiplier"|"drillDamage"|"drillDamageMultiplier"|"electricityDamage"|"electricityDamageMultiplier"|"healingDamage"|"healingDamageMultiplier"|"meleeDamage"|"meleeDamageMultiplier"|"curseDamage"|"curseDamageMultiplier"|"holyDamage"|"holyDamageMultiplier"|"overeatingDamage"|"overeatingMultiplier"|"physicsHitDamage"|"physicsHitDamageMultiplier"|"poisonDamage"|"poisonDamageMultiplier"|"radioactiveDamage"|"radioactiveDamageMultiplier"|"damageCriticalChance"|"speed"|"speedMultiplier"|"explosionRadius"|"bounces"|"knockbackForce"|"lifetime"|"projectilesProvided"|"projectilesUsed"|"maxHp"|"recoilKnockback"|"draw_common"|"draw_hit"|"draw_timer"|"draw_death"|"infinite"|"maxStack"|"maxInPool"} type 
+             * @param {Number} value 
+             * @param {Boolean} needSign 
+             */
+            async _default(type, value, needSign = false) {
+                let content;
+                if (needSign) content = `${aps(value)}`;
+                else content = `${value}`;
+                await loadTr(type, content);
+            }
+        };
     })();
 
     /** @type {String} */

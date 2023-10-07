@@ -37,72 +37,59 @@ component.entity = class extends component.base {
             table.append(tbody);
             section.append(table);
 
-
             //#region 投射物组件
             if (pc) {
                 //#region 简单数据加载
                 /** @type {DamageData} */
                 const od = pc.offeredDamage; //简写伤害数据
-                if (od.projectile !== 0) loadAttr("projectileDamage", od.projectile, tbody);
-                if (od.melee !== 0) loadAttr("meleeDamage", od.melee, tbody);
-                if (od.electricity !== 0) loadAttr("electricityDamage", od.electricity, tbody);
-                if (od.fire !== 0) loadAttr("fireDamage", od.fire, tbody);
-                if (od.explosion !== 0) loadAttr("explosionDamage", od.explosion, tbody);
-                if (od.ice !== 0) loadAttr("iceDamage", od.ice, tbody);
-                if (od.slice !== 0) loadAttr("sliceDamage", od.slice, tbody);
-                if (od.healing !== 0) loadAttr("healingDamage", od.healing, tbody);
-                if (od.curse !== 0) loadAttr("curseDamage", od.curse, tbody);
-                if (od.holy !== 0) loadAttr("holyDamage", od.holy, tbody);
-                if (od.drill !== 0) loadAttr("drillDamage", od.drill, tbody);
-                if (od.radioactive !== 0) loadAttr("radioactiveDamage", od.radioactive, tbody);
-                if (pc.explosionRadius !== 0) loadAttr("explosionRadius", pc.explosionRadius, tbody);
-                if (pc.spreadDegrees !== 0) loadAttr("spreadDegrees", utilities.radianToDegree(pc.spreadDegrees), tbody);//投射物散射为弧度制!
-                if (pc.bounces !== 0) loadAttr("bounces", pc.bounces, tbody);
-                if (pc.knockbackForce !== 0) loadAttr("knockbackForce", pc.knockbackForce, tbody);
-                if (pc.minSpeed + pc.maxSpeed > 0) loadAttr("speed", { min: pc.minSpeed, max: pc.maxSpeed }, tbody);
-                loadAttr("lifetime", { base: pc.lifetime, fluctuation: pc.fluctuatingLifetime }, tbody);
+                loadAttr.setContainer(tbody);
+                if (od.projectile) await loadAttr._damage("projectileDamage", od.projectile);
+                if (od.melee) await loadAttr._damage("meleeDamage", od.melee);
+                if (od.electricity) await loadAttr._damage("electricityDamage", od.electricity);
+                if (od.fire) await loadAttr._damage("fireDamage", od.fire);
+                if (od.explosion) await loadAttr._damage("explosionDamage", od.explosion);
+                if (od.ice) await loadAttr._damage("iceDamage", od.ice);
+                if (od.slice) await loadAttr._damage("sliceDamage", od.slice);
+                if (od.healing) await loadAttr._damage("healingDamage", od.healing);
+                if (od.curse) await loadAttr._damage("curseDamage", od.curse);
+                if (od.holy) await loadAttr._damage("holyDamage", od.holy);
+                if (od.drill) await loadAttr._damage("drillDamage", od.drill);
+                if (od.radioactive) await loadAttr._damage("radioactiveDamage", od.radioactive);
+                if (pc.explosionRadius) await loadAttr._default("explosionRadius", pc.explosionRadius);
+                if (pc.spreadDegrees) await loadAttr._spreadDegrees(utilities.radianToDegree(pc.spreadDegrees));//投射物散射为弧度制!
+                if (pc.bounces) await loadAttr._default("bounces", pc.bounces);
+                if (pc.knockbackForce) await loadAttr._default("knockbackForce", pc.knockbackForce);
+                if (pc.minSpeed + pc.maxSpeed) await loadAttr._speed("speed", { min: pc.minSpeed, max: pc.maxSpeed });
+                await loadAttr._lifetime({ base: pc.lifetime, fluctuation: pc.fluctuatingLifetime });
                 //#endregion
 
                 //#region 提供实体数据加载
-                const relatedDataElements = [];
+                const relatedLiElements = [];
                 const relatedSectionElements = [];
                 for (let i = 0; i < pc.offeredEntities.length; i++) {
                     const entityData = pc.offeredEntities[i].entityData;
                     const num_min = pc.offeredEntities[i].num_min;
                     const num_max = pc.offeredEntities[i].num_max;
-
                     const section_ = await this.getDataSection(entityData);
                     section_.setAttribute("related-id", entityData.id);
                     section_.setAttribute("roles", "tabpanel");// 无障碍标注
-
                     relatedSectionElements.push(section_);
                     section.append(section_);
-
-                    const data = document.createElement("data");
-                    data.setAttribute("tabindex", "0");// 无障碍 允许tab聚焦
-                    data.setAttribute("roles", "tab");
-                    data.relatedDataElements = relatedDataElements;
-                    data.relatedSectionElements = relatedSectionElements;
-                    data.value = entityData.id;
-                    data.addEventListener("click", switchFn.byMouse);
-                    data.addEventListener("keydown", switchFn.byKeyboard);
-                    data.append(entityData.name);
+                    const li = document.createElement("li");
+                    li.setAttribute("related-id", entityData.id);
+                    li.relatedLiElements = relatedLiElements;
+                    li.relatedSectionElements = relatedSectionElements;
+                    li.append(entityData.name);
                     if (num_min === num_max) {
-                        if (num_min !== 0) data.append("(", num_min, ")");
+                        if (num_min !== 0) li.append(`(${num_min})`);
                     }
-                    else data.append("(", num_min, "~", num_max, ")");
-                    data.classList.add("not-in-cast-state");
-                    data.title = "不可享受施法块属性加成";
-                    data.classList.add("unselected");
-                    relatedDataElements.push(data);
+                    else li.append(`(${num_min}~${num_max})`);
+                    li.classList.add("not-in-cast-state");
+                    li.title = "不可享受施法块属性加成";
+                    li.classList.add("unselected");
+                    relatedLiElements.push(li);
                 }
-
-                if (relatedDataElements[0]) {
-                    relatedDataElements[0].click();
-                    // 投射物间接提供的投射物信息会全部展示 此处点击以实现仅显示首个投射物信息
-                    // relatedDataElements[0].relatedTbodyElements[0].querySelector("data")?.click();
-                    loadAttr("projectilesProvided", relatedDataElements, tbody);
-                }
+                if (relatedLiElements[0]) await loadAttr._offerEntity("projectilesProvided", relatedLiElements);
                 //#endregion
 
             }
@@ -110,7 +97,7 @@ component.entity = class extends component.base {
             //#region 伤害模型组件
             if (dmc) {
                 const dm = dmc.damageMultipler; // 简写承伤系数数据
-                loadAttr("maxHp", dmc.maxHp, tbody);
+                await loadAttr._default("maxHp", dmc.maxHp);
                 // 下次在搞
             }
             //#endregion

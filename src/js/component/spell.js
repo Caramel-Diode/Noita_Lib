@@ -67,7 +67,7 @@ component.spell = class extends component.base {
                 this.setAttribute("display", option.display);
             }
             if (option.instanceData) {
-                this.setAttribute("spell.remain",option.instanceData.remain.toString());
+                this.setAttribute("spell.remain", option.instanceData.remain.toString());
                 this.instanceData = option.instanceData;
             }
         }
@@ -84,7 +84,7 @@ component.spell = class extends component.base {
         const loadAttr = super.loadPanelAttr;
         const switchFn = super.panelInfoSwitchFn;
         /** 
-         * @param {SpellData} spellData
+         * @param {DB.spell} spellData
          * @returns {Promise<HTMLElement>}
          */
         return async spellData => {
@@ -99,89 +99,75 @@ component.spell = class extends component.base {
             const sd = spellData; //简写法术数据对象
             const dd = sd.damageMod; //简写伤害数据 damageData
 
-            //#region 基本信息
-            await loadAttr("type", this.#typeInfoMap.get(sd.type)[0], tbody_base); // 法术类型
-            await loadAttr("manaDrain", sd.manaDrain, tbody_base); // 法力消耗
-            if (sd.maxUse !== -1) await loadAttr("maxUse", { times: sd.maxUse, neverUnlimited: sd.neverUnlimited }, tbody_base); // 最大使用次数
-            if (sd.draw.common + sd.draw.hit + sd.draw.timer.count + sd.draw.death) await loadAttr("draw", sd.draw, tbody_base); // 抽取
-            // 先添加基本信息
-            section.append(table_base);
-            //#endregion
-
             //#region 投射物信息
-            const relatedDataElements = [];
+            const relatedLiElements = [];
             const relatedSectionElements = [];
             for (let i = 0; i < sd.offeredProjectiles.length; i++) {
                 const projectileData = sd.offeredProjectiles[i].projectileData;
                 const num_min = sd.offeredProjectiles[i].num_min;
                 const num_max = sd.offeredProjectiles[i].num_max;
                 const isInCastState = sd.offeredProjectiles[i].isInCastState;
-
                 const section_ = await component.entity.getDataSection(projectileData);
                 section_.setAttribute("related-id", projectileData.id);
                 section_.setAttribute("roles", "tabpanel");// 无障碍标注
-
                 relatedSectionElements.push(section_);
-                // 在修正信息和基本信息之间添加投射物信息
-                section.append(section_);
-
-                const data = document.createElement("data");
-                data.setAttribute("tabindex", "0");// 无障碍 允许tab聚焦
-                data.setAttribute("roles", "tab");
-                data.relatedDataElements = relatedDataElements;
-                data.relatedSectionElements = relatedSectionElements;
-                data.value = projectileData.id;
-                data.addEventListener("click", switchFn.byMouse);
-                data.addEventListener("keydown", switchFn.byKeyboard);
-                data.append(projectileData.name);
+                section.append(section_);// 在修正信息和基本信息之间添加投射物信息
+                const li = document.createElement("li");
+                li.setAttribute("related-id", projectileData.id);
+                li.relatedLiElements = relatedLiElements;
+                li.relatedSectionElements = relatedSectionElements;
+                li.append(projectileData.name);
                 if (num_min === num_max) {
-                    if (num_min !== 0) data.append("(", num_min, ")");
+                    if (num_min !== 0) li.append(`(${num_min})`);
                 }
-                else data.append("(", num_min, "~", num_max, ")");
+                else li.append(`(${num_min}~${num_max})`);
                 if (isInCastState) {
-                    data.classList.add("in-cast-state");
-                    data.title = "享受施法块属性加成";
+                    li.classList.add("in-cast-state");
+                    li.title = "享受施法块属性加成";
                 } else {
-                    data.classList.add("not-in-cast-state");
-                    data.title = "不享受施法块属性加成";
+                    li.classList.add("not-in-cast-state");
+                    li.title = "不享受施法块属性加成";
                 }
-                data.classList.add("unselected");
-                relatedDataElements.push(data);
-            }
-
-            if (relatedDataElements[0]) {
-                relatedDataElements[0].click();
-                // 投射物间接提供的投射物信息会全部展示 此处点击以实现仅显示首个投射物信息
-                // relatedDataElements[0].relatedTbodyElements[0].querySelector("data")?.click();
-                loadAttr("projectilesProvided", relatedDataElements, tbody_base);
+                li.classList.add("unselected");
+                relatedLiElements.push(li);
             }
             //#region 
 
             //#region 修正信息
-            if (dd.projectile !== 0) await loadAttr("projectileDamage", dd.projectile, tbody_modifier, true); // 投射物伤害
-            if (dd.melee !== 0) await loadAttr("meleeDamage", dd.melee, tbody_modifier, true); // 近战伤害
-            if (dd.electricity !== 0) await loadAttr("electricityDamage", dd.electricity, tbody_modifier, true); // 雷电伤害
-            if (dd.fire !== 0) await loadAttr("fireDamage", dd.fire, tbody_modifier, true); // 火焰伤害
-            if (dd.explosion !== 0) await loadAttr("explosionDamage", dd.explosion, tbody_modifier, true); // 爆炸伤害
-            if (dd.ice !== 0) await loadAttr("iceDamage", dd.ice, tbody_modifier, true); // 冰冻伤害
-            if (dd.slice !== 0) await loadAttr("sliceDamage", dd.slice, tbody_modifier, true); // 切割伤害
-            if (dd.healing !== 0) await loadAttr("healingDamage", dd.healing, tbody_modifier, true); // 治疗伤害
-            if (dd.curse !== 0) await loadAttr("curseDamage", dd.curse, tbody_modifier, true); // 诅咒伤害
-            if (dd.drill !== 0) await loadAttr("drillDamage", dd.drill, tbody_modifier, true); // 穿凿伤害
-            if (sd.explosionRadius !== 0) await loadAttr("explosionRadius", sd.explosionRadius, tbody_modifier, true); // 爆炸半径
-            if (sd.bounces !== 0) await loadAttr("bounces", sd.bounces, tbody_modifier, true); // 弹跳次数
-            if (sd.recoilKnockback !== 0) await loadAttr("recoilKnockback", sd.recoilKnockback, tbody_modifier, true); // 击退
-            if (sd.knockbackForce !== 0) await loadAttr("knockbackForce", sd.knockbackForce, tbody_modifier, true); // 后座力
-            if (sd.spreadDegrees !== 0) await loadAttr("spreadDegrees", sd.spreadDegrees, tbody_modifier, true); // 散射
-            if (sd.speedMultiplier !== 1) await loadAttr("speed", sd.speedMultiplier, tbody_modifier, true); // 投射物速度
-            if (sd.damageCriticalChance !== 0) await loadAttr("damageCriticalChance", sd.damageCriticalChance, tbody_modifier, true); // 暴击率
-            if (sd.fireRateWait !== 0) await loadAttr("fireRateWait", sd.fireRateWait, tbody_modifier, true); // 施放延迟
-            if (sd.reloadTime !== 0) await loadAttr("reloadTime", sd.reloadTime, tbody_modifier, true); // 充能时间
-            if (sd.lifetimeAdd !== 0) await loadAttr("lifetime", sd.lifetimeAdd, tbody_modifier, true); // 存在时间
-            // 最后添加修正信息
-            section.append(table_modifier);
+            await loadAttr.setContainer(tbody_modifier);
+            if (dd.projectile) await loadAttr._damage("projectileDamage", dd.projectile, true); // 投射物伤害
+            if (dd.melee) await loadAttr._damage("meleeDamage", dd.melee, true); // 近战伤害
+            if (dd.electricity) await loadAttr._damage("electricityDamage", dd.electricity, true); // 雷电伤害
+            if (dd.fire) await loadAttr._damage("fireDamage", dd.fire, true); // 火焰伤害
+            if (dd.explosion) await loadAttr._damage("explosionDamage", dd.explosion, true); // 爆炸伤害
+            if (dd.ice) await loadAttr._damage("iceDamage", dd.ice, true); // 冰冻伤害
+            if (dd.slice) await loadAttr._damage("sliceDamage", dd.slice, true); // 切割伤害
+            if (dd.healing) await loadAttr._damage("healingDamage", dd.healing, true); // 治疗伤害
+            if (dd.curse) await loadAttr._damage("curseDamage", dd.curse, true); // 诅咒伤害
+            if (dd.drill) await loadAttr._damage("drillDamage", dd.drill, true); // 穿凿伤害
+            if (sd.explosionRadius) await loadAttr._default("explosionRadius", sd.explosionRadius, true); // 爆炸半径
+            if (sd.bounces) await loadAttr._default("bounces", sd.bounces, true); // 弹跳次数
+            if (sd.recoilKnockback) await loadAttr._default("recoilKnockback", sd.recoilKnockback, true); // 击退
+            if (sd.knockbackForce) await loadAttr._default("knockbackForce", sd.knockbackForce, true); // 后座力
+            if (sd.spreadDegrees) await loadAttr._spreadDegrees(sd.spreadDegrees, true); // 散射
+            if (!sd.speedMultiplier) await loadAttr._speed("speed", sd.speedMultiplier, true); // 投射物速度
+            if (sd.damageCriticalChance) await loadAttr._damageCriticalChance(sd.damageCriticalChance); // 暴击率
+            if (sd.fireRateWait) await loadAttr._castCD("fireRateWait", sd.fireRateWait, true); // 施放延迟
+            if (sd.reloadTime) await loadAttr._castCD("reloadTime", sd.reloadTime, true); // 充能时间
+            if (sd.lifetimeAdd) await loadAttr._lifetime(sd.lifetimeAdd, true); // 存在时间
+            section.append(table_modifier);//添加到最后
             //#endregion
 
+            //#region 基本信息
+            loadAttr.setContainer(tbody_base);
+            await loadAttr._default("type", this.#typeInfoMap.get(sd.type)[0]); // 法术类型
+            await loadAttr._default("manaDrain", sd.manaDrain); // 法力消耗
+            if (sd.maxUse !== -1) await loadAttr._timesUsed("maxUse", { max: sd.maxUse, neverUnlimited: sd.neverUnlimited }); // 最大使用次数
+            if (sd.draw.common + sd.draw.hit + sd.draw.timer.count + sd.draw.death) await loadAttr._draw(sd.draw); // 抽取
+            if (relatedLiElements[0]) await loadAttr._offerEntity("projectilesProvided", relatedLiElements);
+            section.prepend(table_base);//添加到最前
+            //#endregion
+            
             return section;
         };
     })();
@@ -230,7 +216,7 @@ component.spell = class extends component.base {
             this.#shadowRoot.append(fragment);
             this.setAttribute("role", "button");
             this.setAttribute("tabindex", "0");
-            if(this.#needDefaultFn) {
+            if (this.#needDefaultFn) {
                 this.addEventListener("click", this.#IconClickFn);
             }
         }
@@ -284,6 +270,7 @@ component.spell = class extends component.base {
             if (this.spellDatas.length > 1) { //仅有单个法术数据时不显示选项卡
                 const header = document.createElement("header");//视口容器 适配滚动条
                 const ol = document.createElement("ol");//选项卡
+                ol.className = "spells-tabpanel";
                 for (let i = 0; i < this.spellDatas.length; i++) {
                     const sd = this.spellDatas[i];
                     const li = document.createElement("li");
@@ -341,10 +328,10 @@ component.spell = class extends component.base {
             }
         }
         const spellRemain = this.getAttribute("spell.remain");
-        if(spellRemain !== null && spellRemain !== "") {
+        if (spellRemain !== null && spellRemain !== "") {
             this.instanceData.remain = Number(spellRemain);
         }
-        if(this.hasAttribute("no-default-click-fn")) {
+        if (this.hasAttribute("no-default-click-fn")) {
             this.#needDefaultFn = false;
         }
         if (this.#displayMode === "panel") this.#loadPanelContent();

@@ -1,5 +1,4 @@
 :host {
-    /* border: 3px solid transparent; */
     place-items: center stretch;
     place-content: center;
     padding: 20px !important;
@@ -7,14 +6,6 @@
     --c1: #948064;
     --c2: #B49F81;
     --c3: #0E0D0CF2;
-    /* ☆边框☆ 废弃 */
-    /* --t: 0 -3px var(--c1); */
-    /* background-color: var(--c3);
-    box-shadow:
-        6px 0 var(--t), 6px 3px var(--t), 0 6px var(--t), 3px 6px var(--t),
-        -6px 0 var(--t), -6px -3px var(--t), 0 -6px var(--t), -3px -6px var(--t),
-        3px 0 var(--c2), 0 3px var(--c2), 3px 3px var(--c2),
-        -3px 0 var(--c2), 0 -3px var(--c2), -3px -3px var(--c2); */
     --bg1: linear-gradient(var(--c1), var(--c1));
     --bg2: linear-gradient(var(--c2), var(--c2));
     --bg3: linear-gradient(var(--c3), var(--c3));
@@ -64,9 +55,12 @@ section:not([hidden]) {
     grid-area: attr;
 }
 
-:where(th, td)>canvas {
+:where(th, td, li)>canvas {
     width: 14px;
     height: 14px;
+}
+
+:where(th, td)>canvas {
     margin-right: 8px;
 }
 
@@ -95,7 +89,7 @@ td {
     white-space: nowrap;
 }
 
-data {
+.entities-tabpanel>li {
     cursor: pointer;
     --noita-cursor: pointer;
     margin-right: 6px;
@@ -105,7 +99,7 @@ data {
     --lg: linear-gradient(var(--mark-color), var(--mark-color));
 }
 
-data.selected {
+.entities-tabpanel>li.selected {
     ---foucs-bg1:
         var(--lg) left top/6px 2px no-repeat,
         var(--lg) left top/2px 6px no-repeat,
@@ -118,28 +112,26 @@ data.selected {
         var(---foucs-bg);
 }
 
-data.unselected {
+.entities-tabpanel>li.unselected {
     color: #999999;
     ---foucs-bg1:
         var(--lg) center bottom/10% 4px no-repeat,
         var(---foucs-bg);
 }
 
-data.in-cast-state {
+.in-cast-state {
     --mark-color: #339933;
 }
 
-data.not-in-cast-state {
+.not-in-cast-state {
     --mark-color: #993333;
 }
 
-
-
-data[tabindex]:is(:focus-visible, :hover) {
+.entities-tabpanel>li[tabindex]:is(:focus-visible, :hover) {
     --lg: linear-gradient(#00000000, #00000000);
 }
 
-:is(data, td, h1)[tabindex] {
+:is(li, td, h1)[tabindex] {
     --focus-scale: 0;
     --focus-color: #00000000;
     background: var(---foucs-bg1, var(---foucs-bg));
@@ -147,12 +139,10 @@ data[tabindex]:is(:focus-visible, :hover) {
     will-change: contents;
 }
 
-:is(data, td, h1)[tabindex]:is(:focus-visible, :hover) {
+:is(li, td, h1)[tabindex]:is(:focus-visible, :hover) {
     --focus-scale: 2;
     --focus-color: var(--mark-color, #FFFFFF);
     text-align: center;
-    /* 居然不能这么用 */
-    /* padding: inherit 12px; */
     padding-left: 12px;
     padding-right: 12px;
 }
