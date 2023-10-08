@@ -48,7 +48,7 @@ component.base = class extends HTMLElement {
     })();
 
     /** 
-     * 加载面板属性
+     * 获取面板属性加载器
      */
     static getPanelAttrLoader = (() => {
         /** @borrows utilities.frameToSecond as fts */
@@ -280,7 +280,6 @@ component.base = class extends HTMLElement {
              * @param {Boolean} [needSign] 
              */
             async _spreadDegrees(value, needSign = false) {
-                console.log(value);
                 let content;
                 if (typeof value === "number") {
                     content = ged(value, needSign);

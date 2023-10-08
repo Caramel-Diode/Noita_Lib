@@ -146,7 +146,7 @@ DB.entity = class {
             this.bloodMaterial_die = bloodMaterialList[0];
             this.bloodMaterial_hurt = bloodMaterialList[1] ?? this.bloodMaterial_die;
             this.corpseMaterial = corpseMaterial;
-            this.damageMultipler = new DamageData(damageMultipler);
+            this.damageMultipler = new DamageData(damageMultipler, 1);
         }
     };
     /** 动物行为组件 */

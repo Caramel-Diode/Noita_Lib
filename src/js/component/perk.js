@@ -50,10 +50,14 @@ component.perk = class extends component.base {
      * @returns {HTMLTableElement} 数据表
      */
     static getDataTable = perkData => {
+        // console.log(perkData);
         const table = document.createElement("table");
+        const tbody = document.createElement("tbody");
+        table.append(tbody);
         table.className = "attr-area";
-        super.getPanelAttrLoader("maxStack", perkData.maxStack, table); //堆叠极限
-        super.getPanelAttrLoader("maxInPool", perkData.maxInPool, table); //天赋池最大数量
+        const loader = super.getPanelAttrLoader(tbody);
+        loader._default("maxStack", perkData.maxStack); //堆叠极限
+        if (perkData.maxInPool) loader._default("maxInPool", perkData.maxInPool); //天赋池最大数量
         return table;
     };
 

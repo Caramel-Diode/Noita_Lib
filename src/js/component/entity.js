@@ -94,8 +94,23 @@ component.entity = class extends component.base {
             //#endregion
             //#region 伤害模型组件
             if (dmc) {
+                /** @type {DamageData} */
                 const dm = dmc.damageMultipler; // 简写承伤系数数据
                 loader._default("maxHp", dmc.maxHp);
+                if (dm.projectile !== 1) loader._damage("projectileDamageMultiplier", dm.projectile);
+                if (dm.melee !== 1) loader._damage("meleeDamageMultiplier", dm.melee);
+                if (dm.electricity !== 1) loader._damage("electricityDamageMultiplier", dm.electricity);
+                if (dm.fire !== 1) loader._damage("fireDamageMultiplier", dm.fire);
+                if (dm.explosion !== 1) loader._damage("explosionDamageMultiplier", dm.explosion);
+                if (dm.ice !== 1) loader._damage("iceDamageMultiplier", dm.ice);
+                if (dm.healing !== 1) loader._damage("healingDamageMultiplier", dm.healing);
+                if (dm.curse !== 1) loader._damage("curseDamageMultiplier", dm.curse);
+                if (dm.holy !== 1) loader._damage("holyDamageMultiplier", dm.holy);
+                if (dm.drill !== 1) loader._damage("drillDamageMultiplier", dm.drill);
+                if (dm.radioactive !== 1) loader._damage("radioactiveDamageMultiplier", dm.radioactive);
+                if (dm.physicsHit !== 1) loader._damage("physicsHitDamageMultiplier", dm.physicsHit);
+                if (dm.poison !== 1) loader._damage("poisonDamageMultiplier", dm.poison);
+                if (dm.overeating !== 1) loader._damage("overeatingMultiplier", dm.overeating);
                 // 下次在搞
             }
             //#endregion
