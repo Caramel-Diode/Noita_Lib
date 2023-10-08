@@ -21,7 +21,7 @@ const noitaLib = (() => {
      * `📁 数据库` 
      */
     const DB = {};
-    DB.base = class { static panelAttrIcons = utilities.base64ToImg("panelAttrIcon.png"); };
+    "db/base.js";
     DB.state = class { };
     "db/material.js";
     "db/entity.js";

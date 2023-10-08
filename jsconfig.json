@@ -5,6 +5,7 @@
       "checkJs": true
     },
     "include": [
+        "src/js/db/base.js",
         "src/js/db/entity.js",
         "src/js/db/material.js",
         "src/js/db/spell.js",

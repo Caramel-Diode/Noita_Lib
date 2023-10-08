@@ -6,7 +6,7 @@ component.wand = class extends component.base {
 
     #displayMode = undefined;
 
-    /** @type {DataWand} */
+    /** @type {DB.wand} */
     wandData = undefined;
 
     constructor(...option) {
@@ -117,27 +117,26 @@ component.wand = class extends component.base {
     };
 
     static getDataTable = (() => {
-        const loadAttr = super.loadPanelAttr;
         return async wandData => {
             const table = document.createElement("table");
             const tbody = document.createElement("tbody");
-            /** @type {DataWand} */
+            /** @type {DB.wand} */
             const wd = wandData;
-            loadAttr.setContainer(tbody);
-            loadAttr._default("shuffle", wd.shuffle ? "是" : "否");
-            loadAttr._draw("draw", wd.draw);
-            loadAttr._castCD("fireRateWait", wd.fireRateWait);
-            loadAttr._castCD("reloadTime", wd.reloadTime);
-            loadAttr._manaMaxOrCapacity("manaMax", wd.manaMax);
-            loadAttr._manaChargeSpeed("manaChargeSpeed", wd.manaChargeSpeed);
-            loadAttr._manaMaxOrCapacity("capacity", wd.capacity);
-            if (!wd.spreadDegrees) loadAttr._spreadDegrees("spreadDegrees", wd.spreadDegrees);
-            if (wd.speedMultiplier) loadAttr._speed("speedMultiplier", wd.speedMultiplier);
+            const loader = super.getPanelAttrLoader(tbody);
+            loader._default("shuffle", wd.shuffle ? "是" : "否");
+            loader._draw(wd.draw);
+            loader._castCD("fireRateWait", wd.fireRateWait);
+            loader._castCD("reloadTime", wd.reloadTime);
+            loader._manaMaxOrCapacity("manaMax", wd.manaMax);
+            loader._manaChargeSpeed(wd.manaChargeSpeed);
+            loader._manaMaxOrCapacity("capacity", wd.capacity);
+            if (wd.spreadDegrees) loader._spreadDegrees(wd.spreadDegrees);
+            if (wd.speedMultiplier) loader._speed("speedMultiplier", wd.speedMultiplier);
             if (wd.staticSpells.length > 0) {
                 const staticSpellList = document.createElement("ol");
                 staticSpellList.className = "static-spells";//标记为始终法术列表
                 this.#loadSpellListItems(staticSpellList, wd.staticSpells);
-                loadAttr._custom("staticSpells", [staticSpellList]);
+                loader._custom("staticSpells", [staticSpellList]);
             }
             table.append(tbody);
             return table;

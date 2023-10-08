@@ -25,8 +25,7 @@ component.entity = class extends component.base {
      * @returns {Promise<HTMLTableElement>}
      */
     static getDataSection = (() => {
-        const loadAttr = super.loadPanelAttr;
-        const switchFn = super.panelInfoSwitchFn;
+        // const loadAttr = super.getPanelAttrLoader;
         return /** @param {DB.entity} entityData */ async entityData => {
             const pc = entityData.projectileComponent;
             const dmc = entityData.damageModelComponent;
@@ -36,33 +35,10 @@ component.entity = class extends component.base {
             const tbody = document.createElement("tbody");
             table.append(tbody);
             section.append(table);
+            const loader = super.getPanelAttrLoader(tbody);
 
             //#region 投射物组件
             if (pc) {
-                //#region 简单数据加载
-                /** @type {DamageData} */
-                const od = pc.offeredDamage; //简写伤害数据
-                loadAttr.setContainer(tbody);
-                if (od.projectile) await loadAttr._damage("projectileDamage", od.projectile);
-                if (od.melee) await loadAttr._damage("meleeDamage", od.melee);
-                if (od.electricity) await loadAttr._damage("electricityDamage", od.electricity);
-                if (od.fire) await loadAttr._damage("fireDamage", od.fire);
-                if (od.explosion) await loadAttr._damage("explosionDamage", od.explosion);
-                if (od.ice) await loadAttr._damage("iceDamage", od.ice);
-                if (od.slice) await loadAttr._damage("sliceDamage", od.slice);
-                if (od.healing) await loadAttr._damage("healingDamage", od.healing);
-                if (od.curse) await loadAttr._damage("curseDamage", od.curse);
-                if (od.holy) await loadAttr._damage("holyDamage", od.holy);
-                if (od.drill) await loadAttr._damage("drillDamage", od.drill);
-                if (od.radioactive) await loadAttr._damage("radioactiveDamage", od.radioactive);
-                if (pc.explosionRadius) await loadAttr._default("explosionRadius", pc.explosionRadius);
-                if (pc.spreadDegrees) await loadAttr._spreadDegrees(utilities.radianToDegree(pc.spreadDegrees));//投射物散射为弧度制!
-                if (pc.bounces) await loadAttr._default("bounces", pc.bounces);
-                if (pc.knockbackForce) await loadAttr._default("knockbackForce", pc.knockbackForce);
-                if (pc.minSpeed + pc.maxSpeed) await loadAttr._speed("speed", { min: pc.minSpeed, max: pc.maxSpeed });
-                await loadAttr._lifetime({ base: pc.lifetime, fluctuation: pc.fluctuatingLifetime });
-                //#endregion
-
                 //#region 提供实体数据加载
                 const relatedLiElements = [];
                 const relatedSectionElements = [];
@@ -89,7 +65,29 @@ component.entity = class extends component.base {
                     li.classList.add("unselected");
                     relatedLiElements.push(li);
                 }
-                if (relatedLiElements[0]) await loadAttr._offerEntity("projectilesProvided", relatedLiElements);
+                //#endregion
+                //#region 简单数据加载
+                /** @type {DamageData} */
+                const od = pc.offeredDamage; //简写伤害数据
+                if (od.projectile) loader._damage("projectileDamage", od.projectile);
+                if (od.melee) loader._damage("meleeDamage", od.melee);
+                if (od.electricity) loader._damage("electricityDamage", od.electricity);
+                if (od.fire) loader._damage("fireDamage", od.fire);
+                if (od.explosion) loader._damage("explosionDamage", od.explosion);
+                if (od.ice) loader._damage("iceDamage", od.ice);
+                if (od.slice) loader._damage("sliceDamage", od.slice);
+                if (od.healing) loader._damage("healingDamage", od.healing);
+                if (od.curse) loader._damage("curseDamage", od.curse);
+                if (od.holy) loader._damage("holyDamage", od.holy);
+                if (od.drill) loader._damage("drillDamage", od.drill);
+                if (od.radioactive) loader._damage("radioactiveDamage", od.radioactive);
+                if (pc.explosionRadius) loader._default("explosionRadius", pc.explosionRadius);
+                if (pc.spreadDegrees) loader._spreadDegrees(utilities.radianToDegree(pc.spreadDegrees));//投射物散射为弧度制!
+                if (pc.bounces) loader._default("bounces", pc.bounces);
+                if (pc.knockbackForce) loader._default("knockbackForce", pc.knockbackForce);
+                if (pc.minSpeed + pc.maxSpeed) loader._speed("speed", { min: pc.minSpeed, max: pc.maxSpeed });
+                loader._lifetime({ base: pc.lifetime, fluctuation: pc.fluctuatingLifetime });
+                if (relatedLiElements[0]) loader._offerEntity("projectilesProvided", relatedLiElements);
                 //#endregion
 
             }
@@ -97,7 +95,7 @@ component.entity = class extends component.base {
             //#region 伤害模型组件
             if (dmc) {
                 const dm = dmc.damageMultipler; // 简写承伤系数数据
-                await loadAttr._default("maxHp", dmc.maxHp);
+                loader._default("maxHp", dmc.maxHp);
                 // 下次在搞
             }
             //#endregion

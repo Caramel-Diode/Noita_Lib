@@ -81,8 +81,6 @@ component.spell = class extends component.base {
      * @returns {Promise<HTMLElement>}
      */
     static getDataSection = (() => {
-        const loadAttr = super.loadPanelAttr;
-        const switchFn = super.panelInfoSwitchFn;
         /** 
          * @param {DB.spell} spellData
          * @returns {Promise<HTMLElement>}
@@ -134,40 +132,40 @@ component.spell = class extends component.base {
             //#region 
 
             //#region 修正信息
-            await loadAttr.setContainer(tbody_modifier);
-            if (dd.projectile) await loadAttr._damage("projectileDamage", dd.projectile, true); // 投射物伤害
-            if (dd.melee) await loadAttr._damage("meleeDamage", dd.melee, true); // 近战伤害
-            if (dd.electricity) await loadAttr._damage("electricityDamage", dd.electricity, true); // 雷电伤害
-            if (dd.fire) await loadAttr._damage("fireDamage", dd.fire, true); // 火焰伤害
-            if (dd.explosion) await loadAttr._damage("explosionDamage", dd.explosion, true); // 爆炸伤害
-            if (dd.ice) await loadAttr._damage("iceDamage", dd.ice, true); // 冰冻伤害
-            if (dd.slice) await loadAttr._damage("sliceDamage", dd.slice, true); // 切割伤害
-            if (dd.healing) await loadAttr._damage("healingDamage", dd.healing, true); // 治疗伤害
-            if (dd.curse) await loadAttr._damage("curseDamage", dd.curse, true); // 诅咒伤害
-            if (dd.drill) await loadAttr._damage("drillDamage", dd.drill, true); // 穿凿伤害
-            if (sd.explosionRadius) await loadAttr._default("explosionRadius", sd.explosionRadius, true); // 爆炸半径
-            if (sd.bounces) await loadAttr._default("bounces", sd.bounces, true); // 弹跳次数
-            if (sd.recoilKnockback) await loadAttr._default("recoilKnockback", sd.recoilKnockback, true); // 击退
-            if (sd.knockbackForce) await loadAttr._default("knockbackForce", sd.knockbackForce, true); // 后座力
-            if (sd.spreadDegrees) await loadAttr._spreadDegrees(sd.spreadDegrees, true); // 散射
-            if (!sd.speedMultiplier) await loadAttr._speed("speed", sd.speedMultiplier, true); // 投射物速度
-            if (sd.damageCriticalChance) await loadAttr._damageCriticalChance(sd.damageCriticalChance); // 暴击率
-            if (sd.fireRateWait) await loadAttr._castCD("fireRateWait", sd.fireRateWait, true); // 施放延迟
-            if (sd.reloadTime) await loadAttr._castCD("reloadTime", sd.reloadTime, true); // 充能时间
-            if (sd.lifetimeAdd) await loadAttr._lifetime(sd.lifetimeAdd, true); // 存在时间
+            let modifierLoader = super.getPanelAttrLoader(tbody_modifier);
+            if (dd.projectile) modifierLoader._damage("projectileDamage", dd.projectile, true); // 投射物伤害
+            if (dd.melee) modifierLoader._damage("meleeDamage", dd.melee, true); // 近战伤害
+            if (dd.electricity) modifierLoader._damage("electricityDamage", dd.electricity, true); // 雷电伤害
+            if (dd.fire) modifierLoader._damage("fireDamage", dd.fire, true); // 火焰伤害
+            if (dd.explosion) modifierLoader._damage("explosionDamage", dd.explosion, true); // 爆炸伤害
+            if (dd.ice) modifierLoader._damage("iceDamage", dd.ice, true); // 冰冻伤害
+            if (dd.slice) modifierLoader._damage("sliceDamage", dd.slice, true); // 切割伤害
+            if (dd.healing) modifierLoader._damage("healingDamage", dd.healing, true); // 治疗伤害
+            if (dd.curse) modifierLoader._damage("curseDamage", dd.curse, true); // 诅咒伤害
+            if (dd.drill) modifierLoader._damage("drillDamage", dd.drill, true); // 穿凿伤害
+            if (sd.explosionRadius) modifierLoader._default("explosionRadius", sd.explosionRadius, true); // 爆炸半径
+            if (sd.bounces) modifierLoader._default("bounces", sd.bounces, true); // 弹跳次数
+            if (sd.recoilKnockback) modifierLoader._default("recoilKnockback", sd.recoilKnockback, true); // 击退
+            if (sd.knockbackForce) modifierLoader._default("knockbackForce", sd.knockbackForce, true); // 后座力
+            if (sd.spreadDegrees) modifierLoader._spreadDegrees(sd.spreadDegrees, true); // 散射
+            if (!sd.speedMultiplier) modifierLoader._speed("speed", sd.speedMultiplier, true); // 投射物速度
+            if (sd.damageCriticalChance) modifierLoader._damageCriticalChance(sd.damageCriticalChance); // 暴击率
+            if (sd.fireRateWait) modifierLoader._castCD("fireRateWait", sd.fireRateWait, true); // 施放延迟
+            if (sd.reloadTime) modifierLoader._castCD("reloadTime", sd.reloadTime, true); // 充能时间
+            if (sd.lifetimeAdd) modifierLoader._lifetime(sd.lifetimeAdd, true); // 存在时间
             section.append(table_modifier);//添加到最后
             //#endregion
 
             //#region 基本信息
-            loadAttr.setContainer(tbody_base);
-            await loadAttr._default("type", this.#typeInfoMap.get(sd.type)[0]); // 法术类型
-            await loadAttr._default("manaDrain", sd.manaDrain); // 法力消耗
-            if (sd.maxUse !== -1) await loadAttr._timesUsed("maxUse", { max: sd.maxUse, neverUnlimited: sd.neverUnlimited }); // 最大使用次数
-            if (sd.draw.common + sd.draw.hit + sd.draw.timer.count + sd.draw.death) await loadAttr._draw(sd.draw); // 抽取
-            if (relatedLiElements[0]) await loadAttr._offerEntity("projectilesProvided", relatedLiElements);
+            const baseLoader = super.getPanelAttrLoader(tbody_base);
+            baseLoader._default("type", this.#typeInfoMap.get(sd.type)[0]); // 法术类型
+            baseLoader._default("manaDrain", sd.manaDrain); // 法力消耗
+            if (sd.maxUse !== -1) baseLoader._timesUsed("maxUse", { max: sd.maxUse, neverUnlimited: sd.neverUnlimited }); // 最大使用次数
+            if (sd.draw.common + sd.draw.hit + sd.draw.timer.count + sd.draw.death) baseLoader._draw(sd.draw); // 抽取
+            if (relatedLiElements[0]) baseLoader._offerEntity("projectilesProvided", relatedLiElements);
             section.prepend(table_base);//添加到最前
             //#endregion
-            
+
             return section;
         };
     })();
