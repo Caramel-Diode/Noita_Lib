@@ -124,11 +124,10 @@ DB.entity = class {
     /** 伤害模型组件 */
     static damageModelComponent = class {
         /** @type {Number} 最大生命 */maxHp;
-        // /** @type {Number} 呼吸需求 */airNeed;
         /** @type {Number} 氧气储备 */airInLungsMax;/* -1 代表无需呼吸 */
         /** @type {Array<String>} 有害材料 */damageMaterialList;
-        /** @type {String} 血液材料[受伤] */bloodMaterial_die;/* blood_fading */
-        /** @type {String} 血液材料[死亡] */bloodMaterial_hurt;/* blood_fading */
+        /** @type {String} 血液材料[受伤] */bloodMaterial_hurt;/* blood_fading */
+        /** @type {String} 血液材料[死亡] */bloodMaterial_die;
         /** @type {String} 尸体材料 */corpseMaterial;/* meat */
         /** @type {DamageData} 承伤倍率 */damageMultipler;
         constructor(
@@ -143,8 +142,8 @@ DB.entity = class {
             this.airInLungsMax = airInLungsMax;
             this.damageMaterialList = damageMaterialList;
             const bloodMaterialList = bloodMaterial.split(" ");
-            this.bloodMaterial_die = bloodMaterialList[0];
-            this.bloodMaterial_hurt = bloodMaterialList[1] ?? this.bloodMaterial_die;
+            this.bloodMaterial_hurt = bloodMaterialList[0];
+            this.bloodMaterial_die = bloodMaterialList[1] ?? "";
             this.corpseMaterial = corpseMaterial;
             this.damageMultipler = new DamageData(damageMultipler, 1);
         }

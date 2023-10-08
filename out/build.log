@@ -1,19 +1,19 @@
-2023/10/8 10:19:15
-#sum: 466373
+2023/10/9 03:35:19
+#sum: 467228
 js:
-    #all: 82593
+    #all: 83412
     index: 2416
-    db/base: 2896
-    db/entity: 4448
+    db/base: 3165
+    db/entity: 4428
     db/material: 150
     db/perk: 2119
     db/spell: 20174
     db/wand: 7367
-    component/base: 9001
+    component/base: 9098
     component/cursor: 1152
-    component/entity: 5582
+    component/entity: 5727
     component/perk: 3695
-    component/spell: 10253
+    component/spell: 10581
     component/wand: 4630
     other/consoleCSS: 303
     other/damageData: 1927
@@ -33,14 +33,14 @@ css:
     SpellElement_panel: 1349
     WandElement_panel: 1578
 json:
-    #all: 135697
+    #all: 135677
     entityData: 20250
     perkData: 7296
-    spellData: 76119
+    spellData: 76099
     wandTemplateData: 32032
 base64:
-    #all: 234348
-    panelAttrIcon: 560
+    #all: 234404
+    panelAttrIcon: 616
     perkIcon: 11560
     perkIcon_greedCurse: 328
     spellIcon: 57908

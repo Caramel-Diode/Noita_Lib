@@ -153,6 +153,10 @@ component.spell = class extends component.base {
             if (sd.fireRateWait) modifierLoader._castCD("fireRateWait", sd.fireRateWait, true); // 施放延迟
             if (sd.reloadTime) modifierLoader._castCD("reloadTime", sd.reloadTime, true); // 充能时间
             if (sd.lifetimeAdd) modifierLoader._lifetime(sd.lifetimeAdd, true); // 存在时间
+            if (sd.trailMaterial) modifierLoader._default("trailMaterial", sd.trailMaterial);// 提供轨迹
+            if (sd.trailMaterialAmount) modifierLoader._default("trailMaterialAmount", sd.trailMaterialAmount, true);// 轨迹浓度
+            if (sd.material) modifierLoader._default("material", sd.material);// 提供材料
+            if (sd.materialAmount) modifierLoader._default("materialAmount", sd.materialAmount, true);// 材料浓度
             section.append(table_modifier);//添加到最后
             //#endregion
 

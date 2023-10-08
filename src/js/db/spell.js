@@ -279,7 +279,7 @@ DB.spell = class {
     /** @type {DamageData} 伤害提升 */damageMod;
     /** @type {Number} 爆炸半径 */explosionRadius;
     /** @type {Number} 散射 */spreadDegrees;
-    /** @type {Number} 阵型角度 */patternDegrees;
+    /** @type {Number} 阵型分布 */patternDegrees;
     /** @type {Number} 投射物速度 */speedMultiplier;
     /** @type {Number} 投射物子速度 */childSpeedMultiplier;
     /** @type {Number} 存在时间 */lifetimeAdd;

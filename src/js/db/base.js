@@ -1,5 +1,5 @@
 DB.base = class {
-    
+
     static panelAttrInfo = class {
         static panelAttrIcons = utilities.base64ToImg("panelAttrIcon.png");
         /** @type {Number} */
@@ -70,6 +70,7 @@ DB.base = class {
             ["projectilesUsed", new this(34, "使用投射物")],
             // ( 35, "被动效果"),
             // ( 36, "友军伤害"),
+            ["bloodMaterial", new this(36, "血液材料")],
             ["maxHp", new this(37, "生命值")],
             // ( 38, "免疫能力"),
             // ( 39, "承伤系数"),
@@ -82,6 +83,12 @@ DB.base = class {
             ["infinite", new this(46, "无限")],
             ["maxStack", new this(47, "堆叠极限")],
             ["maxInPool", new this(48, "池最大含量")],
+            ["airInLungsMax", new this(49, "肺容量")],
+            ["patternDegrees", new this(50, "阵型分布")],
+            ["trailMaterial", new this(51, "提供轨迹")],
+            ["trailMaterialAmount", new this(52, "轨迹浓度")],
+            ["material", new this(53, "提供材料")],
+            ["materialAmount", new this(54, "材料浓度")],
         ]);
         async getIcon() {
             const canvas = document.createElement("canvas");
@@ -93,4 +100,4 @@ DB.base = class {
             return canvas;
         }
     };
-}
+};

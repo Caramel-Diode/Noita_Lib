@@ -173,7 +173,7 @@ component.base = class extends HTMLElement {
              * @param {Number|{min:Number,max:Number}} value 
              * @param {Boolean} [needSign] 
              */
-            async _castCD(type, value, needSign = false) {
+            _castCD(type, value, needSign = false) {
                 let unitConvertData = { second: "", frame: "" };
                 if (typeof value === "number") {
                     unitConvertData.second = fts(value);
@@ -216,7 +216,7 @@ component.base = class extends HTMLElement {
              * @param {Number|{base:Number,fluctuation:Number}} value 
              * @param {Boolean} [needSign] 
              */
-            async _lifetime(value, needSign = false) {
+            _lifetime(value, needSign = false) {
                 let unitConvertData = { second: "", frame: "" };
                 if (typeof value === "number") {
                     if (needSign) {
@@ -255,7 +255,7 @@ component.base = class extends HTMLElement {
              * 加载`法力恢复速度`面板属性
              * @param {Number|{min:Number,max:Number}} value 
              */
-            async _manaChargeSpeed(value) {
+            _manaChargeSpeed(value) {
                 let unitConvertData = { second: "", frame: "" };
                 if (typeof value === "number") {
                     unitConvertData.second = `${value}/s`;
@@ -279,7 +279,7 @@ component.base = class extends HTMLElement {
              * @param {Number|{min:Number,max:Number}} value 
              * @param {Boolean} [needSign] 
              */
-            async _spreadDegrees(value, needSign = false) {
+            _spreadDegrees(value, needSign = false) {
                 let content;
                 if (typeof value === "number") {
                     content = ged(value, needSign);
@@ -300,7 +300,7 @@ component.base = class extends HTMLElement {
              * @param {Number|{min:Number,max:Number}} value 
              * @param {Boolean} [needSign] 
              */
-            async _speed(type, value, needSign = false) {
+            _speed(type, value, needSign = false) {
                 let content;
                 if (typeof value === "object") {
                     if (value.min === -Infinity) content = `≤ ${value.max}`;
@@ -315,7 +315,7 @@ component.base = class extends HTMLElement {
              * 加载`暴击率`面板属性
              * @param {Number} value 
              */
-            async _damageCriticalChance(value) {
+            _damageCriticalChance(value) {
                 this.#loadTr("damageCriticalChance", `${aps(value)}%`);
             };
             /**
@@ -323,7 +323,7 @@ component.base = class extends HTMLElement {
              * @param {"maxUse"|"remainingUse"} type 
              * @param {{max:Number,remaining:Number?,neverUnlimited:Boolean}} value 
              */
-            async _timesUsed(type, value) {
+            _timesUsed(type, value) {
                 const content = document.createElement("data");
                 if (value.neverUnlimited) {
                     content.classList.add("never-unlimited");
@@ -386,7 +386,7 @@ component.base = class extends HTMLElement {
              * @param {"manaMax"|"capacity"} type 
              * @param {Number|{min:Number,max:Number}} value 
              */
-            async _manaMaxOrCapacity(type, value) {
+            _manaMaxOrCapacity(type, value) {
                 let content;
                 if (typeof value === "object") {
                     if (value.min === -Infinity) content = `≤ ${value.max}`;
@@ -403,7 +403,7 @@ component.base = class extends HTMLElement {
              * @param {Number|Array<Node>} value 
              * @param {Boolean} [needSign] 
              */
-            async _damage(type, value, needSign = false) {
+            _damage(type, value, needSign = false) {
                 let content;
                 if (needSign) content = `${aps(value)}`;  // 伤害修正
                 else content = `${value}`;//投射物本体伤害/承伤系数
@@ -414,7 +414,7 @@ component.base = class extends HTMLElement {
              * @param {"projectilesProvided"|"projectilesUsed"} type 
              * @param {Array<Node>} value 
              */
-            async _offerEntity(type, value) {
+            _offerEntity(type, value) {
                 const ul = document.createElement("ul");
                 for (let i = 0; i < value.length; i++) {
                     const li = value[i];
@@ -430,11 +430,23 @@ component.base = class extends HTMLElement {
                 this.#loadTr(type, ul);
             };
             /**
+             * 
+             * @param {String} value_hurt 
+             * @param {String} value_die 
+             */
+            _bloodMaterial(value_hurt, value_die) {
+                let content = value_hurt;
+                if (value_die !== value_hurt && value_die !== "") {
+                    content += ` ${value_die}`;
+                }
+                this.#loadTr("bloodMaterial", content);
+            };
+            /**
              * 加载自定义面板属性 内容自定义
              * @param {"type"|"shuffle"|"draw"|"capacity"|"staticSpells"|"manaMax"|"manaChargeSpeed"|"manaDrain"|"maxUse"|"remainingUse"|"fireRateWait"|"reloadTime"|"spreadDegrees"|"projectileDamage"|"projectileDamageMultiplier"|"fireDamage"|"fireDamageMultiplier"|"iceDamage"|"iceDamageMultiplier"|"explosionDamage"|"explosionDamageMultiplier"|"sliceDamage"|"sliceDamageMultiplier"|"drillDamage"|"drillDamageMultiplier"|"electricityDamage"|"electricityDamageMultiplier"|"healingDamage"|"healingDamageMultiplier"|"meleeDamage"|"meleeDamageMultiplier"|"curseDamage"|"curseDamageMultiplier"|"holyDamage"|"holyDamageMultiplier"|"overeatingDamage"|"overeatingMultiplier"|"physicsHitDamage"|"physicsHitDamageMultiplier"|"poisonDamage"|"poisonDamageMultiplier"|"radioactiveDamage"|"radioactiveDamageMultiplier"|"damageCriticalChance"|"speed"|"speedMultiplier"|"explosionRadius"|"bounces"|"knockbackForce"|"lifetime"|"projectilesProvided"|"projectilesUsed"|"maxHp"|"recoilKnockback"|"draw_common"|"draw_hit"|"draw_timer"|"draw_death"|"infinite"|"maxStack"|"maxInPool"} type 
              * @param {Array<Node>} value 
              */
-            async _custom(type, value) {
+            _custom(type, value) {
                 const content = document.createDocumentFragment();
                 content.append(...value);
                 this.#loadTr(type, content);
@@ -445,7 +457,7 @@ component.base = class extends HTMLElement {
              * @param {Number} value 
              * @param {Boolean} needSign 
              */
-            async _default(type, value, needSign = false) {
+            _default(type, value, needSign = false) {
                 let content;
                 if (needSign) content = `${aps(value)}`;
                 else content = `${value}`;

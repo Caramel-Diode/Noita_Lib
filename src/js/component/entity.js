@@ -111,6 +111,8 @@ component.entity = class extends component.base {
                 if (dm.physicsHit !== 1) loader._damage("physicsHitDamageMultiplier", dm.physicsHit);
                 if (dm.poison !== 1) loader._damage("poisonDamageMultiplier", dm.poison);
                 if (dm.overeating !== 1) loader._damage("overeatingMultiplier", dm.overeating);
+                loader._bloodMaterial(dmc.bloodMaterial_hurt, dmc.bloodMaterial_die);
+                if (dmc.airInLungsMax !== -1) loader._default("airInLungsMax", dmc.airInLungsMax);
                 // 下次在搞
             }
             //#endregion
