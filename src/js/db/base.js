@@ -68,11 +68,10 @@ DB.base = class {
             ["lifetime", new this(33, "存在时间")],
             ["projectilesProvided", new this(34, "提供投射物")],
             ["projectilesUsed", new this(34, "使用投射物")],
-            // ( 35, "被动效果"),
-            // ( 36, "友军伤害"),
+            ["passiveEffect", new this(35, "被动效果")],
             ["bloodMaterial", new this(36, "血液材料")],
             ["maxHp", new this(37, "生命值")],
-            // ( 38, "免疫能力"),
+            ["immunity", new this(38, "免疫能力")],
             // ( 39, "承伤系数"),
             ["recoilKnockback", new this(40, "后座力")],
             ["draw_common", new this(41, "抽取|普通")],
@@ -90,6 +89,7 @@ DB.base = class {
             ["material", new this(53, "提供材料")],
             ["materialAmount", new this(54, "材料浓度")],
         ]);
+
         async getIcon() {
             const canvas = document.createElement("canvas");
             canvas.setAttribute("aria-label", `面板属性图标:${this.name}`);// 无障碍标注

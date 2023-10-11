@@ -115,33 +115,34 @@ component.wand = class extends component.base {
             }
         }
     };
-
-    static getDataTable = (() => {
-        return async wandData => {
-            const table = document.createElement("table");
-            const tbody = document.createElement("tbody");
-            /** @type {DB.wand} */
-            const wd = wandData;
-            const loader = super.getPanelAttrLoader(tbody);
-            loader._default("shuffle", wd.shuffle ? "是" : "否");
-            loader._draw(wd.draw);
-            loader._castCD("fireRateWait", wd.fireRateWait);
-            loader._castCD("reloadTime", wd.reloadTime);
-            loader._manaMaxOrCapacity("manaMax", wd.manaMax);
-            loader._manaChargeSpeed(wd.manaChargeSpeed);
-            loader._manaMaxOrCapacity("capacity", wd.capacity);
-            if (wd.spreadDegrees) loader._spreadDegrees(wd.spreadDegrees);
-            if (wd.speedMultiplier) loader._speed("speedMultiplier", wd.speedMultiplier);
-            if (wd.staticSpells.length > 0) {
-                const staticSpellList = document.createElement("ol");
-                staticSpellList.className = "static-spells";//标记为始终法术列表
-                this.#loadSpellListItems(staticSpellList, wd.staticSpells);
-                loader._custom("staticSpells", [staticSpellList]);
-            }
-            table.append(tbody);
-            return table;
-        };
-    })();
+    /**
+     * 
+     * @param {DB.wand} wandData 
+     * @returns {HTMLElement}
+     */
+    static async getDataTable(wandData) {
+        const table = document.createElement("table");
+        const tbody = document.createElement("tbody");
+        const wd = wandData;
+        const loader = super.getPanelAttrLoader(tbody);
+        loader._default("shuffle", wd.shuffle ? "是" : "否");
+        loader._draw(wd.draw);
+        loader._castCD("fireRateWait", wd.fireRateWait);
+        loader._castCD("reloadTime", wd.reloadTime);
+        loader._manaMaxOrCapacity("manaMax", wd.manaMax);
+        loader._manaChargeSpeed(wd.manaChargeSpeed);
+        loader._manaMaxOrCapacity("capacity", wd.capacity);
+        if (wd.spreadDegrees) loader._spreadDegrees(wd.spreadDegrees);
+        if (wd.speedMultiplier !== 1) loader._speed("speedMultiplier", wd.speedMultiplier);
+        if (wd.staticSpells.length > 0) {
+            const staticSpellList = document.createElement("ol");
+            staticSpellList.className = "static-spells";//标记为始终法术列表
+            this.#loadSpellListItems(staticSpellList, wd.staticSpells);
+            loader._custom("staticSpells", [staticSpellList]);
+        }
+        table.append(tbody);
+        return table;
+    };
 
     async #loadIconContent() { };
 

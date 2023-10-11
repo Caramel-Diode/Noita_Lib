@@ -1,20 +1,20 @@
-2023/10/9 03:35:19
-#sum: 467228
+2023/10/11 14:10:32
+#sum: 467437
 js:
-    #all: 83412
+    #all: 83577
     index: 2416
-    db/base: 3165
+    db/base: 3236
     db/entity: 4428
     db/material: 150
     db/perk: 2119
     db/spell: 20174
     db/wand: 7367
-    component/base: 9098
+    component/base: 9122
     component/cursor: 1152
-    component/entity: 5727
+    component/entity: 5757
     component/perk: 3695
-    component/spell: 10581
-    component/wand: 4630
+    component/spell: 10636
+    component/wand: 4615
     other/consoleCSS: 303
     other/damageData: 1927
     other/runtimeEnvironment: 55
@@ -33,10 +33,10 @@ css:
     SpellElement_panel: 1349
     WandElement_panel: 1578
 json:
-    #all: 135677
-    entityData: 20250
+    #all: 135721
+    entityData: 20255
     perkData: 7296
-    spellData: 76099
+    spellData: 76138
     wandTemplateData: 32032
 base64:
     #all: 234404
