@@ -20,29 +20,27 @@
 
 ul,
 ol {
-    display: flex;
-    list-style: none;
     gap: 5px;
 }
 
-:where(ul, ol):hover noita-spell::part(tape) {
+:hover noita-spell::part(tape) {
     animation-play-state: paused;
 }
 
-.static-spells>li {
+li {
     display: grid;
     place-content: center;
     place-items: center;
-    height: 40px;
-    width: 40px;
+    height: var(--size);
+    width: var(--size);
+}
+
+.static-spells>li {
+    --size: 40px;
 }
 
 .dynamic-spells>li {
-    display: grid;
-    place-content: center;
-    place-items: center;
-    height: 50px;
-    width: 50px;
+    --size: 50px;
     --c0: #00000000;
     --c1: #3D302BDA;
     --0: var(--c0) 0;
@@ -59,19 +57,15 @@ ol {
         var(--S) left var(--v),
         var(--S) right var(--v),
         linear-gradient(var(--c1), var(--c1)) center/ 88% 88% no-repeat;
-    padding: 5px;
 }
 
 /* 可选位置 */
-li.optional>noita-spell {
+.optional>noita-spell {
     animation: fade 0.7s ease-out infinite alternate;
+    opacity: 1;
 }
 
 @keyframes fade {
-    0% {
-        opacity: 1;
-    }
-
     100% {
         opacity: 0.5;
     }

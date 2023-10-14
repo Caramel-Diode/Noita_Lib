@@ -19,7 +19,6 @@
         var(--bg2) left top/var(--h2), var(--bg2) left top/var(--v2),
         var(--bg2) right bottom/var(--h2), var(--bg2) right bottom/var(--v2),
         var(--bg3) center/calc(100% - 6px) calc(100% - 6px) no-repeat;
-    /* transition: all 100ms linear; */
 }
 
 :host(:hover),
@@ -55,12 +54,9 @@ section:not([hidden]) {
     grid-area: attr;
 }
 
-:where(th, td, li)>canvas {
+.attr-icon {
     width: 14px;
     height: 14px;
-}
-
-:where(th, td)>canvas {
     margin-right: 8px;
 }
 
@@ -72,11 +68,11 @@ td {
     width: auto;
 }
 
-td.unlimited {
+.unlimited {
     color: #339933;
 }
 
-td.never-unlimited {
+.never-unlimited {
     color: #993333;
 }
 
@@ -89,14 +85,23 @@ td {
     white-space: nowrap;
 }
 
+ul,
+ol {
+    display: flex;
+    list-style: none;
+}
+
+.entities-tabpanel {
+    gap: 6px;
+}
+
 .entities-tabpanel>li {
     cursor: pointer;
     --noita-cursor: pointer;
-    margin-right: 6px;
     padding: 4px;
     transition: all 300ms linear 0ms;
     border-radius: 2px;
-    --lg: linear-gradient(var(--mark-color), var(--mark-color));
+    --lg: linear-gradient(to right, var(--mark-color), var(--mark-color));
 }
 
 .entities-tabpanel>li.selected {
@@ -128,7 +133,7 @@ td {
 }
 
 .entities-tabpanel>li[tabindex]:is(:focus-visible, :hover) {
-    --lg: linear-gradient(#00000000, #00000000);
+    --lg: linear-gradient(to right, #00000000, #00000000);
 }
 
 :is(li, td, h1)[tabindex] {
@@ -145,4 +150,10 @@ td {
     text-align: center;
     padding-left: 12px;
     padding-right: 12px;
+}
+
+p {
+    line-height: 30px;
+    grid-area: desc;
+    max-width: 400px;
 }

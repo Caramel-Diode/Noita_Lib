@@ -1,8 +1,6 @@
 :host {
     grid-template: 'main' 40px/40px;
-    height: 40px;
-    width: 40px;
-    overflow: hidden;
+    --size: 40px;
 }
 
 canvas {
@@ -11,10 +9,6 @@ canvas {
 }
 
 @keyframes carousel {
-    0% {
-        transform: translate(0, 0);
-    }
-
     100% {
         transform: translate(0, -100%);
     }
@@ -38,6 +32,7 @@ ol {
     flex-wrap: nowrap;
     width: 40px;
     height: calc(var(--amount) * 40px);
+    transform: translate(0, 0);
     animation-name: carousel;
     animation-timing-function: steps(var(--amount));
     animation-duration: calc(var(--amount) * 1s);
@@ -86,7 +81,7 @@ li {
         var(--b);
 }
 
-:host(.no-border) li{
+:host(.no-border) li {
     background: none;
 }
 

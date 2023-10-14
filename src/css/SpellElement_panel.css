@@ -20,9 +20,6 @@ header {
 
 ol,
 ul {
-    display: flex;
-    list-style: none;
-    gap: 5px;
     width: fit-content;
     place-content: center;
 }
@@ -32,10 +29,10 @@ li {
     width: fit-content;
     place-content: center;
     place-items: center;
-    gap: 3px;
 }
 
 .spells-tabpanel {
+    gap: 5px;
     max-height: 60px;
 }
 
@@ -46,6 +43,7 @@ li {
     min-height: 20px;
     padding: 0 3px 6px 3px;
     margin: 0 0 10px 0;
+    gap: 3px;
     background: linear-gradient(to right, var(--line-color), var(--line-color)) left bottom/ 100% 2px no-repeat;
     cursor: pointer;
     --noita-cursor: pointer;
@@ -60,7 +58,7 @@ li {
     --line-color: #FFFF55;
 }
 
-.spells-tabpanel>li:where(:hover, :focus-within) {
+.spells-tabpanel>li:is(:hover, :focus-within) {
     color: #FFFF55;
 }
 
@@ -81,7 +79,7 @@ main {
     place-content: center;
     grid-template:
         'name . icon' 30px
-        'description . icon' auto
+        'desc . icon' auto
         '. . icon' 14px
         'attr . icon' 1fr
         /auto 20px 80px;
@@ -92,10 +90,4 @@ main>canvas {
     grid-area: icon;
     width: 80px;
     height: 80px;
-}
-
-p {
-    line-height: 30px;
-    grid-area: description;
-    max-width: 400px;
 }
