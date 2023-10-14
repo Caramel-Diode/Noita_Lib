@@ -249,7 +249,7 @@ DB.spell = class {
 
 
         /** @type {Array<DB.spell>} 生成需要解锁法术 */
-        spawnRequiresFlag: [],
+        spawnRequiresFlag: new Set(),
     };
     /**
      * ⚪️ 空法术  
