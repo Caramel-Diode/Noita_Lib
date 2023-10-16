@@ -14,10 +14,10 @@ DB.material = class {
     /** @type {Number} 血量 */ hp;
     /** @type {Number} 血量 */ fireHp;
 
-    constructor(dataArray) {
-        this.id = dataArray[0];
-        this.name = dataArray[1];
-        this.type = dataArray[2];
+    constructor(datas) {
+        this.id = datas[0];
+        this.name = datas[1];
+        this.type = datas[2];
 
     }
 }

@@ -1,17 +1,17 @@
 /** [实体数据库](entity.js) */
 DB.entity = class {
     static offeredEntityData = class {
-        /** @type {DB.entity} 实体数据 */ entityData;
-        /** @type {Number} 最小数量 */ num_min;
-        /** @type {Number} 最大数量 */ num_max;
         constructor(entityId, num_min, num_max) {
+            /** @type {DB.entity} 实体数据 */
             this.entityData = DB.entity.queryById(entityId);
+            /** @type {Number} 最小数量 */
             this.num_min = num_min;
+            /** @type {Number} 最大数量 */
             this.num_max = num_max;
-        };
+        }
         /**
          * 获取提供实体数据数组
-         * @param {String} dataStr 
+         * @param {String} dataStr
          * @returns {Array<OfferedProjectileData>}
          */
         static createDatas = dataStr => {
@@ -29,129 +29,72 @@ DB.entity = class {
                         case ":":
                             current = entityNum_min;
                             break;
-                        case "~"/* 不定数量实体 */:
+                        case "~" /* 不定数量实体 */:
                             current = entityNum_max;
                             break;
-                        case " "/* 切换至下种实体 */:
+                        case " " /* 切换至下种实体 */:
                             if (entityNum_min.length > 0) projectileNum_min_number = parseInt(entityNum_min.join(""));
                             else projectileNum_min_number = 1;
                             if (entityNum_max.length > 0) projectileNum_max_number = parseInt(entityNum_max.join(""));
                             else projectileNum_max_number = projectileNum_min_number;
-                            result.push(Object.freeze(new this(
-                                entityId.join(""),
-                                projectileNum_min_number,
-                                projectileNum_max_number,
-                            )));
+                            result.push(Object.freeze(new this(entityId.join(""), projectileNum_min_number, projectileNum_max_number)));
                             entityId = [];
                             entityNum_min = [];
                             entityNum_max = [];
                             current = entityId;
                             break;
-                        default: current.push(char);
+                        default:
+                            current.push(char);
                     }
                 }
                 if (entityNum_min.length > 0) projectileNum_min_number = parseInt(entityNum_min.join(""));
                 else projectileNum_min_number = 1;
                 if (entityNum_max.length > 0) projectileNum_max_number = parseInt(entityNum_max.join(""));
                 else projectileNum_max_number = projectileNum_min_number;
-                result.push(Object.freeze(new this(
-                    entityId.join(""),
-                    projectileNum_min_number,
-                    projectileNum_max_number,
-                )));
+                result.push(Object.freeze(new this(entityId.join(""), projectileNum_min_number, projectileNum_max_number)));
             }
             return result;
         };
     };
     /** 投射物组件 */
     static projectileComponent = class {
-        /** @type {DamageData} 提供伤害 */offeredDamage;
-        /** @type {Number} 爆炸半径 */explosionRadius;
-        /** @type {Number} 散射角度 */spreadDegrees;
-        /** @type {Number} 存在时间 */lifetime;
-        /** @type {Number} 存在时间波动 */fluctuatingLifetime;
-        /** @type {Number} 最小速度 */minSpeed;
-        /** @type {Number} 最大速度 */maxSpeed;
-        /** @type {Number} 弹跳次数 */bounces;
-        /** @type {Number} 击退力度 */knockbackForce;
-        /** @type {Boolean} 命中友军 */friendlyFire;
-        /** @type {Boolean} 炸伤友军 */friendlyExplode;
-        /** @type {Boolean} 具有速度差伤害 */speedDiffDamage;
-        /** @type {Number} 物理推力系数 */physicsImpulseCoeff;
-        /** @type {String} 材料生成 */materialGenerate;
-        /** @type {Boolean} 能否爆炸 */canExplode;
-        /** @type {Number} 伤害频率 */damageFrequency;
-        /** @type {DB.entity.offeredEntityData} 提供投射物 */offeredEntities;
-
-        constructor(
-            offeredDamage,
-            explosionRadius,
-            spreadDegrees,
-            lifetime,
-            fluctuatingLifetime,
-            minSpeed,
-            maxSpeed,
-            bounces,
-            knockbackForce,
-            friendlyFire,
-            friendlyExplode,
-            speedDiffDamage,
-            physicsImpulseCoeff,
-            materialGenerate,
-            canExplode,
-            damageFrequency,
-            offeredEntities
-        ) {
-            this.offeredDamage = new DamageData(offeredDamage);
-            this.explosionRadius = explosionRadius;
-            this.spreadDegrees = spreadDegrees;
-            this.lifetime = lifetime;
-            this.fluctuatingLifetime = fluctuatingLifetime;
-            this.minSpeed = minSpeed;
-            this.maxSpeed = maxSpeed;
-            this.bounces = bounces;
-            this.knockbackForce = knockbackForce;
-            this.friendlyFire = friendlyFire;
-            this.friendlyExplode = friendlyExplode;
-            this.speedDiffDamage = speedDiffDamage;
-            this.physicsImpulseCoeff = physicsImpulseCoeff;
-            this.materialGenerate = materialGenerate;
-            this.canExplode = canExplode;
-            this.damageFrequency = damageFrequency;
-            this.offeredEntities = DB.entity.offeredEntityData.createDatas(offeredEntities);
+        constructor(offeredDamage, explosionRadius, spreadDegrees, lifetime, fluctuatingLifetime, minSpeed, maxSpeed, bounces, knockbackForce, friendlyFire, friendlyExplode, speedDiffDamage, physicsImpulseCoeff, materialGenerate, canExplode, damageFrequency, offeredEntities) {
+            /** @type {DamageData} 提供伤害 */ this.offeredDamage = new DamageData(offeredDamage);
+            /** @type {Number} 爆炸半径 */ this.explosionRadius = explosionRadius;
+            /** @type {Number} 散射角度 */ this.spreadDegrees = spreadDegrees;
+            /** @type {Number} 存在时间 */ this.lifetime = lifetime;
+            /** @type {Number} 存在时间波动 */ this.fluctuatingLifetime = fluctuatingLifetime;
+            /** @type {Number} 速度 */ this.speed = { min: minSpeed, max: maxSpeed };
+            /** @type {Number} 最小速度 */ this.minSpeed = minSpeed;
+            /** @type {Number} 最大速度 */ this.maxSpeed = maxSpeed;
+            /** @type {Number} 弹跳次数 */ this.bounces = bounces;
+            /** @type {Number} 击退力度 */ this.knockbackForce = knockbackForce;
+            /** @type {Boolean} 命中友军 */ this.friendlyFire = friendlyFire;
+            /** @type {Boolean} 炸伤友军 */ this.friendlyExplode = friendlyExplode;
+            /** @type {Boolean} 具有速度差伤害 */ this.speedDiffDamage = speedDiffDamage;
+            /** @type {Number} 物理推力系数 */ this.physicsImpulseCoeff = physicsImpulseCoeff;
+            /** @type {String} 材料生成 */ this.materialGenerate = materialGenerate;
+            /** @type {Boolean} 能否爆炸 */ this.canExplode = canExplode;
+            /** @type {Number} 伤害频率 */ this.damageFrequency = damageFrequency;
+            /** @type {DB.entity.offeredEntityData} 提供投射物 */ this.offeredEntities = DB.entity.offeredEntityData.createDatas(offeredEntities);
         }
     };
     /** 伤害模型组件 */
     static damageModelComponent = class {
-        /** @type {Number} 最大生命 */maxHp;
-        /** @type {Number} 氧气储备 */airInLungsMax;/* -1 代表无需呼吸 */
-        /** @type {Array<String>} 有害材料 */damageMaterialList;
-        /** @type {String} 血液材料[受伤] */bloodMaterial_hurt;/* blood_fading */
-        /** @type {String} 血液材料[死亡] */bloodMaterial_die;
-        /** @type {String} 尸体材料 */corpseMaterial;/* meat */
-        /** @type {DamageData} 承伤倍率 */damageMultipler;
-        constructor(
-            maxHp,
-            airInLungsMax,
-            damageMaterialList,
-            bloodMaterial,
-            corpseMaterial,
-            damageMultipler
-        ) {
-            this.maxHp = maxHp;
-            this.airInLungsMax = airInLungsMax;
-            this.damageMaterialList = damageMaterialList;
+        constructor(maxHp, airInLungsMax, damageMaterialList, bloodMaterial, corpseMaterial, damageMultipler) {
+            /** @type {Number} 最大生命 */ this.maxHp = maxHp;
+            /** @type {Number} 氧气储备 */ this.airInLungsMax = airInLungsMax; /* -1 代表无需呼吸 */
+            /** @type {Array<String>} 有害材料 */ this.damageMaterialList = damageMaterialList;
             const bloodMaterialList = bloodMaterial.split(" ");
-            this.bloodMaterial_hurt = bloodMaterialList[0];
-            this.bloodMaterial_die = bloodMaterialList[1] ?? "";
-            this.corpseMaterial = corpseMaterial;
-            this.damageMultipler = new DamageData(damageMultipler, 1);
+            /** @type {String} 血液材料 */ this.bloodMaterial = { hurt: bloodMaterialList[0], die: bloodMaterialList[1] ?? "" };
+            /** @type {String} 血液材料[受伤] */ this.bloodMaterial_hurt = bloodMaterialList[0];
+            /** @type {String} 血液材料[死亡] */ this.bloodMaterial_die = bloodMaterialList[1] ?? "";
+            /** @type {String} 尸体材料 */ this.corpseMaterial = corpseMaterial;
+            /** @type {DamageData} 承伤倍率 */ this.damageMultipler = new DamageData(damageMultipler, 1);
         }
     };
     /** 动物行为组件 */
-    static animalAIComponent = class {
-
-    };
+    static animalAIComponent = class {};
 
     static $NULL;
     static data = {
@@ -160,64 +103,31 @@ DB.entity = class {
         projectile: {
             usedBySpell: new Map()
         },
-        /** @type {Array<EntityData>} 被法术使用的投射物 */
-        projectile_spell: [],
-        /** @type {Array<EntityData>} 被敌人使用的投射物 */
-        projectile_enemy: [],
-        /** @type {Array<EntityData>} 所有的敌人 */
-        enemy_all: [],
-        /** @type {Array<EntityData>} 在进展中显示的敌人 */
-        enemy_progress: [],
+        /** @type {Array<DB.entity>} 被法术使用的投射物 */ projectile_spell: [],
+        /** @type {Array<DB.entity>} 被敌人使用的投射物 */ projectile_enemy: [],
+        /** @type {Array<DB.entity>} 所有的敌人 */ enemy_all: [],
+        /** @type {Array<DB.entity>} 在进展中显示的敌人 */ enemy_progress: []
     };
-    /** @type {String} `★主键` 实体标识符 */id;
-    /** @type {String} 名称 */name;
-    /** @type {DB.entity.projectileComponent} 投射物组件 */projectileComponent;
-    /** @type {DB.entity.damageModelComponent} 伤害模型组件 */damageModelComponent;
-    /** @type {DB.entity.animalAIComponent} 伤害模型组件 */animalAIComponent;
 
-    constructor(dataArray) {
-        /** @type {typeof DB.entity} */
-        const _ = this.constructor;
-        this.id = dataArray[0];
-        this.name = dataArray[1];
+    /** @param {Array} datas */
+    constructor(datas) {
+        /** @type {typeof DB.entity} */ const _ = this.constructor;
+        /** @type {String} `★主键` 实体标识符 */ this.id = datas[0];
+        /** @type {String} 名称 */ this.name = datas[1];
         let i = 2;
-        while (i < dataArray.length) {
-            if (dataArray[i] === "PC") {
-                this.projectileComponent = Object.freeze(new _.projectileComponent(
-                    dataArray[i + 1],
-                    dataArray[i + 2],
-                    dataArray[i + 3],
-                    dataArray[i + 4],
-                    dataArray[i + 5],
-                    dataArray[i + 6],
-                    dataArray[i + 7],
-                    dataArray[i + 8],
-                    dataArray[i + 9],
-                    dataArray[i + 10],
-                    dataArray[i + 11],
-                    dataArray[i + 12],
-                    dataArray[i + 13],
-                    dataArray[i + 14],
-                    dataArray[i + 15],
-                    dataArray[i + 16],
-                    dataArray[i + 17]
-                ));
+        while (i < datas.length) {
+            if (datas[i] === "PC") {
+                /** @type {DB.entity.projectileComponent} 投射物组件 */
+                this.projectileComponent = Object.freeze(new _.projectileComponent(datas[i + 1], datas[i + 2], datas[i + 3], datas[i + 4], datas[i + 5], datas[i + 6], datas[i + 7], datas[i + 8], datas[i + 9], datas[i + 10], datas[i + 11], datas[i + 12], datas[i + 13], datas[i + 14], datas[i + 15], datas[i + 16], datas[i + 17]));
                 i += 17;
-            }
-            else if (dataArray[i] === "DMC") {
-                console.log(dataArray[i + 7]);
-                this.damageModelComponent = Object.freeze(new _.damageModelComponent(
-                    dataArray[i + 1],
-                    dataArray[i + 2],
-                    dataArray[i + 3],
-                    dataArray[i + 4],
-                    dataArray[i + 5],
-                    dataArray[i + 6]
-                ));
+            } else if (datas[i] === "DMC") {
+                /** @type {DB.entity.damageModelComponent} 伤害模型组件 */
+                this.damageModelComponent = Object.freeze(new _.damageModelComponent(datas[i + 1], datas[i + 2], datas[i + 3], datas[i + 4], datas[i + 5], datas[i + 6]));
                 i += 6;
             }
             i++;
         }
+        /** @type {DB.entity.animalAIComponent} 伤害模型组件 */ this.animalAIComponent = {};
     }
     /**
      * 通过id查询唯一投射物

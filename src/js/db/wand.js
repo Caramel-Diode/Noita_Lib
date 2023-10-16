@@ -3,39 +3,24 @@ DB.wand = class {
     /** @type {Promise<HTMLImageElement>} 图标精灵图 */
     static iconImage = utilities.base64ToImg("wandIcon.png");
 
-    static #wandIconData = class WandIconData {
+    static #wandIconData = class {
+        /** @type {Number} 辅助变量 用于记录法杖图标起始位置 */ static #currentOrigin = 1;
+        /** @type {Array<DB.#wandIconData>} 模板数据表 用于匹配图标 */ static dataList = [];
 
-        /** @type {Number} 辅助变量 用于记录法杖图标起始位置 */
-        static #currentOrigin = 1;
-
-        /** @type {Array<WandIconData>} 模板数据表 用于匹配图标 */
-        static dataList = [];
-
-        /** @type {String} 名称 */name;
-        /** @type {Number} 图标起点 */iconOrigin;
-        /** @type {Number} 图标宽度 */iconWidth;
-        /** @type {Number} 容量 */capacity;
-        /** @type {Number} 抽取数 */draw;
-        /** @type {Number} 施放延迟 */fireRateWait;
-        /** @type {Number} 充能时间 */reloadTime;
-        /** @type {Boolean} 乱序 */shuffle;
-        /** @type {Number} 散射 */spreadDegrees;
-        /**
-         * @param {[String,Number,Number,Number,Number,Number,Number,Number]} dataArray 
-         */
-        constructor(dataArray) {
+        /** @param {Array} datas */
+        constructor(datas) {
             const _ = this.constructor;
-            this.name = dataArray[0];
-            this.iconOrigin = _.#currentOrigin;
-            this.iconWidth = dataArray[1];
+            /** @type {String} 名称 */ this.name = datas[0];
+            /** @type {Number} 图标起点 */ this.iconOrigin = _.#currentOrigin;
+            /** @type {Number} 图标宽度 */ this.iconWidth = datas[1];
             _.#currentOrigin += this.iconWidth;
-            this.capacity = dataArray[2];
-            this.draw = dataArray[3];
-            this.fireRateWait = dataArray[4];
-            this.reloadTime = dataArray[5];
-            this.shuffle = dataArray[6] === 1;
-            this.spreadDegrees = dataArray[7];
-        };
+            /** @type {Number} 容量 */ this.capacity = datas[2];
+            /** @type {Number} 抽取数 */ this.draw = datas[3];
+            /** @type {Number} 施放延迟 */ this.fireRateWait = datas[4];
+            /** @type {Number} 充能时间 */ this.reloadTime = datas[5];
+            /** @type {Boolean} 乱序 */ this.shuffle = datas[6] === 1;
+            /** @type {Number} 散射 */ this.spreadDegrees = datas[7];
+        }
 
         static init = () => {
             // data : 嵌入法杖模板数据
@@ -43,28 +28,10 @@ DB.wand = class {
             const datas = "db/data/wandTemplateData.js";
             for (let i = 0; i < datas.length; i++) {
                 this.dataList.push(Object.freeze(new this(datas[i])));
-            };
+            }
         };
-
     };
 
-    /**
-     * 法术序列解析
-     * @param {String} expression 表达式
-     * @returns {Array<DataSpell>}
-     * ---
-     * ## 语法规定
-     * ### 基本词素
-     * * `法术ID` 固定法术
-     * * `:` 重复次数声名符
-     * * `^` 剩余次数声明符
-     * * `法术重复次数`
-     * * `法术剩余次数`
-     * * `[]` 不定法术
-     * * ` ` 间隔符
-     * 
-     * 例: `BLOOD_MAGIC:2 BURST_X [#type_projectile|#type_staticProjectile|#type_material]:23` 血液魔法×2 穷尽施法 (投射物/静态投射物/材料)×23
-     */
     static #spellRecipeParse = (() => {
         const consoleError = (info, index, obj) => {
             const e = new SyntaxError(`${info} index:${index}`);
@@ -144,7 +111,12 @@ DB.wand = class {
             }
         };
         const Token = utilities.parse.token;
-        return /** @param {String} expressionStr */ expressionStr => {
+        /**
+         * 法术序列解析
+         * @param {String} expressionStr 表达式
+         * @returns {Array<DB.spell>}
+         */
+        return expressionStr => {
             if (expressionStr.length > 0) {
                 console.groupCollapsed("法术序列表达式解析: %c`%s`", "color:#25AFF3", expressionStr);
                 let currentToken = undefined;
@@ -156,12 +128,15 @@ DB.wand = class {
                 const EL = expressionStr.length;
                 for (let i = 0; i < EL; i++) {
                     const char = expressionStr[i];
-                    if (Token.regs.number.test(char)) { // 数字开头的token为重复次数
+                    if (Token.regs.number.test(char)) {
+                        // 数字开头的token为重复次数
                         if (currentToken === undefined) {
                             const lastToken = tokens.at(-1);
-                            if (lastToken.type === "COLON") { //上个token是":" 则该数字表示重复次数
+                            if (lastToken.type === "COLON") {
+                                //上个token是":" 则该数字表示重复次数
                                 currentToken = new Token(tokenEnum.TR, i);
-                            } else if (lastToken.type === "CARET") { //上个token是"^" 则该数字表示剩余次数
+                            } else if (lastToken.type === "CARET") {
+                                //上个token是"^" 则该数字表示剩余次数
                                 currentToken = new Token(tokenEnum.REMAIN, i);
                             } else {
                                 currentToken = new Token(tokenEnum.UND, i);
@@ -170,12 +145,11 @@ DB.wand = class {
                             }
                             currentToken.push(char);
                         } else currentToken.push(char);
-                    } else if (Token.regs.word.test(char)) { // 字母开头的token为法术ID或可替换法术表达式
+                    } else if (Token.regs.word.test(char)) {
+                        // 字母开头的token为法术ID或可替换法术表达式
                         if (currentToken === undefined) {
-                            if (tokens.at(-1)?.type === "BRACKET_SQUARE_LEFT")
-                                currentToken = new Token(tokenEnum.RSE, i);
-                            else
-                                currentToken = new Token(tokenEnum.SI, i);
+                            if (tokens.at(-1)?.type === "BRACKET_SQUARE_LEFT") currentToken = new Token(tokenEnum.RSE, i);
+                            else currentToken = new Token(tokenEnum.SI, i);
                         }
                         currentToken.push(char);
                     } else if (Token.regs.logicalOperator.test(char)) {
@@ -199,7 +173,7 @@ DB.wand = class {
                                 currentToken = undefined;
                             }
                         }
-                    } else if(char === "#") {
+                    } else if (char === "#") {
                         if (currentToken === undefined) {
                             if (tokens.at(-1)?.type === "BRACKET_SQUARE_LEFT") {
                                 currentToken = new Token(tokenEnum.RSE);
@@ -212,18 +186,26 @@ DB.wand = class {
                             console.log("法术标签必须出现在法术查询表达式中");
                             return [];
                         }
-                    }
-                    else {// 遇到以下字符需要结束当前token
+                    } else {
+                        // 遇到以下字符需要结束当前token
                         if (currentToken) {
                             currentToken.finish();
                             tokens.push(currentToken);
                             currentToken = undefined;
                         }
                         switch (char) {
-                            case ":": tokens.push(new Token(tokenEnum.COLON, i)); break;
-                            case "[": tokens.push(new Token(tokenEnum.BRACKET_SL, i)); break;
-                            case "]": tokens.push(new Token(tokenEnum.BRACKET_SR, i)); break;
-                            case "^": tokens.push(new Token(tokenEnum.CARET, i)); break;
+                            case ":":
+                                tokens.push(new Token(tokenEnum.COLON, i));
+                                break;
+                            case "[":
+                                tokens.push(new Token(tokenEnum.BRACKET_SL, i));
+                                break;
+                            case "]":
+                                tokens.push(new Token(tokenEnum.BRACKET_SR, i));
+                                break;
+                            case "^":
+                                tokens.push(new Token(tokenEnum.CARET, i));
+                                break;
                             default:
                                 let und = new Token(tokenEnum.UND, i);
                                 und.data = char;
@@ -299,62 +281,59 @@ DB.wand = class {
         };
     })();
 
-    /** @type {String} 名称 */name;
-    /** @type {Number} 图标起点 */iconOrigin;
-    /** @type {Number|{min:Number,max:Number}} 图标宽度 */iconWidth;
-    /** @type {Number|{min:Number,max:Number}} 容量 */capacity;
-    /** @type {Number|{min:Number,max:Number}} 抽取数 */draw;
-    /** @type {Number|{min:Number,max:Number}} 施放延迟 */fireRateWait;
-    /** @type {Number|{min:Number,max:Number}} 充能时间 */reloadTime;
-    /** @type {Boolean} 乱序 */shuffle;
-    /** @type {Number|{min:Number,max:Number}} 散射 */spreadDegrees;
-    /** @type {Number|{min:Number,max:Number}} 投射物速度 */speedMultiplier;
-    /** @type {Number|{min:Number,max:Number}} 法力恢复速度 */manaChargeSpeed;
-    /** @type {Number|{min:Number,max:Number}} 法力上限 */manaMax;
-    /** @type {Array<DataSpell>} 始终施放 */staticSpells;
-    /** @type {Array<DataSpell>} 活动法术 */dynamicSpells;
+    /** @typedef {Number|{min:Number,max:Number}} $Num 固定值或范围值 */
 
     /**
-     * @param {Array} dataArray 
+     * 范围值取中位数
+     * @param {$Num} value
+     * @returns {Number}
      */
-    constructor(dataArray) {
-        this.name = dataArray[0];
-        this.capacity = dataArray[2];
-        this.draw = dataArray[3];
-        this.fireRateWait = dataArray[4];
-        this.reloadTime = dataArray[5];
-        this.shuffle = dataArray[6];
-        this.spreadDegrees = dataArray[7];
-        this.speedMultiplier = dataArray[8];
-        this.manaChargeSpeed = dataArray[9];
-        this.manaMax = dataArray[10];
-        this.staticSpells = new.target.#spellRecipeParse(dataArray[11]);
-        this.dynamicSpells = new.target.#spellRecipeParse(dataArray[12]);
+    static #getMedian(value) {
+        if (typeof value === "number") return value;
+        else return (value.min + value.max) / 2;
+    }
+
+    /** @param {Array} datas */
+    constructor(datas) {
+        /** @type {typeof DB.wand} */
+        const _ = this.constructor;
+
+        /** @type {String} 名称 */ this.name = datas[0];
+        /** @type {$Num} 容量 */ this.capacity = datas[2];
+        /** @type {$Num} 抽取数 */ this.draw = datas[3];
+        /** @type {$Num} 施放延迟 */ this.fireRateWait = datas[4];
+        /** @type {$Num} 充能时间 */ this.reloadTime = datas[5];
+        /** @type {Boolean} 乱序 */ this.shuffle = datas[6];
+        /** @type {$Num} 投射物速度 */ this.spreadDegrees = datas[7];
+        /** @type {$Num} 投射物速度 */ this.speedMultiplier = datas[8];
+        /** @type {$Num} 法力恢复速度 */ this.manaChargeSpeed = datas[9];
+        /** @type {$Num} 法力上限 */ this.manaMax = datas[10];
+        /** @type {Array<DB.spell>} 始终施放 */ this.staticSpells = new.target.#spellRecipeParse(datas[11]);
+        /** @type {Array<DB.spell>} 活动施放 */ this.dynamicSpells = new.target.#spellRecipeParse(datas[12]);
         // 决定法杖图标
-        if (dataArray[1] === "AUTO") /* 根据属性自动决定 */ {
+        if (datas[1] === "AUTO") {
+            // 根据属性自动决定
+            const getMedian = _.#getMedian;
+            const fireRateWait = getMedian(this.fireRateWait),
+                draw = getMedian(this.draw),
+                capacity = getMedian(this.capacity),
+                spreadDegrees = getMedian(this.spreadDegrees),
+                reloadTime = getMedian(this.reloadTime);
 
-            let fireRateWait, draw, capacity, spreadDegrees, reloadTime;
-            if (typeof this.fireRateWait === "number") fireRateWait = this.fireRateWait;
-            else fireRateWait = (this.fireRateWait.min + this.fireRateWait.max) / 2;
-            if (typeof this.draw === "number") draw = this.draw;
-            else draw = (this.draw.min + this.draw.max) / 2;
-            if (typeof this.capacity === "number") capacity = this.capacity;
-            else capacity = (this.capacity.min + this.capacity.max) / 2;
-            if (typeof this.spreadDegrees === "number") spreadDegrees = this.spreadDegrees;
-            else spreadDegrees = (this.spreadDegrees.min + this.spreadDegrees.max) / 2;
-            if (typeof this.reloadTime === "number") reloadTime = this.reloadTime;
-            else reloadTime = (this.reloadTime.min + this.reloadTime.max) / 2;
+            const limit_fireRateWait = utilities.clamp((fireRateWait + 5) / 7, 0, 4),
+                limit_draw = utilities.clamp(draw - 1, 0, 2),
+                limit_capacity = utilities.clamp(capacity / 3 - 1, 0, 7),
+                limit_spreadDegrees = utilities.clamp(spreadDegrees / 5 - 1, 0, 2),
+                limit_reloadTime = utilities.clamp(reloadTime / 25 + 0.8, 0, 2);
 
-            const limit_fireRateWait = utilities.clamp((fireRateWait + 5) / 7, 0, 4);
-            const limit_draw = utilities.clamp(draw - 1, 0, 2);
-            const limit_capacity = utilities.clamp(capacity / 3 - 1, 0, 7);
-            const limit_spreadDegrees = utilities.clamp(spreadDegrees / 5 - 1, 0, 2);
-            const limit_reloadTime = utilities.clamp(reloadTime / 25 + 0.8, 0, 2);
             let bestScore = 1000;
             let score;
             let wandName;
-            for (const e of new.target.#wandIconData.dataList) {
-                score = Math.abs(limit_fireRateWait - e.fireRateWait) * 2/* 施放延迟 权重2 */;
+            const wid = _.#wandIconData.dataList;
+            const len = wid.length;
+            for (let i = 0; i < len; i++) {
+                const e = wid[i];
+                score = Math.abs(limit_fireRateWait - e.fireRateWait) * 2 /* 施放延迟 权重2 */;
                 score += Math.abs(limit_draw - e.draw) * 20 /* 施放数 权重 20 */;
                 score += Math.abs(this.shuffle - e.shuffle) * 30 /* 乱序 权重 30 */;
                 score += Math.abs(limit_capacity - e.capacity) * 5 /* 容量 权重 5 */;
@@ -363,18 +342,17 @@ DB.wand = class {
                 score = Math.floor(score);
                 if (score <= bestScore) {
                     bestScore = score;
-                    this.iconOrigin = e.iconOrigin;
-                    this.iconWidth = e.iconWidth;
+                    /** @type {Number} 图标起点 */ this.iconOrigin = e.iconOrigin;
+                    /** @type {Number} 图标宽度 */ this.iconWidth = e.iconWidth;
                     wandName = e.name;
                     if (score === 0 && utilities.draw(0.33)) break;
                 }
             }
-            if (this.name === "AUTO") this.name = wandName;
-        } else if (dataArray[1] !== "NONE") {
-
+            if (this.name === "AUTO") /** @type {String} 名称 */ this.name = wandName;
+        } else if (datas[1] !== "NONE") {
         }
-    };
+    }
     static init() {
         this.#wandIconData.init();
     }
-}
+};

@@ -276,97 +276,54 @@ DB.spell = class {
     static $NULL;
     /** @type {Number} 辅助变量 用于记录法术图标索引 */
     static #index = 0;
-    static #typeList = ["null", "projectile", "staticProjectile", "modifier", "drawMany", "material", "other", "utility", "passive"];
-    //#region 成员...
-    /** @type {Number} 图标索引 */ #_index;
-    /** @type {String} `★主键` 法术标识符 */ id;
-    /** @type {String} 中文译名 */ name;
-    /** @type {String} 基础描述 */ description;
-    /** @type {String} 额外描述 */ extraDescription;
-    /** @type {String} 法术类型 */ type;
-    /** @type {Number} 最大使用次数 (-1 无限) */ maxUse;
-    /** @type {Boolean} 禁止无限法术 */ neverUnlimited;
-    /** @type {Number} 法力消耗 */ manaDrain;
-    /** @type {SpawningData} 生成 */ spawningData;
-    /** @type {Number} 售价 */ price;
-    /** @type {Array<DB.spell.OfferedProjectileData>} 提供投射物 */ offeredProjectiles;
-    /** @type {String} 被动效果 */ passiveEffect;
-    /** @type {DrawingData} 提供抽取数 */ draw;
-    /** @type {Number} 施放延迟 */ fireRateWait;
-    /** @type {Number} 暴击率 */ damageCriticalChance;
-    /** @type {DamageData} 伤害提升 */ damageMod;
-    /** @type {Number} 爆炸半径 */ explosionRadius;
-    /** @type {Number} 散射 */ spreadDegrees;
-    /** @type {Number} 阵型分布 */ patternDegrees;
-    /** @type {Number} 投射物速度 */ speedMultiplier;
-    /** @type {Number} 投射物子速度 */ childSpeedMultiplier;
-    /** @type {Number} 存在时间 */ lifetimeAdd;
-    /** @type {Number} 弹跳次数 */ bounces;
-    /** @type {Number} 击退力度 */ recoilKnockback;
-    /** @type {Boolean} 启用友伤 */ friendlyFire;
-    /** @type {Number} **<未知>** 可能是废弃的削弱后座力的属性 */ dampening;
-    /** @type {Number} 抖屏力度 */ screenshake;
-    /** @type {Number} 放电能力 */ lightningCount;
-    /** @type {String} 材料类型 */ material;
-    /** @type {Number} 材料数量 */ materialAmount;
-    /** @type {String} 轨迹材料 */ trailMaterial;
-    /** @type {Number} 轨迹材料数量 */ trailMaterialAmount;
-    /** @type {Number} 受重力影响度 */ gravity;
-    /** @type {Number} **<装饰性>** 伤害粒子数量 */ goreParticles;
-    /** @type {Number} **<待确定>** 碰撞箱大小 */ ragdollFx;
-    /** @type {String} 附加实体 */ extraEntities;
-    /** @type {String} 游戏效果实体 */ gameEffectEntities;
-    /** @type {Number} 后座力 */ knockbackForce;
-    /** @type {Number} 充能时间 */ reloadTime;
-    /** @type {Function|null} 法术行为 */ action;
-    //#endregion
+    static #typeList = [/* 无 */ "null", /* 投射物 */ "projectile", /* 静态投射物 */ "staticProjectile", /* 修正 */ "modifier", /* 多重 */ "drawMany", /* 材料 */ "material", /* 其它 */ "other", /* 实用 */ "utility", /* 被动 */ "passive"];
 
-    constructor(dataArray) {
+    /** @param {Array} datas */
+    constructor(datas) {
         /** @type {typeof DB.spell} */
         const _ = this.constructor;
-        /** @type {Number} 图标索引 */
-        this.#_index = _.#index;
+        /** @type {Number} 图标索引 */ this.#_index = _.#index;
         _.#index++;
-        this.id = dataArray[0];
-        this.name = dataArray[1];
-        this.description = dataArray[2];
-        this.extraDescription = dataArray[3];
-        this.type = _.#typeList[dataArray[4]];
-        this.maxUse = dataArray[5];
-        this.neverUnlimited = dataArray[6] === 1;
-        this.manaDrain = dataArray[7];
-        this.spawningData = new _.spawningData(dataArray[8], dataArray[9], dataArray[40]);
-        this.price = dataArray[10];
-        this.offeredProjectiles = _.offeredProjectileData.createDatas(dataArray[11]);
-        this.passiveEffect = dataArray[12];
-        this.draw = new _.drawingData(dataArray[13]);
-        this.fireRateWait = dataArray[14];
-        this.damageCriticalChance = dataArray[15];
-        this.damageMod = Object.freeze(new DamageData(dataArray[16]));
-        this.explosionRadius = dataArray[17];
-        this.spreadDegrees = dataArray[18];
-        this.patternDegrees = dataArray[19];
-        this.speedMultiplier = dataArray[20];
-        this.childSpeedMultiplier = dataArray[21];
-        this.lifetimeAdd = dataArray[22];
-        this.bounces = dataArray[23];
-        this.knockbackForce = dataArray[24];
-        this.friendlyFire = dataArray[25] === 1;
-        this.dampening = dataArray[26];
-        this.screenshake = dataArray[27];
-        this.lightningCount = dataArray[28];
-        this.material = dataArray[29];
-        this.materialAmount = dataArray[30];
-        this.trailMaterial = dataArray[31];
-        this.trailMaterialAmount = dataArray[32];
-        this.gravity = dataArray[33];
-        this.goreParticles = dataArray[34];
-        this.ragdollFx = dataArray[35];
-        this.extraEntities = dataArray[36];
-        this.gameEffectEntities = dataArray[37];
-        this.recoilKnockback = dataArray[38];
-        this.reloadTime = dataArray[39];
-        this.action = dataArray[41];
+        /** @type {String} `★主键` 法术标识符 */ this.id = datas[0];
+        /** @type {String} 中文译名 */ this.name = datas[1];
+        /** @type {String} 基础描述 */ this.description = datas[2];
+        /** @type {String} 额外描述 */ this.extraDescription = datas[3];
+        /** @type {String} 法术类型 */ this.type = _.#typeList[datas[4]];
+        /** @type {Number} 最大使用次数 */ this.maxUse = datas[5]; // -1 代表无限
+        /** @type {Boolean} 禁止无限法术 */ this.neverUnlimited = datas[6] === 1;
+        /** @type {Number} 法力消耗 */ this.manaDrain = datas[7];
+        /** @type {DB.spell.spawningData} 生成数据 */ this.spawningData = new _.spawningData(datas[8], datas[9], datas[40]);
+        /** @type {Number} 售价 */ this.price = datas[10];
+        /** @type {Array<DB.spell.OfferedProjectileData>} 提供投射物 */ this.offeredProjectiles = _.offeredProjectileData.createDatas(datas[11]);
+        /** @type {String} 被动效果 */ this.passiveEffect = datas[12];
+        /** @type {DB.spell.drawingData} 提供抽取数 */ this.draw = new _.drawingData(datas[13]);
+        /** @type {Number} 施放延迟 */ this.fireRateWait = datas[14];
+        /** @type {Number} 暴击率 */ this.damageCriticalChance = datas[15];
+        /** @type {DamageData} 伤害提升 */ this.damageMod = Object.freeze(new DamageData(datas[16]));
+        /** @type {Number} 爆炸半径 */ this.explosionRadius = datas[17];
+        /** @type {Number} 散射 */ this.spreadDegrees = datas[18];
+        /** @type {Number} 阵型分布 */ this.patternDegrees = datas[19];
+        /** @type {Number} 投射物速度 */ this.speedMultiplier = datas[20];
+        /** @type {Number} 投射物子速度 */ this.childSpeedMultiplier = datas[21];
+        /** @type {Number} 存在时间 */ this.lifetimeAdd = datas[22];
+        /** @type {Number} 弹跳次数 */ this.bounces = datas[23];
+        /** @type {Number} 击退力度 */ this.knockbackForce = datas[24];
+        /** @type {Boolean} 启用友伤 */ this.friendlyFire = datas[25] === 1;
+        /** @type {Number} **<未知>** 可能是废弃的削弱后座力的属性 */ this.dampening = datas[26];
+        /** @type {Number} 抖屏力度 */ this.screenshake = datas[27];
+        /** @type {Number} 电弧施放数量 */ this.lightningCount = datas[28];
+        /** @type {String} 材料类型 */ this.material = datas[29];
+        /** @type {Number} 材料数量 */ this.materialAmount = datas[30];
+        /** @type {String} 轨迹材料 */ this.trailMaterial = datas[31];
+        /** @type {Number} 轨迹材料数量 */ this.trailMaterialAmount = datas[32];
+        /** @type {Number} 受重力影响度 */ this.gravity = datas[33];
+        /** @type {Number} **<装饰性>** 伤害粒子数量 */ this.goreParticles = datas[34];
+        /** @type {Number} **<待确定>** 碰撞箱大小 */ this.ragdollFx = datas[35];
+        /** @type {String} 附加实体 */ this.extraEntities = datas[36];
+        /** @type {String} 游戏效果实体 */ this.gameEffectEntities = datas[37];
+        /** @type {Number} 后座力 */ this.recoilKnockback = datas[38];
+        /** @type {Number} 充能时间 */ this.reloadTime = datas[39];
+        /** @type {Function|null} 法术行为 */ this.action = datas[41];
     }
     /** 获取图标 */
     async getIcon() {
@@ -399,11 +356,7 @@ DB.spell = class {
         if (result) return result;
         else return this.$NULL;
     };
-    /**
-     * 通过 `表达式` 获取法术数据
-     * @param {"#all"|"#type_projectile"|"#type_staticProjectile"|"#type_modifier"|"#type_drawMany"|"#type_material"|"#type_other"|"#type_utility"|"#type_passive"|"#level_0"|"#level_1"|"#level_2"|"#level_3"|"#level_4"|"#level_5"|"#level_6"|"#level_7"|"#level_10"|"#draw"|"#draw_common"|"#draw_hit"|"#draw_timer"|"#draw_death"|"#lifetime_mod"|"#lifetime_up"|"#lifetime_down"|"#mana_0"|"#mana_drainlowly"|"#mana_increase"|"#speed_mod"|"#damage_mod"|"#damage_mod_projectile"|"#damage_mod_melee"|"#damage_mod_electricity"|"#damage_mod_fire"|"#damage_mod_explosion"|"#damage_mod_ice"|"#damage_mod_slice"|"#damage_mod_healing"|"#damage_mod_curse"|"#damage_mod_drill"|"#damage_mod_holy"} expression 查询表达式
-     * @returns {Array<DB.spell>} 法术数据
-     */
+
     static queryByExpression = (() => {
         const consoleError = (info, index, obj) => {
             const e = new SyntaxError(`${info} index:${index}`);
@@ -654,7 +607,12 @@ DB.spell = class {
                     }
             }
         };
-        return /** @param {String} expressionStr */ expressionStr => {
+        /**
+         * 通过 `表达式` 获取法术数据
+         * @param {"#all"|"#type_projectile"|"#type_staticProjectile"|"#type_modifier"|"#type_drawMany"|"#type_material"|"#type_other"|"#type_utility"|"#type_passive"|"#level_0"|"#level_1"|"#level_2"|"#level_3"|"#level_4"|"#level_5"|"#level_6"|"#level_7"|"#level_10"|"#draw"|"#draw_common"|"#draw_hit"|"#draw_timer"|"#draw_death"|"#lifetime_mod"|"#lifetime_up"|"#lifetime_down"|"#mana_0"|"#mana_drainlowly"|"#mana_increase"|"#speed_mod"|"#damage_mod"|"#damage_mod_projectile"|"#damage_mod_melee"|"#damage_mod_electricity"|"#damage_mod_fire"|"#damage_mod_explosion"|"#damage_mod_ice"|"#damage_mod_slice"|"#damage_mod_healing"|"#damage_mod_curse"|"#damage_mod_drill"|"#damage_mod_holy"} expressionStr 查询表达式
+         * @returns {Array<DB.spell>} 法术数据
+         */
+        return expressionStr => {
             console.groupCollapsed("法术查询表达式解析: %c`%s`", "color:#25AFF3", expressionStr);
             let currentToken = undefined;
             console.groupCollapsed("🏷️ Tokenization");

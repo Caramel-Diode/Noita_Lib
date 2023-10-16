@@ -7,58 +7,38 @@ DB.perk = class {
         name_map: new Map()
     };
     /**
-     * ⚪️ 空天赋  
-     * @type {DB.perk} 
+     * ⚪️ 空天赋
+     * @type {DB.perk}
      */
     static $NULL;
-    /** @type {Number} 辅助变量 用于记录天赋图标索引 */
-    static #index = 0;
-    //#region 成员
-    /** @type {Number} 图标索引 */#_index;
-    /** @type {String} `★主键` 天赋标识符 */id;
-    /** @type {String} 中文译名 */name;
-    /** @type {String} 基础描述 */description;
-    /** @type {String} 类型 [特殊,普通,一次性,精粹] */type;
-    /** @type {Number} 堆叠极限 */maxStack;
-    /** @type {Number} 天赋池允许存在的最大数量 */maxInPool;
-    /** @type {String} 游戏效果 */gameEffect;
-    /** @type {Boolean} 敌人能否使用 */usableByEnemies;
-    //#endregion
+    /** @type {Number} 辅助变量 用于记录天赋图标索引 */ static #index = 0;
+    static #typeList = [/* 特殊 */ "null", /* 普通 */ "common", /* 一次性 */ "disposable", /* 精粹 */ "essence"];
 
-    constructor(dataArray) {
+    /** @param {Array} datas */
+    constructor(datas) {
         /** @type {typeof DB.perk} */
         const _ = this.constructor;
-        /** @type {Number} 图标索引 */
-        this.#_index = _.#index;
+        /** @type {Number} 图标索引 */ this.#_index = _.#index;
         _.#index++;
-        this.id = dataArray[0];
-        this.name = dataArray[1];
-        this.description = dataArray[2];
-        switch (dataArray[3]) {
-            case 0: this.type = "null"; break; //特殊
-            case 1: this.type = "common"; break; //普通
-            case 2: this.type = "disposable"; break; //一次性
-            case 3: this.type = "essence"; break; //精粹
-            default:
-                console.error("未知的天赋类型");
-                this.type = "undefined";
-        }
-        this.maxStack = dataArray[4];
-        this.maxInPool = dataArray[5];
-        this.gameEffect = dataArray[6];
-        this.usableByEnemies = dataArray[7] === 1;
-
-    };
+        /** @type {String} `★主键` 天赋标识符 */ this.id = datas[0];
+        /** @type {String} 中文译名 */ this.name = datas[1];
+        /** @type {String} 基础描述 */ this.description = datas[2];
+        /** @type {String} 类型 [特殊,普通,一次性,精粹] */ this.type = _.#typeList[datas[3]];
+        /** @type {Number} 堆叠极限 */ this.maxStack = datas[4];
+        /** @type {Number} 天赋池允许存在的最大数量 */ this.maxInPool = datas[5];
+        /** @type {String} 游戏效果 */ this.gameEffect = datas[6];
+        /** @type {Boolean} 敌人能否使用 */ this.usableByEnemies = datas[7] === 1;
+    }
 
     async getIcon() {
         const canvas = document.createElement("canvas");
         // canvas.ariaLabel BUG! Firefox浏览器下是无法让属性显示在html标签中的
-        canvas.setAttribute("aria-label", `天赋图标:${this.name}`);// 无障碍标注
+        canvas.setAttribute("aria-label", `天赋图标:${this.name}`); // 无障碍标注
         canvas.width = 12;
         canvas.height = 12;
         canvas.getContext("2d").drawImage(await this.constructor.iconImage, (this.#_index - 1) * 12, 0, 12, 12, 0, 0, 12, 12);
         return canvas;
-    };
+    }
 
     static queryById = id => {
         const result = this.data.id_map.get(id);
@@ -86,11 +66,11 @@ DB.perk = class {
         }
         // 特殊天赋 --- 贪婪诅咒
         const greedCurse = new this(["GREED_CURSE", "贪婪诅咒", "敌人会掉落3倍的黄金，但你要承受恐怖的诅咒！", 0, 128, 0, "", 0]);
-        this.#index --;
+        this.#index--;
         greedCurse.getIcon = async () => {
             const canvas = document.createElement("canvas");
             // canvas.ariaLabel BUG! Firefox浏览器下是无法让属性显示在html标签中的
-            canvas.setAttribute("aria-label", `天赋图标:${this.name}`);// 无障碍标注
+            canvas.setAttribute("aria-label", `天赋图标:${this.name}`); // 无障碍标注
             canvas.width = 16;
             canvas.height = 16;
             canvas.getContext("2d").drawImage(await this.iconImage_greedCurse, 0, 0, 16, 16, 0, 0, 16, 16);
@@ -100,5 +80,4 @@ DB.perk = class {
         this.data.id_map.set(greedCurse_freeze.id, greedCurse_freeze);
         this.data.name_map.set(greedCurse_freeze.name, greedCurse_freeze);
     }
-
 };
