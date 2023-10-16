@@ -277,12 +277,13 @@ DB.spell = class {
     /** @type {Number} 辅助变量 用于记录法术图标索引 */
     static #index = 0;
     static #typeList = [/* 无 */ "null", /* 投射物 */ "projectile", /* 静态投射物 */ "staticProjectile", /* 修正 */ "modifier", /* 多重 */ "drawMany", /* 材料 */ "material", /* 其它 */ "other", /* 实用 */ "utility", /* 被动 */ "passive"];
+    /** @type {Number} 图标索引 */ #_index;
 
     /** @param {Array} datas */
     constructor(datas) {
         /** @type {typeof DB.spell} */
         const _ = this.constructor;
-        /** @type {Number} 图标索引 */ this.#_index = _.#index;
+        this.#_index = _.#index;
         _.#index++;
         /** @type {String} `★主键` 法术标识符 */ this.id = datas[0];
         /** @type {String} 中文译名 */ this.name = datas[1];

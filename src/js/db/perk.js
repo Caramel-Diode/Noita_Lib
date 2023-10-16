@@ -13,12 +13,13 @@ DB.perk = class {
     static $NULL;
     /** @type {Number} 辅助变量 用于记录天赋图标索引 */ static #index = 0;
     static #typeList = [/* 特殊 */ "null", /* 普通 */ "common", /* 一次性 */ "disposable", /* 精粹 */ "essence"];
+    /** @type {Number} 图标索引 */ #_index;
 
     /** @param {Array} datas */
     constructor(datas) {
         /** @type {typeof DB.perk} */
         const _ = this.constructor;
-        /** @type {Number} 图标索引 */ this.#_index = _.#index;
+        this.#_index = _.#index;
         _.#index++;
         /** @type {String} `★主键` 天赋标识符 */ this.id = datas[0];
         /** @type {String} 中文译名 */ this.name = datas[1];
