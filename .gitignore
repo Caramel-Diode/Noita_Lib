@@ -2,3 +2,5 @@
 /.vscode/settings.json
 /temp
 /tool
+.prettierrc
+dsektop.ini
