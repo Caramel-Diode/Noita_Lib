@@ -58,15 +58,12 @@ DB.entity = class {
     };
     /** 投射物组件 */
     static projectileComponent = class {
-        constructor(offeredDamage, explosionRadius, spreadDegrees, lifetime, fluctuatingLifetime, minSpeed, maxSpeed, bounces, knockbackForce, friendlyFire, friendlyExplode, speedDiffDamage, physicsImpulseCoeff, materialGenerate, canExplode, damageFrequency, offeredEntities) {
+        constructor(offeredDamage, explosionRadius, spreadDegrees, lifetime_base, lifetime_fluctuation, speed_min, speed_max, bounces, knockbackForce, friendlyFire, friendlyExplode, speedDiffDamage, physicsImpulseCoeff, materialGenerate, canExplode, damageFrequency, offeredEntities) {
             /** @type {DamageData} 提供伤害 */ this.offeredDamage = new DamageData(offeredDamage);
             /** @type {Number} 爆炸半径 */ this.explosionRadius = explosionRadius;
             /** @type {Number} 散射角度 */ this.spreadDegrees = spreadDegrees;
-            /** @type {Number} 存在时间 */ this.lifetime = lifetime;
-            /** @type {Number} 存在时间波动 */ this.fluctuatingLifetime = fluctuatingLifetime;
-            /** @type {Number} 速度 */ this.speed = { min: minSpeed, max: maxSpeed };
-            /** @type {Number} 最小速度 */ this.minSpeed = minSpeed;
-            /** @type {Number} 最大速度 */ this.maxSpeed = maxSpeed;
+            /** @type {{base:Number,fluctuation:Number}} 存在时间 */ this.lifetime = { base: lifetime_base, fluctuation: lifetime_fluctuation };
+            /** @type {{min:Number,max:Number}} 速度 */ this.speed = { min: speed_min, max: speed_max };
             /** @type {Number} 弹跳次数 */ this.bounces = bounces;
             /** @type {Number} 击退力度 */ this.knockbackForce = knockbackForce;
             /** @type {Boolean} 命中友军 */ this.friendlyFire = friendlyFire;

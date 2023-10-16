@@ -82,8 +82,8 @@ component.entity = class extends component.base {
             if (pc.spreadDegrees) loader._spreadDegrees(utilities.radianToDegree(pc.spreadDegrees)); //投射物散射为弧度制!
             if (pc.bounces) loader._default("bounces", pc.bounces);
             if (pc.knockbackForce) loader._default("knockbackForce", pc.knockbackForce);
-            if (pc.minSpeed + pc.maxSpeed) loader._speed("speed", { min: pc.minSpeed, max: pc.maxSpeed });
-            loader._lifetime({ base: pc.lifetime, fluctuation: pc.fluctuatingLifetime });
+            if (pc.speed.min + pc.speed.max) loader._speed("speed", pc.speed);
+            loader._lifetime(pc.lifetime);
             if (relatedLiElements[0]) loader._offerEntity("projectilesProvided", relatedLiElements);
             //#endregion
         }
