@@ -129,7 +129,7 @@ DB.entity = class {
     /**
      * 通过id查询唯一投射物
      * @param {String} id 实体ID
-     * @returns {EntityData} 实体数据对象
+     * @returns {DB.entity} 实体数据对象
      */
     static queryById = id => {
         const data = this.data.id_map.get(id);
