@@ -29,7 +29,6 @@ class NoitaCursor extends HTMLElement {
         });
     }
 
-
     /** @type {Array<String>} 属性变化监听列表 */
     static observedAttributes = [];
 
@@ -38,7 +37,7 @@ class NoitaCursor extends HTMLElement {
      * @param {String} oldValue 旧值
      * @param {String} newValue 新值
      */
-    attributeChangedCallback(name, oldValue, newValue) { }
+    attributeChangedCallback(name, oldValue, newValue) {}
 
     /** @type {NoitaCursor} */
     static instance = null;
@@ -53,7 +52,7 @@ class NoitaCursor extends HTMLElement {
                 document.body.append(this.instance);
             }
         }
-    };
+    }
     static remove() {
         if (this.instance) {
             this.instance.remove();
@@ -61,5 +60,5 @@ class NoitaCursor extends HTMLElement {
         } else {
             console.warn("不存在鼠标指针");
         }
-    };
+    }
 }

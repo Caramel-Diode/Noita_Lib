@@ -1,5 +1,5 @@
 :host {
-    grid-template: 'main' auto/auto;
+    grid-template: "main" auto/auto;
     height: 32px;
     width: 32px;
     overflow: hidden;
@@ -14,12 +14,12 @@ div.background {
     place-items: center;
 }
 
-.background:is(.common, .disposable, .essence)>canvas {
+.background:is(.common, .disposable, .essence) > canvas {
     height: 24px;
     width: 24px;
 }
 
-.background.null>canvas {
+.background.null > canvas {
     height: 32px;
     width: 32px;
 }
@@ -43,65 +43,57 @@ data {
     --bg3: linear-gradient(to right, var(--c3), var(--c3));
     --bg4: linear-gradient(to right, var(--c4), var(--c4));
     --bg5: linear-gradient(to right, var(--c5), var(--c5));
-    background:
-        var(--bg1) top right 4px/calc(100% - 8px) 2px no-repeat,
-        var(--bg1) bottom right 4px/calc(100% - 8px) 2px no-repeat,
+    background: var(--bg1) top right 4px / calc(100% - 8px) 2px no-repeat,
+        var(--bg1) bottom right 4px / calc(100% - 8px) 2px no-repeat,
         var(--bg1) top 4px left/2px calc(100% - 8px) no-repeat,
         var(--bg1) top 4px right/2px calc(100% - 8px) no-repeat,
-
-        var(--bg2) top right 2px/calc(100% - 4px) 2px no-repeat,
-        var(--bg2) bottom right 2px/calc(100% - 4px) 2px no-repeat,
+        var(--bg2) top right 2px / calc(100% - 4px) 2px no-repeat,
+        var(--bg2) bottom right 2px / calc(100% - 4px) 2px no-repeat,
         var(--bg2) top 2px left/2px calc(100% - 4px) no-repeat,
         var(--bg2) top 2px right/2px calc(100% - 4px) no-repeat,
-
         var(--bg3) top 2px left 2px/2px 2px no-repeat,
         var(--bg3) bottom 2px left 2px/2px 2px no-repeat,
         var(--bg3) top 2px right 2px/2px 2px no-repeat,
         var(--bg3) bottom 2px right 2px/2px 2px no-repeat,
-
         var(--bg4) top 4px left 2px/2px 4px no-repeat,
         var(--bg4) bottom 4px left 2px/2px 4px no-repeat,
         var(--bg4) top 4px right 2px/2px 4px no-repeat,
         var(--bg4) bottom 4px right 2px/2px 4px no-repeat,
-
         var(--bg4) top 2px left 4px/4px 2px no-repeat,
         var(--bg4) bottom 2px left 4px/4px 2px no-repeat,
         var(--bg4) top 2px right 4px/4px 2px no-repeat,
         var(--bg4) bottom 2px right 4px/4px 2px no-repeat,
-
         var(--bg5) center center/calc(100% - 4px) calc(100% - 4px) no-repeat;
 }
 
-:host(:focus-visible)>.background:is(.common, .disposable, .essence) {
-    --c1: #EDA949;
-    --c2: #C98930;
+:host(:focus-visible) > .background:is(.common, .disposable, .essence) {
+    --c1: #eda949;
+    --c2: #c98930;
 }
 
 .background:is(.common, .disposable) {
-    --c3: #1A1010;
-    --c4: #311D1D;
+    --c3: #1a1010;
+    --c4: #311d1d;
     --c5: #372724;
 }
 
 .background.common {
-    --c1: #4F322D;
-    --c2: #6A4038;
+    --c1: #4f322d;
+    --c2: #6a4038;
 }
 
 .background.disposable {
-    --c1: #354F2D;
-    --c2: #4F6A38;
+    --c1: #354f2d;
+    --c2: #4f6a38;
 }
 
 .background.essence {
-    --c1: #4E3B54;
-    --c2: #6F5178;
-    --c3: #1C171E;
-    --c4: #28212B;
-    --c5: #2E2531;
+    --c1: #4e3b54;
+    --c2: #6f5178;
+    --c3: #1c171e;
+    --c4: #28212b;
+    --c5: #2e2531;
 }
-
-
 
 .background.null {
     width: 32px;

@@ -8,7 +8,7 @@ component.perk = class extends component.base {
             panel: [...superStyleSheets.panel, gss(`"PerkElement_panel.css"`)]
         };
         customElements.define("noita-perk", this);
-    };
+    }
 
     /** @type {ShadowRoot} */
     #shadowRoot = this.attachShadow({ mode: "closed" });
@@ -42,7 +42,7 @@ component.perk = class extends component.base {
                 this.instanceData = option.instanceData;
             }
         }
-    };
+    }
 
     /**
      * 获取天赋数据表
@@ -75,27 +75,27 @@ component.perk = class extends component.base {
         }
         this.#shadowRoot.append(fragment);
         this.title = `${this.perkData.name}\n${this.perkData.id}\n${this.perkData.description}`;
-    };
+    }
 
     async #loadPanelContent() {
         const fragment = document.createDocumentFragment();
         this.#shadowRoot.adoptedStyleSheets = this.publicStyleSheets.panel;
         const pd = this.perkData;
-        const h1 = document.createElement("h1");//名称
+        const h1 = document.createElement("h1"); //名称
         h1.setAttribute("switch.id", pd.id);
         h1.setAttribute("switch.name", pd.name);
-        h1.setAttribute("tabindex", "0");// 无障碍 允许tab聚焦 
+        h1.setAttribute("tabindex", "0"); // 无障碍 允许tab聚焦
         h1.addEventListener("click", super.constructor.panelTitleSwitchFn.byMouse);
         h1.addEventListener("keydown", super.constructor.panelTitleSwitchFn.byKeyboard);
         h1.innerText = pd.name;
-        const p = document.createElement("p");//描述
+        const p = document.createElement("p"); //描述
         //#region 属性
         const table = this.constructor.getDataTable(pd);
         //#endregion
         p.append(pd.description);
         fragment.append(await pd.getIcon(), h1, p, table);
         this.#shadowRoot.append(fragment);
-    };
+    }
 
     contentUpdate() {
         this.#shadowRoot.innerHTML = "";
@@ -121,15 +121,15 @@ component.perk = class extends component.base {
         }
         if (this.#displayMode === "panel") this.#loadPanelContent();
         else this.#loadIconContent();
-    };
+    }
 
     connectedCallback() {
         this.contentUpdate();
-    };
+    }
 
     toString() {
         return `[obejct HTMLNoitaPerkElement #${this.perkData.id}]`;
-    };
+    }
 
     attributeChangedCallback(name, oldValue, newValue) {
         if (oldValue === null) return;
@@ -141,9 +141,10 @@ component.perk = class extends component.base {
                 case "perk.count":
                     this.perkData = null;
                     break;
-                case "display": this.#displayMode = undefined;
+                case "display":
+                    this.#displayMode = undefined;
             }
             this.contentUpdate();
         }
-    };
+    }
 };

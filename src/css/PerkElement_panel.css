@@ -1,17 +1,17 @@
 :host {
     grid-template:
-        'name . icon' 30px
-        'desc . icon' auto
-        '. . icon' 14px
-        'attr . icon' auto
-        /auto 20px 60px;
+        "name . icon" 30px
+        "desc . icon" auto
+        ". . icon" 14px
+        "attr . icon" auto
+        / auto 20px 60px;
     place-items: center stretch;
     place-content: center;
     min-width: 250px;
     min-height: 100px;
 }
 
-:host>canvas {
+:host > canvas {
     height: 60px;
     width: 60px;
 }

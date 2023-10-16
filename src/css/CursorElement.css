@@ -13,11 +13,14 @@
     transition-timing-function: linear linear;
     transform: translate(-50%, -50%);
     z-index: 256;
-    background:
-        linear-gradient(to right, #FFFFFF, #FFFFFF) center left/12px 4px no-repeat,
-        linear-gradient(to left, #FFFFFF, #FFFFFF) center right/12px 4px no-repeat,
-        linear-gradient(to bottom, #FFFFFF, #FFFFFF) center top/4px 12px no-repeat,
-        linear-gradient(to top, #FFFFFF, #FFFFFF) center bottom/4px 12px no-repeat;
+    background: linear-gradient(to right, #ffffff, #ffffff) center left/12px 4px
+            no-repeat,
+        linear-gradient(to left, #ffffff, #ffffff) center right/12px 4px
+            no-repeat,
+        linear-gradient(to bottom, #ffffff, #ffffff) center top/4px 12px
+            no-repeat,
+        linear-gradient(to top, #ffffff, #ffffff) center bottom/4px 12px
+            no-repeat;
 }
 
 :host(.pointer) {
@@ -34,25 +37,30 @@
     animation-direction: alternate-reverse;
     animation-timing-function: linear;
     animation-iteration-count: infinite;
-
 }
 
 @keyframes progress {
     100% {
-        background:
-            linear-gradient(to right, #FFFFFF, #FFFFFF) center center/6px 4px no-repeat,
-            linear-gradient(to left, #FFFFFF, #FFFFFF) center center/6px 4px no-repeat,
-            linear-gradient(to bottom, #FFFFFF, #FFFFFF) center center/4px 6px no-repeat,
-            linear-gradient(to top, #FFFFFF, #FFFFFF) center center/4px 6px no-repeat;
+        background: linear-gradient(to right, #ffffff, #ffffff) center
+                center/6px 4px no-repeat,
+            linear-gradient(to left, #ffffff, #ffffff) center center/6px 4px
+                no-repeat,
+            linear-gradient(to bottom, #ffffff, #ffffff) center center/4px 6px
+                no-repeat,
+            linear-gradient(to top, #ffffff, #ffffff) center center/4px 6px
+                no-repeat;
     }
 }
 
 @keyframes pointer {
     100% {
-        background:
-            linear-gradient(to right, #FFFFFFCC, #FFFFFFCC) center left/8px 4px no-repeat,
-            linear-gradient(to left, #FFFFFFCC, #FFFFFFCC) center right/8px 4px no-repeat,
-            linear-gradient(to bottom, #FFFFFFCC, #FFFFFFCC) center top/4px 8px no-repeat,
-            linear-gradient(to top, #FFFFFFCC, #FFFFFFCC) center bottom/4px 8px no-repeat;
+        background: linear-gradient(to right, #ffffffcc, #ffffffcc) center
+                left/8px 4px no-repeat,
+            linear-gradient(to left, #ffffffcc, #ffffffcc) center right/8px 4px
+                no-repeat,
+            linear-gradient(to bottom, #ffffffcc, #ffffffcc) center top/4px 8px
+                no-repeat,
+            linear-gradient(to top, #ffffffcc, #ffffffcc) center bottom/4px 8px
+                no-repeat;
     }
 }

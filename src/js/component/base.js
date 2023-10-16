@@ -8,10 +8,10 @@ component.base = class extends HTMLElement {
             icon: [styleSheet_base, gss(`"BaseElement_icon.css"`)],
             panel: [styleSheet_base, gss(`"BaseElement_panel.css"`)]
         };
-    };
+    }
 
     /**
-     * 面板标题转换  
+     * 面板标题转换
      * **`name ⇌ id`**
      */
     static panelTitleSwitchFn = (() => {
@@ -47,7 +47,7 @@ component.base = class extends HTMLElement {
         };
     })();
 
-    /** 
+    /**
      * 获取面板属性加载器
      */
     static getPanelAttrLoader = (() => {
@@ -60,7 +60,7 @@ component.base = class extends HTMLElement {
 
         const panelInfoSwitchFn = (() => {
             const main = event => {
-                const forceToHidden = event.target.classList.contains("selected");// 再次点击已选中的target时强制隐藏
+                const forceToHidden = event.target.classList.contains("selected"); // 再次点击已选中的target时强制隐藏
                 const relatedSectionElements = event.target.relatedSectionElements;
                 const relatedLiElements = event.target.relatedLiElements;
                 for (let element of relatedSectionElements) {
@@ -97,10 +97,9 @@ component.base = class extends HTMLElement {
         const panelAttrInfo = DB.base.panelAttrInfo;
 
         const unitConvert = (() => {
-
             /**
              * 单位转换 `秒 ⇌ 帧`
-             * @param {HTMLElement} element 
+             * @param {HTMLElement} element
              */
             const _ = element => {
                 /** @type {HTMLTableCellElement} */
@@ -132,14 +131,14 @@ component.base = class extends HTMLElement {
         })();
 
         const attrLoader = class {
-            /** @type {Node} 目标容器 */container;
+            /** @type {Node} 目标容器 */ container;
             constructor(target) {
                 this.container = target;
             }
             /**
              * 加载属性表行
-             * @param {"type"|"shuffle"|"draw"|"capacity"|"staticSpells"|"manaMax"|"manaChargeSpeed"|"manaDrain"|"maxUse"|"remainingUse"|"fireRateWait"|"reloadTime"|"spreadDegrees"|"projectileDamage"|"projectileDamageMultiplier"|"fireDamage"|"fireDamageMultiplier"|"iceDamage"|"iceDamageMultiplier"|"explosionDamage"|"explosionDamageMultiplier"|"sliceDamage"|"sliceDamageMultiplier"|"drillDamage"|"drillDamageMultiplier"|"electricityDamage"|"electricityDamageMultiplier"|"healingDamage"|"healingDamageMultiplier"|"meleeDamage"|"meleeDamageMultiplier"|"curseDamage"|"curseDamageMultiplier"|"holyDamage"|"holyDamageMultiplier"|"overeatingDamage"|"overeatingMultiplier"|"physicsHitDamage"|"physicsHitDamageMultiplier"|"poisonDamage"|"poisonDamageMultiplier"|"radioactiveDamage"|"radioactiveDamageMultiplier"|"damageCriticalChance"|"speed"|"speedMultiplier"|"explosionRadius"|"bounces"|"knockbackForce"|"lifetime"|"projectilesProvided"|"projectilesUsed"|"bloodMaterial"|"maxHp"|"immunity"|"recoilKnockback"|"draw_common"|"draw_hit"|"draw_timer"|"draw_death"|"infinite"|"maxStack"|"maxInPool"|"airInLungsMax"|"patternDegrees"|"trailMaterial"|"trailMaterialAmount"|"material"|"materialAmount"} type 
-             * @param {String|Node|{second:number,frame:Number}} content 
+             * @param {"type"|"shuffle"|"draw"|"capacity"|"staticSpells"|"manaMax"|"manaChargeSpeed"|"manaDrain"|"maxUse"|"remainingUse"|"fireRateWait"|"reloadTime"|"spreadDegrees"|"projectileDamage"|"projectileDamageMultiplier"|"fireDamage"|"fireDamageMultiplier"|"iceDamage"|"iceDamageMultiplier"|"explosionDamage"|"explosionDamageMultiplier"|"sliceDamage"|"sliceDamageMultiplier"|"drillDamage"|"drillDamageMultiplier"|"electricityDamage"|"electricityDamageMultiplier"|"healingDamage"|"healingDamageMultiplier"|"meleeDamage"|"meleeDamageMultiplier"|"curseDamage"|"curseDamageMultiplier"|"holyDamage"|"holyDamageMultiplier"|"overeatingDamage"|"overeatingMultiplier"|"physicsHitDamage"|"physicsHitDamageMultiplier"|"poisonDamage"|"poisonDamageMultiplier"|"radioactiveDamage"|"radioactiveDamageMultiplier"|"damageCriticalChance"|"speed"|"speedMultiplier"|"explosionRadius"|"bounces"|"knockbackForce"|"lifetime"|"projectilesProvided"|"projectilesUsed"|"bloodMaterial"|"maxHp"|"immunity"|"recoilKnockback"|"draw_common"|"draw_hit"|"draw_timer"|"draw_death"|"infinite"|"maxStack"|"maxInPool"|"airInLungsMax"|"patternDegrees"|"trailMaterial"|"trailMaterialAmount"|"material"|"materialAmount"} type
+             * @param {String|Node|{second:number,frame:Number}} content
              */
             async #loadTr(type, content) {
                 const tr = document.createElement("tr");
@@ -152,10 +151,12 @@ component.base = class extends HTMLElement {
                 if (contentType === "string") {
                     td.append(content);
                 } else if (contentType === "object") {
-                    if (content instanceof Node) {// html节点 直接插入
+                    if (content instanceof Node) {
+                        // html节点 直接插入
                         td.append(content);
-                    } else {// 单位换算信息 默认显示`秒`
-                        td.setAttribute("tabindex", "0");// 无障碍 可被键盘聚焦
+                    } else {
+                        // 单位换算信息 默认显示`秒`
+                        td.setAttribute("tabindex", "0"); // 无障碍 可被键盘聚焦
                         td.addEventListener("click", unitConvert.byMouse);
                         td.addEventListener("keydown", unitConvert.byKeyboard);
                         td.setAttribute("display", "SECOND");
@@ -166,12 +167,12 @@ component.base = class extends HTMLElement {
                 }
                 tr.append(th, td);
                 this.container.append(tr);
-            };
+            }
             /**
              * 加载`施放延迟`|`充能时间`面板属性
              * @param {"fireRateWait"|"lifetime"} type CD类型
-             * @param {Number|{min:Number,max:Number}} value 
-             * @param {Boolean} [needSign] 
+             * @param {Number|{min:Number,max:Number}} value
+             * @param {Boolean} [needSign]
              */
             _castCD(type, value, needSign = false) {
                 let unitConvertData = { second: "", frame: "" };
@@ -210,11 +211,11 @@ component.base = class extends HTMLElement {
                     }
                 }
                 this.#loadTr(type, unitConvertData);
-            };
+            }
             /**
              * 加载`存在时间`面板属性
-             * @param {Number|{base:Number,fluctuation:Number}} value 
-             * @param {Boolean} [needSign] 
+             * @param {Number|{base:Number,fluctuation:Number}} value
+             * @param {Boolean} [needSign]
              */
             _lifetime(value, needSign = false) {
                 let unitConvertData = { second: "", frame: "" };
@@ -250,10 +251,10 @@ component.base = class extends HTMLElement {
                     }
                 }
                 this.#loadTr("lifetime", unitConvertData);
-            };
+            }
             /**
              * 加载`法力恢复速度`面板属性
-             * @param {Number|{min:Number,max:Number}} value 
+             * @param {Number|{min:Number,max:Number}} value
              */
             _manaChargeSpeed(value) {
                 let unitConvertData = { second: "", frame: "" };
@@ -273,11 +274,11 @@ component.base = class extends HTMLElement {
                     }
                 }
                 this.#loadTr("manaChargeSpeed", unitConvertData);
-            };
+            }
             /**
              * 加载`散射角度`面板属性
-             * @param {Number|{min:Number,max:Number}} value 
-             * @param {Boolean} [needSign] 
+             * @param {Number|{min:Number,max:Number}} value
+             * @param {Boolean} [needSign]
              */
             _spreadDegrees(value, needSign = false) {
                 let content;
@@ -293,12 +294,12 @@ component.base = class extends HTMLElement {
                     }
                 }
                 this.#loadTr("spreadDegrees", content);
-            };
+            }
             /**
              * 加载`投射物速度`|`投射物速度倍数`面板属性
-             * @param {"speed"|"speedMultiplier"} type 
-             * @param {Number|{min:Number,max:Number}} value 
-             * @param {Boolean} [needSign] 
+             * @param {"speed"|"speedMultiplier"} type
+             * @param {Number|{min:Number,max:Number}} value
+             * @param {Boolean} [needSign]
              */
             _speed(type, value, needSign = false) {
                 let content;
@@ -311,18 +312,18 @@ component.base = class extends HTMLElement {
 
                 if (needSign) content = `× ${content}`;
                 this.#loadTr(type, content);
-            };
+            }
             /**
              * 加载`暴击率`面板属性
-             * @param {Number} value 
+             * @param {Number} value
              */
             _damageCriticalChance(value) {
                 this.#loadTr("damageCriticalChance", `${aps(value)}%`);
-            };
+            }
             /**
              * 加载`最大使用次数`|`剩余使用次数`面板属性
-             * @param {"maxUse"|"remainingUse"} type 
-             * @param {{max:Number,remaining:Number?,neverUnlimited:Boolean}} value 
+             * @param {"maxUse"|"remainingUse"} type
+             * @param {{max:Number,remaining:Number?,neverUnlimited:Boolean}} value
              */
             _timesUsed(type, value) {
                 const content = document.createElement("data");
@@ -338,33 +339,38 @@ component.base = class extends HTMLElement {
                 }
                 content.append(`${value.max}`);
                 this.#loadTr(type, content);
-            };
+            }
             /**
              * 加载`抽取数`面板属性
-             * @param {Number|{min:Number?,max:Number?,common:Number?,hit:Number?,timer:{count:Number,delay:Number}?,death:Number?}} [value] 
+             * @param {Number|{min:Number?,max:Number?,common:Number?,hit:Number?,timer:{count:Number,delay:Number}?,death:Number?}} [value]
              */
             async _draw(value = 1) {
                 /** @type {DocumentFragment|String} */
                 let content;
                 if (typeof value === "number") {
-                    content = `${value}`;//法杖固定抽取数
+                    content = `${value}`; //法杖固定抽取数
                 } else if (typeof value === "object") {
-                    if (value.min !== undefined) {//法杖不定数量抽取
+                    if (value.min !== undefined) {
+                        //法杖不定数量抽取
                         content = `${value.min} ~ ${value.max}`;
-                    } else { //法术多类型抽取
+                    } else {
+                        //法术多类型抽取
                         const ul = document.createElement("ul");
-                        if (value.common) { // 普通抽取
+                        if (value.common) {
+                            // 普通抽取
                             const li = document.createElement("li");
                             li.append(await panelAttrInfo.datas.get("draw_common").getIcon(), value.common);
                             ul.append(li);
                         }
-                        if (value.hit) { // 碰撞抽取
+                        if (value.hit) {
+                            // 碰撞抽取
                             const li = document.createElement("li");
                             li.append(await panelAttrInfo.datas.get("draw_hit").getIcon(), value.hit);
                             li.title = "碰撞触发抽取";
                             ul.append(li);
                         }
-                        if (value.timer.count) { // 定时抽取
+                        if (value.timer.count) {
+                            // 定时抽取
                             const li = document.createElement("li");
                             li.append(await panelAttrInfo.datas.get("draw_timer").getIcon(), `${value.timer.count} (${value.timer.delay}f)`);
                             li.title = `定时触发抽取\n延迟:${value.timer.delay}f`;
@@ -378,14 +384,13 @@ component.base = class extends HTMLElement {
                         }
                         content = ul;
                     }
-
                 }
                 this.#loadTr("draw", content);
-            };
+            }
             /**
              * 加载`最大法力值`|`容量`面板属性
-             * @param {"manaMax"|"capacity"} type 
-             * @param {Number|{min:Number,max:Number}} value 
+             * @param {"manaMax"|"capacity"} type
+             * @param {Number|{min:Number,max:Number}} value
              */
             _manaMaxOrCapacity(type, value) {
                 let content;
@@ -397,43 +402,43 @@ component.base = class extends HTMLElement {
                     content = `${value}`;
                 }
                 this.#loadTr(type, content);
-            };
+            }
             /**
              * 加载`伤害`|`承伤`面板属性
-             * @param {"projectileDamage"|"projectileDamageMultiplier"|"fireDamage"|"fireDamageMultiplier"|"iceDamage"|"iceDamageMultiplier"|"explosionDamage"|"explosionDamageMultiplier"|"sliceDamage"|"sliceDamageMultiplier"|"drillDamage"|"drillDamageMultiplier"|"electricityDamage"|"electricityDamageMultiplier"|"healingDamage"|"healingDamageMultiplier"|"meleeDamage"|"meleeDamageMultiplier"|"curseDamage"|"curseDamageMultiplier"|"holyDamage"|"holyDamageMultiplier"|"overeatingDamage"|"overeatingMultiplier"|"physicsHitDamage"|"physicsHitDamageMultiplier"|"poisonDamage"|"poisonDamageMultiplier"|"radioactiveDamage"|"radioactiveDamageMultiplier"} type 
-             * @param {Number|Array<Node>} value 
-             * @param {Boolean} [needSign] 
+             * @param {"projectileDamage"|"projectileDamageMultiplier"|"fireDamage"|"fireDamageMultiplier"|"iceDamage"|"iceDamageMultiplier"|"explosionDamage"|"explosionDamageMultiplier"|"sliceDamage"|"sliceDamageMultiplier"|"drillDamage"|"drillDamageMultiplier"|"electricityDamage"|"electricityDamageMultiplier"|"healingDamage"|"healingDamageMultiplier"|"meleeDamage"|"meleeDamageMultiplier"|"curseDamage"|"curseDamageMultiplier"|"holyDamage"|"holyDamageMultiplier"|"overeatingDamage"|"overeatingMultiplier"|"physicsHitDamage"|"physicsHitDamageMultiplier"|"poisonDamage"|"poisonDamageMultiplier"|"radioactiveDamage"|"radioactiveDamageMultiplier"} type
+             * @param {Number|Array<Node>} value
+             * @param {Boolean} [needSign]
              */
             _damage(type, value, needSign = false) {
                 let content;
-                if (needSign) content = `${aps(value)}`;  // 伤害修正
-                else content = `${value}`;//投射物本体伤害/承伤系数
+                if (needSign) content = `${aps(value)}`; // 伤害修正
+                else content = `${value}`; //投射物本体伤害/承伤系数
                 this.#loadTr(type, content);
-            };
+            }
             /**
              * 加载`提供投射物`|`使用投射物`属性
-             * @param {"projectilesProvided"|"projectilesUsed"} type 
-             * @param {Array<Node>} value 
+             * @param {"projectilesProvided"|"projectilesUsed"} type
+             * @param {Array<Node>} value
              */
             _offerEntity(type, value) {
                 const ul = document.createElement("ul");
                 for (let i = 0; i < value.length; i++) {
                     const li = value[i];
-                    li.setAttribute("tabindex", "0");// 无障碍 允许tab聚焦
+                    li.setAttribute("tabindex", "0"); // 无障碍 允许tab聚焦
                     li.setAttribute("roles", "tab");
                     li.addEventListener("click", panelInfoSwitchFn.byMouse);
                     li.addEventListener("keydown", panelInfoSwitchFn.byKeyboard);
                     ul.append(li);
                 }
-                value[0].click();//提供的数据会全部展示 此处点击以实现仅显示首个投射物信息
+                value[0].click(); //提供的数据会全部展示 此处点击以实现仅显示首个投射物信息
                 ul.className = "entities-tabpanel";
-                ul.setAttribute("roles", "tablist");// 无障碍标注
+                ul.setAttribute("roles", "tablist"); // 无障碍标注
                 this.#loadTr(type, ul);
-            };
+            }
             /**
-             * 
-             * @param {String} value_hurt 
-             * @param {String} value_die 
+             *
+             * @param {String} value_hurt
+             * @param {String} value_die
              */
             _bloodMaterial(value_hurt, value_die) {
                 let content = value_hurt;
@@ -441,29 +446,29 @@ component.base = class extends HTMLElement {
                     content += ` ${value_die}`;
                 }
                 this.#loadTr("bloodMaterial", content);
-            };
+            }
             /**
              * 加载自定义面板属性 内容自定义
-             * @param {"type"|"shuffle"|"draw"|"capacity"|"staticSpells"|"manaMax"|"manaChargeSpeed"|"manaDrain"|"maxUse"|"remainingUse"|"fireRateWait"|"reloadTime"|"spreadDegrees"|"projectileDamage"|"projectileDamageMultiplier"|"fireDamage"|"fireDamageMultiplier"|"iceDamage"|"iceDamageMultiplier"|"explosionDamage"|"explosionDamageMultiplier"|"sliceDamage"|"sliceDamageMultiplier"|"drillDamage"|"drillDamageMultiplier"|"electricityDamage"|"electricityDamageMultiplier"|"healingDamage"|"healingDamageMultiplier"|"meleeDamage"|"meleeDamageMultiplier"|"curseDamage"|"curseDamageMultiplier"|"holyDamage"|"holyDamageMultiplier"|"overeatingDamage"|"overeatingMultiplier"|"physicsHitDamage"|"physicsHitDamageMultiplier"|"poisonDamage"|"poisonDamageMultiplier"|"radioactiveDamage"|"radioactiveDamageMultiplier"|"damageCriticalChance"|"speed"|"speedMultiplier"|"explosionRadius"|"bounces"|"knockbackForce"|"lifetime"|"projectilesProvided"|"projectilesUsed"|"maxHp"|"recoilKnockback"|"draw_common"|"draw_hit"|"draw_timer"|"draw_death"|"infinite"|"maxStack"|"maxInPool"} type 
-             * @param {Array<Node>} value 
+             * @param {"type"|"shuffle"|"draw"|"capacity"|"staticSpells"|"manaMax"|"manaChargeSpeed"|"manaDrain"|"maxUse"|"remainingUse"|"fireRateWait"|"reloadTime"|"spreadDegrees"|"projectileDamage"|"projectileDamageMultiplier"|"fireDamage"|"fireDamageMultiplier"|"iceDamage"|"iceDamageMultiplier"|"explosionDamage"|"explosionDamageMultiplier"|"sliceDamage"|"sliceDamageMultiplier"|"drillDamage"|"drillDamageMultiplier"|"electricityDamage"|"electricityDamageMultiplier"|"healingDamage"|"healingDamageMultiplier"|"meleeDamage"|"meleeDamageMultiplier"|"curseDamage"|"curseDamageMultiplier"|"holyDamage"|"holyDamageMultiplier"|"overeatingDamage"|"overeatingMultiplier"|"physicsHitDamage"|"physicsHitDamageMultiplier"|"poisonDamage"|"poisonDamageMultiplier"|"radioactiveDamage"|"radioactiveDamageMultiplier"|"damageCriticalChance"|"speed"|"speedMultiplier"|"explosionRadius"|"bounces"|"knockbackForce"|"lifetime"|"projectilesProvided"|"projectilesUsed"|"maxHp"|"recoilKnockback"|"draw_common"|"draw_hit"|"draw_timer"|"draw_death"|"infinite"|"maxStack"|"maxInPool"} type
+             * @param {Array<Node>} value
              */
             _custom(type, value) {
                 const content = document.createDocumentFragment();
                 content.append(...value);
                 this.#loadTr(type, content);
-            };
+            }
             /**
              * 加载无需特殊处理的面板属性
-             * @param {"type"|"shuffle"|"draw"|"capacity"|"staticSpells"|"manaMax"|"manaChargeSpeed"|"manaDrain"|"maxUse"|"remainingUse"|"fireRateWait"|"reloadTime"|"spreadDegrees"|"projectileDamage"|"projectileDamageMultiplier"|"fireDamage"|"fireDamageMultiplier"|"iceDamage"|"iceDamageMultiplier"|"explosionDamage"|"explosionDamageMultiplier"|"sliceDamage"|"sliceDamageMultiplier"|"drillDamage"|"drillDamageMultiplier"|"electricityDamage"|"electricityDamageMultiplier"|"healingDamage"|"healingDamageMultiplier"|"meleeDamage"|"meleeDamageMultiplier"|"curseDamage"|"curseDamageMultiplier"|"holyDamage"|"holyDamageMultiplier"|"overeatingDamage"|"overeatingMultiplier"|"physicsHitDamage"|"physicsHitDamageMultiplier"|"poisonDamage"|"poisonDamageMultiplier"|"radioactiveDamage"|"radioactiveDamageMultiplier"|"damageCriticalChance"|"speed"|"speedMultiplier"|"explosionRadius"|"bounces"|"knockbackForce"|"lifetime"|"projectilesProvided"|"projectilesUsed"|"maxHp"|"recoilKnockback"|"draw_common"|"draw_hit"|"draw_timer"|"draw_death"|"infinite"|"maxStack"|"maxInPool"} type 
-             * @param {Number} value 
-             * @param {Boolean} needSign 
+             * @param {"type"|"shuffle"|"draw"|"capacity"|"staticSpells"|"manaMax"|"manaChargeSpeed"|"manaDrain"|"maxUse"|"remainingUse"|"fireRateWait"|"reloadTime"|"spreadDegrees"|"projectileDamage"|"projectileDamageMultiplier"|"fireDamage"|"fireDamageMultiplier"|"iceDamage"|"iceDamageMultiplier"|"explosionDamage"|"explosionDamageMultiplier"|"sliceDamage"|"sliceDamageMultiplier"|"drillDamage"|"drillDamageMultiplier"|"electricityDamage"|"electricityDamageMultiplier"|"healingDamage"|"healingDamageMultiplier"|"meleeDamage"|"meleeDamageMultiplier"|"curseDamage"|"curseDamageMultiplier"|"holyDamage"|"holyDamageMultiplier"|"overeatingDamage"|"overeatingMultiplier"|"physicsHitDamage"|"physicsHitDamageMultiplier"|"poisonDamage"|"poisonDamageMultiplier"|"radioactiveDamage"|"radioactiveDamageMultiplier"|"damageCriticalChance"|"speed"|"speedMultiplier"|"explosionRadius"|"bounces"|"knockbackForce"|"lifetime"|"projectilesProvided"|"projectilesUsed"|"maxHp"|"recoilKnockback"|"draw_common"|"draw_hit"|"draw_timer"|"draw_death"|"infinite"|"maxStack"|"maxInPool"} type
+             * @param {Number} value
+             * @param {Boolean} needSign
              */
             _default(type, value, needSign = false) {
                 let content;
                 if (needSign) content = `${aps(value)}`;
                 else content = `${value}`;
                 this.#loadTr(type, content);
-            };
+            }
         };
 
         return target => new attrLoader(target);
@@ -474,7 +479,7 @@ component.base = class extends HTMLElement {
     constructor(display) {
         super();
         if (display) this.#displayMode = display;
-    };
+    }
 
     toString() {
         return "[Obejct HTMLNoitaElement]";

@@ -17,7 +17,7 @@ component.entity = class extends component.base {
                 this.setAttribute("eneity.id", params[0]);
             }
         }
-    };
+    }
 
     /**
      * 获取投射物数据表
@@ -46,7 +46,7 @@ component.entity = class extends component.base {
                 const num_max = pc.offeredEntities[i].num_max;
                 const section_ = await this.getDataSection(entityData);
                 section_.setAttribute("related-id", entityData.id);
-                section_.setAttribute("roles", "tabpanel");// 无障碍标注
+                section_.setAttribute("roles", "tabpanel"); // 无障碍标注
                 relatedSectionElements.push(section_);
                 section.append(section_);
                 const li = document.createElement("li");
@@ -56,8 +56,7 @@ component.entity = class extends component.base {
                 li.append(entityData.name);
                 if (num_min === num_max) {
                     if (num_min !== 0) li.append(`(${num_min})`);
-                }
-                else li.append(`(${num_min}~${num_max})`);
+                } else li.append(`(${num_min}~${num_max})`);
                 li.classList.add("not-in-cast-state");
                 li.title = "不可享受施法块属性加成";
                 li.classList.add("unselected");
@@ -80,14 +79,13 @@ component.entity = class extends component.base {
             if (od.drill) loader._damage("drillDamage", od.drill);
             if (od.radioactive) loader._damage("radioactiveDamage", od.radioactive);
             if (pc.explosionRadius) loader._default("explosionRadius", pc.explosionRadius);
-            if (pc.spreadDegrees) loader._spreadDegrees(utilities.radianToDegree(pc.spreadDegrees));//投射物散射为弧度制!
+            if (pc.spreadDegrees) loader._spreadDegrees(utilities.radianToDegree(pc.spreadDegrees)); //投射物散射为弧度制!
             if (pc.bounces) loader._default("bounces", pc.bounces);
             if (pc.knockbackForce) loader._default("knockbackForce", pc.knockbackForce);
             if (pc.minSpeed + pc.maxSpeed) loader._speed("speed", { min: pc.minSpeed, max: pc.maxSpeed });
             loader._lifetime({ base: pc.lifetime, fluctuation: pc.fluctuatingLifetime });
             if (relatedLiElements[0]) loader._offerEntity("projectilesProvided", relatedLiElements);
             //#endregion
-
         }
         //#endregion
         //#region 伤害模型组件
@@ -116,18 +114,15 @@ component.entity = class extends component.base {
         //#endregion
 
         return section;
-    };
+    }
 
     static {
         const superStyleSheets = super.prototype.publicStyleSheets;
         this.prototype.publicStyleSheets = {
-            panel: [
-                ...superStyleSheets.panel,
-                gss(`"EntityElement_panel.css"`)
-            ]
+            panel: [...superStyleSheets.panel, gss(`"EntityElement_panel.css"`)]
         };
         customElements.define("noita-entity", this);
-    };
+    }
 
     async #loadPanelContent() {
         this.#shadowRoot.adoptedStyleSheets = this.publicStyleSheets.panel;
@@ -135,7 +130,7 @@ component.entity = class extends component.base {
         const h1 = document.createElement("h1");
         h1.setAttribute("switch.id", this.entityData.id);
         h1.setAttribute("switch.name", this.entityData.name);
-        h1.setAttribute("tabindex", "0");// 无障碍 允许tab聚焦 
+        h1.setAttribute("tabindex", "0"); // 无障碍 允许tab聚焦
         h1.addEventListener("click", super.constructor.panelTitleSwitchFn.byMouse);
         h1.addEventListener("keydown", super.constructor.panelTitleSwitchFn.byKeyboard);
         h1.innerText = this.entityData.name;
@@ -144,7 +139,7 @@ component.entity = class extends component.base {
         section.className = "attr-area";
         fragment.append(h1, section);
         this.#shadowRoot.append(fragment);
-    };
+    }
 
     contentUpdate() {
         this.#shadowRoot.innerHTML = "";
@@ -160,15 +155,15 @@ component.entity = class extends component.base {
         if (entityId) this.entityData = DB.entity.queryById(entityId);
         else this.entityData ??= DB.entity.$NULL;
         this.#loadPanelContent();
-    };
+    }
 
     connectedCallback() {
         this.contentUpdate();
-    };
+    }
 
     toString() {
         return `[obejct HTMLNoitaEntityElement #${this.entityData.id}]`;
-    };
+    }
 
     attributeChangedCallback(name, oldValue, newValue) {
         if (oldValue === null) return;
@@ -178,5 +173,5 @@ component.entity = class extends component.base {
             else if (name === "display") this.displayMode = undefined;
             this.contentUpdate();
         }
-    };
+    }
 };

@@ -8,7 +8,7 @@ component.spell = class extends component.base {
             panel: [...superStyleSheets.panel, gss(`"SpellElement_panel.css"`)]
         };
         customElements.define("noita-spell", this);
-    };
+    }
 
     /** @type {ShadowRoot} */
     #shadowRoot = this.attachShadow({ mode: "closed" });
@@ -71,8 +71,7 @@ component.spell = class extends component.base {
                 this.instanceData = option.instanceData;
             }
         }
-
-    };
+    }
 
     /**
      * 获取投射物数据表
@@ -101,9 +100,9 @@ component.spell = class extends component.base {
             const isInCastState = sd.offeredProjectiles[i].isInCastState;
             const section_ = await component.entity.getDataSection(projectileData);
             section_.setAttribute("related-id", projectileData.id);
-            section_.setAttribute("roles", "tabpanel");// 无障碍标注
+            section_.setAttribute("roles", "tabpanel"); // 无障碍标注
             relatedSectionElements.push(section_);
-            section.append(section_);// 在修正信息和基本信息之间添加投射物信息
+            section.append(section_); // 在修正信息和基本信息之间添加投射物信息
             const li = document.createElement("li");
             li.setAttribute("related-id", projectileData.id);
             li.relatedLiElements = relatedLiElements;
@@ -111,8 +110,7 @@ component.spell = class extends component.base {
             li.append(projectileData.name);
             if (num_min === num_max) {
                 if (num_min !== 0) li.append(`(${num_min})`);
-            }
-            else li.append(`(${num_min}~${num_max})`);
+            } else li.append(`(${num_min}~${num_max})`);
             if (isInCastState) {
                 li.classList.add("in-cast-state");
                 li.title = "享受施法块属性加成";
@@ -123,7 +121,7 @@ component.spell = class extends component.base {
             li.classList.add("unselected");
             relatedLiElements.push(li);
         }
-        //#region 
+        //#region
 
         //#region 修正信息
         let modifierLoader = super.getPanelAttrLoader(tbody_modifier);
@@ -147,11 +145,11 @@ component.spell = class extends component.base {
         if (sd.fireRateWait) modifierLoader._castCD("fireRateWait", sd.fireRateWait, true); // 施放延迟
         if (sd.reloadTime) modifierLoader._castCD("reloadTime", sd.reloadTime, true); // 充能时间
         if (sd.lifetimeAdd) modifierLoader._lifetime(sd.lifetimeAdd, true); // 存在时间
-        if (sd.trailMaterial) modifierLoader._default("trailMaterial", sd.trailMaterial);// 提供轨迹
-        if (sd.trailMaterialAmount) modifierLoader._default("trailMaterialAmount", sd.trailMaterialAmount, true);// 轨迹浓度
-        if (sd.material) modifierLoader._default("material", sd.material);// 提供材料
-        if (sd.materialAmount) modifierLoader._default("materialAmount", sd.materialAmount, true);// 材料浓度
-        section.append(table_modifier);//添加到最后
+        if (sd.trailMaterial) modifierLoader._default("trailMaterial", sd.trailMaterial); // 提供轨迹
+        if (sd.trailMaterialAmount) modifierLoader._default("trailMaterialAmount", sd.trailMaterialAmount, true); // 轨迹浓度
+        if (sd.material) modifierLoader._default("material", sd.material); // 提供材料
+        if (sd.materialAmount) modifierLoader._default("materialAmount", sd.materialAmount, true); // 材料浓度
+        section.append(table_modifier); //添加到最后
         //#endregion
 
         //#region 基本信息
@@ -160,13 +158,13 @@ component.spell = class extends component.base {
         baseLoader._default("manaDrain", sd.manaDrain); // 法力消耗
         if (sd.maxUse !== -1) baseLoader._timesUsed("maxUse", { max: sd.maxUse, neverUnlimited: sd.neverUnlimited }); // 最大使用次数
         if (sd.draw.common + sd.draw.hit + sd.draw.timer.count + sd.draw.death) baseLoader._draw(sd.draw); // 抽取
-        if (sd.passiveEffect) baseLoader._default("passiveEffect", sd.passiveEffect);//被动效果
+        if (sd.passiveEffect) baseLoader._default("passiveEffect", sd.passiveEffect); //被动效果
         if (relatedLiElements[0]) baseLoader._offerEntity("projectilesProvided", relatedLiElements);
-        section.prepend(table_base);//添加到最前
+        section.prepend(table_base); //添加到最前
         //#endregion
 
         return section;
-    };
+    }
 
     #IconClickFn() {
         const dialog = document.createElement("dialog");
@@ -183,7 +181,7 @@ component.spell = class extends component.base {
         dialog.append(closeButton);
         document.body.append(dialog);
         dialog.showModal();
-    };
+    }
 
     /** 加载图标模式内容 */
     async #loadIconContent() {
@@ -216,7 +214,7 @@ component.spell = class extends component.base {
                 this.addEventListener("click", this.#IconClickFn);
             }
         }
-    };
+    }
 
     static #panelDataSwitch = (() => {
         const main = event => {
@@ -260,12 +258,15 @@ component.spell = class extends component.base {
     async #loadPanelContent(index = 0) {
         this.#shadowRoot.adoptedStyleSheets = this.publicStyleSheets.panel;
         const fragment = document.createDocumentFragment();
-        if (this.#currentDataIndex !== -1) { //非首次加载 进行更新操作
+        if (this.#currentDataIndex !== -1) {
+            //非首次加载 进行更新操作
             this.#shadowRoot.querySelector("main").remove();
-        } else { //首次加载 尝试加载选项卡
-            if (this.spellDatas.length > 1) { //仅有单个法术数据时不显示选项卡
-                const header = document.createElement("header");//视口容器 适配滚动条
-                const ol = document.createElement("ol");//选项卡
+        } else {
+            //首次加载 尝试加载选项卡
+            if (this.spellDatas.length > 1) {
+                //仅有单个法术数据时不显示选项卡
+                const header = document.createElement("header"); //视口容器 适配滚动条
+                const ol = document.createElement("ol"); //选项卡
                 ol.className = "spells-tabpanel";
                 for (let i = 0; i < this.spellDatas.length; i++) {
                     const sd = this.spellDatas[i];
@@ -287,21 +288,21 @@ component.spell = class extends component.base {
         this.#currentDataIndex = index;
         const sd = this.spellDatas[index];
         const main = document.createElement("main");
-        const h1 = document.createElement("h1");//名称
+        const h1 = document.createElement("h1"); //名称
         h1.setAttribute("switch.id", sd.id);
         h1.setAttribute("switch.name", sd.name);
-        h1.setAttribute("tabindex", "0");// 无障碍 允许tab聚焦 
+        h1.setAttribute("tabindex", "0"); // 无障碍 允许tab聚焦
         h1.addEventListener("click", super.constructor.panelTitleSwitchFn.byMouse);
         h1.addEventListener("keydown", super.constructor.panelTitleSwitchFn.byKeyboard);
         h1.innerText = sd.name;
-        const p = document.createElement("p");//描述
+        const p = document.createElement("p"); //描述
         p.append(sd.description);
-        const section = await this.constructor.getDataSection(sd);//属性区
+        const section = await this.constructor.getDataSection(sd); //属性区
         section.className = "attr-area";
         main.append(await sd.getIcon(), h1, p, section);
         fragment.append(main);
         this.#shadowRoot.append(fragment);
-    };
+    }
 
     contentUpdate() {
         this.#shadowRoot.innerHTML = "";
@@ -336,7 +337,7 @@ component.spell = class extends component.base {
 
     connectedCallback() {
         this.contentUpdate();
-    };
+    }
 
     toString() {
         const datas = [];
@@ -345,7 +346,7 @@ component.spell = class extends component.base {
             datas.push(spell.id);
         }
         return `[obejct HTMLNoitaSpellElement #${datas.join[","]}]`;
-    };
+    }
 
     attributeChangedCallback(name, oldValue, newValue) {
         if (oldValue === null) return;
@@ -359,9 +360,10 @@ component.spell = class extends component.base {
                     this.spellDatas = [];
                     this.#currentDataIndex = -1;
                     break;
-                case "display": this.#displayMode = undefined;
+                case "display":
+                    this.#displayMode = undefined;
             }
             this.contentUpdate();
         }
-    };
+    }
 };

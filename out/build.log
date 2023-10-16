@@ -1,13 +1,13 @@
-2023/10/11 14:10:32
-#sum: 467437
+2023/10/14 16:28:02
+#sum: 467279
 js:
-    #all: 83577
+    #all: 83613
     index: 2416
-    db/base: 3236
+    db/base: 3265
     db/entity: 4428
     db/material: 150
     db/perk: 2119
-    db/spell: 20174
+    db/spell: 20181
     db/wand: 7367
     component/base: 9122
     component/cursor: 1152
@@ -21,22 +21,22 @@ js:
     other/save: 2526
     other/utilities: 3899
 css:
-    #all: 14427
+    #all: 14206
     BaseElement_base: 1172
-    BaseElement_icon: 198
-    BaseElement_panel: 2582
+    BaseElement_icon: 235
+    BaseElement_panel: 2657
     CursorElement: 1588
     EntityElement_panel: 135
     PerkElement_icon: 2303
-    PerkElement_panel: 300
-    SpellElement_icon: 3222
-    SpellElement_panel: 1349
-    WandElement_panel: 1578
+    PerkElement_panel: 220
+    SpellElement_icon: 3161
+    SpellElement_panel: 1252
+    WandElement_panel: 1483
 json:
-    #all: 135721
+    #all: 135748
     entityData: 20255
     perkData: 7296
-    spellData: 76138
+    spellData: 76165
     wandTemplateData: 32032
 base64:
     #all: 234404

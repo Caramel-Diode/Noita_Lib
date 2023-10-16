@@ -1,5 +1,5 @@
 :host {
-    grid-template: 'main' 40px/40px;
+    grid-template: "main" 40px/40px;
     --size: 40px;
 }
 
@@ -57,28 +57,24 @@ li {
     --v1: calc(100% - 6px) 2px no-repeat;
     --p: 2px 2px no-repeat;
     --bb: #00000000;
-    --b: radial-gradient(var(--c5, var(--bb)), var(--c6, var(--bb))) center/calc(100% - 8px) calc(100% - 8px) no-repeat;
+    --b: radial-gradient(var(--c5, var(--bb)), var(--c6, var(--bb)))
+        center/calc(100% - 8px) calc(100% - 8px) no-repeat;
     background:
-        /* 实边 */
-        var(--bg1) left top 4px/var(--h1),
+        /* 实边 */ var(--bg1) left top 4px / var(--h1),
         var(--bg1) right 4px bottom/var(--v1),
-        var(--bg1) right bottom 4px/var(--h1),
+        var(--bg1) right bottom 4px / var(--h1),
         var(--bg1) left 4px top/var(--v1),
-        var(--bg2) left 2px top 2px/var(--h1),
-        var(--bg2) left 2px top 2px/var(--v1),
-        var(--bg2) right 2px bottom 2px/var(--h1),
-        var(--bg2) right 2px bottom 2px/var(--v1),
-        /* 半透明点 */
-        var(--bg3) left 2px top/ var(--p),
-        var(--bg3) right top/ var(--p),
-        var(--bg3) right bottom 2px/ var(--p),
-        var(--bg3) left 2px bottom 2px/ var(--p),
-        var(--bg4) left top 2px/ var(--p),
-        var(--bg4) right 2px top 2px/ var(--p),
-        var(--bg4) right 2px bottom/ var(--p),
-        var(--bg4) left bottom/ var(--p),
-        /* 底色 */
-        var(--b);
+        var(--bg2) left 2px top 2px / var(--h1),
+        var(--bg2) left 2px top 2px / var(--v1),
+        var(--bg2) right 2px bottom 2px / var(--h1),
+        var(--bg2) right 2px bottom 2px / var(--v1),
+        /* 半透明点 */ var(--bg3) left 2px top/ var(--p),
+        var(--bg3) right top/ var(--p), var(--bg3) right bottom 2px / var(--p),
+        var(--bg3) left 2px bottom 2px / var(--p),
+        var(--bg4) left top 2px / var(--p),
+        var(--bg4) right 2px top 2px / var(--p),
+        var(--bg4) right 2px bottom/ var(--p), var(--bg4) left bottom/ var(--p),
+        /* 底色 */ var(--b);
 }
 
 :host(.no-border) li {
@@ -87,35 +83,28 @@ li {
 
 /* 轮播项 Tab聚焦 */
 :host(:focus-visible) li {
-    --bg5: linear-gradient(#EDA949, #EDA949);
-    --bg6: linear-gradient(#C98930, #C98930);
-    --bg7: linear-gradient(#493414C5, #493414C5);
+    --bg5: linear-gradient(#eda949, #eda949);
+    --bg6: linear-gradient(#c98930, #c98930);
+    --bg7: linear-gradient(#493414c5, #493414c5);
     --bg8: linear-gradient(#49341426, #49341426);
     --h2: calc(100% - 8px) 2px no-repeat;
     --v2: 2px calc(100% - 8px) no-repeat;
     --bb: #49341426;
     background:
-        /* 高亮点 */
-        var(--bg5) left 2px top/var(--p),
-        var(--bg5) right 2px top/var(--p),
-        var(--bg5) left top 2px/var(--p),
-        var(--bg5) right top 2px/var(--p),
-        var(--bg5) left 2px bottom/var(--p),
+        /* 高亮点 */ var(--bg5) left 2px top/var(--p),
+        var(--bg5) right 2px top/var(--p), var(--bg5) left top 2px / var(--p),
+        var(--bg5) right top 2px / var(--p), var(--bg5) left 2px bottom/var(--p),
         var(--bg5) right 2px bottom/var(--p),
-        var(--bg5) left bottom 2px/var(--p),
-        var(--bg5) right bottom 2px/var(--p),
-        /* 实边 */
-        var(--bg6) left 4px top/var(--h2),
-        var(--bg6) left top 4px/var(--v2),
+        var(--bg5) left bottom 2px / var(--p),
+        var(--bg5) right bottom 2px / var(--p),
+        /* 实边 */ var(--bg6) left 4px top/var(--h2),
+        var(--bg6) left top 4px / var(--v2),
         var(--bg6) left 4px bottom/var(--h2),
-        var(--bg6) right top 4px/var(--v2),
-        /* 虚边 */
-        var(--bg7) left 2px top 2px/var(--v1),
-        var(--bg7) left 2px top 4px/var(--h1),
-        var(--bg7) left 4px bottom 2px/var(--v1),
-        var(--bg7) right 2px top 2px/var(--h1),
-        /* 底色 */
-        var(--b) !important;
+        var(--bg6) right top 4px / var(--v2),
+        /* 虚边 */ var(--bg7) left 2px top 2px / var(--v1),
+        var(--bg7) left 2px top 4px / var(--h1),
+        var(--bg7) left 4px bottom 2px / var(--v1),
+        var(--bg7) right 2px top 2px / var(--h1), /* 底色 */ var(--b) !important;
 }
 
 :host(:hover) li {
@@ -130,48 +119,48 @@ li {
 
 /* 投射物 */
 li.projectile {
-    --c1: #5A2323;
+    --c1: #5a2323;
     --c2: #411919;
 }
 
 /* 静态投射物 */
 li.staticProjectile {
-    --c1: #8D3F18;
+    --c1: #8d3f18;
     --c2: #553422;
 }
 
 /* 修正 */
 li.modifier {
-    --c1: #2D3A72;
+    --c1: #2d3a72;
     --c2: #202952;
 }
 
 /* 材料 */
 li.material {
-    --c1: #356F44;
-    --c2: #2F4836;
+    --c1: #356f44;
+    --c2: #2f4836;
 }
 
 /* 多重 */
 li.drawMany {
-    --c1: #1C6D73;
+    --c1: #1c6d73;
     --c2: #214346;
 }
 
 /* 其他 */
 li.other {
-    --c1: #714B33;
-    --c2: #49392E;
+    --c1: #714b33;
+    --c2: #49392e;
 }
 
 /* 实用 */
 li.utility {
-    --c1: #7B2A74;
-    --c2: #4D2A4A;
+    --c1: #7b2a74;
+    --c2: #4d2a4a;
 }
 
 /* 被动 */
 li.passive {
-    --c1: #212F26;
-    --c2: #18211B;
+    --c1: #212f26;
+    --c2: #18211b;
 }
