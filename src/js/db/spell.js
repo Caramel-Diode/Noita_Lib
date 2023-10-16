@@ -940,7 +940,7 @@ DB.spell = class {
         this.$NULL = Object.freeze(new this(["_NULL", "空白", "NULL", "额外描述", 0, -1, 0, 0, "", "", 0, "", "", "", 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 1, 1, 0, 0, 0, 0, 0, 0, 0, "", 0, "", 0, 0, 0, 0, "", "", 0, 0, "", ""]));
         // data : 嵌入法术数据
         /** @type {Array} */
-        const datas = "spellData.jsonc";
+        const datas = "db/data/spellData.js";
         for (let i = 0; i < datas.length; i++) {
             const data = Object.freeze(new this(datas[i]));
             const storage = this.data;

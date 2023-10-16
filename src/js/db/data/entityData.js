@@ -245,5 +245,4 @@
     ["WORM_BIG_WORM_RAIN", "大型蠕虫[蠕虫雨]", "PC", "", 0, 0, -1, 0, 0, 0, 0, 0, 0, 0, 0, 0, "", 0, 1, "", "DMC", 3500, -1, "acid lava", "blood_worm blood_worm", "meat_worm", "D0.4"],
     ["WORM_BIG", "大型蠕虫", "PC", "", 0, 0, -1, 0, 0, 0, 0, 0, 0, 0, 0, 0, "", 0, 1, "", "DMC", 3500, -1, "acid lava", "blood_worm blood_worm", "meat_worm", "D0.4"],
     ["WORM_RAIN", "蠕虫雨", "PC", "", 0, 0, 400, 0, 0, 0, 0, 0, 0, 0, 0, 0, "", 0, 1, "WORM_BIG_WORM_RAIN:10"]
-]
-
+];

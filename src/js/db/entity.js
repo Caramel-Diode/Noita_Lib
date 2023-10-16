@@ -231,7 +231,7 @@ DB.entity = class {
     };
     static init() {
         this.$NULL = new this(["_NULL", "空白"]);
-        const datas = "entityData.jsonc";
+        const datas = "db/data/entityData.js";
         for (let i = 0; i < datas.length; i++) {
             const data = Object.freeze(new this(datas[i]));
             this.data.projectile.usedBySpell.set(data.id, data);
