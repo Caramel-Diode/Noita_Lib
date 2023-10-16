@@ -25,7 +25,7 @@ DB.wand = class {
         static init = () => {
             // data : 嵌入法杖模板数据
             /** @type {Array} */
-            const datas = "db/data/wandTemplateData.js";
+            const datas = "db/data/wandTemplate.js";
             for (let i = 0; i < datas.length; i++) {
                 this.dataList.push(Object.freeze(new this(datas[i])));
             }

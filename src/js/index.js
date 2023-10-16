@@ -83,22 +83,6 @@ const noitaLib = (() => {
             queryById: DB.spell.queryById,
             queryByName: DB.spell.queryByName,
             queryByExpression: DB.spell.queryByExpression,
-            /**
-             * ## `</> DOM元素`
-             * ```html
-             *  <noita-spell><noita-spell/>
-             *  ```
-             * ---
-             * ### 🔷 显示模式 `display`  
-             * 🔹 图标模式(默认) `"icon"`  
-             * 🔹 面板模式 `"panel"`
-             * ---
-             * ### 🔷 法术数据-id `spell.id`
-             * ---
-             * ### 🔷 法术数据-名称 `spell.name`
-             * ---
-             *  @extends HTMLElement 
-             */
             HTMLElement: component.spell
         },
         /** # [`🪄 魔杖`](https://noita.wiki.gg/zh/wiki/法杖) */
@@ -116,7 +100,7 @@ const noitaLib = (() => {
         /** # [`👿 敌人`](https://noita.wiki.gg/zh/wiki/敌人) */
         enemy: {},
         /** # [`🔮 真理魔球`](https://noita.wiki.gg/zh/wiki/真理魔球) */
-        orb: {/*D:\Project\Noita Mod\原版拆包数据\data_wak\items_gfx\orbs*/ },
+        orb: { },
         //#endregion
         save: save,
         cursor: {

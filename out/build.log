@@ -1,14 +1,14 @@
-2023/10/17 04:38:52
-#sum: 465945
+2023/10/17 05:05:50
+#sum: 465938
 js:
-    #all: 81422
+    #all: 81399
     index: 2416
-    db/base: 3265
-    db/entity: 3950
+    db/base: 3258
+    db/entity: 3946
     db/material: 134
-    db/perk: 1900
-    db/spell: 19460
-    db/wand: 6728
+    db/perk: 1896
+    db/spell: 19456
+    db/wand: 6724
     component/base: 9105
     component/cursor: 1150
     component/entity: 5684
