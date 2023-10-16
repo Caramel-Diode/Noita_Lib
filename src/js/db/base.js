@@ -1,11 +1,7 @@
 DB.base = class {
-
     static panelAttrInfo = class {
         static panelAttrIcons = utilities.base64ToImg("panelAttrIcon.png");
-        /** @type {Number} */
-        #iconIndex;
-        /** @type {String} */
-        name;
+        /** @type {Number} 图标索引 */ #iconIndex;
         /**
          * 面板属性信息构造器
          * @param {Number} iconIndex 图标索引
@@ -13,8 +9,8 @@ DB.base = class {
          */
         constructor(iconIndex, name) {
             this.#iconIndex = iconIndex;
-            this.name = name;
-        };
+            /** @type {String} 属性名称 */ this.name = name;
+        }
         static datas = new Map([
             ["type", new this(1, "法术类型")],
             ["shuffle", new this(2, "乱序")],
@@ -87,13 +83,13 @@ DB.base = class {
             ["trailMaterial", new this(51, "提供轨迹")],
             ["trailMaterialAmount", new this(52, "轨迹浓度")],
             ["material", new this(53, "提供材料")],
-            ["materialAmount", new this(54, "材料浓度")],
+            ["materialAmount", new this(54, "材料浓度")]
         ]);
 
         async getIcon() {
             const canvas = document.createElement("canvas");
             canvas.className = "attr-icon";
-            canvas.setAttribute("aria-label", `面板属性图标:${this.name}`);// 无障碍标注
+            canvas.setAttribute("aria-label", `面板属性图标:${this.name}`); // 无障碍标注
             canvas.title = this.name;
             canvas.width = 7;
             canvas.height = 7;
