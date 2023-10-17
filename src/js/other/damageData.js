@@ -1,4 +1,4 @@
-class DamageData { // mark : 伤害数据类
+class DamageData {
     static #reg_letter = /[A-Z]/;
     static #reg_number = /[0-9\.\-]/;
     //#region 成员...

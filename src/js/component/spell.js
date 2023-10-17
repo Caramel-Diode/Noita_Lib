@@ -52,20 +52,14 @@ component.spell = class extends component.base {
             option = params[1];
         }
         if (option) {
-            if (option.id) {
-                this.setAttribute("spell.id", option.id);
-            } else if (option.name) {
-                this.setAttribute("spell.name", option.name);
-            } else if (option.expression) {
-                this.setAttribute("spell.expression", option.expression);
-            } else if (option.needDefaultFn === false) {
-                this.#needDefaultFn = false;
-            } else if (option.datas) {
-                this.spellDatas = option.datas;
-            }
-            if (option.display) {
-                this.setAttribute("display", option.display);
-            }
+            if (option.id) this.setAttribute("spell.id", option.id);
+            else if (option.name) this.setAttribute("spell.name", option.name);
+            else if (option.expression) this.setAttribute("spell.expression", option.expression);
+            else if (option.datas) this.spellDatas = option.datas;
+            this.#needDefaultFn = option.needDefaultFn === false;
+
+            if (option.display) this.setAttribute("display", option.display);
+
             if (option.instanceData) {
                 this.setAttribute("spell.remain", option.instanceData.remain.toString());
                 this.instanceData = option.instanceData;

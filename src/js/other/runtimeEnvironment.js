@@ -1,4 +1,4 @@
-class runtimeEnvironment { // mark : 施放运行时环境
+class runtimeEnvironment {
     /**
      * 预备队列 
      * @type {Array<DB.spell>} 

@@ -2,15 +2,23 @@ component.wand = class extends component.base {
     /** @type {ShadowRoot} */
     #shadowRoot = this.attachShadow({ mode: "closed" });
 
-    static observedAttributes = [...super.observedAttributes];
+    static observedAttributes = [...super.observedAttributes, "wand.name", "wand.template", "wand.icon", "wand.capacity", "wand.draw", "wand.fire-rate-wait", "wand.reload-time", "wand.shuffle", "wand.spread-degrees", "wand.speed-multiplier", "wand.mana-charge-speed", "wand.mana-max", "wand.static-spells", "wand.dynamic-spells"];
 
     #displayMode = undefined;
 
     /** @type {DB.wand} */
     wandData = undefined;
 
-    constructor(...option) {
+    constructor(option) {
         super();
+        if (option) {
+            this.#displayMode = option.display ?? "panel";
+            if (option.data) {
+                const data = option.data;
+                if (data.template) this.wandData = DB.wand.template.get(data.template);
+                else this.wandData = new DB.wand([data.name ?? "魔杖", data.icon ?? "AUTO", data.capacity ?? 0, data.draw ?? 1, data.fireRateWait ?? 0, data.reloadTime ?? 0, data.shuffle ?? false, data.spreadDegrees ?? 0, data.speedMultiplier ?? 1, data.manaChargeSpeed ?? 0, data.manaMax ?? 0, data.staticSpells ?? "", data.dynamicSpells ?? ""]);
+            }
+        }
     }
 
     static {
@@ -33,11 +41,9 @@ component.wand = class extends component.base {
                 /** @type {String} */
                 const attrStr = bindThis.getAttribute(`wand.${attrName}`);
                 if (attrStr) {
-                    if (attrStr.startsWith(">=")) {
-                        return { min: Number(attrStr.slice(2)), max: Infinity };
-                    } else if (attrStr.startsWith("<=")) {
-                        return { min: -Infinity, max: Number(attrStr.slice(2)) };
-                    } else {
+                    if (attrStr.startsWith(">=")) return { min: Number(attrStr.slice(2)), max: Infinity };
+                    else if (attrStr.startsWith("<=")) return { min: -Infinity, max: Number(attrStr.slice(2)) };
+                    else {
                         const [min, max = ""] = attrStr.split("~");
                         if (max) return { min: Number(min), max: Number(max) };
                         else return Number(attrStr);
@@ -52,7 +58,7 @@ component.wand = class extends component.base {
 
                 let displayMode = this.getAttribute("display");
                 if (displayMode) this.#displayMode = displayMode;
-                else {
+                else if (this.#displayMode) {
                     this.setAttribute("display", "panel");
                     this.#displayMode = "panel";
                 }
@@ -60,7 +66,7 @@ component.wand = class extends component.base {
                 if (wandTemplate) {
                 } else {
                     bindThis = this;
-                    this.wandData = new DB.wand([this.getAttribute("wand.name") ?? "魔杖", this.getAttribute("wand.icon") ?? "AUTO", attrParse("capacity", 0), attrParse("draw", 1), attrParse("fire-rate-wait", 1), attrParse("reload-time", 0), this.getAttribute("wand.shuffle") === "true", attrParse("spread-degrees", 0), attrParse("speed-multiplier", 1), attrParse("mana-charge-speed", 0), attrParse("mana-max", 0), this.getAttribute("wand.static-spells") ?? "", this.getAttribute("wand.dynamic-spells") ?? ""]);
+                    this.wandData = new DB.wand([this.getAttribute("wand.name") ?? "魔杖", this.getAttribute("wand.icon") ?? "AUTO", attrParse("capacity", 0), attrParse("draw", 1), attrParse("fire-rate-wait", 0), attrParse("reload-time", 0), this.getAttribute("wand.shuffle") === "true", attrParse("spread-degrees", 0), attrParse("speed-multiplier", 1), attrParse("mana-charge-speed", 0), attrParse("mana-max", 0), this.getAttribute("wand.static-spells") ?? "", this.getAttribute("wand.dynamic-spells") ?? ""]);
                 }
                 if (this.#displayMode === "panel") this.#loadPanelContent(this);
                 else this.#loadIconContent(this);
@@ -170,10 +176,6 @@ component.wand = class extends component.base {
     attributeChangedCallback(name, oldValue, newValue) {
         if (oldValue === null) return;
         else if (newValue === oldValue) return;
-        else {
-            if (name === "data-type") this.wandData = undefined;
-            else if (name === "data-display") this.#displayMode = undefined;
-            this.contentUpdate();
-        }
+        else this.contentUpdate();
     }
 };

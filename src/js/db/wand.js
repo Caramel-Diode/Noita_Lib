@@ -23,8 +23,7 @@ DB.wand = class {
         }
 
         static init = () => {
-            // data : 嵌入法杖模板数据
-            /** @type {Array} */
+            /** #data: 法杖模板数据 @type {Array} */
             const datas = "db/data/wandTemplate.js";
             for (let i = 0; i < datas.length; i++) {
                 this.dataList.push(Object.freeze(new this(datas[i])));
@@ -281,6 +280,10 @@ DB.wand = class {
         };
     })();
 
+    static template = {
+        get(id) {}
+    };
+
     /** @typedef {Number|{min:Number,max:Number}} $Num 固定值或范围值 */
 
     /**
@@ -352,6 +355,7 @@ DB.wand = class {
         } else if (datas[1] !== "NONE") {
         }
     }
+
     static init() {
         this.#wandIconData.init();
     }

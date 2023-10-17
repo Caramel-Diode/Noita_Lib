@@ -1,5 +1,6 @@
 /** 
  * @file Noita Web Lib
+ * #home: 入口
  */
 "use strict";
 
