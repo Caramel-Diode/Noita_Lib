@@ -57,24 +57,8 @@ li {
     --v1: calc(100% - 6px) 2px no-repeat;
     --p: 2px 2px no-repeat;
     --bb: #00000000;
-    --b: radial-gradient(var(--c5, var(--bb)), var(--c6, var(--bb)))
-        center/calc(100% - 8px) calc(100% - 8px) no-repeat;
-    background:
-        /* 实边 */ var(--bg1) left top 4px / var(--h1),
-        var(--bg1) right 4px bottom/var(--v1),
-        var(--bg1) right bottom 4px / var(--h1),
-        var(--bg1) left 4px top/var(--v1),
-        var(--bg2) left 2px top 2px / var(--h1),
-        var(--bg2) left 2px top 2px / var(--v1),
-        var(--bg2) right 2px bottom 2px / var(--h1),
-        var(--bg2) right 2px bottom 2px / var(--v1),
-        /* 半透明点 */ var(--bg3) left 2px top/ var(--p),
-        var(--bg3) right top/ var(--p), var(--bg3) right bottom 2px / var(--p),
-        var(--bg3) left 2px bottom 2px / var(--p),
-        var(--bg4) left top 2px / var(--p),
-        var(--bg4) right 2px top 2px / var(--p),
-        var(--bg4) right 2px bottom/ var(--p), var(--bg4) left bottom/ var(--p),
-        /* 底色 */ var(--b);
+    --b: radial-gradient(var(--c5, var(--bb)), var(--c6, var(--bb))) center/calc(100% - 8px) calc(100% - 8px) no-repeat;
+    background:/* 实边 */ var(--bg1) left top 4px / var(--h1), var(--bg1) right 4px bottom/var(--v1), var(--bg1) right bottom 4px / var(--h1), var(--bg1) left 4px top/var(--v1), var(--bg2) left 2px top 2px / var(--h1), var(--bg2) left 2px top 2px / var(--v1), var(--bg2) right 2px bottom 2px / var(--h1), var(--bg2) right 2px bottom 2px / var(--v1), /* 半透明点 */ var(--bg3) left 2px top/ var(--p), var(--bg3) right top/ var(--p), var(--bg3) right bottom 2px / var(--p), var(--bg3) left 2px bottom 2px / var(--p), var(--bg4) left top 2px / var(--p), var(--bg4) right 2px top 2px / var(--p), var(--bg4) right 2px bottom/ var(--p), var(--bg4) left bottom/ var(--p), /* 底色 */ var(--b);
 }
 
 :host(.no-border) li {
@@ -91,20 +75,7 @@ li {
     --v2: 2px calc(100% - 8px) no-repeat;
     --bb: #49341426;
     background:
-        /* 高亮点 */ var(--bg5) left 2px top/var(--p),
-        var(--bg5) right 2px top/var(--p), var(--bg5) left top 2px / var(--p),
-        var(--bg5) right top 2px / var(--p), var(--bg5) left 2px bottom/var(--p),
-        var(--bg5) right 2px bottom/var(--p),
-        var(--bg5) left bottom 2px / var(--p),
-        var(--bg5) right bottom 2px / var(--p),
-        /* 实边 */ var(--bg6) left 4px top/var(--h2),
-        var(--bg6) left top 4px / var(--v2),
-        var(--bg6) left 4px bottom/var(--h2),
-        var(--bg6) right top 4px / var(--v2),
-        /* 虚边 */ var(--bg7) left 2px top 2px / var(--v1),
-        var(--bg7) left 2px top 4px / var(--h1),
-        var(--bg7) left 4px bottom 2px / var(--v1),
-        var(--bg7) right 2px top 2px / var(--h1), /* 底色 */ var(--b) !important;
+        /* 高亮点 */ var(--bg5) left 2px top/var(--p), var(--bg5) right 2px top/var(--p), var(--bg5) left top 2px / var(--p), var(--bg5) right top 2px / var(--p), var(--bg5) left 2px bottom/var(--p), var(--bg5) right 2px bottom/var(--p), var(--bg5) left bottom 2px / var(--p), var(--bg5) right bottom 2px / var(--p), /* 实边 */ var(--bg6) left 4px top/var(--h2), var(--bg6) left top 4px / var(--v2), var(--bg6) left 4px bottom/var(--h2), var(--bg6) right top 4px / var(--v2), /* 虚边 */ var(--bg7) left 2px top 2px / var(--v1), var(--bg7) left 2px top 4px / var(--h1), var(--bg7) left 4px bottom 2px / var(--v1), var(--bg7) right 2px top 2px / var(--h1), /* 底色 */ var(--b) !important;
 }
 
 :host(:hover) li {
