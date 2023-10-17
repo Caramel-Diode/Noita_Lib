@@ -41,10 +41,9 @@ li {
 
 .dynamic-spells > li {
     --size: 50px;
-    --c0: #00000000;
-    --c1: #3d302bda;
-    --0: var(--c0) 0;
-    --1: var(--c1) 0;
+    --c: #3d302bda;
+    --0: #00000000 0;
+    --1: var(--c) 0;
     --2: #794738 0;
     --3: #582b28 0;
     --4: #5f302c 0;
@@ -100,7 +99,7 @@ li {
             )
             bottom var(--h),
         var(--S) left var(--v), var(--S) right var(--v),
-        linear-gradient(var(--c1), var(--c1)) center/ 88% 88% no-repeat;
+        linear-gradient(var(--c), var(--c)) center/ 88% 88% no-repeat;
 }
 
 /* 可选位置 */
