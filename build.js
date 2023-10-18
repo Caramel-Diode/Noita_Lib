@@ -84,7 +84,7 @@ const u = {
                 }
             }
         }
-        return result.join("");
+        return result.join("").replaceAll(/0+\.(?=[d])/g, ".");
     },
     /**
      * 最小化js文件
@@ -193,7 +193,7 @@ const u = {
                 }
             }
         }
-        return result.join("");
+        return result.join("").replaceAll(/0+\.(?=[d])/g, "."); // 压缩小数表达式
     },
     embed_files: (() => {
         let matchData = [];
@@ -343,6 +343,11 @@ const getMinJson = () => {
 // 将所有js文件合并到index.js中
 const embedJsToMainJs = jsData => {
     if (jsData.main.length > 0) {
+        for (let i = 0; i < jsData.db_data.length; i++) {
+            /** @type {{data:String}} */
+            const e = jsData.db_data[i];
+            e.data = e.data.slice(0, -1); //去除js数据文件末尾的分号
+        }
         jsData.db = u.embed_files(jsData.db, jsData.db_data); //先将数据库数据表合并到class中
         jsData.main = u.embed_files(jsData.main, [...jsData.db, ...jsData.component, ...jsData.other]); //合并其余js
     } else console.log("index.js不存在");
