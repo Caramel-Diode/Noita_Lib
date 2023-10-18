@@ -5,27 +5,7 @@
       "checkJs": true
     },
     "include": [
-        "src/js/db/base.js",
-        "src/js/db/entity.js",
-        "src/js/db/material.js",
-        "src/js/db/spell.js",
-        "src/js/db/wand.js",
-        "src/js/db/perk.js",
-
-        "src/js/component/cursor.js",
-        "src/js/component/base.js",
-        "src/js/component/entity.js",
-        "src/js/component/spell.js",
-        "src/js/component/wand.js",
-        "src/js/component/perk.js",
-        
-        "src/js/other/consoleCSS.js",
-        "src/js/other/damageData.js",
-        "src/js/other/runtimeEnvironment.js",
-        "src/js/other/wave.js",
-        "src/js/other/utilities.js",
-
-        "src/js/index.js"
+        "src/js/**/*",
     ],
     "exclude": [
         "out/**"
