@@ -1,0 +1,88 @@
+{
+    "name": "noita_lib",
+    "displayName": "noitaLib",
+    "description": "基于Web Component技术构建的 Noita 游戏UI元素工具库",
+    "version": "1.0.0",
+    "license": "GPL",
+    "repository": "github:Caramel-Diode/Noita_Lib",
+    "keywords": [
+        "noita",
+        "vanilla",
+        "web component"
+    ],
+    "author": {
+        "name": "半导体果冻",
+        "url": "https://github.com/Caramel-Diode",
+        "email": "2746671038@qq.com"
+    },
+    "contributors": [],
+    "main": "src/js/index.js",
+    "types": "./type.d.ts",
+    "scripts": {
+        "build": "node ./util/build.js"
+    },
+    "eslintConfig": {
+        "env": {
+            "browser": true,
+            "node": true,
+            "es6": true,
+            "worker": true
+        }
+    },
+    "prettier": {
+        "tabWidth": 4,
+        "useTabs": false,
+        "proseWrap": "preserve",
+        "endOfLine": "crlf",
+        "printWidth": 800,
+        "overrides": [
+            {
+                "files": "*.js",
+                "options": {
+                    "semi": true,
+                    "singleQuote": false,
+                    "arrowParens": "avoid",
+                    "bracketSpacing": true,
+                    "trailingComma": "none",
+                    "parser": "babel"
+                }
+            },
+            {
+                "files": "*.css",
+                "options": {
+                    "printWidth": 2000,
+                    "proseWrap": "never",
+                    "parser": "css"
+                }
+            },
+            {
+                "files": "*.html",
+                "options": {
+                    "bracketSameLine": false,
+                    "htmlWhitespaceSensitivity": "css",
+                    "singleAttributePerLine": true,
+                    "parser": "html"
+                }
+            }
+        ]
+    },
+    "stylelint": {
+        "overrides": [],
+        "rules": {
+            "declaration-block-no-duplicate-properties": true,
+            "no-duplicate-selectors": true,
+            "block-no-empty": true,
+            "comment-no-empty": true,
+            "no-empty-source": true,
+            "function-calc-no-unspaced-operator": true,
+            "keyframe-declaration-no-important": true,
+            "media-query-no-invalid": true,
+            "named-grid-areas-no-invalid": true,
+            "no-invalid-double-slash-comments": true,
+            "string-no-newline": true,
+            "length-zero-no-unit": true,
+            "font-family-name-quotes": "always-where-recommended",
+            "function-url-quotes": "always"
+        }
+    }
+}
