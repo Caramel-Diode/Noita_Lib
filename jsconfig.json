@@ -4,6 +4,6 @@
         "target": "esnext",
         "checkJs": true
     },
-    "include": ["src/**/*", "src/index.js", "src/public"],
+    "include": ["src/**/*", "src/index.js", "util/embed.info.js"],
     "exclude": ["out/**"]
 }
