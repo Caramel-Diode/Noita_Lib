@@ -1,13 +1,9 @@
 {
     "compilerOptions": {
-      "module": "None",
-      "target": "esnext",
-      "checkJs": true
+        "module": "None",
+        "target": "esnext",
+        "checkJs": true
     },
-    "include": [
-        "src/js/**/*",
-    ],
-    "exclude": [
-        "out/**"
-    ]
-  }
+    "include": ["src/**/*", "src/index.js", "src/public"],
+    "exclude": ["out/**"]
+}
