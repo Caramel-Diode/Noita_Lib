@@ -1,0 +1,42 @@
+{
+    "version": "2.0.0",
+    "tasks": [
+        {
+            "label": "Build",
+            "type": "shell",
+            "command": "node ${workspaceFolder}/util/build.js",
+            "detail": "构建noitaLib.js",
+            "icon": {
+                "id": "file-code",
+                "color": "terminal.ansiYellow"
+            },
+            "problemMatcher": [],
+            "group": {
+                "kind": "build",
+                "isDefault": true
+            }
+        },
+        {
+            "label": "Live Preview",
+            "type": "Live Preview",
+            "workspacePath": "d:\\Project\\Web\\NoitaLib",
+            "detail": "实时预览",
+            "icon": {
+                "id": "beaker",
+                "color": "terminal.ansiBlue"
+            },
+            "group": "test"
+        },
+        {
+            "label": "打开测试项目",
+            "type": "shell",
+            "command": "code D:/Project/Web/NoitaTest",
+            "detail": "打开Noita教学文档项目",
+            "icon": {
+                "id": "file-directory",
+                "color": "terminal.ansiMagenta"
+            },
+            "group": "none"
+        }
+    ]
+}

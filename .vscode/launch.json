@@ -1,18 +1,121 @@
 {
-    // 使用 IntelliSense 了解相关属性。 
+    // 使用 IntelliSense 了解相关属性。
     // 悬停以查看现有属性的描述。
     // 欲了解更多信息，请访问: https://go.microsoft.com/fwlink/?linkid=830387
     "version": "0.2.0",
     "configurations": [
         {
-            "name": "📦️Build",
-            "program": "${workspaceFolder}/build.js",
+            "name": "📦️ Build",
+            "program": "${workspaceFolder}/util/build.js",
             "request": "launch",
-            "skipFiles": [
-                "<node_internals>/**"
-            ],
-            "type": "node"
-        }
+            "type": "node",
+            "presentation": {
+                "hidden": false,
+                "group": "build",
+                "order": 1
+            }
+        },
+        {
+            "name": "📦️ npm Build",
+            "request": "launch",
+            "runtimeArgs": ["run-script", "build"],
+            "runtimeExecutable": "npm",
+            "type": "node",
+            "presentation": {
+                "hidden": false,
+                "group": "build",
+                "order": 1
+            }
+        },
+
+        {
+            "name": "🐞 Run Firefox",
+            "type": "firefox",
+            "request": "launch",
+            "reAttach": true,
+            "file": "${workspaceFolder}/test/index.html",
+            "firefoxArgs": [],
+            "presentation": {
+                "hidden": false,
+                "group": "debug",
+                "order": 3
+            }
+        },
+        {
+            "name": "🐞 Attach Firefox",
+            "type": "firefox",
+            "request": "attach",
+            "presentation": {
+                "hidden": false,
+                "group": "debug",
+                "order": 4
+            }
+        },
+
+        {
+            "name": "launch msedge",
+            "request": "launch",
+            "type": "msedge",
+            "url": "${workspaceFolder}/test/index.html",
+            "webRoot": "${workspaceFolder}",
+            "runtimeArgs": ["--remote-debugging-port=9222"],
+            "presentation": { "hidden": true }
+        },
+        {
+            "name": "launch msedge headless",
+            "request": "launch",
+            "type": "msedge",
+            "url": "${workspaceFolder}/test/index.html",
+            "webRoot": "${workspaceFolder}",
+            "runtimeArgs": ["--remote-debugging-port=9222", "--headless"],
+            "presentation": { "hidden": true }
+        },
+        {
+            "name": "open devtools",
+            "port": 9222,
+            "request": "attach",
+            "type": "vscode-edge-devtools.debug",
+            "url": "${workspaceFolder}/test/index.html",
+            "webRoot": "${workspaceFolder}",
+            "presentation": { "hidden": true }
+        },
+
+        // {
+        //     "name": "📦️Build",//旧版配置
+        //     "program": "${workspaceFolder}/build.js",
+        //     "request": "launch",
+        //     "skipFiles": ["<node_internals>/**"],
+        //     "type": "node",
+        //     "console": "integratedTerminal"
+        // }
     ],
-    "compounds": []
+    "compounds": [
+        // {
+        //     "name": "📦️ 构建",
+        //     "configurations": [],
+        //     "presentation": {
+        //         "hidden": false,
+        //         "group": "构建",
+        //         "order": 1
+        //     }
+        // },
+        {
+            "name": "🐞 Edge Debug",
+            "configurations": ["launch msedge", "open devtools"],
+            "presentation": {
+                "hidden": false,
+                "group": "debug",
+                "order": 1
+            }
+        },
+        {
+            "name": "🐞 Edge Headless Debug",
+            "configurations": ["launch msedge headless", "open devtools"],
+            "presentation": {
+                "hidden": false,
+                "group": "debug",
+                "order": 2
+            }
+        }
+    ]
 }
