@@ -1,4 +1,4 @@
-const db_perk = class {
+const PerkData = class {
     /** @type {Promise<HTMLImageElement>} 图标精灵图 */
     static iconImage = util.base64ToImg(embed(`#icon.png`));
     static iconImage_greedCurse = util.base64ToImg(embed(`#icon_greedCurse.png`));
@@ -13,12 +13,12 @@ const db_perk = class {
 
     /** @param {Array} datas */
     constructor(datas) {
-        this.#_index = db_perk.#index;
-        db_perk.#index++;
+        this.#_index = PerkData.#index;
+        PerkData.#index++;
         /** @type {String} `★主键` 天赋标识符 */ this.id = datas[0];
         /** @type {String} 中文译名 */ this.name = datas[1];
         /** @type {String} 基础描述 */ this.description = datas[2];
-        /** @type {String} 类型 [特殊,普通,一次性,精粹] */ this.type = db_perk.#typeList[datas[3]];
+        /** @type {String} 类型 [特殊,普通,一次性,精粹] */ this.type = PerkData.#typeList[datas[3]];
         /** @type {Number} 堆叠极限 */ this.maxStack = datas[4];
         /** @type {Number} 天赋池允许存在的最大数量 */ this.maxInPool = datas[5];
         /** @type {String} 游戏效果 */ this.gameEffect = datas[6];

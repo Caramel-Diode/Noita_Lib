@@ -1,9 +1,9 @@
-/** [法术数据库](spell.js) */
-const db_spell = class {
+/** 法术数据 */
+const SpellData = class {
     static iconImage = util.base64ToImg(embed(`#icon.png`));
 
-    /** 提供投射物数据类 */
-    static offeredProjectileData = class OfferedProjectileData {
+    /** 提供投射物数据 */
+    static OfferedProjectileData = class {
         /**
          * @param {String} projectileId
          * @param {Number} num_min
@@ -21,7 +21,7 @@ const db_spell = class {
         /**
          * 获取提供投射物数据数组
          * @param {String} dataStr
-         * @returns {Array<db_spell.OfferedProjectileData>}
+         * @returns {Array<SpellData.OfferedProjectileData>}
          */
         static createDatas = dataStr => {
             const result = [];
@@ -73,8 +73,8 @@ const db_spell = class {
             return result;
         };
     };
-    /** 抽取数据类 */
-    static drawingData = class DrawingData {
+    /** 抽取数据 */
+    static DrawingData = class {
         /**
          * 获取提供抽取数数据数组
          * @param {String} dataStr
@@ -117,8 +117,8 @@ const db_spell = class {
             /** @type {Number} 失效抽取 */ this.death = Number.isNaN(D) ? 0 : D;
         }
     };
-    /** 法术生成数据类 -1表示非该等级法术 */
-    static spawningData = class SpawningData {
+    /** 法术生成数据 -1表示非该等级法术 */
+    static SpawningData = class {
         /** @type {Number} */ prob_lv0 = -1;
         /** @type {Number} */ prob_lv1 = -1;
         /** @type {Number} */ prob_lv2 = -1;
@@ -175,11 +175,10 @@ const db_spell = class {
         }
     };
 
-    /** @typedef {Set<db_spell>} SpellSet 法术集合 */
-
+    /** @typedef {Set<SpellData>} SpellSet 法术集合 */
     static data = {
-        /** @type {Map<String,db_spell>} id  data */ id_map: new Map(),
-        /** @type {Map<String,db_spell>} */ name_map: new Map(),
+        /** @type {Map<String,SpellData>} id  data */ id_map: new Map(),
+        /** @type {Map<String,SpellData>} */ name_map: new Map(),
 
         /** @type {SpellSet} 所有法术 */ all: new Set(),
 
@@ -234,33 +233,32 @@ const db_spell = class {
         /** @type {SpellSet} 影响[穿凿]伤害的法术 */ damage_mod_drill: new Set(),
         /** @type {SpellSet} 影响[神圣]伤害的法术 */ damage_mod_holy: new Set(),
 
-        /** @type {Array<db_spell>} 生成需要解锁法术 */
+        /** @type {Array<SpellData>} 生成需要解锁法术 */
         spawnRequiresFlag: new Set()
     };
-    /** ⚪️ 空法术 @type {db_spell} */ static $NULL;
+    /** ⚪️ 空法术 @type {SpellData} */ static $NULL;
     /** @type {Number} 辅助变量 用于记录法术图标索引 */ static #index = 0;
     static #typeList = [/* 无 */ "null", /* 投射物 */ "projectile", /* 静态投射物 */ "staticProjectile", /* 修正 */ "modifier", /* 多重 */ "drawMany", /* 材料 */ "material", /* 其它 */ "other", /* 实用 */ "utility", /* 被动 */ "passive"];
     /** @type {Number} 图标索引 */ #_index;
 
     /** @param {Array} datas */
     constructor(datas) {
-        /** @type {typeof db_spell} */
-        const _ = this.constructor;
-        this.#_index = _.#index;
-        _.#index++;
+        /** @type {typeof SpellData} */
+        this.#_index = SpellData.#index;
+        SpellData.#index++;
         /** @type {String} `★主键` 法术标识符 */ this.id = datas[0];
         /** @type {String} 中文译名 */ this.name = datas[1];
         /** @type {String} 基础描述 */ this.description = datas[2];
         /** @type {String} 额外描述 */ this.extraDescription = datas[3];
-        /** @type {String} 法术类型 */ this.type = _.#typeList[datas[4]];
+        /** @type {String} 法术类型 */ this.type = SpellData.#typeList[datas[4]];
         /** @type {Number} 最大使用次数 */ this.maxUse = datas[5]; // -1 代表无限
         /** @type {Boolean} 禁止无限法术 */ this.neverUnlimited = datas[6] === 1;
         /** @type {Number} 法力消耗 */ this.manaDrain = datas[7];
-        /** @type {db_spell.spawningData} 生成数据 */ this.spawningData = new _.spawningData(datas[8], datas[9], datas[40]);
+        /** @type {SpellData.SpawningData} 生成数据 */ this.spawningData = new SpellData.SpawningData(datas[8], datas[9], datas[40]);
         /** @type {Number} 售价 */ this.price = datas[10];
-        /** @type {Array<db_spell.OfferedProjectileData>} 提供投射物 */ this.offeredProjectiles = _.offeredProjectileData.createDatas(datas[11]);
+        /** @type {Array<SpellData.OfferedProjectileData>} 提供投射物 */ this.offeredProjectiles = SpellData.OfferedProjectileData.createDatas(datas[11]);
         /** @type {String} 被动效果 */ this.passiveEffect = datas[12];
-        /** @type {db_spell.drawingData} 提供抽取数 */ this.draw = new _.drawingData(datas[13]);
+        /** @type {SpellData.DrawingData} 提供抽取数 */ this.draw = new SpellData.DrawingData(datas[13]);
         /** @type {Number} 施放延迟 */ this.fireRateWait = datas[14];
         /** @type {Number} 暴击率 */ this.damageCriticalChance = datas[15];
         /** @type {DamageData} 伤害提升 */ this.damageMod = Object.freeze(new DamageData(datas[16]));
@@ -296,14 +294,14 @@ const db_spell = class {
         canvas.setAttribute("aria-label", `法术图标:${this.name}`); // 无障碍标注
         canvas.width = 16;
         canvas.height = 16;
-        canvas.getContext("2d").drawImage(await db_spell.iconImage, (this.#_index - 1) * 16, 0, 16, 16, 0, 0, 16, 16);
+        canvas.getContext("2d").drawImage(await SpellData.iconImage, (this.#_index - 1) * 16, 0, 16, 16, 0, 0, 16, 16);
         return canvas;
     }
 
     /**
      * 通过 `法术ID` 获取法术数据
      * @param {SpellIdEnum} id 法术ID
-     * @returns {db_spell} 法术数据
+     * @returns {SpellData} 法术数据
      */
     static queryById = id => {
         const result = this.data.id_map.get(id);
@@ -313,7 +311,7 @@ const db_spell = class {
     /**
      * 通过 `法术名称` 获取法术数据
      * @param {SpellNameEnum} name 法术名称
-     * @returns {db_spell} 法术数据
+     * @returns {SpellData} 法术数据
      */
     static queryByName = name => {
         const result = this.data.name_map.get(name);
@@ -322,9 +320,12 @@ const db_spell = class {
     };
 
     static queryByExp = (() => {
-        const consoleError = (info, index, obj) => {
-            const e = new SyntaxError(`${info} index:${index}`);
-            console.error(e, obj);
+        /** @type {util.parse.Token} */ let currentToken = undefined;
+        /** @type {SpellGroup|undefined} 当前表达式 */ let currentExpression = undefined;
+        /** @param {String} info */ const consoleError = info => {
+            const e = new SyntaxError(`${info} index:${currentToken.index}`);
+            if (currentExpression) console.error(currentToken.index, e, currentExpression);
+            else console.error(currentToken.index, e);
         };
 
         const tokenEnum = {
@@ -391,7 +392,7 @@ const db_spell = class {
                 id: "UND"
             }
         };
-        const Token = util.parse.token;
+        const Token = util.parse.Token;
         class SpellGroup {
             type = "SPELL_GROUP";
             /** @type {String} 逻辑运算符 */
@@ -549,7 +550,7 @@ const db_spell = class {
                             //取交集
                             const s1 = getSpellDatas(expression.data1);
                             const a2 = Array.from(getSpellDatas(expression.data2));
-                            /** @type {Set<db_spell>} */
+                            /** @type {Set<SpellData>} */
                             const s3 = new Set();
                             const l = a2.length;
                             for (let i = 0; i < l; i++) if (s1.has(a2[i])) s3.add(a2[i]);
@@ -573,12 +574,12 @@ const db_spell = class {
         };
         /**
          * 通过 `表达式` 获取法术数据
-         * @param {SpellTagEnum} exp 查询表达式
-         * @returns {Array<db_spell>} 法术数据
+         * @param {SpellTagEnum|SpellId} exp 查询表达式
+         * @returns {Array<SpellData>} 法术数据
          */
         return exp => {
             console.groupCollapsed("法术查询表达式解析: %c`%s`", "color:#25AFF3", exp);
-            let currentToken = undefined;
+            currentToken = undefined;
             console.groupCollapsed("🏷️ Tokenization");
             //#region 令牌化 Tokenization
             const tokens = [];
@@ -621,9 +622,9 @@ const db_spell = class {
                                 tokens.push(new Token(tokenEnum.AND, i));
                                 break;
                             default:
-                                let und = new Token(tokenEnum.UND, i);
+                                currentToken = new Token(tokenEnum.UND, i);
                                 und.data = char;
-                                consoleError(`不合法的字符: "${char}"`, i, und);
+                                consoleError(`不合法的字符: "${char}"`);
                                 return [];
                         }
                 }
@@ -642,13 +643,12 @@ const db_spell = class {
             const TL = tokens.length;
             /** @type {Array<Object>} 表达式栈 */
             const expressions = [];
-            /** @type {SpellGroup|undefined} 当前表达式 */
-            let currentExpression = undefined;
+
+            currentExpression = undefined;
             /** @type {SpellGroup|undefined} 根表达式 */
             let rootExpression = undefined;
             for (let j = 0; j < TL; j++) {
                 currentToken = tokens[j];
-                const i = currentToken.index;
                 currentExpression = expressions.at(-1);
                 switch (currentToken.type) {
                     case "SPELL_ID": {
@@ -667,7 +667,7 @@ const db_spell = class {
                                 currentExpression.dataState = -1;
                                 expressions.push(subExpression);
                             } else {
-                                consoleError(`缺少运算符连接`, i, currentExpression);
+                                consoleError(`缺少运算符连接`);
                                 return [];
                             }
                         } else {
@@ -696,7 +696,7 @@ const db_spell = class {
                                 currentExpression.dataState = -1;
                                 expressions.push(subExpression);
                             } else {
-                                consoleError(`缺少运算符连接`, i, currentExpression);
+                                consoleError(`缺少运算符连接`);
                                 return [];
                             }
                         } else {
@@ -720,7 +720,7 @@ const db_spell = class {
                                 expressions.push(subExpression);
                                 currentExpression.dataState = -1; //完成匹配
                             } else {
-                                consoleError(`缺少运算符连接`, i, currentExpression);
+                                consoleError(`缺少运算符连接`);
                                 return [];
                             }
                         } else {
@@ -735,7 +735,7 @@ const db_spell = class {
                     case "BRACKET_SMALL_RIGHT":
                         if (currentExpression) {
                             if (currentExpression.dataState === 2) {
-                                consoleError(`${currentToken.data} 缺少法术标签或法术ID连接`, i, currentExpression);
+                                consoleError(`${currentToken.data} 缺少法术标签或法术ID连接`);
                                 return [];
                             } else {
                                 let pairedBracket = false; //取消无意义法术组时可能会丢失需要匹配的左括号 这里需要记录是否在取消无意义法术组中已经完成了括号配对
@@ -753,7 +753,7 @@ const db_spell = class {
                                             expressions.pop();
                                             currentExpression = expressions.at(-1);
                                         } else {
-                                            consoleError(`不成对的括号`, i, currentExpression);
+                                            consoleError(`不成对的括号`);
                                             return [];
                                         }
                                     }
@@ -771,7 +771,7 @@ const db_spell = class {
                                 if (expressions.length > 1) expressions.pop();
                             }
                         } else {
-                            consoleError(`不成对的括号`, i, currentExpression);
+                            consoleError(`不成对的括号`);
                             return [];
                         }
                         break;
@@ -790,7 +790,7 @@ const db_spell = class {
                                 currentExpression.dataState = -1;
                                 expressions.push(subExpression);
                             } else if (currentExpression.dataState === 1) {
-                                consoleError("! 不可以用于连接两个法术标签或法术ID", i, currentExpression);
+                                consoleError("! 不可以用于连接两个法术标签或法术ID");
                                 return [];
                             }
                         } else {
@@ -805,11 +805,11 @@ const db_spell = class {
                                 currentExpression.dataState = 2;
                                 currentExpression.operator = "OR";
                             } else if (currentExpression.dataState === 2) {
-                                consoleError("已存在逻辑运算符", i, currentExpression);
+                                consoleError("已存在逻辑运算符");
                                 return [];
                             }
                         } else {
-                            consoleError("缺少被连接的法术标签或ID", i, currentExpression);
+                            consoleError("缺少被连接的法术标签或ID");
                             return [];
                         }
                         break;
@@ -819,11 +819,11 @@ const db_spell = class {
                                 currentExpression.dataState = 2;
                                 currentExpression.operator = "AND";
                             } else if (currentExpression.dataState === 2) {
-                                consoleError("已存在逻辑运算符", i, currentExpression);
+                                consoleError("已存在逻辑运算符");
                                 return [];
                             }
                         } else {
-                            consoleError("缺少被连接的法术标签或ID", i, currentExpression);
+                            consoleError("缺少被连接的法术标签或ID");
                             return [];
                         }
                         break;
@@ -841,7 +841,7 @@ const db_spell = class {
                 } else rootExpression = currentExpression.data1;
             }
             if (rootExpression.data2 === null) {
-                consoleError("缺少连接的法术标签或ID", currentToken.index, currentToken);
+                consoleError("缺少连接的法术标签或ID");
                 return [];
             }
 

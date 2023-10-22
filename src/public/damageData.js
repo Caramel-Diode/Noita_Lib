@@ -1,4 +1,4 @@
-class DamageData {
+const DamageData = class {
     static #reg_letter = /[A-Z]/;
     static #reg_number = /[0-9\.\-]/;
     //#region 成员...

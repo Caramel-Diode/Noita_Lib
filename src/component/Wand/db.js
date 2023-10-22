@@ -1,11 +1,10 @@
-/** @typedef {Number|{min:Number,max:Number}} $Num  固定值或范围值 */
-/** [法杖数据库](wand.js) */
-const db_wand = class {
+/** 法杖数据 */
+const WandData = class {
     /** 图标信息 */
-    static iconInfo = class {
+    static IconInfo = class {
         /** @type {Promise<HTMLImageElement>} 图标精灵图 */
         static iconImage = util.base64ToImg(embed(`#icon.png`));
-        /** @type {Map<String,db_wand.iconInfo>}  */ static #dataMap = new Map();
+        /** @type {Map<String,WandData.IconInfo>}  */ static #dataMap = new Map();
         /** @type {Number} 辅助变量 用于记录法杖图标起始位置 */ static #currentOrigin = 1;
         /** @type {Number} 辅助变量 用于记录法杖图标索引 */ static #currentIndex = 1;
         /**
@@ -17,7 +16,7 @@ const db_wand = class {
         constructor(origin, length, index, name) {
             /** @type {Number} 起点 */ this.origin = origin;
             /** @type {Number} 宽度 */ this.width = length;
-            /** @type {String} 标识符 */ this.index = index;
+            /** @type {String} 索引 */ this.index = index;
             /** @type {String} 名称 */ this.name = name;
         }
         /**
@@ -34,7 +33,7 @@ const db_wand = class {
         }
         /**
          * @param {String} name 图标名
-         * @returns {db_wand.iconInfo}
+         * @returns {WandData.IconInfo}
          */
         static get(name) {
             return this.#dataMap.get(name);
@@ -53,18 +52,18 @@ const db_wand = class {
         }
     };
 
-    /** 法杖匹配模板 */
-    static matchTemplate = class {
-        /** @type {Array<db_wand.matchTemplate>} */ static #dataList = [];
+    /** 法杖匹配数据 */
+    static MatchData = class {
+        /** @type {Array<WandData.MatchData>} */ static #dataList = [];
         constructor(datas) {
             /** @type {String} 名称 */ this.name = datas[0];
-            /** @type {db_wand.iconInfo} 图标信息 */ this.icon = db_wand.iconInfo.create(datas[1]);
-            /** @type {$Num} 容量 */ this.capacity = datas[2];
-            /** @type {$Num} 抽取数 */ this.draw = datas[3];
-            /** @type {$Num} 施放延迟 */ this.fireRateWait = datas[4];
-            /** @type {$Num} 充能时间 */ this.reloadTime = datas[5];
+            /** @type {WandData.IconInfo} 图标信息 */ this.icon = WandData.IconInfo.create(datas[1]);
+            /** @type {Number} 容量 */ this.capacity = datas[2];
+            /** @type {Number} 抽取数 */ this.draw = datas[3];
+            /** @type {Number} 施放延迟 */ this.fireRateWait = datas[4];
+            /** @type {Number} 充能时间 */ this.reloadTime = datas[5];
             /** @type {Boolean} 乱序 */ this.shuffle = datas[6] === 1;
-            /** @type {$Num} 散射 */ this.spreadDegrees = datas[7];
+            /** @type {Number} 散射角度 */ this.spreadDegrees = datas[7];
         }
         static init() {
             /** #data: [常规法杖模板数据](template.match.data.js) @type {Array} */
@@ -75,7 +74,7 @@ const db_wand = class {
         static getInfo = (() => {
             /**
              * 范围值取中位数
-             * @param {$Num} value
+             * @param {NumRangeOrConstant} value
              * @returns {Number}
              */
             const getMedian = value => {
@@ -85,11 +84,11 @@ const db_wand = class {
             const clamp = util.math.clamp;
             const random = util.math.random;
             /**
-             * @param {db_wand} data
-             * @returns {{icon:db_wand.iconInfo,name:String}}
+             * @param {WandData} data
+             * @returns {{icon:WandData.IconInfo,name:String}}
              */
             return data => {
-                /** @type {{icon:db_wand.iconInfo,name:String}} 返回结果 */
+                /** @type {{icon:WandData.IconInfo,name:String}} 返回结果 */
                 const result = {};
                 const fireRateWait = getMedian(data.fireRateWait),
                     draw = getMedian(data.draw),
@@ -101,7 +100,7 @@ const db_wand = class {
                     limit_draw = clamp(draw - 1, 0, 2),
                     limit_capacity = clamp(capacity / 3 - 1, 0, 7),
                     limit_spreadDegrees = clamp(spreadDegrees / 5 - 1, 0, 2),
-                    limit_reloadTime = clamp(reloadTime / 25 + .8, 0, 2);
+                    limit_reloadTime = clamp(reloadTime / 25 + 0.8, 0, 2);
 
                 let bestScore = 1000;
                 const wid = this.#dataList;
@@ -138,14 +137,14 @@ const db_wand = class {
              */
             return (cost, level, force_unshuffle) => {};
         })();
-        /** @type {Map<String,db_wand.presetTemplate>} */ static dataMap = new Map();
+        /** @type {Map<String,WandData.presetTemplate>} */ static dataMap = new Map();
         constructor(datas) {
             /** @type {String} 名称 */ this.name = datas[0];
             //图标长度为0代表法杖图标自动生成
             if (datas[1] === 0) this.icon = null;
             else {
-                /** @type {db_wand.iconInfo} 图标信息 */
-                this.icon = db_wand.iconInfo.create(datas[1], datas[0]);
+                /** @type {WandData.IconInfo} 图标信息 */
+                this.icon = WandData.IconInfo.create(datas[1], datas[0]);
             }
         }
         static init() {
@@ -158,16 +157,13 @@ const db_wand = class {
         }
     };
 
+    /** 法术配方解析  */
     static #spellRecipeParse = (() => {
-        const consoleError = (info, index, obj) => {
-            const e = new SyntaxError(`${info} index:${index}`);
-            console.error(e, obj);
+        /** @type {util.parse.Token} */ let currentToken = undefined;
+        /** @param {String} info */ const consoleError = info => {
+            const e = new SyntaxError(`${info} index:${currentToken.index}`);
+            console.error(currentToken.index, e);
         };
-        const regs = {
-            word: /[^\s :;^<>{}\[\]()*/]/,
-            number: /[0-9]/
-        };
-
         const tokenEnum = {
             /** 法术ID */
             SI: {
@@ -177,9 +173,17 @@ const db_wand = class {
                 fontWeight: "700",
                 needBlank: true
             },
-            /** 重复次数 */
-            TR: {
-                id: "TIME_OF_REPETITION",
+            /** 重复次数1 */
+            TR1: {
+                id: "TIME_OF_REPETITION1",
+                type: "number",
+                color: "#7FB717",
+                bgColor: "#00000000",
+                fontWeight: "400"
+            },
+            /** 重复次数2 */
+            TR2: {
+                id: "TIME_OF_REPETITION2",
                 type: "number",
                 color: "#7FB717",
                 bgColor: "#00000000",
@@ -216,10 +220,18 @@ const db_wand = class {
                 bgColor: "#00000000",
                 fontWeight: "700"
             },
-            /**  重复次数声明符 */
+            /**  重复次数1声明符 */
             COLON: {
                 id: "COLON",
                 data: ":",
+                color: "#CE9178",
+                bgColor: "#00000000",
+                fontWeight: "700"
+            },
+            /**  重复次数2声明符 */
+            WAVE: {
+                id: "WAVE",
+                data: "~",
                 color: "#CE9178",
                 bgColor: "#00000000",
                 fontWeight: "700"
@@ -236,19 +248,19 @@ const db_wand = class {
                 id: "UND"
             }
         };
-        const Token = util.parse.token;
+        const Token = util.parse.Token;
         /**
          * 法术序列解析
          * @param {String} expressionStr 表达式
-         * @returns {Array<db_spell>}
+         * @returns {Array<SpellData>}
          */
         return expressionStr => {
             if (expressionStr.length > 0) {
                 console.groupCollapsed("法术序列表达式解析: %c`%s`", "color:#25AFF3", expressionStr);
-                let currentToken = undefined;
+                currentToken = undefined;
                 console.groupCollapsed("🏷️ Tokenization");
                 //#region 令牌化 Tokenization
-                /** @type {Array<Token>} */
+                /** @type {Array<util.parse.Token>} */
                 const tokens = [];
                 Token.logData.init();
                 const EL = expressionStr.length;
@@ -259,14 +271,17 @@ const db_wand = class {
                         if (currentToken === undefined) {
                             const lastToken = tokens.at(-1);
                             if (lastToken.type === "COLON") {
-                                //上个token是":" 则该数字表示重复次数
-                                currentToken = new Token(tokenEnum.TR, i);
+                                //上个token是":" 则该数字表示重复次数1
+                                currentToken = new Token(tokenEnum.TR1, i);
+                            } else if (lastToken.type === "WAVE") {
+                                //上个token是"~" 则该数字表示重复次数2
+                                currentToken = new Token(tokenEnum.TR2, i);
                             } else if (lastToken.type === "CARET") {
                                 //上个token是"^" 则该数字表示剩余次数
                                 currentToken = new Token(tokenEnum.REMAIN, i);
                             } else {
                                 currentToken = new Token(tokenEnum.UND, i);
-                                consoleError("法术ID不允许数字开头 数字必须用于表示法术重复次数或法术剩余次数", i, currentToken);
+                                consoleError("法术ID不允许数字开头 数字必须用于表示法术重复次数或法术剩余次数");
                                 return [];
                             }
                             currentToken.push(char);
@@ -287,7 +302,7 @@ const db_wand = class {
                         } else if (currentToken.type === "REPLACEABLE_SPELL_EXPRESSION") {
                             currentToken.push(char);
                         } else {
-                            consoleError(`不合法的字符: "${char}"`, i, currentToken);
+                            consoleError(`不合法的字符: "${char}"`);
                             console.log("集合运算符必须出现在法术查询表达式中");
                             return [];
                         }
@@ -308,7 +323,7 @@ const db_wand = class {
                         } else if (currentToken.type === "REPLACEABLE_SPELL_EXPRESSION") {
                             currentToken.push(char);
                         } else {
-                            consoleError(`不合法的字符: "${char}"`, i, currentToken);
+                            consoleError(`不合法的字符: "${char}"`);
                             console.log("法术标签必须出现在法术查询表达式中");
                             return [];
                         }
@@ -323,6 +338,9 @@ const db_wand = class {
                             case ":":
                                 tokens.push(new Token(tokenEnum.COLON, i));
                                 break;
+                            case "~":
+                                tokens.push(new Token(tokenEnum.WAVE, i));
+                                break;
                             case "[":
                                 tokens.push(new Token(tokenEnum.BRACKET_SL, i));
                                 break;
@@ -333,9 +351,9 @@ const db_wand = class {
                                 tokens.push(new Token(tokenEnum.CARET, i));
                                 break;
                             default:
-                                let und = new Token(tokenEnum.UND, i);
-                                und.data = char;
-                                consoleError(`不合法的字符: "${char}"`, i, und);
+                                currentToken = new Token(tokenEnum.UND, i);
+                                currentToken.data = char;
+                                consoleError(`不合法的字符: "${char}"`);
                                 return [];
                         }
                     }
@@ -350,54 +368,97 @@ const db_wand = class {
                 //#endregion
                 console.groupCollapsed("🍁 AST");
                 //#region 生成AST
+                /** @type {Array<SpellRecipeItem>} */
                 const result = [];
+                let currentSpellResult = result[0];
                 const TL = tokens.length;
                 for (let i = 0; i < TL; i++) {
                     currentToken = tokens[i];
+                    currentSpellResult = result.at(-1);
                     switch (currentToken.type) {
-                        case "SPELL_ID": {
+                        case "SPELL_ID":
                             result.push({
-                                type: "STATIC",
-                                spellDatas: [Spell.queryById(currentToken.data)],
-                                amount: 1,
-                                instanceData: {
-                                    remain: Infinity
-                                }
+                                type: "固定法术",
+                                // attrStr: `spell.id="${currentToken.data}"`,
+                                datas: [Spell.queryById(currentToken.data)],
+                                instanceData: { remain: Infinity },
+                                min: 1,
+                                max: 1,
+                                flag_REMAIN: false,
+                                flag_TIME_OF_REPETITION: 0
                             });
                             break;
-                        }
-                        case "REMAIN": {
-                            const lastToken = result.at(-1);
-                            if (lastToken) lastToken.instanceData.remain = currentToken.data;
-                            else {
-                                consoleError("未指定目标法术", currentToken.index, currentToken);
+                        case "REPLACEABLE_SPELL_EXPRESSION":
+                            result.push({
+                                type: "可替换法术",
+                                // attrStr: `spell.exp="${currentToken.data}"`,
+                                datas: Spell.queryByExp(currentToken.data),
+                                instanceData: { remain: Infinity },
+                                min: 1,
+                                max: 1,
+                                flag_REMAIN: false,
+                                flag_TIME_OF_REPETITION: 0
+                            });
+                            break;
+                        case "REMAIN":
+                            if (currentSpellResult) {
+                                if (currentSpellResult.flag_REMAIN) consoleError("重复声明剩余次数"); // 非严重错误
+                                else {
+                                    // currentSpellResult.attrStr += `spell.remain=${currentToken.data}`;
+                                    currentSpellResult.instanceData.remain = currentToken.data;
+                                    currentSpellResult.flag_REMAIN = true;
+                                }
+                            } else {
+                                consoleError("未指定目标法术");
                                 return [];
                             }
                             break;
-                        }
-                        case "TIME_OF_REPETITION": {
-                            const lastToken = result.at(-1);
-                            if (lastToken) lastToken.amount = currentToken.data;
-                            else {
-                                consoleError("未指定目标法术", currentToken.index, currentToken);
+                        case "TIME_OF_REPETITION1":
+                            if (currentSpellResult) {
+                                if (currentSpellResult.flag_TIME_OF_REPETITION === 0) {
+                                    const data = currentToken.data;
+                                    if (data >= 0) {
+                                        //次数允许为0 用于配合~表示范围
+                                        currentSpellResult.min = data;
+                                        currentSpellResult.max = data;
+                                    } else {
+                                        consoleError("重复次数不可为负数");
+                                        return [];
+                                    }
+                                    currentSpellResult.flag_TIME_OF_REPETITION = 1;
+                                } else consoleError("重复声明剩余次数"); // 非严重错误
+                            } else {
+                                consoleError("未指定目标法术");
                                 return [];
                             }
                             break;
-                        }
-                        case "REPLACEABLE_SPELL_EXPRESSION": {
-                            result.push({
-                                type: "REPLACEABLE",
-                                spellDatas: Spell.queryByExp(currentToken.data),
-                                amount: 1,
-                                instanceData: {
-                                    remain: Infinity
+                        case "TIME_OF_REPETITION2":
+                            if (currentSpellResult) {
+                                if (currentToken.data > 0) {
+                                    if (currentSpellResult.flag_TIME_OF_REPETITION === 0) {
+                                        currentSpellResult.min = 0;
+                                        currentSpellResult.max = currentToken.data;
+                                        currentSpellResult.flag_TIME_OF_REPETITION === 2;
+                                    } else if (currentSpellResult.flag_TIME_OF_REPETITION === 1) {
+                                        if (currentToken.data > currentSpellResult.max) currentSpellResult.max = currentToken.data;
+                                        else currentSpellResult.min = currentToken.data;
+                                        currentSpellResult.flag_TIME_OF_REPETITION === 2;
+                                    } else {
+                                        consoleError("重复次数声明格式非法");
+                                        return [];
+                                    }
+                                } else {
+                                    consoleError("重复次数必须为正整数");
+                                    return [];
                                 }
-                            });
+                            } else {
+                                consoleError("未指定目标法术");
+                                return [];
+                            }
                             break;
-                        }
                     }
                 }
-                console.table(result, ["type", "spellData", "amount", "instanceData"]);
+                console.table(result, ["type", "min", "max", "instanceData"]);
                 console.groupEnd();
                 //#endregion
                 console.groupEnd();
@@ -431,30 +492,29 @@ const db_wand = class {
 
     /** @param {Array} datas */
     constructor(datas) {
-        /** @type {typeof db_wand} */ const _ = this.constructor;
         /** @type {String} 名称 */ this.name = datas[0];
-        /** @type {$Num} 容量 */ this.capacity = datas[2];
-        /** @type {$Num} 抽取数 */ this.draw = datas[3];
-        /** @type {$Num} 施放延迟 */ this.fireRateWait = datas[4];
-        /** @type {$Num} 充能时间 */ this.reloadTime = datas[5];
+        /** @type {NumRangeOrConstant} 容量 */ this.capacity = datas[2];
+        /** @type {NumRangeOrConstant} 抽取数 */ this.draw = datas[3];
+        /** @type {NumRangeOrConstant} 施放延迟 */ this.fireRateWait = datas[4];
+        /** @type {NumRangeOrConstant} 充能时间 */ this.reloadTime = datas[5];
         /** @type {Boolean} 乱序 */ this.shuffle = datas[6];
-        /** @type {$Num} 散射角度 */ this.spreadDegrees = datas[7];
-        /** @type {$Num} 投射物速度 */ this.speedMultiplier = datas[8];
-        /** @type {$Num} 法力恢复速度 */ this.manaChargeSpeed = datas[9];
-        /** @type {$Num} 法力上限 */ this.manaMax = datas[10];
-        /** @type {Array<db_spell>} 始终施放 */ this.staticSpells = new.target.#spellRecipeParse(datas[11]);
-        /** @type {Array<db_spell>} 活动施放 */ this.dynamicSpells = new.target.#spellRecipeParse(datas[12]);
+        /** @type {NumRangeOrConstant} 散射角度 */ this.spreadDegrees = datas[7];
+        /** @type {NumRangeOrConstant} 投射物速度 */ this.speedMultiplier = datas[8];
+        /** @type {NumRangeOrConstant} 法力恢复速度 */ this.manaChargeSpeed = datas[9];
+        /** @type {NumRangeOrConstant} 法力上限 */ this.manaMax = datas[10];
+        /** @type {Array<SpellRecipeItem>} 始终施放 `法术配方表达式` */ this.staticSpells = new.target.#spellRecipeParse(datas[11]);
+        /** @type {Array<SpellRecipeItem>} 活动法术 `法术配方表达式` */ this.dynamicSpells = new.target.#spellRecipeParse(datas[12]);
         // 决定法杖图标
         const iconName = datas[1];
         if (iconName === "AUTO") {
-            const info = _.matchTemplate.getInfo(this);
-            /** @type {db_wand.iconInfo} 图标信息 */ this.icon = info.icon;
+            const info = WandData.MatchData.getInfo(this);
+            /** @type {WandData.IconInfo} 图标信息 */ this.icon = info.icon;
             if (this.name === "AUTO") /** @type {String} 名称 */ this.name = info.name;
-        } else this.icon = _.iconInfo.get(iconName);
+        } else this.icon = WandData.IconInfo.get(iconName);
     }
 
     static init() {
-        this.matchTemplate.init();
+        this.MatchData.init();
         this.presetTemplate.init();
     }
 };

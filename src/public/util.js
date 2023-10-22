@@ -66,6 +66,18 @@ const util = {
         }
     },
     /**
+     * 向元素添加指定交互功能
+     * @param {Node} target 目标节点
+     * @param {Listeners} listeners 监听器
+     */
+    addFeatureTo(target, listeners) {
+        if (listeners.click) target.addEventListener("click", listeners.click);
+        if (listeners.keydown) {
+            target.setAttribute("tabindex", "0"); // 无障碍 允许tab聚焦
+            target.addEventListener("keydown", listeners.keydown);
+        }
+    },
+    /**
      * 将图像中的白色像素切换为指定颜色
      * @param {ImageData} imageData
      * @param {String} hexColor_str 16进制色值
@@ -229,7 +241,7 @@ const util = {
     /** 解析相关工具 */
     parse: {
         /** 🏷️ 令牌类 */
-        token: class Token {
+        Token: class {
             static regs = {
                 /** 逻辑运算符 */
                 logicalOperator: /[|&!]/,
@@ -267,7 +279,7 @@ const util = {
             }
             /** @type { String } */
             type = "";
-            /** @type { String } */
+            /** @type { String|Number } */
             data = "";
             /** @type { Array < String >} */
             #tempData = [];
