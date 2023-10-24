@@ -1,18 +1,18 @@
 const generateData = (() => {
     /**
      * @typedef {Object} AttrData 📄属性数据表
-     * @property {Number} cost 💰️ 属性点数
-     * @property {Boolean} forceUnshuffle 必定否杖
-     * @property {Boolean} isRare **★** 稀有
-     * @property {Number} manaChargeSpeed 法力恢复速度
-     * @property {Number} manaMax 法力上限
-     * @property {Number} capacity 容量
-     * @property {Number} reloadTime 充能时间
-     * @property {Number} fireRateWait 施放延迟
-     * @property {Number} draw 抽取数
-     * @property {Number} speedMultiplier 速度倍数
-     * @property {Number} prop_drawMany 多重抽取概率
-     * @property {Number} prop_unshuffle 非乱序概率
+     * @prop {Number} cost 💰️ 属性点数
+     * @prop {Boolean} forceUnshuffle 必定否杖
+     * @prop {Boolean} isRare **★** 稀有
+     * @prop {Number} manaChargeSpeed 法力恢复速度
+     * @prop {Number} manaMax 法力上限
+     * @prop {Number} capacity 容量
+     * @prop {Number} reloadTime 充能时间
+     * @prop {Number} fireRateWait 施放延迟
+     * @prop {Number} draw 抽取数
+     * @prop {Number} speedMultiplier 速度倍数
+     * @prop {Number} prop_drawMany 多重抽取概率
+     * @prop {Number} prop_unshuffle 非乱序概率
      */
     const random = util.math.random;
     const clamp = util.math.clamp;
@@ -23,13 +23,13 @@ const generateData = (() => {
         class probs {
             /**
              * @typedef {Object} ProbsItem 概率子项
-             * @property {Number} prob
-             * @property {Number} min
-             * @property {Number} max
-             * @property {Number} mean
-             * @property {Number} sharpness
-             * @property {Number} prob_unshuffle_add
-             * @property {Number} prob_drawMany_add
+             * @prop {Number} prob
+             * @prop {Number} min
+             * @prop {Number} max
+             * @prop {Number} mean
+             * @prop {Number} sharpness
+             * @prop {Number} prob_unshuffle_add
+             * @prop {Number} prob_drawMany_add
              */
             /** @type {Map<String,probs>} */
             static dataMap = new Map();

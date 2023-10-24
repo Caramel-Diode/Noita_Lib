@@ -333,9 +333,9 @@ const genLog = () => {
 class File {
     /**
      * @typedef {Object} EmbeddingPoint
-     * @property {String} src 插入源
-     * @property {Array<String>} srcChars 插入源字符数组(缓存)
-     * @property {String} data 插入数据
+     * @prop {String} src 插入源
+     * @prop {Array<String>} srcChars 插入源字符数组(缓存)
+     * @prop {String} data 插入数据
      */
     /** @typedef {"js"|"css"|"bin"} FileType */
     static readFileopt_text = { encoding: "utf8", flag: "r" };

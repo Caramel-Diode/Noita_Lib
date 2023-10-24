@@ -7,9 +7,3 @@
  */
 
 /** @typedef {"panel"|"icon"} DisplayMode 展示模式 */
-/**
- * @readonly
- * @typedef {Object} PublicStyleSheets 公共样式表
- * @property {Array<CSSStyleSheet>?} icon 图标模式样式表
- * @property {Array<CSSStyleSheet>?} panel 面板模式样式表
- */
