@@ -38,7 +38,10 @@ const Spell = (() => {
         instanceData = {
             remain: Infinity
         };
-
+        /**
+         * 
+         * @param  {[Array<SpellData>,SpellElementConstructParam]|SpellElementConstructParam} params 
+         */
         constructor(...params) {
             super();
             let option = null;
@@ -248,7 +251,7 @@ const Spell = (() => {
             if (sd.damageCriticalChance) modLoader.damageCriticalChance(sd.damageCriticalChance); // 暴击率
             if (sd.fireRateWait) modLoader.castCD("fireRateWait", sd.fireRateWait, true); // 施放延迟
             if (sd.reloadTime) modLoader.castCD("reloadTime", sd.reloadTime, true); // 充能时间
-            if (sd.lifetimeAdd) modLoader.lifetime(sd.lifetimeAdd, true); // 存在时间
+            if (sd.lifetime) modLoader.lifetime(sd.lifetime, true); // 存在时间
             if (sd.trailMaterial) modLoader.default("trailMaterial", sd.trailMaterial); // 提供轨迹
             if (sd.trailMaterialAmount) modLoader.default("trailMaterialAmount", sd.trailMaterialAmount, true); // 轨迹浓度
             if (sd.material) modLoader.default("material", sd.material); // 提供材料
