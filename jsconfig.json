@@ -4,6 +4,6 @@
         "target": "esnext",
         "checkJs": true
     },
-    "include": ["src/**/*", "src/index.js", "util/embed.info.js"],
-    "exclude": ["out/**"]
+    "include": ["src/**/*", "src/index.js", "util/embed.info.js", "util/lib.noitaLib.d.ts"],
+    "exclude": ["dist/**"]
 }
