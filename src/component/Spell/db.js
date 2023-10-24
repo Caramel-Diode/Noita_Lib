@@ -267,7 +267,7 @@ const SpellData = class {
         /** @type {Number} 阵型分布 */ this.patternDegrees = datas[19];
         /** @type {Number} 投射物速度 */ this.speedMultiplier = datas[20];
         /** @type {Number} 投射物子速度 */ this.childSpeedMultiplier = datas[21];
-        /** @type {Number} 存在时间 */ this.lifetimeAdd = datas[22];
+        /** @type {Number} 存在时间 */ this.lifetime = datas[22];
         /** @type {Number} 弹跳次数 */ this.bounces = datas[23];
         /** @type {Number} 击退力度 */ this.knockbackForce = datas[24];
         /** @type {Boolean} 启用友伤 */ this.friendlyFire = datas[25] === 1;
@@ -562,11 +562,10 @@ const SpellData = class {
                         }
                         case "NOT": {
                             //取补集
-                            const all = this.data.all;
                             const a2 = Array.from(getSpellDatas(expression.data2));
-                            const result = new Set();
+                            const result = new Set(this.data.all);
                             const l = a2.length;
-                            for (let i = 0; i < l; i++) if (!all.has(a2[i])) result.add(a2[i]);
+                            for (let i = 0; i < l; i++) result.delete(a2[i]);
                             return result;
                         }
                     }
@@ -924,9 +923,9 @@ const SpellData = class {
                 storage.draw_death.add(data);
             }
 
-            if (data.lifetimeAdd) {
+            if (data.lifetime) {
                 storage.lifetime_mod.add(data);
-                if (data.lifetimeAdd > 0) storage.lifetime_up.add(data);
+                if (data.lifetime > 0) storage.lifetime_up.add(data);
                 else storage.lifetime_down.add(data);
             }
 
