@@ -930,8 +930,8 @@ const SpellData = class {
             }
 
             if (data.manaDrain < 5) {
-                if (data.manaDrain > 0) storage.mana_drainlowly.add(data);
-                else if (data.manaDrain === 0) storage.mana_0.add(data);
+                storage.mana_drainlowly.add(data);
+                if (data.manaDrain === 0) storage.mana_0.add(data);
                 else storage.mana_increase.add(data);
             }
 
