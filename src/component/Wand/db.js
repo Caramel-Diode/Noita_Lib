@@ -293,7 +293,7 @@ const WandData = class {
                             else currentToken = new Token(tokenEnum.SI, i);
                         }
                         currentToken.push(char);
-                    } else if (Token.regs.logicalOperator.test(char)) {
+                    } else if (Token.regs.operator1.test(char)) {
                         if (currentToken === undefined) {
                             if (tokens.at(-1)?.type === "BRACKET_SQUARE_LEFT") {
                                 currentToken = new Token(tokenEnum.RSE);
@@ -303,7 +303,7 @@ const WandData = class {
                             currentToken.push(char);
                         } else {
                             consoleError(`不合法的字符: "${char}"`);
-                            console.log("集合运算符必须出现在法术查询表达式中");
+                            console.log("该运算符必须出现在法术查询表达式中");
                             return [];
                         }
                     } else if (Token.regs.blank.test(char)) {
