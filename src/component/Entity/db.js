@@ -73,7 +73,7 @@ const EntityData = class {
             /** @type {String} 材料生成 */ this.materialGenerate = materialGenerate;
             /** @type {Boolean} 能否爆炸 */ this.canExplode = canExplode;
             /** @type {Number} 伤害频率 */ this.damageFrequency = damageFrequency;
-            /** @type {Array<EntityData.offeredEntityData>} 提供投射物 */ this.offeredEntities = EntityData.OfferedEntityData.createDatas(offeredEntities);
+            /** @type {Array<EntityData.OfferedEntityData>} 提供投射物 */ this.offeredEntities = EntityData.OfferedEntityData.createDatas(offeredEntities);
         }
     };
     /** 伤害模型组件 */
@@ -98,10 +98,10 @@ const EntityData = class {
         projectile: {
             usedBySpell: new Map()
         },
-        /** @type {Array<db_entity>} 被法术使用的投射物 */ projectile_spell: [],
-        /** @type {Array<db_entity>} 被敌人使用的投射物 */ projectile_enemy: [],
-        /** @type {Array<db_entity>} 所有的敌人 */ enemy_all: [],
-        /** @type {Array<db_entity>} 在进展中显示的敌人 */ enemy_progress: []
+        /** @type {Array<EntityData>} 被法术使用的投射物 */ projectile_spell: [],
+        /** @type {Array<EntityData>} 被敌人使用的投射物 */ projectile_enemy: [],
+        /** @type {Array<EntityData>} 所有的敌人 */ enemy_all: [],
+        /** @type {Array<EntityData>} 在进展中显示的敌人 */ enemy_progress: []
     };
 
     /** @param {Array} datas */
@@ -121,12 +121,12 @@ const EntityData = class {
             }
             i++;
         }
-        /** @type {db_entity.AnimalAIComponent} 动物行为组件 */ this.animalAIComponent = {};
+        /** @type {EntityData.AnimalAIComponent} 动物行为组件 */ this.animalAIComponent = {};
     }
     /**
      * 通过id查询唯一投射物
      * @param {String} id 实体ID
-     * @returns {db_entity} 实体数据对象
+     * @returns {EntityData} 实体数据对象
      */
     static queryById = id => {
         const data = this.data.id_map.get(id);

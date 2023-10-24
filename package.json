@@ -34,7 +34,7 @@
         "useTabs": false,
         "proseWrap": "preserve",
         "endOfLine": "crlf",
-        "printWidth": 800,
+        "printWidth": 8000,
         "overrides": [
             {
                 "files": "*.js",
