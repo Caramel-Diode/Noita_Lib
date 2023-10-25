@@ -13,7 +13,7 @@ const MessageBackgroundData = class {
         }
         static init() {
             /** #data: [生物群系修正数据](data.js) @type {Array} */
-            const datas = embed(`#biome_modifiers_data.js`);
+            const datas = embed(`#template.preset.data.js`);
             for (let i = 0; i < datas.length; i++) {
                 const data = Object.freeze(new this(datas[i]));
                 this.#data_map.set(data.id, data);
