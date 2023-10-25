@@ -75,5 +75,13 @@
 			"    wand.dynamic-spells=\"$13\"",
 			"></noita-wand>"
 		]
+	},
+	" 消息组件 <noita-message>":{
+		"scope": "html,vue,jsx",
+		"prefix": "noita-message",
+        "description": "消息组件",
+		"body":[
+			"<noita-message message.background=\"${1|important,fungal_shift,booby_trapped,conductive,fog_of_war,fog_of_war_clear_at_player,freezing,fungal,furnished,gas,gold,gravity_fields,high_gravity,hot,invisible,low_gravity,moist,ominous,perforated,plant_infested,shielded,spooky,sunlight,wormy|}\" message.content=\"$2\" message.template=\"${3|FUNGAL_SHIFT,BOOBY_TRAPPED,CONDUCTIVE,FOG_OF_WAR_REAPPEARS,FOG_OF_WAR_CLEAR_AT_PLAYER,FREEZING,FUNGAL,FURNISHED,GAS_FLOODED,GOLD_VEIN,GOLD_VEIN_SUPER,GRAVITY_FIELDS,HIGH_GRAVITY,HOT,INVISIBILITY,LOW_GRAVITY,FLOODED,OMINOUS,PERFORATED,PLANT_INFESTED,SHIELDED,SPOOKY,PROTECTION_FIELDS,WORMY|}\"></noita-message>"
+		]
 	}
 }
