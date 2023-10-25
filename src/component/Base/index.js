@@ -2,7 +2,7 @@ const Base = (() => {
     embed(`#db.js`);
     const styleSheet_base = gss(embed(`#base.css`));
 
-    /** @type {Listeners} */const panelTitleSwitch = (() => {
+    /** @type {Listeners} */ const panelTitleSwitch = (() => {
         const main = event => {
             /** @type {HTMLHeadingElement} */
             const h1 = event.target;
@@ -43,6 +43,7 @@ const Base = (() => {
             //初始化原型上的属性 但是这样似乎无法让vscode进行智能补全
             /** @type {PublicStyleSheets} */
             this.prototype.publicStyleSheets = Object.freeze({
+                base: [styleSheet_base],
                 icon: [styleSheet_base, gss(embed(`#icon.css`))],
                 panel: [styleSheet_base, gss(embed(`#panel.css`))]
             });
@@ -50,17 +51,17 @@ const Base = (() => {
 
         /**
          * 创建面板 **`<h1>`** 标题
-         * @param {String} id 
-         * @param {String} name 
+         * @param {String} id
+         * @param {String} name
          * @returns {HTMLHeadingElement} `<h1>` 元素
          */
-        createPanelH1(id,name){
+        createPanelH1(id, name) {
             const h1 = document.createElement("h1");
             h1.setAttribute("switch.id", id);
             h1.setAttribute("switch.name", name);
             h1.innerText = name;
-            util.addFeatureTo(h1,panelTitleSwitch);
-            return h1
+            util.addFeatureTo(h1, panelTitleSwitch);
+            return h1;
         }
 
         /** 面板属性加载器 */

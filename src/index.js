@@ -20,6 +20,7 @@ const noitaLib = (() => {
     embed(`#component/Wand/index.js`);
     embed(`#component/Perk/index.js`);
     embed(`#component/Cursor/index.js`);
+    embed(`#component/Message/index.js`);
     
     
     const lib = {
