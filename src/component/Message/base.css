@@ -20,7 +20,6 @@
 }
 h1 {
     display: grid;
-    place-content: center;
+    place-items: center;
     grid-area: center;
-    width: fit-content;
 }
