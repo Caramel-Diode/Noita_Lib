@@ -3,23 +3,11 @@
     min-width: 144px;
     height: 48px;
     display: grid;
-    grid-template:
-        "left center right" 48px
-        /36px 1fr 36px;
-    place-items: stretch;
-    margin: 6px !important;
-}
-.left {
-    grid-area: left;
-}
-.center {
-    grid-area: center;
-}
-.right {
-    grid-area: right;
-}
-h1 {
-    display: grid;
     place-items: center;
-    grid-area: center;
+    margin: 6px !important;
+    border-width: 4px 34px;
+    border-style: solid;
+    border-color: transparent;
+    border-image: var(--url) 2 17 fill/4px 34px/0 stretch;
 }
+

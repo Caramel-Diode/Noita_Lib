@@ -1,25 +1,6 @@
 const MessageBackgroundData = class {
     static backgroundImage = util.base64ToImg(embed(`#background.png`));
-    static PresetData = class {
-        static #data_map = new Map();
-        /** @param {Array} datas */
-        constructor(datas) {
-            this.id = datas[0];
-            this.text = datas[1];
-            this.background = MessageBackgroundData.queryById(datas[2]);
-        }
-        static get(id) {
-            return this.#data_map.get(id);
-        }
-        static init() {
-            /** #data: [生物群系修正数据](data.js) @type {Array} */
-            const datas = embed(`#template.preset.data.js`);
-            for (let i = 0; i < datas.length; i++) {
-                const data = Object.freeze(new this(datas[i]));
-                this.#data_map.set(data.id, data);
-            }
-        }
-    };
+
     /** @type {Map<String,MessageData>} */ static #data_map = new Map();
     /** @type {Number} 辅助变量 用于记录消息背景索引 */ static #index = 0;
     /** @type {Number} 图标索引 */ #_index;
@@ -32,29 +13,22 @@ const MessageBackgroundData = class {
         this.#_index = MessageBackgroundData.#index;
         MessageBackgroundData.#index++;
         this.id = id;
+        /** @type {Promise<String>} blob_URL */ this.url = this.#getBackgroundImgURL();
     }
 
-    async getBackgrounds() {
+    async #getBackgroundImgURL() {
         const canvas_left = document.createElement("canvas"),
-            canvas_center = document.createElement("canvas"),
             canvas_right = document.createElement("canvas");
-        canvas_left.className = "left";
-        canvas_center.className = "center";
-        canvas_right.className = "right";
         canvas_left.height = 24;
-        canvas_center.height = 24;
         canvas_right.height = 24;
         canvas_left.width = 18;
-        canvas_center.width = 1;
         canvas_right.width = 18;
         const ctx_left = canvas_left.getContext("2d"),
-            ctx_center = canvas_center.getContext("2d"),
             ctx_right = canvas_right.getContext("2d");
-        const fragment = document.createDocumentFragment();
         const img = await MessageBackgroundData.backgroundImage;
         const offset = this.#_index * 18;
         ctx_left.drawImage(img, offset, 0, 18, 24, 0, 0, 18, 24);
-        ctx_center.drawImage(img, offset + 17, 0, 1, 24, 0, 0, 1, 24);
+
         const data_left = ctx_left.getImageData(0, 0, 18, 24).data;
         const data_right = new Uint8ClampedArray(1728); //data_left.length
         for (let i = 0; i < 1728; i += 4) {
@@ -81,9 +55,15 @@ const MessageBackgroundData = class {
             data_right[i_ + 3] = data_left[i + 3];
         }
         ctx_right.putImageData(new ImageData(data_right, 18, 24), 0, 0);
-        fragment.append(canvas_left, canvas_center, canvas_right);
-        // document.body.append(fragment);
-        return fragment;
+
+        const canvas_result = document.createElement("canvas");
+        canvas_result.height = 24;
+        canvas_result.width = 36;
+        const ctx_result = canvas_result.getContext("2d");
+        ctx_result.drawImage(canvas_left, 0, 0, 18, 24, 0, 0, 18, 24);
+        ctx_result.drawImage(canvas_right, 0, 0, 18, 24, 18, 0, 18, 24);
+
+        return util.base64ToObjectURL(canvas_result.toDataURL("image/png"));
     }
 
     static queryById(id) {
@@ -99,6 +79,26 @@ const MessageBackgroundData = class {
             const data = Object.freeze(new this(datas[i]));
             this.#data_map.set(data.id, data);
         }
-        this.PresetData.init();
+    }
+};
+
+const MessagePresetData = class {
+    static #data_map = new Map();
+    /** @param {Array} datas */
+    constructor(datas) {
+        this.id = datas[0];
+        this.text = datas[1];
+        this.background = MessageBackgroundData.queryById(datas[2]);
+    }
+    static queryById(id) {
+        return this.#data_map.get(id);
+    }
+    static init() {
+        /** #data: [生物群系修正数据](data.js) @type {Array} */
+        const datas = embed(`#template.preset.data.js`);
+        for (let i = 0; i < datas.length; i++) {
+            const data = Object.freeze(new this(datas[i]));
+            this.#data_map.set(data.id, data);
+        }
     }
 };
