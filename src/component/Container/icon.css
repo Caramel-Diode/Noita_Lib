@@ -1,0 +1,13 @@
+:host {
+    grid-template: "main" auto/auto;
+    height: 48px;
+    width: 48px;
+    overflow: hidden;
+    place-content: center;
+    place-items: center;
+}
+
+svg {
+    transform: scale(3);
+    grid-area: main;
+}

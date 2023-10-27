@@ -21,6 +21,7 @@ const noitaLib = (() => {
     embed(`#component/Perk/index.js`);
     embed(`#component/Cursor/index.js`);
     embed(`#component/Message/index.js`);
+    embed(`#component/Container/index.js`);
     
     
     const lib = {
