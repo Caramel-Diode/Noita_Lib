@@ -12,10 +12,7 @@ const Container = (() => {
         }
         /** @type {ShadowRoot} */ #shadowRoot = this.attachShadow({ mode: "closed" });
         /** @type {DisplayMode} */ #displayMode = undefined;
-        materials = [];
-        #color = "";
         /** @type {"common","conical","jar","bag"} */ #type = "";
-        #amount = 100;
         #content = [];
         #amount_all = 0;
         constructor() {
@@ -79,7 +76,6 @@ const Container = (() => {
                 this.#amount_all += currentContent.amount;
             }
             this.#content = result;
-            console.log(result);
         }
 
         #getCascadingSvgs = () => {
@@ -87,7 +83,6 @@ const Container = (() => {
             const svgGenerator = svgGenerators.get(this.#type) ?? svgGenerators.get("common");
             fragment.appendChild(svgGenerator());
             let currentFillHeight = this.#amount_all;
-            console.log(this.#content);
             for (let i = 0; i < this.#content.length; i++) {
                 const item = this.#content[i];
                 if (item.type === "COLOR") {
