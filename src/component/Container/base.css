@@ -6,20 +6,20 @@ path {
 }
 
 .fill-5a5a5a {
-    fill: color-mix(in srgb, var(--mix-color, #5a5a5a), #5a5a5a);
+    fill: color-mix(in srgb, var(--mix-color, #5a5a5a) 80%, #5a5a5a 20%);
 }
 .fill-777777 {
-    fill: color-mix(in srgb, var(--mix-color, #777777), #777777);
+    fill: color-mix(in srgb, var(--mix-color, #777777) 80%, #777777 20%);
 }
 .fill-959595 {
-    fill: color-mix(in srgb, var(--mix-color, #959595), #959595);
+    fill: color-mix(in srgb, var(--mix-color, #959595) 80%, #959595 20%);
 }
 .fill-c3c3c3 {
-    fill: color-mix(in srgb, var(--mix-color, #c3c3c3), #c3c3c3);
+    fill: color-mix(in srgb, var(--mix-color, #c3c3c3) 80%, #c3c3c3 20%);
 }
 .fill-7a6a44 {
-    fill: color-mix(in srgb, var(--mix-color, #7a6a44), #7a6a44);
+    fill: color-mix(in srgb, var(--mix-color, #7a6a44) 80%, #7a6a44 20%);
 }
 .fill-937f52 {
-    fill: color-mix(in srgb, var(--mix-color, #937f52), #937f52);
+    fill: color-mix(in srgb, var(--mix-color, #937f52) 80%, #937f52 20%);
 }

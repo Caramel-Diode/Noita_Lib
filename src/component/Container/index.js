@@ -1,8 +1,9 @@
 const Container = (() => {
-    embed(`#svg.data.js`);
+    embed(`#data.js`);
     const styleSheet_base = gss(embed(`#base.css`));
 
     const HTMLNoitaContainerElement = class extends Base {
+        static observedAttributes = Object.freeze([...super.observedAttributes, "container.type", "container.content"]);
         static {
             const superStyleSheets = super.prototype.publicStyleSheets;
             /** @type {PublicStyleSheets} */ this.prototype.publicStyleSheets = {
@@ -13,6 +14,7 @@ const Container = (() => {
         /** @type {ShadowRoot} */ #shadowRoot = this.attachShadow({ mode: "closed" });
         /** @type {DisplayMode} */ #displayMode = undefined;
         /** @type {"common","conical","jar","bag"} */ #type = "";
+        /** @type {Array<{type:"COLOR"|"MATERIAL",amount:Number,color?:String,material?:String}>} 容器内容 */
         #content = [];
         #amount_all = 0;
         constructor() {
@@ -101,7 +103,35 @@ const Container = (() => {
             this.#shadowRoot.append(this.#getCascadingSvgs());
         }
 
-        async #loadPanelContent() {}
+        async #loadPanelContent() {
+            const { name, desc } = containerData.get(this.#type) ?? containerData.get("common");
+            this.#shadowRoot.adoptedStyleSheets = this.publicStyleSheets.panel;
+            const fragment = document.createDocumentFragment();
+            const h1 = document.createElement("h1");
+            const svgs = this.#getCascadingSvgs();
+            const table = document.createElement("table");
+            const p = document.createElement("p");
+            const tbody = document.createElement("tbody");
+            const h1_contentCache = [];
+            const tbody_contentCache = [];
+            for (let i = 0; i < this.#content.length; i++) {
+                const item = this.#content[i];
+                if (item.type === "COLOR") {
+                    h1_contentCache.push(item.color);
+                    tbody_contentCache.push(`<tr><td>${item.amount}%</td><td style="color:${item.color}">${item.color}</td></tr>`);
+                } else {
+                    h1_contentCache.push(item.material);
+                    tbody_contentCache.push(`<tr><td>${item.amount}%</td><td>${item.material}</td></tr>`);
+                }
+            }
+            if (this.#amount_all !== 0) h1.innerText = `${h1_contentCache.join("+")}${name}(${this.#amount_all}%)`;
+            else h1.innerText = `空${name}`;
+            tbody.innerHTML = tbody_contentCache.join("");
+            table.append(tbody);
+            p.innerHTML = desc;
+            fragment.append(h1, svgs, table, p);
+            this.#shadowRoot.append(fragment);
+        }
 
         contentUpdate() {
             this.#shadowRoot.innerHTML = "";
@@ -136,17 +166,14 @@ const Container = (() => {
             if (oldValue === null) return;
             else if (newValue === oldValue) return;
             else {
-                // switch (name) {
-                //     case "spell.id":
-                //     case "spell.name":
-                //     case "spell.remain":
-                //     case "spell.exp":
-                //         this.spellDatas = [];
-                //         this.#currentDataIndex = -1;
-                //         break;
-                //     case "display":
-                //         this.#displayMode = undefined;
-                // }
+                switch (name) {
+                    case "container.content":
+                    case "container.type":
+                        this.#type = "";
+                        break;
+                    case "display":
+                        this.#displayMode = undefined;
+                }
                 this.contentUpdate();
             }
         }
