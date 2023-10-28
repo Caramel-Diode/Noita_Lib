@@ -4,13 +4,12 @@
 }
 
 canvas {
-    height: 32px;
-    width: 32px;
+    scale: 2;
 }
 
 @keyframes carousel {
     100% {
-        transform: translate(0, -100%);
+        translate: 0 -100%;
     }
 }
 
@@ -32,7 +31,7 @@ ol {
     flex-wrap: nowrap;
     width: 40px;
     height: calc(var(--amount) * 40px);
-    transform: translate(0, 0);
+    translate: 0 0;
     animation-name: carousel;
     animation-timing-function: steps(var(--amount));
     animation-duration: calc(var(--amount) * 1s);

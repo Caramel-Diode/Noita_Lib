@@ -72,7 +72,6 @@ const Perk = (() => {
             const table = document.createElement("table");
             const tbody = document.createElement("tbody");
             table.append(tbody);
-            table.className = "attr-area";
             const loader = new Base.panelAttrLoader(tbody);
             loader.default("maxStack", pd.maxStack); //堆叠极限
             if (pd.maxInPool) loader.default("maxInPool", pd.maxInPool); //天赋池最大数量

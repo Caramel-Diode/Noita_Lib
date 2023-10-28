@@ -268,7 +268,6 @@ const Spell = (() => {
             if (sd.passiveEffect) baseLoader.default("passiveEffect", sd.passiveEffect); //被动效果
             if (relatedLiElements[0]) baseLoader.offerEntity("projectilesProvided", relatedLiElements);
             section.prepend(table_base); //添加到最前
-            section.className = "attr-area";
             //#endregion
             /*###############################################################################*/
             //#endregion

@@ -14,6 +14,6 @@ code {
     user-select: none;
     width: 200%;
     height: 200%;
-    transform: scale(0.5);
+    scale: 0.5;
     --font-size: large;
 }

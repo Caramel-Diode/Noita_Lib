@@ -17,7 +17,7 @@ div.background {
     display: grid;
     place-content: center;
     place-items: center;
-    transform: scale(3);
+    scale: 3;
 }
 
 

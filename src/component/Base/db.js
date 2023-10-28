@@ -17,7 +17,6 @@ const PanelAttrInfo = class {
 
     async getIcon() {
         const canvas = document.createElement("canvas");
-        canvas.className = "attr-icon";
         canvas.setAttribute("aria-label", `面板属性图标:${this.name}`); // 无障碍标注
         canvas.title = this.name;
         canvas.width = 7;

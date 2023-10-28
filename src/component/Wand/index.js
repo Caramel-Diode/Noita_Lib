@@ -125,7 +125,6 @@ const Wand = (() => {
             table.append(tbody);
             /*###############################################################################*/
             //#endregion
-            table.className = "attr-area";
             let dynamicSpellList;
             if (wd.shuffle) dynamicSpellList = document.createElement("ul");
             else dynamicSpellList = document.createElement("ol");

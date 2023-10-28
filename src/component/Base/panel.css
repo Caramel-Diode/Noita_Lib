@@ -23,14 +23,26 @@
     --c3: #000000dc;
 }
 
-:host > canvas {
-    grid-area: icon;
-}
-
+/*########## 标题区 ##########*/
 h1 {
     grid-area: name;
     color: #cfcfcf;
     line-height: 30px;
+}
+/*########## 描述区 ##########*/
+p {
+    grid-area: desc;
+    line-height: 30px;
+    max-width: 400px;
+}
+/*########## 图标区 ##########*/
+:host > :is(canvas, svg) {
+    grid-area: icon;
+}
+/*########## 属性区 ##########*/
+:host > :is(table, section),
+main > :is(table, section) {
+    grid-area: attr;
 }
 
 table {
@@ -40,16 +52,13 @@ table {
 section:not([hidden]) {
     display: grid;
     grid-template-columns: 1fr;
-    place-content: center;
     place-items: center stretch;
+    place-content: center;
     gap: 14px;
 }
 
-.attr-area {
-    grid-area: attr;
-}
-
-.attr-icon {
+/* 属性图标 */
+tr canvas {
     width: 14px;
     height: 14px;
     margin-right: 8px;
@@ -134,10 +143,4 @@ ol {
     text-align: center;
     padding-left: 12px;
     padding-right: 12px;
-}
-
-p {
-    line-height: 30px;
-    grid-area: desc;
-    max-width: 400px;
 }

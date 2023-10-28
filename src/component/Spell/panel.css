@@ -68,11 +68,6 @@ li {
     padding: 0 6px 6px 6px;
 }
 
-.spells-tabpanel > li > canvas {
-    height: 16px;
-    width: 16px;
-}
-
 main {
     display: grid;
     place-items: center stretch;

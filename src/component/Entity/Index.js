@@ -132,7 +132,6 @@ const Entity = (() => {
             const fragment = document.createDocumentFragment();
             const ed = this.entityData;
             const section = await HTMLNoitaEntityElement.getDataSection(this.entityData);
-            section.className = "attr-area";
             fragment.append(this.createPanelH1(ed.id, ed.name), section);
             this.#shadowRoot.append(fragment);
         }

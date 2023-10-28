@@ -4,9 +4,7 @@ path {
     stroke-linecap: round;
     stroke-linejoin: round;
 }
-.fore {
-    /* --mix-color: yellow; */
-}
+
 .fill-5a5a5a {
     fill: color-mix(in srgb, var(--mix-color, #5a5a5a), #5a5a5a);
 }
