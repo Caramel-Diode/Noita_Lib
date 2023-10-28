@@ -1,16 +1,11 @@
 :host {
     grid-template:
-        "name . icon" 30px
-        "attr . icon" auto
-        ". . ." 10px
-        "solts solts solts" auto
-        / 1fr 15px 75px;
+        "name icon" 30px
+        "attr icon" auto
+        ". ." 10px
+        "solts solts" auto
+        / 1fr 75px;
     max-width: 600ox;
-}
-
-:host > canvas {
-    width: 75px; /* 15 * 5 */
-    height: calc(5 * var(--h));
 }
 
 .dynamic-spells {

@@ -40,7 +40,6 @@ const WandData = class {
         }
         async getIcon() {
             const canvas = document.createElement("canvas");
-            canvas.style.cssText = `--h:${this.width}px`;
             canvas.setAttribute("aria-label", `法杖图标 ${this.name}`); // 无障碍标注
             canvas.height = this.width;
             canvas.width = 15;

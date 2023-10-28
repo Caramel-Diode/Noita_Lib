@@ -1,5 +1,4 @@
 :host {
-    place-items: center stretch;
     place-content: center;
     padding: 20px !important;
     margin: 5px !important;
@@ -14,6 +13,7 @@
     --h2: 3px calc(100% - 3px) no-repeat;
     --v2: calc(100% - 3px) 3px no-repeat;
     background: var(--bg1) left top 3px / var(--h1), var(--bg1) left 3px top/var(--v1), var(--bg1) right bottom 3px / var(--h1), var(--bg1) right 3px bottom/var(--v1), var(--bg2) left top/var(--h2), var(--bg2) left top/var(--v2), var(--bg2) right bottom/var(--h2), var(--bg2) right bottom/var(--v2), var(--bg3) center/calc(100% - 6px) calc(100% - 6px) no-repeat;
+    gap: 0 20px;
 }
 
 :host(:hover),
@@ -28,21 +28,27 @@ h1 {
     grid-area: name;
     color: #cfcfcf;
     line-height: 30px;
+    place-self: stretch;
 }
 /*########## 描述区 ##########*/
 p {
     grid-area: desc;
     line-height: 30px;
     max-width: 400px;
+    place-self: stretch;
 }
 /*########## 图标区 ##########*/
-:host > :is(canvas, svg) {
+:host > :is(canvas, svg),
+main  > :is(canvas, svg){
     grid-area: icon;
+    place-self: center;
+    scale: 5;
 }
 /*########## 属性区 ##########*/
 :host > :is(table, section),
 main > :is(table, section) {
     grid-area: attr;
+    place-self: stretch;
 }
 
 table {
