@@ -21,7 +21,8 @@
      * 避免被外部修改
      */
     font-size: var(--font-size, 18px) !important;
-    font-weight: var(--font-weight, 700) !important;
+    /* 肥猫喜欢细的 */
+    font-weight: var(--font-weight, 400) !important;
     padding: 0;
     margin: 0;
     outline-style: none;
