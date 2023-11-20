@@ -1,4 +1,3 @@
-const { log } = require("console");
 const fs = require("fs");
 const path = {
     src: "./src",
@@ -289,41 +288,35 @@ const addLog = file => {
 };
 const genLog = () => {
     const buildLogPath = `${path.log}/build.log`;
-    const distFile = new File(`${path.dist}/noitaLib.js`);
-    const logFile = new File(buildLogPath);
-    const lastSum = Number(logFile.data.match(/(?<=\[总计\] )\d+/g)?.at(-1)),
-        lastSum_js = Number(logFile.data.match(/(?<=\[js\] )\d+/g)?.at(-1)),
-        lastSum_css = Number(logFile.data.match(/(?<=\[css\] )\d+/g)?.at(-1)),
-        lastSum_base64 = Number(logFile.data.match(/(?<=\[base64\] )\d+/g)?.at(-1));
-    let sumDiff = 0,
-        sumDiff_js = 0,
-        sumDiff_css = 0,
-        sumDiff_base64 = 0;
-    if (lastSum) sumDiff = logData.sum - lastSum;
-    if (lastSum_js) sumDiff = logData.js.sum - lastSum_js;
-    if (lastSum_css) sumDiff = logData.css.sum - lastSum_css;
-    if (lastSum_base64) sumDiff = logData.base64.sum - lastSum_base64;
+    const distFile = new File(`${path.dist}/noitaLib.js`, false);
+    const logFile = new File(buildLogPath, false);
+    // const lastSum = Number(logFile.data.match(/(?<=\[总计\] )\d+/g)?.at(-1)),
+    //     lastSum_js = Number(logFile.data.match(/(?<=\[js\] )\d+/g)?.at(-1)),
+    //     lastSum_css = Number(logFile.data.match(/(?<=\[css\] )\d+/g)?.at(-1)),
+    //     lastSum_base64 = Number(logFile.data.match(/(?<=\[base64\] )\d+/g)?.at(-1));
+    // let sumDiff = 0,
+    //     sumDiff_js = 0,
+    //     sumDiff_css = 0,
+    //     sumDiff_base64 = 0;
+    // if (lastSum) sumDiff = logData.sum - lastSum;
+    // if (lastSum_js) sumDiff = logData.js.sum - lastSum_js;
+    // if (lastSum_css) sumDiff = logData.css.sum - lastSum_css;
+    // if (lastSum_base64) sumDiff = logData.base64.sum - lastSum_base64;
     const dt = new Date();
     const datetimeStr = `${dt.getFullYear()}-${(dt.getMonth() + 1).toString().padStart(2, "0")}-${dt.getDate().toString().padStart(2, "0")} ${dt.getHours().toString().padStart(2, "0")}:${dt.getMinutes().toString().padStart(2, "0")}:${dt.getSeconds().toString().padStart(2, "0")}.${dt.getMilliseconds().toString().padStart(3, "0")}`;
     let temp = [];
-    const addDiffInfo = diff => {
-        if (diff) {
-            if (diff > 0) temp.push(`⬆`);
-            else temp.push(`⬇`);
-            temp.push(` ${diff}`);
-        }
-    };
+
     temp.push(datetimeStr, ` [info] [总计] ${logData.sum} `);
-    addDiffInfo(sumDiff);
+
     temp.push(` ${Math.round(distFile.size / 1024)}KB \n`);
     temp.push(`  [js] ${logData.js.sum} `);
-    addDiffInfo(sumDiff_js);
+
     temp.push("\n", ...logData.js.detail);
     temp.push(`  [css] ${logData.css.sum} `);
-    addDiffInfo(sumDiff_css);
+
     temp.push("\n", ...logData.css.detail);
     temp.push(`  [base64] ${logData.base64.sum} `);
-    addDiffInfo(sumDiff_base64);
+
     temp.push("\n", ...logData.base64.detail);
     const result = temp.join("");
     console.log(result);
@@ -349,9 +342,10 @@ class File {
     /** 连接数据 @type {Array<Object>} */ #connectData = [];
     /**
      * @param {String} path 文件路径
+     * @param {Boolean} [neddAddLog] 文件路径
      * @param {Boolean} compress 是否进行压缩
      */
-    constructor(path) {
+    constructor(path, neddAddLog = true) {
         /** @type {typeof File} */ const _ = this.constructor;
         const pathData = path.split("/");
         /** @type {String} 文件名 */ this.name = pathData.pop();
@@ -363,8 +357,8 @@ class File {
             case "js":
                 this.data = util.min_js(fs.readFileSync(path, _.readFileopt_text));
                 break;
-            case "css": //作为字符串嵌入
-                this.data = `\`${util.min_css(fs.readFileSync(path, _.readFileopt_text))}\``;
+            case "css": //作为字符串嵌入 取消转义
+                this.data = `String.raw\`${util.min_css(fs.readFileSync(path, _.readFileopt_text))}\``;
                 break;
             case "bin": //作为字符串嵌入
                 this.data = `\`data:image/png;base64,${fs.readFileSync(path, _.readFileopt_bin)}\``;
@@ -372,7 +366,7 @@ class File {
             default:
                 this.data = fs.readFileSync(path, _.readFileopt_text);
         }
-        addLog(this);
+        if (neddAddLog) addLog(this);
     }
 
     #loadEmbeddingPoint() {
@@ -502,6 +496,7 @@ const index = new File(`${path.src}/index.js`);
 index.embed();
 logData.sum = index.data.length;
 fs.writeFileSync(`${path.dist}/noitaLib.js`, index.data);
+fs.writeFileSync(`${path.dist2}/noitaLib.js`, index.data);
 fs.writeFileSync(`${path.dist}/noitaLib.mjs`, index.data.replace(`"use strict";`, `"use strict";export `));
 const params = process.argv.slice(2);
 if (!params.includes("-nolog")) {
