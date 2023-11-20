@@ -120,6 +120,33 @@ const Base = (() => {
                     }
                 };
             })();
+
+            const showOrHideunlockFlag = (() => {
+                /**
+                 * @param {HTMLElement} element
+                 */
+                const main = element => {
+                    if (element instanceof HTMLTableCellElement) element = element.parentElement; //目标元素为<tr> 而不是<th>或<td>
+                    if (element.getAttribute("display") === "false") {
+                        element.innerHTML = "";
+                        element.append(element.th_unlock, element.td_unlock);
+                        element.setAttribute("display", "true");
+                        element.title = "点击隐藏解锁条件";
+                    } else {
+                        element.innerHTML = "";
+                        element.append(element.th_lock, element.td_lock);
+                        element.setAttribute("display", "false");
+                        element.title = "点击查看解锁条件";
+                    }
+                };
+                return {
+                    click: event => main(event.target),
+                    keydown: event => {
+                        if (event.key === "Enter") main(event.target);
+                        else if (event.key === "Escape") event.target.blur();
+                    }
+                };
+            })();
             return class {
                 /** @type {Node} 目标容器 */ #container;
                 constructor(target) {
@@ -392,6 +419,31 @@ const Base = (() => {
                     if (needSign) content = `${aps(value)}`; // 伤害修正
                     else content = `${value}`; //投射物本体伤害/承伤系数
                     this.#loadTr(type, content);
+                }
+                /**
+                 * 加载`生成锁 ⇌ 解锁条件`
+                 * @param {String} flag 解锁条件
+                 */
+                async unlock(flag) {
+                    const tr = document.createElement("tr");
+                    const attrInfo_lock = PanelAttrInfo.query("lock");
+                    const attrInfo_unlock = PanelAttrInfo.query("unlock");
+
+                    tr.th_lock = document.createElement("th");
+                    tr.th_lock.append(await attrInfo_lock.getIcon(), attrInfo_lock.name);
+                    tr.td_lock = document.createElement("td");
+                    tr.td_lock.innerText = " * ".repeat(flag.length);
+
+                    tr.th_unlock = document.createElement("th");
+                    tr.th_unlock.append(await attrInfo_unlock.getIcon(), attrInfo_unlock.name);
+                    tr.td_unlock = document.createElement("td");
+                    tr.td_unlock.innerText = flag;
+
+                    tr.setAttribute("display", "false");
+                    addFeatureTo(tr, showOrHideunlockFlag);
+                    tr.append(tr.th_lock, tr.td_lock);
+                    tr.title = "点击查看解锁条件";
+                    this.#container.append(tr);
                 }
                 /**
                  * 加载`提供投射物`|`使用投射物`属性
