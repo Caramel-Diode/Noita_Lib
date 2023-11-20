@@ -63,7 +63,7 @@ const MessageBackgroundData = class {
         ctx_result.drawImage(canvas_left, 0, 0, 18, 24, 0, 0, 18, 24);
         ctx_result.drawImage(canvas_right, 0, 0, 18, 24, 18, 0, 18, 24);
 
-        return util.base64ToObjectURL(canvas_result.toDataURL("image/png"));
+        return util.base64ToObjectURL(canvas_result.toDataURL("image/png"), this.id);
     }
 
     static queryById(id) {
