@@ -201,10 +201,11 @@ const util = {
     },
     /**
      * 将Base64转为URL
-     * @param {String} base64
+     * @param {String} base64 base64数据文本
+     * @param {String} fileName 文件名
      * @returns {String}
      */
-    base64ToObjectURL: base64 => URL.createObjectURL(util.base64ToFile(base64, "")),
+    base64ToObjectURL: (base64, fileName = "") => URL.createObjectURL(util.base64ToFile(base64, fileName)),
     /**
      * 拆分精灵图
      * @param {String} base64
