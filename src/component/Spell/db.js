@@ -278,7 +278,7 @@ const SpellData = class {
         /** @type {Number} 材料数量 */ this.materialAmount = datas[30];
         /** @type {String} 轨迹材料 */ this.trailMaterial = datas[31];
         /** @type {Number} 轨迹材料数量 */ this.trailMaterialAmount = datas[32];
-        /** @type {Number} 受重力影响度 */ this.gravity = datas[33];
+        /** @type {Number} 重力系数 */ this.gravity = datas[33];
         /** @type {Number} **<装饰性>** 伤害粒子数量 */ this.goreParticles = datas[34];
         /** @type {Number} **<待确定>** 碰撞箱大小 */ this.ragdollFx = datas[35];
         /** @type {String} 附加实体 */ this.extraEntities = datas[36];
@@ -321,10 +321,10 @@ const SpellData = class {
 
     static queryByExp = (() => {
         /** @type {util.parse.Token} */ let currentToken = undefined;
-        /** @type {SpellGroup|undefined} 当前表达式 */ let currentExpression = undefined;
+        /** @type {SpellGroup|undefined} 当前表达式 */ let currentExp = undefined;
         /** @param {String} info */ const consoleError = info => {
             const e = new SyntaxError(`${info} index:${currentToken.index}`);
-            if (currentExpression) console.error(currentToken.index, e, currentExpression);
+            if (currentExp) console.error(currentToken.index, e, currentExp);
             else console.error(currentToken.index, e);
         };
 
@@ -436,120 +436,27 @@ const SpellData = class {
         }
         /**
          * 根据AST获取法术数据数组
-         * @param {{type: String, data: String, data1: String?, data2: String?}} expression
+         * @param {{type: String, data: String, data1: String?, data2: String?}} exp
          * @returns {Set<db_sepll>}
          */
-        const getSpellDatas = expression => {
-            switch (expression.type) {
+        const getSpellDatas = exp => {
+            switch (exp.type) {
                 case "SPELL_ID":
-                    return [this.queryById(expression.data)];
+                    return [this.queryById(exp.data)];
                 case "SPELL_TAG":
-                    const _ = this.data;
-                    switch (expression.data) {
-                        case "all":
-                            return this.data.all;
-                        //#region 法术类型
-                        case "type_projectile":
-                            return _.type_projectile;
-                        case "type_staticProjectile":
-                            return _.type_staticProjectile;
-                        case "type_modifier":
-                            return _.type_modifier;
-                        case "type_drawMany":
-                            return _.type_drawMany;
-                        case "type_material":
-                            return _.type_material;
-                        case "type_other":
-                            return _.type_other;
-                        case "type_utility":
-                            return _.type_utility;
-                        case "type_passive":
-                            return _.type_passive;
-                        //#endregion
-
-                        //#region 法术等级
-                        case "level_0":
-                            return _.level_0;
-                        case "level_1":
-                            return _.level_1;
-                        case "level_2":
-                            return _.level_2;
-                        case "level_3":
-                            return _.level_3;
-                        case "level_4":
-                            return _.level_4;
-                        case "level_5":
-                            return _.level_5;
-                        case "level_6":
-                            return _.level_6;
-                        case "level_7":
-                            return _.level_7;
-                        case "level_10":
-                            return _.level_10;
-                        //#endregion
-
-                        case "draw":
-                            return _.draw;
-                        case "draw_common":
-                            return _.draw_common;
-                        case "draw_hit":
-                            return _.draw_hit;
-                        case "draw_timer":
-                            return _.draw_timer;
-                        case "draw_death":
-                            return _.draw_death;
-
-                        case "lifetime_mod":
-                            return _.lifetime_mod;
-                        case "lifetime_up":
-                            return _.lifetime_up;
-                        case "lifetime_down":
-                            return _.lifetime_down;
-
-                        case "mana_0":
-                            return _.mana_0;
-                        case "mana_drainlowly":
-                            return _.mana_drainlowly;
-                        case "mana_increase":
-                            return _.mana_increase;
-                        //#region 伤害修正
-                        case "speed_mod":
-                            return _.speed_mod;
-                        case "damage_mod":
-                            return _.damage_mod;
-                        case "damage_mod_projectile":
-                            return _.damage_mod_projectile;
-                        case "damage_mod_melee":
-                            return _.damage_mod_melee;
-                        case "damage_mod_electricity":
-                            return _.damage_mod_electricity;
-                        case "damage_mod_fire":
-                            return _.damage_mod_fire;
-                        case "damage_mod_explosion":
-                            return _.damage_mod_explosion;
-                        case "damage_mod_ice":
-                            return _.damage_mod_ice;
-                        case "damage_mod_slice":
-                            return _.damage_mod_slice;
-                        case "damage_mod_healing":
-                            return _.damage_mod_healing;
-                        case "damage_mod_curse":
-                            return _.damage_mod_curse;
-                        case "damage_mod_drill":
-                            return _.damage_mod_drill;
-                        case "damage_mod_holy":
-                            return _.damage_mod_holy;
-                        //#endregion
-                        default:
-                            console.warn("暂不支持的法术法术标签", expression);
-                            return new Set();
+                    const result = this.data[exp.data];
+                    if(result) return result;
+                    else {
+                        console.warn("暂不支持的法术法术标签", exp);
+                        return new Set();
                     }
+                    
                 case "SPELL_GROUP":
-                    switch (expression.operator) {
+                    switch (exp.operator) {
                         case "AND": {
                             //取交集
-                            const s1 = getSpellDatas(expression.data1);
-                            const a2 = Array.from(getSpellDatas(expression.data2));
+                            const s1 = getSpellDatas(exp.data1);
+                            const a2 = Array.from(getSpellDatas(exp.data2));
                             /** @type {Set<SpellData>} */
                             const s3 = new Set();
                             const l = a2.length;
@@ -558,11 +465,11 @@ const SpellData = class {
                         }
                         case "OR": {
                             //取并集
-                            return new Set([...getSpellDatas(expression.data1), ...getSpellDatas(expression.data2)]);
+                            return new Set([...getSpellDatas(exp.data1), ...getSpellDatas(exp.data2)]);
                         }
                         case "NOT": {
                             //取补集
-                            const a2 = Array.from(getSpellDatas(expression.data2));
+                            const a2 = Array.from(getSpellDatas(exp.data2));
                             const result = new Set(this.data.all);
                             const l = a2.length;
                             for (let i = 0; i < l; i++) result.delete(a2[i]);
@@ -641,133 +548,133 @@ const SpellData = class {
             //#region 生成AST
             const TL = tokens.length;
             /** @type {Array<Object>} 表达式栈 */
-            const expressions = [];
+            const exps = [];
 
-            currentExpression = undefined;
+            currentExp = undefined;
             /** @type {SpellGroup|undefined} 根表达式 */
-            let rootExpression = undefined;
+            let rootExp = undefined;
             for (let j = 0; j < TL; j++) {
                 currentToken = tokens[j];
-                currentExpression = expressions.at(-1);
+                currentExp = exps.at(-1);
                 switch (currentToken.type) {
                     case "SPELL_ID": {
                         const spellId = new SpellId(currentToken.data);
-                        if (currentExpression) {
-                            if (currentExpression.dataState === 0) {
-                                currentExpression.data1 = spellId;
-                                currentExpression.dataState = 1;
-                            } else if (currentExpression.dataState === 2) {
-                                const subExpression = new SpellGroup();
-                                subExpression.data1 = spellId;
+                        if (currentExp) {
+                            if (currentExp.dataState === 0) {
+                                currentExp.data1 = spellId;
+                                currentExp.dataState = 1;
+                            } else if (currentExp.dataState === 2) {
+                                const subExp = new SpellGroup();
+                                subExp.data1 = spellId;
                                 // 子表达式更新匹配状态 已匹配第一个法术ID
-                                subExpression.dataState = 1;
-                                currentExpression.data2 = subExpression;
+                                subExp.dataState = 1;
+                                currentExp.data2 = subExp;
                                 //更新匹配状态 完成匹配!
-                                currentExpression.dataState = -1;
-                                expressions.push(subExpression);
+                                currentExp.dataState = -1;
+                                exps.push(subExp);
                             } else {
                                 consoleError(`缺少运算符连接`);
                                 return [];
                             }
                         } else {
-                            rootExpression = new SpellGroup();
+                            rootExp = new SpellGroup();
 
-                            rootExpression.data1 = spellId;
-                            rootExpression.dataState = 1;
-                            expressions.push(rootExpression);
+                            rootExp.data1 = spellId;
+                            rootExp.dataState = 1;
+                            exps.push(rootExp);
                         }
                         break;
                     }
                     case "SPELL_TAG":
-                        if (currentExpression) {
-                            if (currentExpression.dataState === 0) {
-                                currentExpression.data1 = new SpellTag(currentToken.data.slice(1));
-                                currentExpression.dataState = 1;
-                            } else if (currentExpression.dataState === 2) {
-                                const subExpression = new SpellGroup();
+                        if (currentExp) {
+                            if (currentExp.dataState === 0) {
+                                currentExp.data1 = new SpellTag(currentToken.data.slice(1));
+                                currentExp.dataState = 1;
+                            } else if (currentExp.dataState === 2) {
+                                const subExp = new SpellGroup();
 
-                                subExpression.data1 = new SpellTag(currentToken.data.slice(1));
+                                subExp.data1 = new SpellTag(currentToken.data.slice(1));
                                 // 子表达式更新匹配状态 已匹配第一个法术标签
-                                subExpression.dataState = 1;
+                                subExp.dataState = 1;
 
-                                currentExpression.data2 = subExpression;
+                                currentExp.data2 = subExp;
                                 //更新匹配状态 完成匹配!
-                                currentExpression.dataState = -1;
-                                expressions.push(subExpression);
+                                currentExp.dataState = -1;
+                                exps.push(subExp);
                             } else {
                                 consoleError(`缺少运算符连接`);
                                 return [];
                             }
                         } else {
-                            rootExpression = new SpellGroup();
-                            rootExpression.data1 = new SpellTag(currentToken.data.slice(1));
-                            rootExpression.dataState = 1;
-                            expressions.push(rootExpression);
+                            rootExp = new SpellGroup();
+                            rootExp.data1 = new SpellTag(currentToken.data.slice(1));
+                            rootExp.dataState = 1;
+                            exps.push(rootExp);
                         }
                         break;
                     case "BRACKET_SMALL_LEFT": {
-                        const subExpression = new SpellGroup();
-                        subExpression.dataState = 0;
-                        subExpression.bracketState = 1;
-                        if (currentExpression) {
-                            if (currentExpression.dataState === 0) {
-                                currentExpression.data1 = subExpression;
-                                expressions.push(subExpression);
-                                currentExpression.dataState = 1;
-                            } else if (currentExpression.dataState === 2) {
-                                currentExpression.data2 = subExpression;
-                                expressions.push(subExpression);
-                                currentExpression.dataState = -1; //完成匹配
+                        const subExp = new SpellGroup();
+                        subExp.dataState = 0;
+                        subExp.bracketState = 1;
+                        if (currentExp) {
+                            if (currentExp.dataState === 0) {
+                                currentExp.data1 = subExp;
+                                exps.push(subExp);
+                                currentExp.dataState = 1;
+                            } else if (currentExp.dataState === 2) {
+                                currentExp.data2 = subExp;
+                                exps.push(subExp);
+                                currentExp.dataState = -1; //完成匹配
                             } else {
                                 consoleError(`缺少运算符连接`);
                                 return [];
                             }
                         } else {
                             // 根表达式不存在时 左括号开头 这里应该默认多一层表达式 否则右括号完成该表达式匹配后仍然有后续逻辑运算符会导致匹配出错
-                            rootExpression = new SpellGroup();
-                            rootExpression.data1 = subExpression;
-                            rootExpression.dataState = 1;
-                            expressions.push(rootExpression, subExpression);
+                            rootExp = new SpellGroup();
+                            rootExp.data1 = subExp;
+                            rootExp.dataState = 1;
+                            exps.push(rootExp, subExp);
                         }
                         break;
                     }
                     case "BRACKET_SMALL_RIGHT":
-                        if (currentExpression) {
-                            if (currentExpression.dataState === 2) {
+                        if (currentExp) {
+                            if (currentExp.dataState === 2) {
                                 consoleError(`${currentToken.data} 缺少法术标签或法术ID连接`);
                                 return [];
                             } else {
                                 let pairedBracket = false; //取消无意义法术组时可能会丢失需要匹配的左括号 这里需要记录是否在取消无意义法术组中已经完成了括号配对
-                                if (currentExpression.dataState === 1) {
-                                    pairedBracket = currentExpression.bracketState === 1;
-                                    const parentExpression = expressions.at(-2);
-                                    if (parentExpression.dataState === 1) parentExpression.data1 = currentExpression.data1;
-                                    else if (parentExpression.dataState === -1) parentExpression.data2 = currentExpression.data1;
-                                    expressions.pop();
-                                    currentExpression = expressions.at(-1);
+                                if (currentExp.dataState === 1) {
+                                    pairedBracket = currentExp.bracketState === 1;
+                                    const parentExp = exps.at(-2);
+                                    if (parentExp.dataState === 1) parentExp.data1 = currentExp.data1;
+                                    else if (parentExp.dataState === -1) parentExp.data2 = currentExp.data1;
+                                    exps.pop();
+                                    currentExp = exps.at(-1);
                                 }
                                 if (!pairedBracket) {
-                                    while (currentExpression.bracketState !== 1) {
-                                        if (expressions.length > 1) {
-                                            expressions.pop();
-                                            currentExpression = expressions.at(-1);
+                                    while (currentExp.bracketState !== 1) {
+                                        if (exps.length > 1) {
+                                            exps.pop();
+                                            currentExp = exps.at(-1);
                                         } else {
                                             consoleError(`不成对的括号`);
                                             return [];
                                         }
                                     }
-                                    currentExpression.bracketState = -1;
+                                    currentExp.bracketState = -1;
                                 }
                                 // 你永远也等不到运算符了 所以你应该是一个法术标签/ID 而不是法术标签组
-                                if (currentExpression.dataState === 1) {
-                                    const parentExpression = expressions.at(-2);
-                                    if (parentExpression.dataState === 1) parentExpression.data1 = currentExpression.data1;
-                                    else if (parentExpression.dataState === -1) parentExpression.data2 = currentExpression.data1;
-                                    expressions.pop();
-                                    currentExpression = expressions.at(-1);
+                                if (currentExp.dataState === 1) {
+                                    const parentExp = exps.at(-2);
+                                    if (parentExp.dataState === 1) parentExp.data1 = currentExp.data1;
+                                    else if (parentExp.dataState === -1) parentExp.data2 = currentExp.data1;
+                                    exps.pop();
+                                    currentExp = exps.at(-1);
                                 }
                                 //防止根表达式弹出
-                                if (expressions.length > 1) expressions.pop();
+                                if (exps.length > 1) exps.pop();
                             }
                         } else {
                             consoleError(`不成对的括号`);
@@ -775,35 +682,35 @@ const SpellData = class {
                         }
                         break;
                     case "NOT": {
-                        const subExpression = new SpellGroup();
-                        subExpression.dataState = 2;
-                        subExpression.data1 = null;
-                        subExpression.operator = "NOT";
-                        if (currentExpression) {
-                            if (currentExpression.dataState === 0) {
-                                currentExpression.data1 = subExpression;
-                                currentExpression.dataState = 1;
-                                expressions.push(subExpression);
-                            } else if (currentExpression.dataState === 2) {
-                                currentExpression.data2 = subExpression;
-                                currentExpression.dataState = -1;
-                                expressions.push(subExpression);
-                            } else if (currentExpression.dataState === 1) {
+                        const subExp = new SpellGroup();
+                        subExp.dataState = 2;
+                        subExp.data1 = null;
+                        subExp.operator = "NOT";
+                        if (currentExp) {
+                            if (currentExp.dataState === 0) {
+                                currentExp.data1 = subExp;
+                                currentExp.dataState = 1;
+                                exps.push(subExp);
+                            } else if (currentExp.dataState === 2) {
+                                currentExp.data2 = subExp;
+                                currentExp.dataState = -1;
+                                exps.push(subExp);
+                            } else if (currentExp.dataState === 1) {
                                 consoleError("! 不可以用于连接两个法术标签或法术ID");
                                 return [];
                             }
                         } else {
-                            rootExpression = subExpression;
-                            expressions.push(subExpression);
+                            rootExp = subExp;
+                            exps.push(subExp);
                         }
                         break;
                     }
                     case "OR":
-                        if (currentExpression) {
-                            if (currentExpression.dataState === 1) {
-                                currentExpression.dataState = 2;
-                                currentExpression.operator = "OR";
-                            } else if (currentExpression.dataState === 2) {
+                        if (currentExp) {
+                            if (currentExp.dataState === 1) {
+                                currentExp.dataState = 2;
+                                currentExp.operator = "OR";
+                            } else if (currentExp.dataState === 2) {
                                 consoleError("已存在逻辑运算符");
                                 return [];
                             }
@@ -813,11 +720,11 @@ const SpellData = class {
                         }
                         break;
                     case "AND":
-                        if (currentExpression) {
-                            if (currentExpression.dataState === 1) {
-                                currentExpression.dataState = 2;
-                                currentExpression.operator = "AND";
-                            } else if (currentExpression.dataState === 2) {
+                        if (currentExp) {
+                            if (currentExp.dataState === 1) {
+                                currentExp.dataState = 2;
+                                currentExp.operator = "AND";
+                            } else if (currentExp.dataState === 2) {
                                 consoleError("已存在逻辑运算符");
                                 return [];
                             }
@@ -828,26 +735,26 @@ const SpellData = class {
                         break;
                 }
             }
-            currentExpression = expressions[expressions.length - 1];
+            currentExp = exps[exps.length - 1];
             // 你永远也等不到运算符了 所以你应该是一个法术标签/ID 而不是法术标签组
-            if (currentExpression.dataState === 1) {
-                const parentExpression = expressions.at(-2);
-                if (parentExpression) {
-                    if (parentExpression.dataState === 1) parentExpression.data1 = currentExpression.data1;
-                    else if (parentExpression.dataState === -1) parentExpression.data2 = currentExpression.data1;
-                    expressions.pop();
-                    currentExpression = expressions.at(-1);
-                } else rootExpression = currentExpression.data1;
+            if (currentExp.dataState === 1) {
+                const parentExp = exps.at(-2);
+                if (parentExp) {
+                    if (parentExp.dataState === 1) parentExp.data1 = currentExp.data1;
+                    else if (parentExp.dataState === -1) parentExp.data2 = currentExp.data1;
+                    exps.pop();
+                    currentExp = exps.at(-1);
+                } else rootExp = currentExp.data1;
             }
-            if (rootExpression.data2 === null) {
+            if (rootExp.data2 === null) {
                 consoleError("缺少连接的法术标签或ID");
                 return [];
             }
 
             //#endregion
-            console.log(rootExpression);
+            console.log(rootExp);
             //#region 解析AST
-            const result = getSpellDatas(rootExpression);
+            const result = getSpellDatas(rootExp);
             console.table(result, ["id", "name", "description"]);
             //#endregion
             console.groupEnd();
