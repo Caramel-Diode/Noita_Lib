@@ -33,7 +33,7 @@
     --focus-box-shadow: 0 0 0 2px #ff77a3, 0 0 0 3px #aaaaaa;
     --focus-scale: 1;
     --focus-color: #ffffff;
-    --foucs-base: linear-gradient(to right, var(--focus-color), var(--focus-color)) center;
+    --foucs-base: linear-gradient(var(--focus-color), var(--focus-color)) center;
     --foucs-lw: calc(var(--focus-scale) * 1px);
     --foucs-l1: 1px / var(--foucs-lw) calc(6px * var(--focus-scale)) no-repeat;
     --foucs-l2: calc(var(--foucs-lw) + 1px) / var(--foucs-lw) calc(4px * var(--focus-scale)) no-repeat;
