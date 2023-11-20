@@ -424,7 +424,7 @@ const WandData = class {
                                         return [];
                                     }
                                     currentSpellResult.flag_TIME_OF_REPETITION = 1;
-                                } else consoleError("重复声明剩余次数"); // 非严重错误
+                                } else consoleError("重复声明重复次数"); // 非严重错误
                             } else {
                                 consoleError("未指定目标法术");
                                 return [];
