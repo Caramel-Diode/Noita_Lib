@@ -94,14 +94,7 @@ const EntityData = class {
     static $NULL;
     static data = {
         id_map: new Map(),
-        all: [],
-        projectile: {
-            usedBySpell: new Map()
-        },
-        /** @type {Array<EntityData>} 被法术使用的投射物 */ projectile_spell: [],
-        /** @type {Array<EntityData>} 被敌人使用的投射物 */ projectile_enemy: [],
-        /** @type {Array<EntityData>} 所有的敌人 */ enemy_all: [],
-        /** @type {Array<EntityData>} 在进展中显示的敌人 */ enemy_progress: []
+        /** @type {Array<EntityData>} 在进展中显示的敌人 */enemy:[]
     };
 
     /** @param {Array} datas */
@@ -139,7 +132,6 @@ const EntityData = class {
         const datas = embed(`#data.js`);
         for (let i = 0; i < datas.length; i++) {
             const data = Object.freeze(new this(datas[i]));
-            this.data.projectile.usedBySpell.set(data.id, data);
             this.data.id_map.set(data.id, data);
         }
     }
