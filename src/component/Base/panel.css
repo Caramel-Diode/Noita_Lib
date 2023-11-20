@@ -39,7 +39,7 @@ p {
 }
 /*########## 图标区 ##########*/
 :host > :is(canvas, svg),
-main  > :is(canvas, svg){
+main > :is(canvas, svg) {
     grid-area: icon;
     place-self: center;
     scale: 5;
@@ -111,7 +111,7 @@ ol {
     padding: 4px;
     transition: all 300ms linear 0ms;
     border-radius: 2px;
-    --lg: linear-gradient(to right, var(--mark-color), var(--mark-color));
+    --lg: linear-gradient(var(--mark-color), var(--mark-color));
 }
 
 .entities-tabpanel > li.selected {
@@ -132,9 +132,10 @@ ol {
 }
 
 .entities-tabpanel > li[tabindex]:is(:focus-visible, :hover) {
-    --lg: linear-gradient(to right, #00000000, #00000000);
+    --lg: linear-gradient(#00000000, #00000000);
 }
 
+tr[tabindex] > td,
 :is(li, td, h1)[tabindex] {
     --focus-scale: 0;
     --focus-color: #00000000;
@@ -143,6 +144,7 @@ ol {
     will-change: contents;
 }
 
+tr:is(:focus-visible, :hover)[tabindex] > td,
 :is(li, td, h1)[tabindex]:is(:focus-visible, :hover) {
     --focus-scale: 2;
     --focus-color: var(--mark-color, #ffffff);
