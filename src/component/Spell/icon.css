@@ -88,49 +88,49 @@ li {
 }
 
 /* 投射物 */
-li.projectile {
+.projectile {
     --c1: #5a2323;
     --c2: #411919;
 }
 
 /* 静态投射物 */
-li.staticProjectile {
+.static-projectile {
     --c1: #8d3f18;
     --c2: #553422;
 }
 
 /* 修正 */
-li.modifier {
+.modifier {
     --c1: #2d3a72;
     --c2: #202952;
 }
 
 /* 材料 */
-li.material {
+.material {
     --c1: #356f44;
     --c2: #2f4836;
 }
 
 /* 多重 */
-li.drawMany {
+.draw-many {
     --c1: #1c6d73;
     --c2: #214346;
 }
 
 /* 其他 */
-li.other {
+.other {
     --c1: #714b33;
     --c2: #49392e;
 }
 
 /* 实用 */
-li.utility {
+.utility {
     --c1: #7b2a74;
     --c2: #4d2a4a;
 }
 
 /* 被动 */
-li.passive {
+.passive {
     --c1: #212f26;
     --c2: #18211b;
 }
