@@ -37,11 +37,11 @@ data {
 .background:is(.common, .disposable, .essence) {
     width: 14px;
     height: 14px;
-    --bg1: linear-gradient(to right, var(--c1), var(--c1));
-    --bg2: linear-gradient(to right, var(--c2), var(--c2));
-    --bg3: linear-gradient(to right, var(--c3), var(--c3));
-    --bg4: linear-gradient(to right, var(--c4), var(--c4));
-    --bg5: linear-gradient(to right, var(--c5), var(--c5));
+    --bg1: linear-gradient(var(--c1), var(--c1));
+    --bg2: linear-gradient(var(--c2), var(--c2));
+    --bg3: linear-gradient(var(--c3), var(--c3));
+    --bg4: linear-gradient(var(--c4), var(--c4));
+    --bg5: linear-gradient(var(--c5), var(--c5));
     background: var(--bg1) top center / 10px 1px no-repeat, var(--bg1) bottom center / 10px 1px no-repeat, var(--bg1) center left/ 1px 10px no-repeat, var(--bg1) center right/ 1px 10px no-repeat, var(--bg2) top center / 12px 1px no-repeat, var(--bg2) bottom center / 12px 1px no-repeat, var(--bg2) center left/1px 12px no-repeat, var(--bg2) center right/1px 12px no-repeat, var(--bg3) top 1px left 1px/1px 1px no-repeat, var(--bg3) bottom 1px left 1px/1px 1px no-repeat, var(--bg3) top 1px right 1px/1px 1px no-repeat, var(--bg3) bottom 1px right 1px/1px 1px no-repeat, var(--bg4) top 1px left 1px/1px 3px no-repeat, var(--bg4) top 1px left 1px/3px 1px no-repeat, var(--bg4) bottom 1px left 1px/1px 3px no-repeat, var(--bg4) bottom 1px left 1px/3px 1px no-repeat, var(--bg4) top 1px right 1px/1px 3px no-repeat, var(--bg4) top 1px right 1px/3px 1px no-repeat, var(--bg4) bottom 1px right 1px/1px 3px no-repeat, var(--bg4) bottom 1px right 1px/3px 1px no-repeat, var(--bg5) center center/12px 12px no-repeat;
 }
 

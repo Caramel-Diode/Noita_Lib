@@ -44,7 +44,7 @@ li {
     padding: 0 3px 6px 3px;
     margin: 0 0 10px 0;
     gap: 3px;
-    background: linear-gradient(to right, var(--line-color), var(--line-color)) left bottom/ 100% 2px no-repeat;
+    background: linear-gradient(var(--line-color), var(--line-color)) left bottom/ 100% 2px no-repeat;
     cursor: pointer;
     --noita-cursor: pointer;
     transition: font-size 100ms ease-in;

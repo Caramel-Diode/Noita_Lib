@@ -13,7 +13,7 @@
     transition-timing-function: linear linear;
     transform: translate(-50%, -50%);
     z-index: 256;
-    background: linear-gradient(to right, #ffffff, #ffffff) center left/12px 4px no-repeat, linear-gradient(to left, #ffffff, #ffffff) center right/12px 4px no-repeat, linear-gradient(to bottom, #ffffff, #ffffff) center top/4px 12px no-repeat, linear-gradient(to top, #ffffff, #ffffff) center bottom/4px 12px no-repeat;
+    background: linear-gradient(90deg, #ffffff, #ffffff) center left/12px 4px no-repeat, linear-gradient(270deg, #ffffff, #ffffff) center right/12px 4px no-repeat, linear-gradient(180deg, #ffffff, #ffffff) center top/4px 12px no-repeat, linear-gradient(0deg, #ffffff, #ffffff) center bottom/4px 12px no-repeat;
 }
 
 :host(.pointer) {
@@ -34,12 +34,12 @@
 
 @keyframes progress {
     100% {
-        background: linear-gradient(to right, #ffffff, #ffffff) center center/6px 4px no-repeat, linear-gradient(to left, #ffffff, #ffffff) center center/6px 4px no-repeat, linear-gradient(to bottom, #ffffff, #ffffff) center center/4px 6px no-repeat, linear-gradient(to top, #ffffff, #ffffff) center center/4px 6px no-repeat;
+        background: linear-gradient(90deg, #ffffff, #ffffff) center center/6px 4px no-repeat, linear-gradient(270deg, #ffffff, #ffffff) center center/6px 4px no-repeat, linear-gradient(180deg, #ffffff, #ffffff) center center/4px 6px no-repeat, linear-gradient(0deg, #ffffff, #ffffff) center center/4px 6px no-repeat;
     }
 }
 
 @keyframes pointer {
     100% {
-        background: linear-gradient(to right, #ffffffcc, #ffffffcc) center left/8px 4px no-repeat, linear-gradient(to left, #ffffffcc, #ffffffcc) center right/8px 4px no-repeat, linear-gradient(to bottom, #ffffffcc, #ffffffcc) center top/4px 8px no-repeat, linear-gradient(to top, #ffffffcc, #ffffffcc) center bottom/4px 8px no-repeat;
+        background: linear-gradient(90deg, #ffffffcc, #ffffffcc) center left/8px 4px no-repeat, linear-gradient(270deg, #ffffffcc, #ffffffcc) center right/8px 4px no-repeat, linear-gradient(180deg, #ffffffcc, #ffffffcc) center top/4px 8px no-repeat, linear-gradient(0deg, #ffffffcc, #ffffffcc) center bottom/4px 8px no-repeat;
     }
 }
