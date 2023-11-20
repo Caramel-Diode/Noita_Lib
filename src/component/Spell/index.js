@@ -4,15 +4,15 @@ const Spell = (() => {
     SpellData.init();
 
     const typeInfoMap = new Map([
-        ["null", ["NULL", "⚫"]],
-        ["projectile", ["投射物", "🔴"]],
-        ["staticProjectile", ["静态投射物", "🟠"]],
-        ["modifier", ["投射修正", "🔵"]],
-        ["drawMany", ["多重施放", "⚪"]],
-        ["material", ["材料", "🟢"]],
-        ["other", ["其他", "🟡"]],
-        ["utility", ["实用", "🟣"]],
-        ["passive", ["被动", "🟤"]]
+        ["null", ["NULL", "⚫", "null"]],
+        ["projectile", ["投射物", "🔴", "projectile"]],
+        ["staticProjectile", ["静态投射物", "🟠", "static-projectile"]],
+        ["modifier", ["投射修正", "🔵", "modifier"]],
+        ["drawMany", ["多重施放", "⚪", "draw-many"]],
+        ["material", ["材料", "🟢", "material"]],
+        ["other", ["其他", "🟡", "other"]],
+        ["utility", ["实用", "🟣", "utility"]],
+        ["passive", ["被动", "🟤", "passive"]]
     ]);
     const HTMLNoitaSpellElement = class extends Base {
         static queryById = id => SpellData.queryById(id);
@@ -39,8 +39,8 @@ const Spell = (() => {
             remain: Infinity
         };
         /**
-         * 
-         * @param  {[Array<SpellData>,SpellElementConstructParam]|SpellElementConstructParam} params 
+         *
+         * @param  {[Array<SpellData>,SpellElementConstructParam]|SpellElementConstructParam} params
          */
         constructor(...params) {
             super();
@@ -98,11 +98,12 @@ const Spell = (() => {
                 ol.style.cssText = `--amount: ${this.spellDatas.length}`;
                 for (let i = 0; i < this.spellDatas.length; i++) {
                     const spellData = this.spellDatas[i];
+                    const typeInfo = typeInfoMap.get(spellData.type);
                     const li = document.createElement("li");
-                    li.className = spellData.type;
+                    li.className = typeInfo[2];
                     li.append(await spellData.getIcon());
                     ol.append(li);
-                    titles.push(`${typeInfoMap.get(spellData.type)[1]}${spellData.name}\n${spellData.id}\n${spellData.description}`);
+                    titles.push(`${typeInfo[1]}${spellData.name}\n${spellData.id}\n${spellData.description}`);
                 }
                 this.title = titles.join("\n\n");
                 fragment.append(ol);
@@ -215,7 +216,7 @@ const Spell = (() => {
                 li.relatedSectionElements = relatedSectionElements;
                 li.append(projectileData.name);
                 if (num_min === num_max) {
-                    if (num_min !== 0) li.append(`(${num_min})`);
+                    if (num_min > 1) li.append(`(${num_min})`);
                 } else li.append(`(${num_min}~${num_max})`);
                 if (isInCastState) {
                     li.classList.add("in-cast-state");
@@ -261,11 +262,12 @@ const Spell = (() => {
 
             //#region 基本信息
             const baseLoader = new Base.panelAttrLoader(tbody_base);
-            baseLoader.default("type", typeInfoMap.get(sd.type)[0]); // 法术类型
+            baseLoader.default("spellType", typeInfoMap.get(sd.type)[0]); // 法术类型
             baseLoader.default("manaDrain", sd.manaDrain); // 法力消耗
             if (sd.maxUse !== -1) baseLoader.timesUsed("maxUse", { max: sd.maxUse, neverUnlimited: sd.neverUnlimited }); // 最大使用次数
             if (sd.draw.common + sd.draw.hit + sd.draw.timer.count + sd.draw.death) baseLoader.draw(sd.draw); // 抽取
             if (sd.passiveEffect) baseLoader.default("passiveEffect", sd.passiveEffect); //被动效果
+            if (sd.spawningData.requiresFlag !== "None") baseLoader.unlock(sd.spawningData.requiresFlag); // 解锁条件
             if (relatedLiElements[0]) baseLoader.offerEntity("projectilesProvided", relatedLiElements);
             section.prepend(table_base); //添加到最前
             //#endregion
