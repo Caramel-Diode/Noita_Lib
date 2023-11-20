@@ -1,5 +1,6 @@
 [
-    ["type", new this(1, "法术类型")],
+    ["spellType", new this(1, "法术类型")],
+    ["materialType", new this(1, "材料类型")], //材料属性
     ["shuffle", new this(2, "乱序")],
     ["draw", new this(3, "抽取数")],
     ["capacity", new this(4, "容量")],
@@ -24,8 +25,10 @@
     ["sliceDamageMultiplier", new this(17, "切割承伤")],
     ["drillDamage", new this(18, "穿凿伤害")],
     ["drillDamageMultiplier", new this(18, "穿凿承伤")],
+    ["durability", new this(18, "硬度")], //材料属性
     ["electricityDamage", new this(19, "雷电伤害")],
     ["electricityDamageMultiplier", new this(19, "雷电承伤")],
+    ["conductivity", new this(19, "导电性")], //材料属性
     ["healingDamage", new this(20, "治疗伤害")],
     ["healingDamageMultiplier", new this(20, "治疗承伤")],
     ["meleeDamage", new this(21, "近战伤害")],
@@ -35,11 +38,13 @@
     ["holyDamage", new this(23, "神圣伤害")],
     ["holyDamageMultiplier", new this(23, "神圣承伤")],
     ["overeatingDamage", new this(24, "吃撑伤害")],
-    ["overeatingMultiplier", new this(24, "吃撑伤害")],
+    ["overeatingMultiplier", new this(24, "吃撑承伤")],
+    ["ingestionStatusEffects", new this(24, "摄入效果")], //材料属性
     ["physicsHitDamage", new this(25, "物理伤害")],
     ["physicsHitDamageMultiplier", new this(25, "物理承伤")],
     ["poisonDamage", new this(26, "剧毒伤害")],
     ["poisonDamageMultiplier", new this(26, "剧毒承伤")],
+    ["stainsStatusEffects", new this(26, "沾染效果")], //材料属性
     ["radioactiveDamage", new this(27, "辐射伤害")],
     ["radioactiveDamageMultiplier", new this(27, "辐射承伤")],
     ["damageCriticalChance", new this(28, "暴击率")],
@@ -55,14 +60,14 @@
     ["bloodMaterial", new this(36, "血液材料")],
     ["maxHp", new this(37, "生命值")],
     ["immunity", new this(38, "免疫能力")],
-    // ( 39, "承伤系数"),
+    ["#1", new this(39, "#1")], /// 未启用图标
     ["recoilKnockback", new this(40, "后座力")],
     ["draw_common", new this(41, "抽取|普通")],
     ["draw_hit", new this(42, "抽取|碰撞触发")],
     ["draw_timer", new this(43, "抽取|定时触发")],
     ["draw_death", new this(44, "抽取|失效触发")],
-    // neverUnlimited: new this(45, "?"),
-    ["infinite", new this(46, "无限")],
+    ["#2", new this(45, "#2")], /// 未启用图标
+    ["camp", new this(46, "阵营")],
     ["maxStack", new this(47, "堆叠极限")],
     ["maxInPool", new this(48, "池最大含量")],
     ["airInLungsMax", new this(49, "肺容量")],
@@ -70,5 +75,16 @@
     ["trailMaterial", new this(51, "提供轨迹")],
     ["trailMaterialAmount", new this(52, "轨迹浓度")],
     ["material", new this(53, "提供材料")],
-    ["materialAmount", new this(54, "材料浓度")]
-]
+    ["materialAmount", new this(54, "材料浓度")],
+    ["temperature", new this(55, "自燃温度")],
+    ["lock", new this(56, "生成锁")],
+    ["unlock", new this(57, "解锁条件")],
+    ["#3", new this(58, "#3")], /// 未启用图标
+    ["#4", new this(59, "#镐子")], /// 未启用图标
+    ["#5", new this(60, "#铲子")], /// 未启用图标
+    ["#6", new this(61, "#锤子")], /// 未启用图标
+    ["#9", new this(62, "#扳手")], /// 未启用图标
+    ["#10", new this(63, "#双刃斧")], /// 未启用图标
+    ["#11", new this(64, "#图钉")], /// 未启用图标
+    ["#12", new this(65, "#魔杖")] /// 未启用图标
+];
