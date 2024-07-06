@@ -1,0 +1,60 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>材料数据解析</title>
+    <style desc="base-style">
+        :root {
+            background: #1F1F1F;
+        }
+
+        * {
+            padding: 0;
+            margin: 0;
+            box-sizing: border-box;
+            image-rendering: pixelated;
+        }
+
+        body {
+            display: grid;
+            place-items: center;
+            place-content: center;
+            height: 100vh;
+            width: 100vw;
+        }
+
+        canvas {
+            outline: 1px solid black;
+            height: 36px;
+        }
+
+        #canvas-viewport {
+            display: grid;
+            place-content: center left;
+            place-items: center left;
+            position: relative;
+            height: 80px;
+            width: 500px;
+            overflow: auto;
+            border: 1px solid #cccccc;
+            padding: 3px;
+        }
+    </style>
+    <script src="script.js"></script>
+</head>
+
+<body>
+    <button id="genMaterialData">生成材料数据</button>
+    <div>
+        <br>
+    </div>
+    <button id="genReactionData">生成材料反应数据</button>
+    <div>
+        <br>
+    </div>
+    <div id="canvas-viewport"></div>
+</body>
+
+</html>

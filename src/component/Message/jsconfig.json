@@ -1,0 +1,23 @@
+{
+    "compilerOptions": {
+        "lib": ["DOM", "ES2017"],
+        "allowSyntheticDefaultImports": true,
+        "declaration": true,
+        "allowJs": true,
+        "module": "None",
+        "target": "esnext",
+        "checkJs": true,
+        "paths": {
+            "TYPE": ["../../../@types/@message"],
+            "@contanier": ["../../../@types/@container"],
+            "@cursor": ["../../../@types/@cursor"],
+            "@entity": ["../../../@types/@entity"],
+            "@material": ["../../../@types/@material"],
+            "@message": ["../../../@types/@message"],
+            "@perk": ["../../../@types/@perk"],
+            "@spell": ["../../../@types/@spell"],
+            "@wand": ["../../../@types/@wand"]
+        }
+    },
+    "include": ["db.js", "index.js", "../Base/index.js", "../../public/util.js", "../../public/damageData.js"]
+}

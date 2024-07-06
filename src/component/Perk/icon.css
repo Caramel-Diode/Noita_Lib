@@ -1,8 +1,6 @@
 :host {
     grid-template: "main" auto/auto;
-    height: 48px;
-    width: 48px;
-    overflow: hidden;
+    --size: 48px;
     place-content: center;
     place-items: center;
 }
@@ -17,10 +15,8 @@ div.background {
     display: grid;
     place-content: center;
     place-items: center;
-    scale: 3;
+    zoom: 3;
 }
-
-
 
 /* 叠加次数 */
 data {
@@ -42,30 +38,82 @@ data {
     --bg3: linear-gradient(var(--c3), var(--c3));
     --bg4: linear-gradient(var(--c4), var(--c4));
     --bg5: linear-gradient(var(--c5), var(--c5));
-    background: var(--bg1) top center / 10px 1px no-repeat, var(--bg1) bottom center / 10px 1px no-repeat, var(--bg1) center left/ 1px 10px no-repeat, var(--bg1) center right/ 1px 10px no-repeat, var(--bg2) top center / 12px 1px no-repeat, var(--bg2) bottom center / 12px 1px no-repeat, var(--bg2) center left/1px 12px no-repeat, var(--bg2) center right/1px 12px no-repeat, var(--bg3) top 1px left 1px/1px 1px no-repeat, var(--bg3) bottom 1px left 1px/1px 1px no-repeat, var(--bg3) top 1px right 1px/1px 1px no-repeat, var(--bg3) bottom 1px right 1px/1px 1px no-repeat, var(--bg4) top 1px left 1px/1px 3px no-repeat, var(--bg4) top 1px left 1px/3px 1px no-repeat, var(--bg4) bottom 1px left 1px/1px 3px no-repeat, var(--bg4) bottom 1px left 1px/3px 1px no-repeat, var(--bg4) top 1px right 1px/1px 3px no-repeat, var(--bg4) top 1px right 1px/3px 1px no-repeat, var(--bg4) bottom 1px right 1px/1px 3px no-repeat, var(--bg4) bottom 1px right 1px/3px 1px no-repeat, var(--bg5) center center/12px 12px no-repeat;
+    /* 1*1 像素点 宽高参数 */
+    --p: 1px 1px no-repeat;
+    /* 内侧装饰线(垂直方向) 宽高参数 */
+    --dH: 1px 3px no-repeat;
+    /* 内侧装饰线(垂直方向) 宽高参数 */
+    --dV: 3px 1px no-repeat;
+    /* prettier-ignore */
+    --background-default: /* 背景框 */
+        /* 外层框线 */
+        var(--bg1) top center / 10px 1px no-repeat,
+        var(--bg1) bottom center / 10px 1px no-repeat,
+        var(--bg1) center left/ 1px 10px no-repeat,
+        var(--bg1) center right/ 1px 10px no-repeat,
+        /* 外层框线装饰点 (框线端点) */
+        var(--bg2) top center / 12px 1px no-repeat,
+        var(--bg2) bottom center / 12px 1px no-repeat,
+        var(--bg2) center left/1px 12px no-repeat,
+        var(--bg2) center right/1px 12px no-repeat,
+        /* 内侧四角装饰 */
+            /* 四角黑点 */
+        var(--bg3) top 1px left 1px/var(--p),
+        var(--bg3) bottom 1px left 1px/var(--p),
+        var(--bg3) top 1px right 1px/var(--p),
+        var(--bg3) bottom 1px right 1px/var(--p),
+            /* 左上角 */
+        var(--bg4) top 1px left 1px/var(--dH),
+        var(--bg4) top 1px left 1px/var(--dV),
+            /* 左下角 */
+        var(--bg4) bottom 1px left 1px/var(--dH),
+        var(--bg4) bottom 1px left 1px/var(--dV),
+            /* 右上角 */
+        var(--bg4) top 1px right 1px/var(--dH),
+        var(--bg4) top 1px right 1px/var(--dV),
+            /* 右下角 */
+        var(--bg4) bottom 1px right 1px/var(--dH),
+        var(--bg4) bottom 1px right 1px/var(--dV),
+        /* 中心背景 */
+        var(--bg5) center center/12px 12px no-repeat;
+    /* --background-image 用于在css中覆盖默认背景 */
+    /* 聚焦时使用聚焦边框 否则使用透明渐变回退 */
+    background: var(--focus\#border, linear-gradient(#00000000, #00000000)), var(--background-image, var(--background-default));
 }
 
 :host(:focus-visible) > .background:is(.common, .disposable, .essence) {
-    --c1: #eda949;
-    --c2: #c98930;
+    /* prettier-ignore */
+    --focus\#border: /* 聚焦边框 */
+        var(--focus\#bg1) top center / 10px 1px no-repeat,
+        var(--focus\#bg1) bottom center / 10px 1px no-repeat,
+        var(--focus\#bg1) center left/ 1px 10px no-repeat,
+        var(--focus\#bg1) center right/ 1px 10px no-repeat,
+        var(--focus\#bg2) top center / 12px 1px no-repeat,
+        var(--focus\#bg2) bottom center / 12px 1px no-repeat,
+        var(--focus\#bg2) center left/1px 12px no-repeat,
+        var(--focus\#bg2) center right/1px 12px no-repeat;
 }
 
+/* 普通天赋与一次性天赋共享的中心色盘 */
 .background:is(.common, .disposable) {
     --c3: #1a1010;
     --c4: #311d1d;
     --c5: #372724;
 }
 
+/* 普通天赋的边框色盘 */
 .background.common {
     --c1: #4f322d;
     --c2: #6a4038;
 }
 
+/* 一次性天赋的边框色盘 */
 .background.disposable {
     --c1: #354f2d;
     --c2: #4f6a38;
 }
 
+/* 精粹的背景色盘 */
 .background.essence {
     --c1: #4e3b54;
     --c2: #6f5178;
@@ -73,5 +121,3 @@ data {
     --c4: #28212b;
     --c5: #2e2531;
 }
-
-

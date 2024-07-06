@@ -1,6 +1,7 @@
-const DamageData = class {
-    static #reg_letter = /[A-Z]/;
-    static #reg_number = /[0-9\.\-]/;
+class DamageData {
+    /** @type {['projectile', 'melee', 'electricity', 'fire', 'explosion', 'ice', 'slice', 'healing', 'curse', 'drill', 'holy', 'overeating', 'physicsHit', 'poison', 'radioactive']} */
+    static types = Object.freeze(Object.keys(new this("")));
+    /** @type {"multipliers"|"values"} 数值类型 */ #type;
     //#region 成员...
     /**
      * ![](data:image/webp;base64,UklGRmoAAABXRUJQVlA4WAoAAAAQAAAADQAADQAAQUxQSCAAAAABDzD/ERFCURsp0Eji+C5gfc3hIaL/4fMhRNMOx3HEA1ZQOCAkAAAAMAEAnQEqDgAOAAEAHCWkAANwAP73nf//o3X/+jPf//0bsAAA) [`投射物`](https://noita.wiki.gg/zh/wiki/伤害类型#投射物伤害)
@@ -8,11 +9,11 @@ const DamageData = class {
      */
     projectile;
     /**
-     * ![](data:image/webp;base64,UklGRmQAAABXRUJQVlA4WAoAAAAQAAAADQAADQAAQUxQSCUAAAABDzD/ERFCUSNJyu7dlwyR/4SsnABcEBHR/2hOW6BZqSbakRZFAFZQOCAYAAAAMAEAnQEqDgAOAAEAHCWkAANwAP79wIAA) [`近战`](https://noita.wiki.gg/zh/wiki/伤害类型#近战伤害) 
+     * ![](data:image/webp;base64,UklGRmQAAABXRUJQVlA4WAoAAAAQAAAADQAADQAAQUxQSCUAAAABDzD/ERFCUSNJyu7dlwyR/4SsnABcEBHR/2hOW6BZqSbakRZFAFZQOCAYAAAAMAEAnQEqDgAOAAEAHCWkAANwAP79wIAA) [`近战`](https://noita.wiki.gg/zh/wiki/伤害类型#近战伤害)
      * @type {Number}
      */
     melee;
-    /** 
+    /**
      * ![](data:image/webp;base64,UklGRmAAAABXRUJQVlA4WAoAAAAQAAAADQAADQAAQUxQSCEAAAABDzD/ERHCTNs2kQKgVMb/KqQCGJCI/gdirWN8PrWOcRwAVlA4IBgAAAAwAQCdASoOAA4AAQAcJaQAA3AA/v3AgAA=) [`雷电`](https://noita.wiki.gg/zh/wiki/伤害类型#雷电伤害)
      * @type {Number}
      */
@@ -32,7 +33,7 @@ const DamageData = class {
      * @type {Number}
      */
     ice;
-    /** 
+    /**
      * ![](data:image/webp;base64,UklGRmAAAABXRUJQVlA4WAoAAAAQAAAADQAADQAAQUxQSCIAAAABDzD/ERFCIRtJEMKoHMAmA39an0ZE/+PraxxjJETkedoWVlA4IBgAAAAwAQCdASoOAA4AAQAcJaQAA3AA/v3AgAA=) [`切割`](https://noita.wiki.gg/zh/wiki/伤害类型#切割伤害)
      * @type {Number}
      */
@@ -42,7 +43,7 @@ const DamageData = class {
      * @type {Number}
      */
     healing;
-    /** 
+    /**
      * ![](data:image/webp;base64,UklGRmYAAABXRUJQVlA4WAoAAAAQAAAADQAADQAAQUxQSCcAAAABDzD/ERFCSSRJzgWarJyDFf/0xJyAhS8iov9xfs5mv/kBgM3e2AAAVlA4IBgAAAAwAQCdASoOAA4AAQAcJaQAA3AA/v3AgAA=) [`诅咒` ](https://noita.wiki.gg/zh/wiki/伤害类型#诅咒伤害)
      * @type {Number}
      */
@@ -57,7 +58,7 @@ const DamageData = class {
      * @type {Number}
      */
     holy;
-    /** 
+    /**
      * ![](data:image/webp;base64,UklGRmAAAABXRUJQVlA4WAoAAAAQAAAADQAADQAAQUxQSCIAAAABDzD/ERFCcdo2UCDfgPffMgP0WCOi/yFEKUkyDM/zflsWVlA4IBgAAAAwAQCdASoOAA4AAQAcJaQAA3AA/v3AgAA=) [`过饱和`](https://noita.wiki.gg/zh/wiki/伤害类型#暴食伤害)
      * @type {Number}
      */
@@ -80,10 +81,14 @@ const DamageData = class {
 
     //#endregion
 
-    constructor(str, defaultValue = 0) {
-        let dataChars = [];
-        const
-            P = [],
+    /**
+     * @param {String} exp 伤害数据表达式
+     * @param {Number} [defaultValue] 默认值
+     * @param {"multipliers"|"values"} [type]
+     */
+    constructor(exp, defaultValue = 0, type = "values") {
+        this.#type = type;
+        const P = [],
             M = [],
             L = [],
             F = [],
@@ -99,56 +104,79 @@ const DamageData = class {
             R = [],
             O = [];
         let target = P;
-        for (let i = 0; i < str.length; i++) {
-            const char = str[i];
-            switch (char) {
-                case "P": target = P; break;
-                case "M": target = M; break;
-                case "L": target = L; break;
-                case "F": target = F; break;
-                case "E": target = E; break;
-                case "I": target = I; break;
-                case "S": target = S; break;
-                case "H": target = H; break;
-                case "C": target = C; break;
-                case "D": target = D; break;
-                case "V": target = O; break;
-                case "Y": target = Y; break;
-                case "N": target = N; break;
-                case "R": target = R; break;
-                case "O": target = O; break;
-                default: target.push(char);
-            }
+        const targets = { P, M, L, F, E, I, S, H, C, D, V, Y, N, R, O };
+        for (let i = 0; i < exp.length; i++) {
+            const char = exp[i];
+            if ("PMLFEISHCDVYNRO".includes(char)) target = targets[char];
+            else target.push(char);
         }
-        if (P.length > 0) this.projectile = Number(P.join(""));
-        else this.projectile = defaultValue;
-        if (M.length > 0) this.melee = Number(M.join(""));
-        else this.melee = defaultValue;
-        if (L.length > 0) this.electricity = Number(L.join(""));
-        else this.electricity = defaultValue;
-        if (F.length > 0) this.fire = Number(F.join(""));
-        else this.fire = defaultValue;
-        if (E.length > 0) this.explosion = Number(E.join(""));
-        else this.explosion = defaultValue;
-        if (I.length > 0) this.ice = Number(I.join(""));
-        else this.ice = defaultValue;
-        if (S.length > 0) this.slice = Number(S.join(""));
-        else this.slice = defaultValue;
-        if (H.length > 0) this.healing = Number(H.join(""));
-        else this.healing = defaultValue;
-        if (C.length > 0) this.curse = Number(C.join(""));
-        else this.curse = defaultValue;
-        if (D.length > 0) this.drill = Number(D.join(""));
-        else this.drill = defaultValue;
-        if (V.length > 0) this.overeating = Number(V.join(""));
-        else this.overeating = defaultValue;
-        if (Y.length > 0) this.physicsHit = Number(Y.join(""));
-        else this.physicsHit = defaultValue;
-        if (N.length > 0) this.poison = Number(N.join(""));
-        else this.poison = defaultValue;
-        if (R.length > 0) this.radioactive = Number(R.join(""));
-        else this.radioactive = defaultValue;
-        if (O.length > 0) this.holy = Number(O.join(""));
-        else this.holy = defaultValue;
+        const toNumber = data => (data.length ? Number(data.join("")) : defaultValue);
+        this.projectile = toNumber(P);
+        this.melee = toNumber(M);
+        this.electricity = toNumber(L);
+        this.fire = toNumber(F);
+        this.explosion = toNumber(E);
+        this.ice = toNumber(I);
+        this.slice = toNumber(S);
+        this.healing = toNumber(H);
+        this.curse = toNumber(C);
+        this.drill = toNumber(D);
+        this.overeating = toNumber(V);
+        this.physicsHit = toNumber(Y);
+        this.poison = toNumber(N);
+        this.radioactive = toNumber(R);
+        this.holy = toNumber(O);
+    }
+
+    get #_XML() {
+        let tag = "";
+        if (this.#type === "multipliers") tag = "damage_multipliers";
+        else tag = "damage_by_type";
+        const cache = [];
+        cache.push(`projectile="`, this.projectile, `" `);
+        cache.push(`melee="`, this.melee, `" `);
+        cache.push(`electricity="`, this.electricity, `" `);
+        cache.push(`fire="`, this.fire, `" `);
+        cache.push(`explosion="`, this.explosion, `"`);
+        cache.push(`ice="`, this.ice, `" `);
+        cache.push(`slice="`, this.slice, `" `);
+        cache.push(`healing="`, this.healing, `" `);
+        cache.push(`curse="`, this.curse, `" `);
+        cache.push(`dirll="`, this.dirll, `" `);
+        cache.push(`overeating="`, this.overeating, `" `);
+        cache.push(`physics_hit="`, this.physicsHit, `" `);
+        cache.push(`poison="`, this.poison, `" `);
+        cache.push(`radioactive="`, this.radioactive, `" `);
+        cache.push(`holy="`, this.holy, `" `);
+        return `<${tag} ${cache.join("")}><${tag}/>`;
+    }
+
+    get #_exp() {
+        const cache = [];
+        if (this.projectile) cache.push("P", this.projectile);
+        if (this.melee) cache.push("M", this.melee);
+        if (this.electricity) cache.push("L", this.electricity);
+        if (this.fire) cache.push("F", this.fire);
+        if (this.explosion) cache.push("E", this.explosion);
+        if (this.ice) cache.push("I", this.ice);
+        if (this.slice) cache.push("S", this.slice);
+        if (this.healing) cache.push("H", this.healing);
+        if (this.curse) cache.push("C", this.curse);
+        if (this.dirll) cache.push("D", this.dirll);
+        if (this.overeating) cache.push("V", this.overeating);
+        if (this.physicsHit) cache.push("Y", this.physicsHit);
+        if (this.poison) cache.push("N", this.poison);
+        if (this.radioactive) cache.push("R", this.radioactive);
+        if (this.holy) cache.push("O", this.holy);
+        return cache.join("");
+    }
+
+    /**
+     * 转为字符串
+     * @param {"XML"|"exp"} [format] 转换格式
+     */
+    toString(format = "exp") {
+        if ((format = "exp")) return this.#_exp;
+        else return this.#_XML;
     }
 }

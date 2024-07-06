@@ -1,13 +1,9 @@
-:host {
+main {
     grid-template:
         "name icon" 30px
         ". icon" 14px
         "attr icon" 1fr
         ". icon" 14px
         "desc icon" auto
-        / auto 80px;
-}
-
-td:nth-child(1) {
-    width: 55px;
+        / auto minmax(80px, 1fr);
 }

@@ -1,77 +1,61 @@
+/** @typedef {import("TYPE").MessageBackgroundId} MessageBackgroundId */
+/** @typedef {import("TYPE").MessagePresetId} MessagePresetId */
+/** @typedef {import("TYPE").Preset$[MessagePresetId]} MessagePresetContent */
 const Message = (() => {
     embed(`#db.js`);
     MessageBackgroundData.init();
     MessagePresetData.init();
-    const loadInnerHTML = (bindThis, container) => {
-        container.innerHTML = bindThis.innerHTML;
-    };
+    const styleSheet = { base: gss(embed(`#base.css`)) };
+    // 默认使用 important 样式
+    MessageBackgroundData.query("important").url.then(v => styleSheet.base.insertRule(`:host{--url:url("${v}")}`));
 
-    const HTMLNoitaMessageElement = class extends Base {
-        static observedAttributes = Object.freeze([...super.observedAttributes, "message.style", "message.content", "message.preset"]);
-        static {
-            const superStyleSheets = super.prototype.publicStyleSheets;
-            /** @type {PublicStyleSheets} */ this.prototype.publicStyleSheets = {
-                base: [...superStyleSheets.base, gss(embed(`#base.css`))]
-            };
-        }
+    //prettier-ignore
+    for (const [id, data] of MessageBackgroundData.data_map) 
+        data.url.then(v => styleSheet.base.insertRule(String.raw`:host([message\.style="${id}"]){--url:url("${v}")}`));
+    //prettier-ignore
+    for (const [id, data] of MessagePresetData.data_map) 
+        data.background.url.then(v => styleSheet.base.insertRule(String.raw`:host([message\.preset="${id}"]){--url:url("${v}")}`));
+
+    return class HTMLNoitaMessageElement extends $class(Base, {
+        displayMode: { attrName: "display", $default: "#" },
+        /** @type {$ValueOption<MessageBackgroundId>} */
+        messageStyle: { attrName: "message.style", $default: "important" },
+        /** @type {$ValueOption<MessagePresetContent>} */
+        messageContent: { attrName: "message.content", $default: "使用 message.content 属性设置或者直接在内部填充内容" },
+        /** @type {$ValueOption<MessagePresetId>} */
+        messagePreset: { attrName: "message.preset" }
+    }) {
         /** @type {ShadowRoot} */ #shadowRoot = this.attachShadow({ mode: "closed" });
-        /** @type {MessageBackgroundData} */ background;
-        /** @type {String|Node} */ content;
+
         constructor(...param) {
             super();
             if (param.length > 1) {
-                this.background = MessageBackgroundData.queryById(param[0]);
-                this.content = param[1];
-            } else if (param.length === 1) {
-                const template = MessagePresetData.queryById(param[0]);
-                this.background = template.background;
-                this.content = template.text;
-            }
+                this.messageStyle = param[0];
+                this.messageContent = param[1];
+            } else if (param.length === 1) this.messagePreset = param[0];
         }
 
-        async contentUpdate() {
-            this.#shadowRoot.innerHTML = "";
-            const background = this.getAttribute("message.style");
-            if (background) {
-                this.background = MessageBackgroundData.queryById(background);
-            }
-            const h1 = document.createElement("h1");
-            const content = this.getAttribute("message.content");
-            if (content) this.content = content;
-            if (this.content) this.#shadowRoot.append(this.content);
-            else {
-                const presetId = this.getAttribute("message.preset");
-                if (presetId) {
-                    const data = MessagePresetData.queryById(presetId);
-                    this.#shadowRoot.innerHTML = data.text;
-                    this.background = data.background;
-                } else {
-                    // 载入内部innerHTML
-                    const listener = () => {
-                        loadInnerHTML(this, this.#shadowRoot);
-                        document.removeEventListener("DOMContentLoaded", listener); //及时让GC回收未被引用的函数
-                    };
-                    document.addEventListener("DOMContentLoaded", listener);
-                    // requestAnimationFrame(listener); // 这个无法获取到innerHTML
-                }
-            }
-            this.#shadowRoot.adoptedStyleSheets = [...this.publicStyleSheets.base, gss(`:host{--url:url("${await this.background.url}")}`)];
+        /** @param {Array<CSSStyleSheet>} [extraStyleSheets] 额外样式表 */
+        [$symbols.initStyle](extraStyleSheets = []) {
+            extraStyleSheets.push(styleSheet.base);
+            super[$symbols.initStyle](extraStyleSheets);
+        }
+
+        contentUpdate() {
+            const preset = this.messagePreset;
+            /** @type {MessagePresetData?} */ let presetData;
+            if (preset) presetData = MessagePresetData.query(preset);
+            const background = presetData?.background ?? MessageBackgroundData.query(this.messageStyle);
+            this.#shadowRoot.innerHTML = `<h1><slot>${presetData?.text ?? this.messageContent}</slot></h1>`;
+            this[$symbols.initStyle]();
         }
 
         connectedCallback() {
             this.contentUpdate();
         }
 
-        toString() {
-            return `[obejct HTMLNoitaMessageElement #${this.background.id}]`;
-        }
-
-        attributeChangedCallback(name, oldValue, newValue) {
-            if (oldValue === null) return;
-            else if (newValue === oldValue) return;
-            else this.contentUpdate();
-        }
+        //prettier-ignore
+        get [Symbol.toStringTag]() { return `HTMLNoitaMessageElement #${this.background.id}` }
     };
-    return Object.freeze(HTMLNoitaMessageElement);
 })();
-customElements.define("noita-message", Message);
+customElements.define("noita-message", freeze(Message));

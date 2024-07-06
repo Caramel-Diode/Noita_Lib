@@ -4,6 +4,48 @@
     height: var(--size);
     width: var(--size);
 }
+/* 为focus目标项目提供背景变量 */
+:host(:focus-visible) {
+    --focus\#bg1: linear-gradient(#eda949, #eda949);
+    --focus\#bg2: linear-gradient(#c98930, #c98930);
+}
+
+/*==================*\
+        轮播带
+\*==================*/
+[part="tape"] {
+    display: flex;
+    list-style: none;
+    flex-direction: column;
+    flex-wrap: nowrap;
+    width: var(--size);
+    height: calc(var(--amount) * var(--size));
+    translate: 0 0;
+
+    animation-name: carousel;
+    animation-timing-function: steps(var(--amount));
+    animation-duration: calc(var(--amount) * 1s);
+    animation-iteration-count: infinite;
+    animation-play-state: running;
+
+    /* 轮播项 */
+    > * {
+        height: var(--size);
+        width: var(--size);
+    }
+}
+
+/* 鼠标悬停时暂停轮播动画 */
+:host(:hover) [part="tape"] {
+    animation-play-state: paused;
+}
+
+/* 轮播动画 */
+@keyframes carousel {
+    to {
+        translate: 0 -100%;
+    }
+}
 
 /* 图标模式下用于搜索文本 */
 code {
@@ -17,3 +59,5 @@ code {
     scale: 0.5;
     --font-size: large;
 }
+
+

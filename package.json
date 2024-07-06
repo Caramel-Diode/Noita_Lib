@@ -2,7 +2,8 @@
     "name": "noita_lib",
     "displayName": "noitaLib",
     "description": "基于Web Component技术构建的 Noita 游戏UI元素工具库",
-    "version": "1.0.0",
+    "type": "module",
+    "version": "1.0.4",
     "license": "GPL",
     "repository": "github:Caramel-Diode/Noita_Lib",
     "keywords": [
@@ -16,10 +17,14 @@
         "email": "2746671038@qq.com"
     },
     "contributors": [],
-    "main": "src/js/index.js",
-    "types": "./type.d.ts",
+    "main": "dist/noitaLib.mjs",
+    "types": "@type/index.d.ts",
+    "files": [
+        "dist/*"
+    ],
     "scripts": {
-        "build": "node ./util/build.js"
+        "build": "node ./util/build.js",
+        "parser server": "node ./src/parseTools/serve.js"
     },
     "eslintConfig": {
         "env": {

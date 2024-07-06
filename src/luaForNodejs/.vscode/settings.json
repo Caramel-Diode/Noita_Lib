@@ -1,0 +1,7 @@
+{
+    "files.associations": {
+        "*.yrm": "ini",
+        "*.json": "jsonc",
+        "array": "cpp"
+    }
+}

@@ -2,175 +2,174 @@
 const Wand = (() => {
     embed(`#db.js`);
     WandData.init();
-    /** @type {Wand} */ let bindThis = undefined;
-    /**
-     * 属性解析
-     * @param {String} attrName 属性名
-     * @param {Number} [defaultValue = 0] 默认值
-     * @returns {Number|{min:Number,max:Number}}
-     */
-    const attrParse = (attrName, defaultValue = 0) => {
-        /** @type {String} */
-        const attrStr = bindThis.getAttribute(`wand.${attrName}`);
-        if (attrStr) {
-            if (attrStr.startsWith(">=")) return { min: Number(attrStr.slice(2)), max: Infinity };
-            else if (attrStr.startsWith("<=")) return { min: -Infinity, max: Number(attrStr.slice(2)) };
-            else {
-                const [min, max = ""] = attrStr.split("~");
-                if (max) return { min: Number(min), max: Number(max) };
-                else return Number(attrStr);
-            }
-        }
-        return defaultValue;
+
+    const styleSheet = {
+        icon: /* gss(embed(`#icon.css`)) */ null,
+        panel: gss(embed(`#panel.css`))
     };
-    const li_necessary = document.createElement("li");
-    const li_optional = document.createElement("li");
 
     /**
      * 加载法术列表项
      * @param {HTMLOListElement|HTMLUListElement} container
      * @param {Array<SpellRecipeItem>} datas
-     * ---
-     * ### 重复片段(废弃)
-     * ```html
-     * <li class=" |optional">
-     *     <noita-spell {{attr}}></noita-spell>
-     * </li>
-     * ```
      */
-    const loadSpellListItems = (container, datas) => {
-        /* 不要使用字符串拼接
-        const resultHTMLs = [];
-        for (let i = 0; i < datas.length; i++) {
-            const data = datas[i];
-            resultHTMLs.push(`<li><noita-spell ${data.attrStr}></noita-spell></li>`.repeat(data.min), `<li class="optional"><noita-spell ${data.attrStr}></noita-spell></li>`.repeat(data.max - data.min));
-        }
-        container.innerHTML = resultHTMLs.join("");
-        */
-        for (let i = 0; i < datas.length; i++) {
-            const data = datas[i];
-            const { min, max } = data;
+    const loadSpellListItems = datas => {
+        /** @type {Array<HTMLLIElement>} */
+        const lis = [];
+        for (const data of datas) {
             let j = 0;
-            for (; j < min; j++) {
-                const li = document.createElement("li");
-                li.append(new Spell(data));
-                container.append(li);
-            }
-            for (; j < max; j++) {
-                const li = document.createElement("li");
-                li.className = "optional";
-                li.append(new Spell(data));
-                container.append(li);
-            }
+            for (; j < data.min; j++) lis.push($html`<li>${new Spell(data)}</li>`);
+            for (; j < data.max; j++) lis.push($html`<li class=optional>${new Spell(data)}</li>`);
         }
+        return lis;
     };
-    const HTMLNoitaWandElement = class extends Base {
-        static observedAttributes = Object.freeze([...super.observedAttributes, "wand.name", "wand.template", "wand.icon", "wand.capacity", "wand.draw", "wand.fire-rate-wait", "wand.reload-time", "wand.shuffle", "wand.spread-degrees", "wand.speed-multiplier", "wand.mana-charge-speed", "wand.mana-max", "wand.static-spells", "wand.dynamic-spells"]);
-
+    return class HTMLNoitaWandElement extends $class(Base, {
+        /** @type {$ValueOption<"icon"|"panel">} */
+        displayMode: { name: "display", $default: "panel" },
+        /** @type {$ValueOption<String>} */
+        wandName: { name: "wand.name", $default: "魔杖" },
+        /** @type {$ValueOption<String>} */
+        wandTemplate: { name: "wand.template" },
+        /** @type {$ValueOption<"AUTO"|`#<number>`|import("TYPE").wandName>} */
+        wandIcon: { name: "wand.icon", $default: "AUTO" },
+        /** @type {$ValueOption<String>} */
+        wandCapacity: { name: "wand.capacity", $default: "26" },
+        /** @type {$ValueOption<String>} */
+        wandDraw: { name: "wand.draw", $default: "1" },
+        /** @type {$ValueOption<String>} */
+        wandFireRateWait: { name: "wand.fire-rate-wait", $default: "0" },
+        /** @type {$ValueOption<String>} */
+        wandReloadTime: { name: "wand.reload-time", $default: "0" },
+        /** @type {$ValueOption<"true"|"false">} */
+        wandShuffle: { name: "wand.shuffle", $default: "false" },
+        /** @type {$ValueOption<String>} */
+        wandSpreadDegrees: { name: "wand.spread-degrees", $default: "0" },
+        /** @type {$ValueOption<String>} */
+        wandSpeedMultiplier: { name: "wand.speed-multiplier", $default: "1" },
+        /** @type {$ValueOption<String>} */
+        wandManaChargeSpeed: { name: "wand.mana-charge-speed", $default: "0" },
+        /** @type {$ValueOption<String>} */
+        wandManaMax: { name: "wand.mana-max", $default: "1000" },
+        /** @type {$ValueOption<String>} */
+        wandStaticSpells: { name: "wand.static-spells", $default: "" },
+        /** @type {$ValueOption<String>} */
+        wandDynamicSpells: { name: "wand.dynamic-spells", $default: "" }
+    }) {
         /** @type {ShadowRoot} */ #shadowRoot = this.attachShadow({ mode: "closed" });
-        /**  @type {DisplayMode}  */ #displayMode = undefined;
-
-        /** @type {WandData} */ wandData = undefined;
+        /**  @type {DisplayMode} */ #displayMode;
+        /** @type {WandData} */ wandData;
 
         constructor(option) {
             super();
             if (option) {
-                this.#displayMode = option.display ?? "panel";
+                this.displayMode = option.display ?? "panel";
                 if (option.data) {
                     const data = option.data;
                     if (data.template) this.wandData = WandData.getDataByTemplate(data.template);
-                    else this.wandData = new WandData([data.name ?? "魔杖", data.icon ?? "AUTO", data.capacity ?? 0, data.draw ?? 1, data.fireRateWait ?? 0, data.reloadTime ?? 0, data.shuffle ?? false, data.spreadDegrees ?? 0, data.speedMultiplier ?? 1, data.manaChargeSpeed ?? 0, data.manaMax ?? 0, data.staticSpells ?? "", data.dynamicSpells ?? ""]);
+                    //prettier-ignore
+                    else this.wandData = new WandData([
+                        data.name ?? "魔杖",
+                        data.icon ?? "AUTO",
+                        data.capacity ?? 0,
+                        data.draw ?? 1,
+                        data.fireRateWait ?? 0,
+                        data.reloadTime ?? 0,
+                        data.shuffle ?? false,
+                        data.spreadDegrees ?? 0,
+                        data.speedMultiplier ?? 1,
+                        data.manaChargeSpeed ?? 0,
+                        data.manaMax ?? 1500,
+                        data.staticSpells ?? "",
+                        data.dynamicSpells ?? ""
+                    ]);
                 }
             }
         }
 
-        static {
-            const superStyleSheets = super.prototype.publicStyleSheets;
-            this.prototype.publicStyleSheets = {
-                icon: [...superStyleSheets.icon],
-                panel: [...superStyleSheets.panel, gss(embed(`#panel.css`))]
-            };
-        }
+        #loadIconContent() {}
 
-        async #loadIconContent() {}
-
-        async #loadPanelContent() {
+        #loadPanelContent() {
             const wd = this.wandData;
-            this.#shadowRoot.adoptedStyleSheets = this.publicStyleSheets.panel;
-            const fragment = document.createDocumentFragment();
+            const template = createElement("template");
 
-            const h1 = document.createElement("h1"); //法杖名
-            h1.innerText = wd.name;
             //#region 属性区
             /*###############################################################################*/
-            const table = document.createElement("table");
-            const tbody = document.createElement("tbody");
+            const loader = new Base.PanelAttrLoader();
 
-            const loader = new Base.panelAttrLoader(tbody);
-            loader.default("shuffle", wd.shuffle ? "是" : "否");
-            loader.draw(wd.draw);
-            loader.castCD("fireRateWait", wd.fireRateWait);
-            loader.castCD("reloadTime", wd.reloadTime);
-            loader.manaMaxOrCapacity("manaMax", wd.manaMax);
-            loader.manaChargeSpeed(wd.manaChargeSpeed);
-            loader.manaMaxOrCapacity("capacity", wd.capacity);
-            if (wd.spreadDegrees) loader.spreadDegrees(wd.spreadDegrees);
-            if (wd.speedMultiplier !== 1) loader.speed("speedMultiplier", wd.speedMultiplier);
-            if (wd.staticSpells.length > 0) {
-                const staticSpellList = document.createElement("ol");
-                staticSpellList.className = "static-spells"; //标记为始终法术列表
-                loadSpellListItems(staticSpellList, wd.staticSpells);
-                loader.custom("staticSpells", [staticSpellList]);
-            }
-            table.append(tbody);
+            //prettier-ignore
+            loader.load({
+                shuffle:         { value: wd.shuffle ? "是" : "否"                                },
+                draw:            { value: wd.draw                                                },
+                fireRateWait:    { value: wd.fireRateWait                                        },
+                reloadTime:      { value: wd.reloadTime                                          },
+                manaMax:         { value: wd.manaMax                                             },
+                manaChargeSpeed: { value: wd.manaChargeSpeed                                     },
+                capacity:        { value: wd.capacity                                            },
+                spreadDegrees:   { value: wd.spreadDegrees                                       },
+                speedMultiplier: { value: wd.speedMultiplier,   hidden: wd.speedMultiplier == 1  }, //这里用的就是非严格相等
+                staticSpells:    { value: $html`<ol class=static-spells>${loadSpellListItems(wd.staticSpells)}</ol>`, hidden:!wd.staticSpells.length }
+            });
+
             /*###############################################################################*/
             //#endregion
-            let dynamicSpellList;
-            if (wd.shuffle) dynamicSpellList = document.createElement("ul");
-            else dynamicSpellList = document.createElement("ol");
-            dynamicSpellList.className = "dynamic-spells";
-            if (wd.dynamicSpells.length > 0) loadSpellListItems(dynamicSpellList, wd.dynamicSpells);
+            const type = wd.shuffle ? "ul" : "ol";
+            //prettier-ignore
+            template.content.append(
+                wd.icon,
+                $html`<h1>${wd.name}</h1>`,
+                loader.container,
+                $html`<${type} class=dynamic-spells>${loadSpellListItems(wd.dynamicSpells)}</${type}>`
+            );
 
-            fragment.append(await wd.icon.getIcon(), h1, table, dynamicSpellList);
-            this.#shadowRoot.append(fragment);
+            this.loadPanelContent([template]);
+        }
+
+        /** @param {Array<CSSStyleSheet>} [extraStyleSheets] 额外样式表 */
+        [$symbols.initStyle](extraStyleSheets = []) {
+            // extraStyleSheets.push(styleSheet.base);
+            //prettier-ignore
+            switch(this.displayMode) {
+                case "panel": extraStyleSheets.push(styleSheet.panel); break;
+                // case "icon": extraStyleSheets.push(styleSheet.icon)
+            }
+            super[$symbols.initStyle](extraStyleSheets);
         }
 
         contentUpdate() {
-            this.#shadowRoot.innerHTML = "";
-            this.#shadowRoot.adoptedStyleSheets = [];
+            const templateName = this.WandTemplate;
+            if (templateName) this.wandData = WandData.getDataByTemplate(templateName);
+            //prettier-ignore
+            else this.wandData = new WandData([
+                this.wandName,
+                this.wandIcon,
+                new RangeValue(this.wandCapacity),
+                new RangeValue(this.wandDraw),
+                new RangeValue(this.wandFireRateWait),
+                new RangeValue(this.wandReloadTime),
+                this.wandShuffle === "true",
+                new RangeValue(this.wandSpreadDegrees),
+                new RangeValue(this.wandSpeedMultiplier),
+                new RangeValue(this.wandManaChargeSpeed),
+                new RangeValue(this.wandManaMax),
+                this.wandStaticSpells,
+                this.wandDynamicSpells
+            ]);
 
-            let displayMode = this.getAttribute("display");
-            if (displayMode) this.#displayMode = displayMode;
-            else if (this.#displayMode) {
-                this.setAttribute("display", "panel");
-                this.#displayMode = "panel";
+            this[$symbols.initStyle]();
+            //prettier-ignore
+            switch(this.displayMode) {
+                case "panel": this.#loadPanelContent(); break;
+                case "icon": this.#loadIconContent(); break;
+                default: throw new TypeError("不支持的显示模式");
             }
-            const templateName = this.getAttribute("wand.template");
-            if (templateName) {
-                this.wandData = WandData.getDataByTemplate(templateName);
-            } else {
-                this.wandData;
-                bindThis = this;
-                this.wandData = new WandData([this.getAttribute("wand.name") ?? "魔杖", this.getAttribute("wand.icon") ?? "AUTO", attrParse("capacity", 0), attrParse("draw", 1), attrParse("fire-rate-wait", 0), attrParse("reload-time", 0), this.getAttribute("wand.shuffle") === "true", attrParse("spread-degrees", 0), attrParse("speed-multiplier", 1), attrParse("mana-charge-speed", 0), attrParse("mana-max", 0), this.getAttribute("wand.static-spells") ?? "", this.getAttribute("wand.dynamic-spells") ?? ""]);
-            }
-            if (this.#displayMode === "panel") this.#loadPanelContent(this);
-            else this.#loadIconContent(this);
         }
 
         connectedCallback() {
             this.contentUpdate();
         }
 
-        toString() {
-            return `[obejct HTMLNoitaWandElement #${this.wandData.name}]`;
-        }
-
-        attributeChangedCallback(name, oldValue, newValue) {
-            if (oldValue === null) return;
-            else if (newValue === oldValue) return;
-            else this.contentUpdate();
-        }
+        //prettier-ignore
+        get [Symbol.toStringTag]() { return `HTMLNoitaWandElement #${this.wandData.name}` }
     };
-    return Object.freeze(HTMLNoitaWandElement);
 })();
-customElements.define("noita-wand", Wand);
+customElements.define("noita-wand", freeze(Wand));

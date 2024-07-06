@@ -1,31 +1,37 @@
+/** @typedef {import("@contanier").ContainerType} ContainerType */
+/** @typedef {import("@material").MaterialData} MaterialData */
 const Container = (() => {
-    embed(`#data.js`);
-    const styleSheet_base = gss(embed(`#base.css`));
+    embed(`#db.js`);
+    ContainerData.init();
+    const styleSheet = {
+        base: gss(embed(`#base.css`)),
+        icon: gss(embed(`#icon.css`)),
+        panel: gss(embed(`#panel.css`))
+    };
 
-    const HTMLNoitaContainerElement = class extends Base {
-        static observedAttributes = Object.freeze([...super.observedAttributes, "container.type", "container.content"]);
-        static {
-            const superStyleSheets = super.prototype.publicStyleSheets;
-            /** @type {PublicStyleSheets} */ this.prototype.publicStyleSheets = {
-                icon: [...superStyleSheets.icon, styleSheet_base, gss(embed(`#icon.css`))],
-                panel: [...superStyleSheets.panel, styleSheet_base, gss(embed(`#panel.css`))]
-            };
-        }
+    return class HTMLNoitaContainerElement extends $class(Base, {
+        /** @type {$ValueOption<"icon"|"panel">} */
+        displayMode: { name: "display", $default: "icon" },
+        /** @type {$ValueOption<ContainerType>} */
+        containerType: { name: "container.type", $default: "common" },
+        /** @type {$ValueOption<String>} */
+        containerContent: { name: "container.content" }
+    }) {
         /** @type {ShadowRoot} */ #shadowRoot = this.attachShadow({ mode: "closed" });
-        /** @type {DisplayMode} */ #displayMode = undefined;
-        /** @type {"common","conical","jar","bag"} */ #type = "";
-        /** @type {Array<{type:"COLOR"|"MATERIAL",amount:Number,color?:String,material?:String}>} 容器内容 */
+        /** @type {Array<{type:"COLOR"|"MATERIAL",amount:Number,color?:String,material?:MaterialData}>} 容器内容 */
         #content = [];
         #amount_all = 0;
+        /** @type {ContainerData} */
+        containerData;
         constructor() {
             super();
         }
 
         #parseContentExpression() {
-            const data = this.getAttribute("container.content");
+            const data = [...(this.containerContent ??= "")];
             const result = [];
             if (data) {
-                const regex_blank = util.parse.Token.regs.blank;
+                this.#amount_all = 0;
                 let currentContent;
                 let state = 0; /// 1: 匹配颜色中 2:匹配材料中 3:匹配数量中
                 for (let i = 0; i < data.length; i++) {
@@ -47,10 +53,8 @@ const Container = (() => {
                             color_cache: ["#"]
                         });
                         state = 1;
-                    } else if (char === ":") {
-                        // 指定数量
-                        state = 3;
-                    } else if (!regex_blank.test(char)) {
+                    } else if (char === ":") state = 3; // 指定数量
+                    else if (!/\s/.test(char)) {
                         if (state === 0) {
                             result.push({
                                 type: "MATERIAL",
@@ -65,33 +69,38 @@ const Container = (() => {
                         else if (state === 3) currentContent.amount_cache.push(char);
                     } else {
                         //此处char为空白符
-                        if (currentContent.type === "COLOR") currentContent.color = currentContent.color_cache.join("");
-                        else if (currentContent.type === "MATERIAL") currentContent.material = currentContent.material_cache.join("");
+                        if (currentContent.type === "COLOR") {
+                            currentContent.color = currentContent.color_cache.join("");
+                            currentContent.color_cache = null;
+                        } else if (currentContent.type === "MATERIAL") {
+                            currentContent.material = Material.queryById(currentContent.material_cache.join(""));
+                            currentContent.material_cache = null;
+                        }
                         currentContent.amount = Number(currentContent.amount_cache.join(""));
+                        currentContent.amount_cache = null;
                         this.#amount_all += currentContent.amount;
                         state = 0;
                     }
                 }
                 if (currentContent.type === "COLOR") currentContent.color = currentContent.color_cache.join("");
-                else if (currentContent.type === "MATERIAL") currentContent.material = currentContent.material_cache.join("");
+                else if (currentContent.type === "MATERIAL") currentContent.material = Material.queryById(currentContent.material_cache.join(""));
                 currentContent.amount = Number(currentContent.amount_cache.join(""));
                 this.#amount_all += currentContent.amount;
             }
             this.#content = result;
         }
 
-        #getCascadingSvgs = () => {
-            const fragment = document.createDocumentFragment();
-            const svgGenerator = svgGenerators.get(this.#type) ?? svgGenerators.get("common");
-            fragment.appendChild(svgGenerator());
+        #getCascadingSVGs = () => {
+            const fragment = new DocumentFragment();
+            fragment.append(this.containerData.createSVG());
             let currentFillHeight = this.#amount_all;
             for (let i = 0; i < this.#content.length; i++) {
                 const item = this.#content[i];
                 if (item.type === "COLOR") {
-                    fragment.append(svgGenerator(currentFillHeight, item.color));
+                    fragment.append(this.containerData.createSVG(currentFillHeight, item.color));
                 } else {
-                    // === "MATERIAL"
-                    //#todo: 等材料数据库完成后补充
+                    //                                                                                                                            我是否应该移除透明度?
+                    fragment.append(this.containerData.createSVG(currentFillHeight, "#" + item.material.color /*.slice(0, -2)*/));
                 }
                 currentFillHeight -= item.amount;
             }
@@ -99,85 +108,76 @@ const Container = (() => {
         };
 
         async #loadIconContent() {
-            this.#shadowRoot.adoptedStyleSheets = this.publicStyleSheets.icon;
-            this.#shadowRoot.append(this.#getCascadingSvgs());
+            this.#shadowRoot.append(this.#getCascadingSVGs());
         }
 
         async #loadPanelContent() {
-            const { name, desc } = containerData.get(this.#type) ?? containerData.get("common");
-            this.#shadowRoot.adoptedStyleSheets = this.publicStyleSheets.panel;
-            const fragment = document.createDocumentFragment();
-            const h1 = document.createElement("h1");
-            const svgs = this.#getCascadingSvgs();
-            const table = document.createElement("table");
-            const p = document.createElement("p");
-            const tbody = document.createElement("tbody");
+            const template = createElement("template");
+            const { name, desc } = this.containerData;
+            let h1_innerText = "空" + name;
+            const svgs = this.#getCascadingSVGs();
+            const table = createElement("table");
+
+            const tbody = createElement("tbody");
             const h1_contentCache = [];
-            const tbody_contentCache = [];
+            const table_contentCache = [];
+            table.className = "attrs";
             for (let i = 0; i < this.#content.length; i++) {
                 const item = this.#content[i];
                 if (item.type === "COLOR") {
                     h1_contentCache.push(item.color);
-                    tbody_contentCache.push(`<tr><td>${item.amount}%</td><td style="color:${item.color}">${item.color}</td></tr>`);
+                    table_contentCache.push(`<tr><td>${item.amount}%</td><th style="color:${item.color}">${item.color}</th></tr>`);
                 } else {
-                    h1_contentCache.push(item.material);
-                    tbody_contentCache.push(`<tr><td>${item.amount}%</td><td>${item.material}</td></tr>`);
+                    h1_contentCache.push(item.material.name);
+                    table_contentCache.push(`<tr><td>${item.amount}%</td><th>${item.material.name}</th></tr>`);
                 }
             }
-            if (this.#amount_all !== 0) h1.innerText = `${h1_contentCache.join("+")}${name}(${this.#amount_all}%)`;
-            else h1.innerText = `空${name}`;
-            tbody.innerHTML = tbody_contentCache.join("");
-            table.append(tbody);
-            p.innerHTML = desc;
-            fragment.append(h1, svgs, table, p);
-            this.#shadowRoot.append(fragment);
+            if (this.#amount_all !== 0) h1_innerText = `${h1_contentCache.join("+")}${name}(${this.#amount_all}%)`;
+            table.innerHTML = table_contentCache.join("");
+
+            template.content.append($html`<h1>${h1_innerText}</h1>`, svgs, table, $html`<p>${desc}</p>`);
+            this.loadPanelContent([template]);
         }
 
-        contentUpdate() {
-            this.#shadowRoot.innerHTML = "";
-            this.#shadowRoot.adoptedStyleSheets = [];
-            const displayMode = this.getAttribute("display");
-            if (displayMode) this.#displayMode = displayMode;
-            else {
-                this.setAttribute("display", "icon");
-                this.#displayMode = "icon";
+        /**
+         * @override
+         * @param {Array<CSSStyleSheet>} [extraStyleSheets] 额外样式表
+         */
+        [$symbols.initStyle](extraStyleSheets = []) {
+            extraStyleSheets.push(styleSheet.base);
+            //prettier-ignore
+            switch(this.displayMode) {
+                case "icon": extraStyleSheets.push(styleSheet.icon); break;
+                case "panel": extraStyleSheets.push(styleSheet.panel)
             }
-            const type = this.getAttribute("container.type");
-            if (type) this.#type = type;
-            if (this.#displayMode === "panel") this.#loadPanelContent();
-            else this.#loadIconContent();
+            super[$symbols.initStyle](extraStyleSheets);
+        }
+        /** @override */
+        contentUpdate() {
+            this.#parseContentExpression();
+            this.#shadowRoot.innerHTML = "";
+            this[$symbols.initStyle]();
+            this.containerData = ContainerData.query(this.containerType);
+            //prettier-ignore
+            switch(this.displayMode) {
+                case "panel": this.#loadPanelContent(); break;
+                case "icon": this.#loadIconContent(); break;
+                default: throw new TypeError("不支持的显示模式");
+            }
         }
 
         connectedCallback() {
-            this.#parseContentExpression();
             this.contentUpdate();
         }
 
-        toString() {
+        get [Symbol.toStringTag]() {
             const datas = [];
             for (let i = 0; i < this.spellDatas.length; i++) {
                 const spell = this.spellDatas[i];
                 datas.push(spell.id);
             }
-            return `[obejct HTMLNoitaContainerElement #${datas.join[","]}]`;
-        }
-
-        attributeChangedCallback(name, oldValue, newValue) {
-            if (oldValue === null) return;
-            else if (newValue === oldValue) return;
-            else {
-                switch (name) {
-                    case "container.content":
-                    case "container.type":
-                        this.#type = "";
-                        break;
-                    case "display":
-                        this.#displayMode = undefined;
-                }
-                this.contentUpdate();
-            }
+            return `HTMLNoitaContainerElement < ${datas.join(",")} >`;
         }
     };
-    return Object.freeze(HTMLNoitaContainerElement);
 })();
 customElements.define("noita-container", Container);

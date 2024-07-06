@@ -1,154 +1,519 @@
-:host {
-    place-content: center;
-    padding: 20px !important;
-    margin: 5px !important;
-    --c1: #948064;
-    --c2: #b49f81;
-    --c3: #0e0d0cf2;
-    --bg1: linear-gradient(var(--c1), var(--c1));
-    --bg2: linear-gradient(var(--c2), var(--c2));
-    --bg3: linear-gradient(var(--c3), var(--c3));
-    --h1: 3px calc(100% - 9px) no-repeat;
-    --v1: calc(100% - 9px) 3px no-repeat;
-    --h2: 3px calc(100% - 3px) no-repeat;
-    --v2: calc(100% - 3px) 3px no-repeat;
-    background: var(--bg1) left top 3px / var(--h1), var(--bg1) left 3px top/var(--v1), var(--bg1) right bottom 3px / var(--h1), var(--bg1) right 3px bottom/var(--v1), var(--bg2) left top/var(--h2), var(--bg2) left top/var(--v2), var(--bg2) right bottom/var(--h2), var(--bg2) right bottom/var(--v2), var(--bg3) center/calc(100% - 6px) calc(100% - 6px) no-repeat;
-    gap: 0 20px;
+@property --c1 {
+    syntax: "<color>";
+    inherits: true;
 }
 
-:host(:hover),
-:host(:focus-within) {
-    --c1: #eda949;
-    --c2: #c98930;
-    --c3: #000000dc;
+@property --c2 {
+    syntax: "<color>";
+    inherits: true;
 }
 
-/*########## 标题区 ##########*/
-h1 {
-    grid-area: name;
-    color: #cfcfcf;
-    line-height: 30px;
-    place-self: stretch;
+@property --c3 {
+    syntax: "<color>";
+    inherits: true;
 }
-/*########## 描述区 ##########*/
-p {
-    grid-area: desc;
-    line-height: 30px;
-    max-width: 400px;
-    place-self: stretch;
-}
-/*########## 图标区 ##########*/
-:host > :is(canvas, svg),
-main > :is(canvas, svg) {
-    grid-area: icon;
-    place-self: center;
-    scale: 5;
-}
-/*########## 属性区 ##########*/
-:host > :is(table, section),
-main > :is(table, section) {
-    grid-area: attr;
-    place-self: stretch;
+
+/* css 变量 */
+@layer variables {
+    * {
+        /*========================*\
+            ▷ 三角形聚焦样式 ◁
+        \*========================*/
+        /* 缩放倍数 */
+        --focus-scale: 1;
+        /* 颜色 */
+        --focus-color: #ffffff;
+        /* 基本渐变参数 */
+        --foucs-base: linear-gradient(var(--focus-color), var(--focus-color)) center;
+        /* 竖线宽度 */
+        --foucs-lw: calc(var(--focus-scale) * 1px);
+        /* 竖线 6px */
+        --foucs-l1: 1px / var(--foucs-lw) calc(6px * var(--focus-scale)) no-repeat;
+        /* 竖线 4px */
+        --foucs-l2: calc(var(--foucs-lw) + 1px) / var(--foucs-lw) calc(4px * var(--focus-scale)) no-repeat;
+        /* 竖线 2px */
+        --foucs-l3: calc(var(--foucs-lw) * 2 + 1px) / var(--foucs-lw) calc(2px * var(--focus-scale)) no-repeat;
+        /* prettier-ignore */
+        ---foucs-bg-left:
+        /* ▷ */
+        var(--foucs-base) left var(--foucs-l1),
+        var(--foucs-base) left var(--foucs-l2),
+        var(--foucs-base) left var(--foucs-l3);
+        /* prettier-ignore */
+        ---foucs-bg-right:
+        /* ◁ */
+        var(--foucs-base) right var(--foucs-l1),
+        var(--foucs-base) right var(--foucs-l2),
+        var(--foucs-base) right var(--foucs-l3);
+        /* prettier-ignore */
+        ---foucs-bg: /* ▷ 聚焦三角形背景 ◁ */
+        var(---foucs-bg-left), var(---foucs-bg-right);
+    }
+    [tabindex] {
+        /* 通过缩放系数隐藏 聚焦三角形背景 */
+        --focus-scale: 0;
+        /* 通过三角形颜色隐藏 聚焦三角形背景 */
+        --focus-color: #0000;
+        > td {
+            --focus-scale: 0;
+        }
+    }
+
+    :host {
+        /* 边框线色 */
+        --c1: #948064;
+        /* 边框装饰点色 */
+        --c2: #b49f81;
+        /* 底色 */
+        --c3: #0e0d0cf2;
+        /* 边框线宽度 */
+        --border-width: 3px;
+        /*=====================*\
+            面板属性值的颜色变量
+        \*======================*/
+        table td {
+            --attr-color-red: #ff7f7f;
+            --attr-color-green: #7fff7f;
+            --attr-color-default: #ffffff;
+        }
+        .entities-tablist > li {
+            --focus-scale: 0;
+            --focus-color: #0000;
+            &:hover,
+            &:focus-visible {
+                --focus-scale: 2;
+                --focus-color: #ffffb2;
+            }
+        }
+        > header > menu > li {
+            --c1: #00000099;
+            --c2: #696357;
+            &.selected {
+                --c1: #0e0d0cf2;
+                --c2: #948064;
+                --c3: #b49f81;
+            }
+            > span {
+                --focus-color: #ffffb200;
+            }
+        }
+    }
+    /* 为聚焦模式下的背景框提供色盘 */
+    :host(:hover),
+    :host(:focus-within) {
+        /* 聚焦时 边框线色 */
+        --c1: #eda949;
+        /* 聚焦时 边框装饰点色 */
+        --c2: #c98930;
+        /* 聚焦时 底色 */
+        --c3: #000000dc;
+
+        > header > menu > li {
+            &.selected {
+                --c1: #000000dc;
+                --c2: #eda949;
+                --c3: #c98930;
+            }
+            &:is(:hover, :focus-within) {
+                --c2: #a59d8f;
+                > span {
+                    --focus-scale: 2;
+                    --focus-color: #ffffb2;
+                }
+            }
+        }
+    }
 }
 
 table {
     border-collapse: collapse;
 }
 
-section:not([hidden]) {
-    display: grid;
-    grid-template-columns: 1fr;
-    place-items: center stretch;
-    place-content: center;
-    gap: 14px;
-}
-
-/* 属性图标 */
-tr canvas {
-    width: 14px;
-    height: 14px;
-    margin-right: 8px;
-}
-
-th {
-    width: 160px;
-}
-
-td {
-    width: auto;
-}
-
-.unlimited {
-    color: #339933;
-}
-
-.never-unlimited {
-    color: #993333;
-}
-
-th,
-td {
-    text-align: left;
-    height: 30px;
-    line-height: 30px;
-    border-radius: 3px;
-    white-space: nowrap;
-}
-
-ul,
-ol {
+menu,
+ol,
+ul {
     display: flex;
     list-style: none;
+    width: fit-content;
+    place-content: center;
 }
 
-.entities-tabpanel {
-    gap: 6px;
+:host {
+    grid-template:
+        "tabs" min-content /* 选项卡 */
+        "main" auto /* 内容区 */
+        / 1fr;
 }
 
-.entities-tabpanel > li {
-    cursor: pointer;
-    --noita-cursor: pointer;
-    padding: 4px;
-    transition: all 300ms linear 0ms;
-    border-radius: 2px;
-    --lg: linear-gradient(var(--mark-color), var(--mark-color));
+/*===================*\
+         选项卡区
+\*===================*/
+:host > header {
+    grid-area: tabs;
+    place-self: center;
+    height: 60px;
+    max-width: 560px;
+    padding: 0 10px;
+    overflow: auto;
+    position: relative;
+    top: 3px;
+    scrollbar-width: none;
+    /*===================*\
+             选项卡
+    \*===================*/
+
+    menu > li {
+        display: flex;
+        height: 60px;
+        width: fit-content;
+        text-wrap: nowrap;
+        padding: 0 10px;
+        margin: 0 0 0 -3px;
+        place-content: center;
+        place-items: center;
+        --bg1: linear-gradient(var(--c1), var(--c1));
+        --bg2: linear-gradient(var(--c2), var(--c2));
+        /* prettier-ignore */
+        background:
+            var(--bg2) top 9px left 3px/3px 3px no-repeat,
+            var(--bg2) top 9px right 3px/3px 3px no-repeat,
+            var(--bg2) top 6px center/calc(100% - 12px) 3px no-repeat,
+            var(--bg2) top 12px right/3px calc(100% - 12px) no-repeat,
+            var(--bg2) top 12px left/3px calc(100% - 12px) no-repeat,
+            var(--bg1) top 9px center/calc(100% - 6px) calc(100% - 9px) no-repeat;
+
+        &.selected {
+            z-index: 1;
+            --bg3: linear-gradient(var(--c3), var(--c3));
+            /* prettier-ignore */
+            background:
+                var(--bg3) top 6px left 3px/3px 3px no-repeat,
+                var(--bg3) top 6px right 3px/3px 3px no-repeat,
+                var(--bg2) top 3px center/calc(100% - 12px) 3px no-repeat,
+                var(--bg2) top 9px right/3px calc(100% - 9px) no-repeat,
+                var(--bg2) top 9px left/3px calc(100% - 9px) no-repeat,
+                var(--bg1) top 6px center/calc(100% - 6px) calc(100% - 9px) no-repeat,
+                linear-gradient(#18191A, #18191A) bottom center/ 100% 3px no-repeat;
+        }
+        > span {
+            padding: 0 10px;
+            background: var(---foucs-bg-left);
+        }
+    }
 }
 
-.entities-tabpanel > li.selected {
-    ---foucs-bg1: var(--lg) left top/6px 2px no-repeat, var(--lg) left top/2px 6px no-repeat, var(--lg) left bottom/6px 2px no-repeat, var(--lg) left bottom/2px 6px no-repeat, var(--lg) right top/6px 2px no-repeat, var(--lg) right top/2px 6px no-repeat, var(--lg) right bottom/6px 2px no-repeat, var(--lg) right bottom/2px 6px no-repeat, var(---foucs-bg);
-}
+/*===================*\
+         内容区
+\*===================*/
+:host > main {
+    grid-area: main;
+    padding: 20px;
 
-.entities-tabpanel > li.unselected {
-    color: #999999;
-    ---foucs-bg1: var(--lg) center bottom/10% 4px no-repeat, var(---foucs-bg);
-}
+    --bg1: linear-gradient(var(--c1), var(--c1));
+    --bg2: linear-gradient(var(--c2), var(--c2));
+    --bg3: linear-gradient(var(--c3), var(--c3));
 
-.in-cast-state {
-    --mark-color: #339933;
-}
+    ---1bw: var(--border-width);
+    ---2bw: calc(2 * var(--border-width));
+    ---nrbb: no-repeat border-box;
+    ---nrpb: no-repeat padding-box;
+    ---1: calc(100% - var(---1bw));
+    ---2: calc(100% - var(---2bw));
+    /* 渐变色带 边框线 */
+    ---: var(--c2), var(--c2) var(---1bw), var(--c1) var(---1bw), var(--c1) var(---2), var(--c2) var(---2), var(--c2) var(---1), #00000000 var(---1);
+    /* prettier-ignore */
+    background:
+        /* 上框线 */ linear-gradient( 90deg, var(---) ) top / 100% var(---1bw)  var(---nrbb),
+        /* 左框线 */ linear-gradient( 180deg, var(---) ) left / var(---1bw) 100%  var(---nrbb),
+        /* 下框线 */ linear-gradient( 270deg, var(---) ) bottom / 100% var(---1bw) var(---nrbb),
+        /* 右框线 */ linear-gradient( 0, var(---) ) right / var(---1bw) 100%  var(---nrbb),
+        /* 中心底色 */ var(--bg3) center/100% 100% var(---nrpb);
+    border: solid var(---1bw) #0000;
+    transition: all 250ms linear;
+    overflow: auto;
+    /* 清除继承 避免滚动条样式无效 */
+    scrollbar-color: initial;
 
-.not-in-cast-state {
-    --mark-color: #993333;
-}
+    &::-webkit-scrollbar,
+    &::-webkit-scrollbar-thumb {
+        /* 事实上透明边框是为了实现边距效果 */
+        border: solid 2px #00000000;
+        background-clip: border-box;
+    }
+    /* 滚动条 */
+    &::-webkit-scrollbar {
+        /* 滚动条宽高视觉效果上应该是 25px 需要额外加上边框宽度 25px + 2*2px */
+        /* 控制水平滚动条高度 */
+        height: 29px;
+        /* 控制垂直滚动条宽度 */
+        width: 29px;
+        --c4: #6c6c6b;
+        --bg4: linear-gradient(var(--c4), var(--c4));
+        /* prettier-ignore */
+        background:
+        /* 边框 */
+        /* 高亮点(右上) */ var(--bg4) right top/var(---1bw) var(---1bw) no-repeat,
+        /* 高亮点(右下) */ var(--bg4) right bottom/var(---1bw) var(---1bw) no-repeat,
+        /* 高亮点(左下) */ var(--bg4) left bottom/var(---1bw) var(---1bw) no-repeat,
+        /* 挖空区域 */ var(--bg3) center/calc(100% - var(---2bw)) calc(100% - var(---2bw)) no-repeat,
+        /* 边框线 上下左右各留出5px 边距 中心被--bg3覆盖以实现挖空效果 */
+        linear-gradient(#464646,#464646) 100% no-repeat;
+    }
 
-.entities-tabpanel > li[tabindex]:is(:focus-visible, :hover) {
-    --lg: linear-gradient(#00000000, #00000000);
-}
+    /* 滚动条滑块 */
+    &::-webkit-scrollbar-thumb {
+        --c4: #6c6c6c;
+        --c5: #7e7e7e;
+        --c6: #606060;
+        --c7: #464646;
+        --bg4: linear-gradient(var(--c4), var(--c4));
+        --bg5: linear-gradient(var(--c5), var(--c5));
+        --bg6: linear-gradient(var(--c6), var(--c6));
+        /* prettier-ignore */
+        background:
+        /* 中心图案 */
+        /* 高亮点(右上) */ var(--bg4) calc(50% + 5px) calc(50% - 5px)/3px 3px no-repeat,
+        /* 高亮点(右下) */ var(--bg4) calc(50% + 5px) calc(50% + 5px)/3px 3px no-repeat,
+        /* 高亮点(左下) */ var(--bg4) calc(50% - 5px) calc(50% + 5px)/3px 3px no-repeat,
+        /* 挖空区域 */ var(--bg3) center/7px 7px no-repeat,
+        linear-gradient(var(--c7), var(--c7)) center/13px 13px no-repeat,
+        /* 边框 */
+        /* 高亮点(右上) */ var(--bg5) right top/var(---1bw) var(---1bw) no-repeat,
+        /* 高亮点(右下) */ var(--bg5) right bottom/var(---1bw) var(---1bw) no-repeat,
+        /* 高亮点(左下) */ var(--bg5) left bottom/var(---1bw) var(---1bw) no-repeat,
+        /* 挖空区域 */ var(--bg3) center/calc(100% - var(---2bw)) calc(100% - var(---2bw)) no-repeat,
+        var(--bg6) center/100% 100% no-repeat;
+    }
 
-tr[tabindex] > td,
-:is(li, td, h1)[tabindex] {
-    --focus-scale: 0;
-    --focus-color: #00000000;
-    background: var(---foucs-bg1, var(---foucs-bg));
-    transition: all 0.2s linear;
-    will-change: contents;
-}
+    /* 滚动条滑块悬浮高亮色盘 */
+    &::-webkit-scrollbar-thumb:hover {
+        --c4: #b5b5b5;
+        --c5: #b5b5b5;
+        --c6: #9b9b9d;
+        --c7: #9b9b9b;
+    }
 
-tr:is(:focus-visible, :hover)[tabindex] > td,
-:is(li, td, h1)[tabindex]:is(:focus-visible, :hover) {
-    --focus-scale: 2;
-    --focus-color: var(--mark-color, #ffffff);
-    text-align: center;
-    padding-left: 12px;
-    padding-right: 12px;
+    /* 滚动条转角 */
+    &::-webkit-scrollbar-corner {
+        background: transparent;
+        cursor: help;
+    }
+    &.custom {
+        display: var(--display, block);
+    }
+    &:not(.custom) {
+        display: grid;
+        place-content: center;
+
+        section:not([hidden]) {
+            display: grid;
+            grid-template-columns: 1fr;
+            place-items: center stretch;
+            place-content: center;
+            gap: 14px;
+        }
+
+        .unlimited {
+            color: var(--attr-color-green);
+        }
+
+        .never-unlimited {
+            color: var(--attr-color-red);
+        }
+
+        .entities-tablist {
+            gap: 6px;
+            > li {
+                display: flex;
+                place-items: center;
+                cursor: pointer;
+                transition: all 300ms linear 0ms;
+                color: color-mix(in srgb, var(--mark-color), #0000);
+                padding: 0 10px 0 0;
+                /* 选中时 */
+                &.selected {
+                    color: var(--mark-color);
+                }
+                &:hover,
+                &:focus-visible {
+                    padding: 0 10px;
+                    --font-weight: 600;
+                }
+                &[entity\.relation] {
+                    /* prettier-ignore */
+                    background:
+                        var(---foucs-bg-left),
+                        linear-gradient(var(--relation-color), var(--relation-color)) center right/4px 4px no-repeat
+                    ;
+                }
+                &[entity\.relation="common"] {
+                    --relation-color: #0000;
+                }
+                &[entity\.relation="relate"] {
+                    --relation-color: #f08705;
+                }
+                &[entity\.relation="cast"] {
+                    --relation-color: #1cd66c;
+                }
+                &[entity\.relation="orbit"] {
+                    --relation-color: #a200a1;
+                }
+                &[entity\.relation="bounce"] {
+                    --relation-color: #118811;
+                }
+                &[entity\.relation="low-speed"] {
+                    --relation-color: #e21e26;
+                }
+                &[entity\.relation="death"] {
+                    --relation-color: #d8deea;
+                }
+                &[entity\.relation="hit"] {
+                    --relation-color: #f7c34f;
+                }
+                &[entity\.relation="timer"] {
+                    --relation-color: #3b6bcb;
+                }
+            }
+        }
+
+        /* 享受施法块加成 */
+        [entity\.relation="common"],
+        [entity\.relation="cast"],
+        [entity\.relation="relate"] {
+            --mark-color: var(--attr-color-green);
+        }
+
+        /* 不享受施法块加成 */
+        [entity\.relation="orbit"],
+        [entity\.relation="bounce"],
+        [entity\.relation="low-speed"],
+        [entity\.relation="death"],
+        [entity\.relation="hit"],
+        [entity\.relation="timer"],
+        [entity\.relation="null"] {
+            --mark-color: var(--attr-color-red);
+        }
+
+        [tabindex],
+        [tabindex] > td {
+            transition: all 0.2s linear;
+            will-change: contents;
+            cursor: pointer;
+        }
+        /* 允许被tab聚焦的元素 */
+        tr[tabindex] > td,
+        [tabindex]:is(td, h1) {
+            background: var(---foucs-bg);
+        }
+
+        /* 允许被tab聚焦的元素 聚焦/鼠标悬停时 */
+        tr:is(:focus-visible, :hover)[tabindex] > td,
+        :is(:is(ol, ul) > li, td, h1)[tabindex]:is(:focus-visible, :hover) {
+            /* 通过缩放系数显示 聚焦三角形背景 */
+            --focus-scale: 2;
+            /* 通过三角形颜色显示 聚焦三角形背景 */
+            --focus-color: var(--mark-color, #fff);
+            text-align: center;
+            /*
+                聚焦三角形背景 的显示需要左右12px留白
+                td元素必须使用padding才生效
+                分别声明左右内边距以继承原有的上下内边距
+            */
+            padding-left: 12px;
+            padding-right: 12px;
+        }
+
+        /* 属性图标 */
+        .attr-icon {
+            width: 21px;
+            height: 21px;
+            object-fit: none;
+            object-position: -100% -100%;
+            background: var(--attr-icon-color, #fff);
+            &::selection {
+                background-color: #948064;
+            }
+        }
+
+        tr:hover {
+            --attr-icon-color: #eda949;
+        }
+
+        th.before {
+            /* prettier-ignore */
+            background: 
+                linear-gradient(#00f, #00f) right 11px center/ 4px 4px no-repeat,
+                linear-gradient(#fff8, #fff8) right 10px center/ 6px 6px no-repeat
+            ;
+        }
+        th.after {
+            /* prettier-ignore */
+            background: 
+                linear-gradient(#ff0, #ff0) right 11px center/ 4px 4px no-repeat,
+                linear-gradient(#fff8, #fff8) right 10px center/ 6px 6px no-repeat
+            ;
+        }
+
+        /*########## 图标区 ##########*/
+        > :is(canvas, svg, img) {
+            grid-area: icon;
+            place-self: center;
+            zoom: var(--zoom, 5);
+        }
+        /*########## 属性区 ##########*/
+        > .attrs {
+            grid-area: attr;
+            place-self: stretch;
+
+            /* 首个th  */
+            th:nth-child(1) {
+                max-width: 21px;
+                width: 21px;
+            }
+
+            th:nth-child(2) {
+                padding-left: 10px;
+                /* max-width: 180px;
+                min-width: 180px; */
+                width: 180px;
+                color: #cfcfcf;
+                --font-weight: 300;
+            }
+
+            td {
+                min-width: 80px;
+            }
+
+            th,
+            td {
+                font-weight: ;
+                text-align: left;
+                height: 26px;
+                line-height: 100%;
+                border-radius: 3px;
+                white-space: nowrap;
+                --font-size: 24px;
+                --font-weight: 300;
+            }
+        }
+
+        > :is(h1, p) {
+            grid-area: name;
+            color: #cfcfcf;
+            line-height: 30px;
+            place-self: stretch;
+            --font-size: 24px;
+            --font-weight: 300;
+        }
+        /*########## 标题区 ##########*/
+        > h1 {
+            grid-area: name;
+            place-self: stretch;
+        }
+        /*########## 描述区 ##########*/
+        > p {
+            grid-area: desc;
+            max-width: 400px;
+        }
+    }
 }

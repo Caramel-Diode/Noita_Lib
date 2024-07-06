@@ -1,0 +1,104 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>ESM Test</title>
+    <style desc="base-style">
+        :root {
+            background: #1F1F1F;
+        }
+
+        * {
+            padding: 0;
+            margin: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            display: flex;
+            flex-wrap: wrap;
+            gap: 10px;
+            /* place-items: center;
+            place-content: center; */
+            height: 100vh;
+            width: 100vw;
+            padding: 10px;
+        }
+
+        .container {
+            display: grid;
+            grid-template:
+                "spell bar" 50px
+                / 50px 1fr
+            ;
+            place-items: center;
+        }
+
+        .progress-bar {
+            /* margin-left: 20px; */
+            position: relative;
+            display: inline-block;
+            height: 30px;
+            width: 300px;
+            border: 2px solid #559;
+            border-radius: 5px;
+            --x: calc(var(--p) * 5);
+            background:
+                linear-gradient(#ddd, #ddd) left center/var(--x) no-repeat;
+        }
+
+        .progress-bar>.text {
+            color: #fff;
+            position: absolute;
+            display: grid;
+            height: 100%;
+            place-items: center;
+            left: var(--x);
+            padding-left: 3px;
+        }
+        h1 {
+            color: #fff;
+            width: 95%;
+            border-bottom: 1px solid #ccc;
+            padding-left: 15px;
+            background-color: #55555580;
+            border-radius: 10px;
+        }
+    </style>
+    <script src="./noitaLib.sf.js"></script>
+</head>
+
+<body>
+    <!-- <h1 style="color: #fff; width: 100%;">LV4</h1> -->
+
+    <script>
+        
+        for(const lv of ["lv0","lv1","lv2","lv3","lv4","lv5","lv6","lv7","lv10"]) {
+            const h1 = document.createElement("h1");
+            h1.innerHTML = lv;
+            document.body.append(h1);
+            const data = noitaLib.Spell.queryByExp("#" + lv);
+            data.sort((a, b) => a.spawn[`prob_${lv}`] - b.spawn[`prob_${lv}`]);
+            // console.log(lv1);
+            data.forEach(e => {
+                const container = document.createElement("div");
+                container.className = "container";
+                const progressBar = document.createElement("div");
+                progressBar.className = "progress-bar";
+                progressBar.style.setProperty("--p", e.spawn.percentage(lv) + "%");
+                const text = document.createElement("data");
+                text.className = "text";
+                text.innerHTML = e.spawn.percentage(lv).toFixed(2) + "%";
+                progressBar.append(text);
+                container.append(new noitaLib.Spell(e), progressBar);
+                document.body.append(container);
+            });
+            
+        }
+        
+    </script>
+</body>
+
+</html>

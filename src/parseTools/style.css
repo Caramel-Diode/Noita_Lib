@@ -1,0 +1,28 @@
+button {
+    min-height: 40px;
+    padding: 6px;
+    border-radius: 6px;
+    background: #00000010;
+    border: #ffffff80 solid 2px;
+    color: #ffffff;
+    transition-property: border;
+    transition-duration: 200ms;
+    letter-spacing: 2px;
+}
+
+button:hover {
+    border: #cccccc solid 2px;
+    background: #00000030;
+}
+
+:root {
+    background: #1f1f1f;
+}
+
+* {
+    padding: 0;
+    margin: 0;
+    box-sizing: border-box;
+    image-rendering: pixelated;
+    color: #ffffff;
+}

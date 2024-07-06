@@ -1,124 +1,137 @@
-/** 法术数据 */
-const SpellData = class {
-    static iconImage = util.base64ToImg(embed(`#icon.png`));
+class Icon extends $icon(16, "法术") {
+    static urls = asyncSpriteUrls(embed(`#icon.png`));
+    /** @type {SpellData?} */ #data;
 
-    /** 提供投射物数据 */
-    static OfferedProjectileData = class {
+    /** @param {SpellData} data  */
+    constructor(data) {
+        super();
+        this.#data = data;
+    }
+
+    connectedCallback() {
+        const data = this.#data ?? SpellData.query(this.getAttribute("spell.id"));
+        this.alt = data.name;
+        this.src = data.asyncIconUrl;
+    }
+}
+
+Icon.$defineElement("-spell");
+
+/** @typedef {import("TYPE").SpellId} SpellId */
+/** @typedef {import("TYPE").SpellName} SpellName */
+/** @typedef {import("TYPE").SpellAlias} SpellAlias */
+/**
+ * @template {SpellId} T
+ * @typedef {import("TYPE").SpellData<T>} SpellData
+ */
+
+class SpellData {
+    /** 法术等级 */
+    static lvs = ["lv0", "lv1", "lv2", "lv3", "lv4", "lv5", "lv6", "lv7", "lv10"];
+
+    static ProjectileData = class ProjectileData {
+        /** 类型映射表 */
+        static #typeMap = ["common", "relate", "cast", "orbit", "bounce", "low-speed", "death", "hit", "timer"];
+        /** @type {Number} 最小数量 */ amountMin = 1;
+        /** @type {Number} 最大数量 */ amountMax = 1;
         /**
-         * @param {String} projectileId
-         * @param {Number} num_min
-         * @param {Number} num_max
-         * @param {Boolean} isRelatedProjectiles
-         * @param {Boolean} isInCastState
+         * @type {"common"|"relate"|"cast"|"orbit"|"bounce"|"low-speed"|"death"|"hit"|"timer"} 类型(关联投射物的方式)
+         * * `common`: 提供给施法块/作为关联投射物(享受修正)
+         * * `relate`: 作为关联投射物(享受修正)
+         * * `cast`: 提供给施法块(享受修正)
+         * * `orbit` : 作为环绕投射物
+         * * `bounce` : 作为弹跳时发射的投射物
+         * * `low-speed` : 作为低速时发射的投射物
+         * * `death` : 作为失效时发射的投射物
+         * * `hit` : 作为碰撞时发射的投射物
+         * * `timer` : 作为定时发射的投射物
          */
-        constructor(projectileId, num_min, num_max, isRelatedProjectiles, isInCastState) {
-            /** @type {db_entity} 投射物数据 */ this.projectileData = Entity.queryById(projectileId);
-            /** @type {Number} 最小提供量 */ this.num_min = num_min;
-            /** @type {Number} 最大提供量 */ this.num_max = num_max;
-            /** @type {Boolean} 是否为关联投射物 能否进行追加触发 (首个投射物默认为 true) */ this.isRelatedProjectiles = isRelatedProjectiles;
-            /** @type {Boolean} 处于施法块中 (能否享受施法状态中的效果) */ this.isInCastState = isInCastState;
-        }
-        /**
-         * 获取提供投射物数据数组
-         * @param {String} dataStr
-         * @returns {Array<SpellData.OfferedProjectileData>}
-         */
-        static createDatas = dataStr => {
-            const result = [];
-            if (dataStr) {
-                let first = true; //首个投射物默认为关联投射物 创建首个投射物后该变量值为false
-                let isInCastState = true;
-                let projectileId = [];
-                let projectileNum_min = [];
-                let projectileNum_max = [];
-                let current = projectileId;
-                let projectileNum_min_number = 0;
-                let projectileNum_max_number = 0;
-                for (let i = 0; i < dataStr.length; i++) {
-                    const char = dataStr[i];
-                    switch (char) {
-                        case "!" /* 直接提供投射物 */:
-                            isInCastState = true;
-                            current = projectileNum_min;
-                            break;
-                        case "?" /* 间接提供投射物 */:
-                            current = projectileNum_min;
-                            isInCastState = false;
-                            break;
-                        case "~" /* 不定数量投射物 */:
-                            current = projectileNum_max;
-                            break;
-                        case " " /* 切换至下种投射物 */:
-                            if (projectileNum_min.length > 0) projectileNum_min_number = parseInt(projectileNum_min.join(""));
-                            else projectileNum_min_number = 1;
-                            if (projectileNum_max.length > 0) projectileNum_max_number = parseInt(projectileNum_max.join(""));
-                            else projectileNum_max_number = projectileNum_min_number;
-                            result.push(Object.freeze(new this(projectileId.join(""), projectileNum_min_number, projectileNum_max_number, first, isInCastState)));
-                            first = false;
-                            projectileId = [];
-                            projectileNum_min = [];
-                            projectileNum_max = [];
-                            current = projectileId;
-                            break;
-                        default:
-                            current.push(char);
-                    }
-                }
-                if (projectileNum_min.length > 0) projectileNum_min_number = parseInt(projectileNum_min.join(""));
-                else projectileNum_min_number = 1;
-                if (projectileNum_max.length > 0) projectileNum_max_number = parseInt(projectileNum_max.join(""));
-                else projectileNum_max_number = projectileNum_min_number;
-                result.push(Object.freeze(new this(projectileId.join(""), projectileNum_min_number, projectileNum_max_number, first, isInCastState)));
-            }
-            return result;
-        };
-    };
-    /** 抽取数据 */
-    static DrawingData = class {
-        /**
-         * 获取提供抽取数数据数组
-         * @param {String} dataStr
-         */
-        constructor(dataStr) {
-            let C = [],
-                H = [],
-                T_count = [],
-                T_delay = [],
-                D = [];
-            let current = C;
-            for (let char of dataStr)
+        type = "common";
+        /** @type {Number} 失效触发抽取数 */ drawCount_Death = 0;
+        /** @type {Number} 碰撞触发抽取数 */ drawCount_Hit = 0;
+        /** @type {Number} 定时触发抽取数 */ drawCount_Timer = 0;
+        /** @type {Number} 定时触发延迟 */ drawDelay_Timer = 0;
+        /** @param {String} exp */
+        constructor(exp) {
+            const [projectileId, _exp = []] = exp.split(":");
+            /** @type {import("@entity").EntityData} 投射物数据 */
+            this.projectile = Entity.queryById(projectileId);
+            let target = "amountMin"; // 数据目标
+            let cache = [];
+            const temp = {
+                amountMin: 1,
+                amountMax: 1,
+                drawCount_Death: 0,
+                drawCount_Hit: 0,
+                drawCount_Timer: 0,
+                drawDelay_Timer: 0,
+                typeIndex: 0
+            };
+            for (let i = 0; i <= _exp.length; i++) {
+                const char = _exp[i];
                 switch (char) {
-                    case "H":
-                        current = H;
-                        break;
-                    case "T":
-                        current = T_count;
-                        break;
-                    case ":":
-                        current = T_delay;
+                    case "~":
+                        temp[target] = Number(cache.join(""));
+                        cache = [];
+                        target = "amountMax";
                         break;
                     case "D":
-                        current = D;
+                        temp[target] = Number(cache.join(""));
+                        cache = [];
+                        target = "drawCount_Death";
                         break;
-                    default:
-                        current.push(char);
+                    case "H":
+                        temp[target] = Number(cache.join(""));
+                        cache = [];
+                        target = "drawCount_Hit";
+                        break;
+                    case "T":
+                        temp[target] = Number(cache.join(""));
+                        cache = [];
+                        target = "drawCount_Timer";
+                        break;
+                    case "!":
+                        temp[target] = Number(cache.join(""));
+                        cache = [];
+                        target = "drawDelay_Timer";
+                        break;
+                    case "#":
+                        temp[target] = Number(cache.join(""));
+                        cache = [];
+                        target = "typeIndex";
+                    case undefined: // exp结束
+                        temp[target] = Number(cache.join(""));
+                        break;
+                    default: //数字
+                        cache.push(char);
                 }
-            C = Number(C.join(""));
-            H = Number(H.join(""));
-            T_count = Number(T_count.join(""));
-            T_delay = Number(T_delay.join(""));
-            D = Number(D.join(""));
-            /** @type {Number} 普通抽取 */ this.common = Number.isNaN(C) ? 0 : C;
-            /** @type {Number} 碰撞抽取 */ this.hit = Number.isNaN(H) ? 0 : H;
-            /** @type {{count:Number,delay:Number}} 定时抽取 */ this.timer = {
-                count: Number.isNaN(T_count) ? 0 : T_count,
-                delay: Number.isNaN(T_delay) ? 0 : T_delay
-            };
-            /** @type {Number} 失效抽取 */ this.death = Number.isNaN(D) ? 0 : D;
+            }
+            if (temp.amountMin === 0) temp.amountMin = 1; //空字符串会被转为0 投射物数量至少为1
+            if (temp.amountMin > temp.amountMax) temp.amountMax = temp.amountMin;
+            this.amountMin = temp.amountMin;
+            this.amountMax = temp.amountMax;
+            this.type = SpellData.ProjectileData.#typeMap[temp.typeIndex];
+            this.drawCount_Death = temp.drawCount_Death;
+            this.drawCount_Hit = temp.drawCount_Hit;
+            this.drawCount_Timer = temp.drawCount_Timer;
+            this.drawDelay_Timer = temp.drawDelay_Timer;
+            Object.freeze(this);
+        }
+
+        /** @param {String} exp */
+        static createDatas(exp) {
+            const result = [];
+            if (exp) {
+                const exps = exp.split(" ");
+                for (let i = 0; i < exps.length; i++) result[i] = new this(exps[i]);
+            }
+            return Object.freeze(result);
         }
     };
+
     /** 法术生成数据 -1表示非该等级法术 */
-    static SpawningData = class {
+    static SpawningData = class SpawningData {
+        static sum = { prob_lv0: 0, prob_lv1: 0, prob_lv2: 0, prob_lv3: 0, prob_lv4: 0, prob_lv5: 0, prob_lv6: 0, prob_lv7: 0, prob_lv10: 0 };
         /** @type {Number} */ prob_lv0 = -1;
         /** @type {Number} */ prob_lv1 = -1;
         /** @type {Number} */ prob_lv2 = -1;
@@ -128,48 +141,142 @@ const SpellData = class {
         /** @type {Number} */ prob_lv6 = -1;
         /** @type {Number} */ prob_lv7 = -1;
         /** @type {Number} */ prob_lv10 = -1;
-        /** @type {String} 生成解锁条件 */ requiresFlag = "None";
+        /** @type {String} 生成解锁条件 */ requiresFlag;
+        /** @type {Array<"lv0"|"lv1"|"lv2"|"lv3"|"lv4"|"lv5"|"lv6"|"lv7"|"lv10">} */ lvs = [];
+        /** @type {Array<"lv0"|"lv1"|"lv2"|"lv3"|"lv4"|"lv5"|"lv6"|"lv7"|"lv10">} */ lvs_nonzero = [];
         /**
-         *
-         * @param {String} levels
-         * @param {String} probs
+         * @param {{[key: Number]:Number}} probs
+         * @param {String} requiresFlag
          */
-        constructor(levels, probs, requiresFlag) {
+        constructor(probs, requiresFlag) {
             if (requiresFlag) this.requiresFlag = requiresFlag;
-            //转为数组
-            const levels_ = levels.split(",");
-            const probs_ = probs.split(",");
-            const len = levels_.length;
-            for (let i = 0; i < len; i++) {
-                // this[`prob_lv${levels_[i]}`] = Number(probs_[i]); //效率似乎不行
-                const prob = Number(probs_[i]);
-                switch (levels_[i]) {
-                    case "0":
-                        this.prob_lv0 = prob;
-                        break;
-                    case "1":
-                        this.prob_lv1 = prob;
-                        break;
-                    case "2":
-                        this.prob_lv2 = prob;
-                        break;
-                    case "3":
-                        this.prob_lv3 = prob;
-                        break;
-                    case "4":
-                        this.prob_lv4 = prob;
-                        break;
-                    case "5":
-                        this.prob_lv5 = prob;
-                        break;
-                    case "6":
-                        this.prob_lv6 = prob;
-                        break;
-                    case "7":
-                        this.prob_lv7 = prob;
-                        break;
-                    case "10":
-                        this.prob_lv10 = prob;
+            for (const key in probs) {
+                const lv = `lv${key}`;
+                const probKey = `prob_${lv}`;
+                const value = probs[key];
+                this[probKey] = value;
+                this.lvs.push(lv);
+                if (value > 0) this.lvs_nonzero.push(lv);
+                SpawningData.sum[probKey] += value * 1e4; // 此处解决精度问题 记得用的时候 /10000
+            }
+            Object.freeze(this.lvs);
+            Object.freeze(this.lvs_nonzero);
+        }
+        /**
+         * @param {"lv0"|"lv1"|"lv2"|"lv3"|"lv4"|"lv5"|"lv6"|"lv7"|"lv10"} lv 法术等级
+         * @returns 百分比形式的概率
+         */
+        percentage(lv) {
+            const key = `prob_${lv}`;
+            const value = this[key];
+            if (value <= 0) return 0;
+            // return value * 10000 / SpawningData.sum[key] * 100; 简化计算
+            return (1e6 * value) / SpawningData.sum[key];
+        }
+    };
+
+    static ModifierAction = class ModifierAction {
+        static modifierPropAbbrMap = {
+            //简写:全称(in js)
+            frw: "fireRateWait",
+            spm: "speed",
+            exr: "explosionRadius",
+            spd: "spreadDegrees",
+            pad: "patternDegrees",
+            dmM: "meleeDamage",
+            dmP: "projectileDamage",
+            dmL: "electricityDamage",
+            dmF: "fireDamage",
+            dmE: "explosionDamage",
+            dmI: "iceDamage",
+            dmS: "sliceDamage",
+            dmH: "healingDamage",
+            dmC: "curseDamage",
+            dmD: "drillDamage",
+            dmV: "overeatingDamage", // 不存在
+            dmY: "physicsHitDamage", // 不存在
+            dmN: "poisonDamage", // 不存在
+            dmR: "radioactiveDamage", // 不存在
+            dmO: "holyDamage", // 不存在
+            dcc: "damageCriticalChance",
+            kbf: "knockbackForce",
+            mel: "material",
+            mea: "materialAmount",
+            tme: "trailMaterial",
+            tma: "trailMaterialAmount",
+            boc: "bounces",
+            fyf: "friendlyFire",
+            lft: "lifetime",
+            exe: "extraEntities",
+            gee: "gameEffectEntities",
+            rlt: "reloadTime",
+            rkb: "recoil"
+        };
+        /** @param {String} data */
+        constructor(data) {
+            if (data) {
+                const parts = data.split("#");
+                let /** @type {String} */ before, /** @type {String} */ after, /** @type {String} */ common;
+                if (parts.length === 2) [before, after] = parts;
+                else common = parts[0];
+                if (common) this.#parse(common, "none");
+                else {
+                    this.#parse(before, "before");
+                    this.#parse(after, "after");
+                }
+            }
+        }
+        /** @param {String} data */
+        #parse(data, pos) {
+            if (data) {
+                const parts = data.split(";");
+                for (let i = 0; i < parts.length; i++) {
+                    const part = parts[i];
+                    /** @type {"fireRateWait"|"speed"|"explosionRadius"|"spreadDegrees"|"patternDegrees"|"meleeDamage"|"projectileDamage"|"electricityDamage"|"fireDamage"|"explosionDamage"|"iceDamage"|"sliceDamage"|"healingDamage"|"curseDamage"|"drillDamage"|"overeatingDamage"|"physicsHitDamage"|"poisonDamage"|"radioactiveDamage"|"holyDamage"|"damageCriticalChance"|"knockbackForce"|"material"|"materialAmount"|"trailMaterial"|"trailMaterialAmount"|"bounces"|"friendlyFire"|"lifetime"|"extraEntities"|"gameEffectEntities"|"reloadTime"|"recoil"} */
+                    const prop = ModifierAction.modifierPropAbbrMap[part.slice(0, 3)];
+                    const type = part.slice(3, 4);
+                    let value;
+                    switch (prop) {
+                        case "meleeDamage":
+                        case "projectileDamage":
+                        case "electricityDamage":
+                        case "fireDamage":
+                        case "explosionDamage":
+                        case "iceDamage":
+                        case "sliceDamage":
+                        case "healingDamage":
+                        case "curseDamage":
+                        case "drillDamage":
+                        case "overeatingDamage":
+                        case "physicsHitDamage":
+                        case "poisonDamage":
+                        case "radioactiveDamage":
+                        case "holyDamage":
+                            value = Number(part.slice(4)) * 25;
+                            break;
+                        case "fireRateWait":
+                        case "speed":
+                        case "explosionRadius":
+                        case "spreadDegrees":
+                        case "patternDegrees":
+                        case "damageCriticalChance":
+                        case "knockbackForce":
+                        case "materialAmount":
+                        case "trailMaterialAmount":
+                        case "bounces":
+                        case "friendlyFire":
+                        case "lifetime":
+                        // case "extraEntities":
+                        // case "gameEffectEntities":
+                        case "reloadTime":
+                        case "recoil":
+                            value = Number(part.slice(4));
+                            break;
+                        case "material":
+                        case "trailMaterial":
+                            value = part.slice(4);
+                    }
+                    this[prop] = { pos, type, value };
                 }
             }
         }
@@ -177,9 +284,7 @@ const SpellData = class {
 
     /** @typedef {Set<SpellData>} SpellSet 法术集合 */
     static data = {
-        /** @type {Map<String,SpellData>} id  data */ id_map: new Map(),
-        /** @type {Map<String,SpellData>} */ name_map: new Map(),
-
+        /** @type {Map<String,SpellData>} */ map: new Map(),
         /** @type {SpellSet} 所有法术 */ all: new Set(),
 
         /** @type {SpellSet} 投射物类型法术 */ type_projectile: new Set(),
@@ -191,17 +296,20 @@ const SpellData = class {
         /** @type {SpellSet} 实用类型法术 */ type_utility: new Set(),
         /** @type {SpellSet} 被动类型法术 */ type_passive: new Set(),
 
-        /** @type {SpellSet} 0级法术 */ level_0: new Set(),
-        /** @type {SpellSet} 1级法术 */ level_1: new Set(),
-        /** @type {SpellSet} 2级法术 */ level_2: new Set(),
-        /** @type {SpellSet} 3级法术 */ level_3: new Set(),
-        /** @type {SpellSet} 4级法术 */ level_4: new Set(),
-        /** @type {SpellSet} 5级法术 */ level_5: new Set(),
-        /** @type {SpellSet} 6级法术 */ level_6: new Set(),
-        /** @type {SpellSet} 7级法术 */ level_7: new Set(),
-        /** @type {SpellSet} 10级法术 */ level_10: new Set(),
+        /** @type {SpellSet} 0级法术 */ lv0: new Set(),
+        /** @type {SpellSet} 1级法术 */ lv1: new Set(),
+        /** @type {SpellSet} 2级法术 */ lv2: new Set(),
+        /** @type {SpellSet} 3级法术 */ lv3: new Set(),
+        /** @type {SpellSet} 4级法术 */ lv4: new Set(),
+        /** @type {SpellSet} 5级法术 */ lv5: new Set(),
+        /** @type {SpellSet} 6级法术 */ lv6: new Set(),
+        /** @type {SpellSet} 7级法术 */ lv7: new Set(),
+        /** @type {SpellSet} 10级法术 */ lv10: new Set(),
 
-        /** @type {SpellSet} 影响存在时间的法术 */ lifetime_mod: new Set(),
+        /** @type {SpellSet} 影响存在时间的法术 [自动管理 直接添加到对应的存在时间修改类型即可] */
+        get lifetime_mod() {
+            return new Set([...this.lifetime_up, ...this.lifetime_down]);
+        },
         /** @type {SpellSet} 增加存在时间的法术 */ lifetime_up: new Set(),
         /** @type {SpellSet} 减少存在时间的法术 */ lifetime_down: new Set(),
 
@@ -213,13 +321,25 @@ const SpellData = class {
 
         /** @type {SpellSet} 影响投射物速度的法术 */ speed_mod: new Set(),
 
-        /** @type {SpellSet} 带有抽取的法术 */ draw: new Set(),
+        /** @type {SpellSet} 带有抽取的法术 [自动管理 直接添加到对应抽取类型即可] */
+        get draw() {
+            return new Set([...this.draw_common, ...this.draw_hit, ...this.draw_timer, ...this.draw_death]);
+        },
+
         /** @type {SpellSet} 带有基础抽取的法术 */ draw_common: new Set(),
         /** @type {SpellSet} 带有碰撞触发抽取的法术 */ draw_hit: new Set(),
         /** @type {SpellSet} 带有定时触发抽取的法术 */ draw_timer: new Set(),
         /** @type {SpellSet} 带有失效触发抽取的法术 */ draw_death: new Set(),
 
-        /** @type {SpellSet} 影响伤害的法术 */ damage_mod: new Set(),
+        /** @type {SpellSet} 影响伤害的法术 [自动管理 直接添加到具体伤害类型中即可] */
+        get damage_mod() {
+            const cache = [];
+            for (const type of DamageData.types) {
+                const key = `damage_mod_${type}`;
+                if (key in this) cache.push(...this[key]);
+            }
+            return new Set(...cache);
+        },
 
         /** @type {SpellSet} 影响[投射物]伤害的法术 */ damage_mod_projectile: new Set(),
         /** @type {SpellSet} 影响[近战]伤害的法术 */ damage_mod_melee: new Set(),
@@ -233,665 +353,167 @@ const SpellData = class {
         /** @type {SpellSet} 影响[穿凿]伤害的法术 */ damage_mod_drill: new Set(),
         /** @type {SpellSet} 影响[神圣]伤害的法术 */ damage_mod_holy: new Set(),
 
-        /** @type {Array<SpellData>} 生成需要解锁法术 */
-        spawnRequiresFlag: new Set()
+        /** @type {Array<SpellData>} 生成需要解锁法术 */ spawnRequiresFlag: new Set(),
+        $update() {
+            this.damage_mod = new Set();
+        }
     };
-    /** ⚪️ 空法术 @type {SpellData} */ static $NULL;
-    /** @type {Number} 辅助变量 用于记录法术图标索引 */ static #index = 0;
+
     static #typeList = [/* 无 */ "null", /* 投射物 */ "projectile", /* 静态投射物 */ "staticProjectile", /* 修正 */ "modifier", /* 多重 */ "drawMany", /* 材料 */ "material", /* 其它 */ "other", /* 实用 */ "utility", /* 被动 */ "passive"];
-    /** @type {Number} 图标索引 */ #_index;
+    /** @type {String} 图标url */ #iconIndex;
 
-    /** @param {Array} datas */
-    constructor(datas) {
-        /** @type {typeof SpellData} */
-        this.#_index = SpellData.#index;
-        SpellData.#index++;
-        /** @type {String} `★主键` 法术标识符 */ this.id = datas[0];
-        /** @type {String} 中文译名 */ this.name = datas[1];
-        /** @type {String} 基础描述 */ this.description = datas[2];
-        /** @type {String} 额外描述 */ this.extraDescription = datas[3];
-        /** @type {String} 法术类型 */ this.type = SpellData.#typeList[datas[4]];
-        /** @type {Number} 最大使用次数 */ this.maxUse = datas[5]; // -1 代表无限
-        /** @type {Boolean} 禁止无限法术 */ this.neverUnlimited = datas[6] === 1;
-        /** @type {Number} 法力消耗 */ this.manaDrain = datas[7];
-        /** @type {SpellData.SpawningData} 生成数据 */ this.spawningData = new SpellData.SpawningData(datas[8], datas[9], datas[40]);
-        /** @type {Number} 售价 */ this.price = datas[10];
-        /** @type {Array<SpellData.OfferedProjectileData>} 提供投射物 */ this.offeredProjectiles = SpellData.OfferedProjectileData.createDatas(datas[11]);
-        /** @type {String} 被动效果 */ this.passiveEffect = datas[12];
-        /** @type {SpellData.DrawingData} 提供抽取数 */ this.draw = new SpellData.DrawingData(datas[13]);
-        /** @type {Number} 施放延迟 */ this.fireRateWait = datas[14];
-        /** @type {Number} 暴击率 */ this.damageCriticalChance = datas[15];
-        /** @type {DamageData} 伤害提升 */ this.damageMod = Object.freeze(new DamageData(datas[16]));
-        /** @type {Number} 爆炸半径 */ this.explosionRadius = datas[17];
-        /** @type {Number} 散射 */ this.spreadDegrees = datas[18];
-        /** @type {Number} 阵型分布 */ this.patternDegrees = datas[19];
-        /** @type {Number} 投射物速度 */ this.speedMultiplier = datas[20];
-        /** @type {Number} 投射物子速度 */ this.childSpeedMultiplier = datas[21];
-        /** @type {Number} 存在时间 */ this.lifetime = datas[22];
-        /** @type {Number} 弹跳次数 */ this.bounces = datas[23];
-        /** @type {Number} 击退力度 */ this.knockbackForce = datas[24];
-        /** @type {Boolean} 启用友伤 */ this.friendlyFire = datas[25] === 1;
-        /** @type {Number} **<未知>** 可能是废弃的削弱后座力的属性 */ this.dampening = datas[26];
-        /** @type {Number} 抖屏力度 */ this.screenshake = datas[27];
-        /** @type {Number} 电弧施放数量 */ this.lightningCount = datas[28];
-        /** @type {String} 材料类型 */ this.material = datas[29];
-        /** @type {Number} 材料数量 */ this.materialAmount = datas[30];
-        /** @type {String} 轨迹材料 */ this.trailMaterial = datas[31];
-        /** @type {Number} 轨迹材料数量 */ this.trailMaterialAmount = datas[32];
-        /** @type {Number} 重力系数 */ this.gravity = datas[33];
-        /** @type {Number} **<装饰性>** 伤害粒子数量 */ this.goreParticles = datas[34];
-        /** @type {Number} **<待确定>** 碰撞箱大小 */ this.ragdollFx = datas[35];
-        /** @type {String} 附加实体 */ this.extraEntities = datas[36];
-        /** @type {String} 游戏效果实体 */ this.gameEffectEntities = datas[37];
-        /** @type {Number} 后座力 */ this.recoilKnockback = datas[38];
-        /** @type {Number} 充能时间 */ this.reloadTime = datas[39];
-        /** @type {Function|null} 法术行为 */ this.action = datas[41];
+    /**
+     * @param {Array<String>} datas
+     */
+    constructor(data, index) {
+        this.#iconIndex = index;
+        [
+            this.id, //===============[0] id
+            this.name, //=============[1] 名称
+            ,
+            //========================[2] 别名
+            this.desc, //=============[3] 描述
+            ,
+            ,
+            //========================[4] 类型
+            //========================[5] 最大使用次数
+            this.mana, //=============[6] 蓝耗
+            this.price, //============[7] 售价
+            this.passive = "", //=====[8] 被动效果
+            ,
+            ,
+            //=======================[9] 生成概率
+            //=======================[10] 生成条件
+            this.draw = 0, //========[11] 抽取数
+            ,
+            ,
+            //=======================[12] 提供投射物
+            //=======================[13] 修正行为
+            this.action, //==========[14] 法术行为
+            this.nameKey = "", //====[15] 名称键 用于csv翻译映射
+            this.descKey = "" //=====[16] 描述键 用于csv翻译映射
+        ] = data;
+        this.alias = freeze(data[2] ? data[2].split(" ") : []);
+        this.type = SpellData.#typeList[data[4]];
+        data[5] ??= 0;
+        this.unlimited = data[5] > 0;
+        let maxUse = Math.abs(data[5]);
+        this.maxUse = maxUse === 0 ? Infinity : maxUse;
+        this.spawn = freeze(new SpellData.SpawningData(data[9], data[10] ?? ""));
+        this.offeredProjectile = freeze(SpellData.ProjectileData.createDatas(data[12] ?? ""));
+        this.modifierAction = freeze(new SpellData.ModifierAction(data[13] ?? ""));
     }
-    /** 获取图标 */
-    async getIcon() {
-        const canvas = document.createElement("canvas");
-        // canvas.ariaLabel BUG! Firefox浏览器下是无法让属性显示在html标签中的
-        canvas.setAttribute("aria-label", `法术图标:${this.name}`); // 无障碍标注
-        canvas.width = 16;
-        canvas.height = 16;
-        canvas.getContext("2d").drawImage(await SpellData.iconImage, (this.#_index - 1) * 16, 0, 16, 16, 0, 0, 16, 16);
-        return canvas;
+
+    /** @return {Promise<String>} */
+    get asyncIconUrl() {
+        return new Promise(resolve => Icon.urls.then(value => resolve(value[this.#iconIndex])));
+    }
+
+    get icon() {
+        return new Icon(this);
     }
 
     /**
-     * 通过 `法术ID` 获取法术数据
-     * @param {SpellIdEnum} id 法术ID
-     * @returns {SpellData} 法术数据
+     * 创建具有剩余使用次数的法术数据实例
+     * @param {Number} remain
+     * @returns {SpellData & {remain:Number}}
      */
-    static queryById = id => {
-        const result = this.data.id_map.get(id);
-        if (result) return result;
-        else return this.$NULL;
-    };
+    instance(remain) {
+        return Object.create(this, { remain: { value: remain } });
+    }
+
     /**
-     * 通过 `法术名称` 获取法术数据
-     * @param {SpellNameEnum} name 法术名称
+     * 通过 `法术名称,ID,别名` 获取法术数据
+     * @param {SpellId|SpellName|SpellAlias} key 查询键
      * @returns {SpellData} 法术数据
      */
-    static queryByName = name => {
-        const result = this.data.name_map.get(name);
-        if (result) return result;
-        else return this.$NULL;
+    static query = key => {
+        if (key[0] === "$") return this.$NULL[key] ?? this.$NULL;
+        return this.data.map.get(key) ?? this.$NULL;
     };
 
     static queryByExp = (() => {
-        /** @type {util.parse.Token} */ let currentToken = undefined;
-        /** @type {SpellGroup|undefined} 当前表达式 */ let currentExp = undefined;
-        /** @param {String} info */ const consoleError = info => {
-            const e = new SyntaxError(`${info} index:${currentToken.index}`);
-            if (currentExp) console.error(currentToken.index, e, currentExp);
-            else console.error(currentToken.index, e);
-        };
-
-        const tokenEnum = {
-            /** 法术ID */
-            SI: {
-                id: "SPELL_ID",
-                color: "#8080FF",
-                bgColor: "#8080FF40",
-                fontWeight: "700",
-                needBlank: true
-            },
-            /** 法术标签 */
-            ST: {
-                id: "SPELL_TAG",
-                color: "#FFFF80",
-                bgColor: "#FFFF8040",
-                fontWeight: "700",
-                needBlank: true
-            },
-            BRACKET_SL: {
-                id: "BRACKET_SMALL_LEFT",
-                data: "(",
-                color: "#CE9178",
-                bgColor: "#00000000",
-                fontWeight: "700",
-                needBlank: true
-            },
-            BRACKET_SR: {
-                id: "BRACKET_SMALL_RIGHT",
-                data: ")",
-                color: "#CE9178",
-                bgColor: "#00000000",
-                fontWeight: "700",
-                needBlank: true
-            },
-            /** 逻辑非 */
-            NOT: {
-                id: "NOT",
-                data: "!",
-                color: "#CE9178",
-                bgColor: "#00000000",
-                fontWeight: "700",
-                needBlank: true
-            },
-            /** 逻辑或 */
-            OR: {
-                id: "OR",
-                data: "|",
-                color: "#CE9178",
-                bgColor: "#00000000",
-                fontWeight: "700",
-                needBlank: true
-            },
-            /** 逻辑与 */
-            AND: {
-                id: "AND",
-                data: "&",
-                color: "#CE9178",
-                bgColor: "#00000000",
-                fontWeight: "700",
-                needBlank: true
-            },
-            UND: {
-                id: "UND"
-            }
-        };
-        const Token = util.parse.Token;
-        class SpellGroup {
-            type = "SPELL_GROUP";
-            /** @type {String} 逻辑运算符 */
-            operator = "";
-            data1 = null;
-            data2 = null;
-            /**
-             * @type {Number}
-             * ### 匹配状态
-             * * 0:未开始
-             * * 1:等待匹配逻辑运算符
-             * * 2:等待匹配法术标签/ID/组
-             * * -1:完成
-             * @memberof SpellGroup
-             */
-            dataState = 0;
-            /**
-             * @type {Number}
-             * ### 匹配状态
-             * * 0: 无需括号
-             * * 1: 等待右括号
-             * * -1: 括号已成对
-             * @memberof SpellGroup
-             */
-            bracketState = 0;
-            constructor() {}
-        }
-        class SpellTag {
-            type = "SPELL_TAG";
-            data = "";
-            constructor(data) {
-                this.data = data;
-            }
-        }
-        class SpellId {
-            type = "SPELL_ID";
-            data = "";
-            constructor(data) {
-                this.data = data;
-            }
-        }
-        /**
-         * 根据AST获取法术数据数组
-         * @param {{type: String, data: String, data1: String?, data2: String?}} exp
-         * @returns {Set<db_sepll>}
-         */
-        const getSpellDatas = exp => {
-            switch (exp.type) {
-                case "SPELL_ID":
-                    return [this.queryById(exp.data)];
-                case "SPELL_TAG":
-                    const result = this.data[exp.data];
-                    if(result) return result;
-                    else {
-                        console.warn("暂不支持的法术法术标签", exp);
-                        return new Set();
-                    }
-                    
-                case "SPELL_GROUP":
-                    switch (exp.operator) {
-                        case "AND": {
-                            //取交集
-                            const s1 = getSpellDatas(exp.data1);
-                            const a2 = Array.from(getSpellDatas(exp.data2));
-                            /** @type {Set<SpellData>} */
-                            const s3 = new Set();
-                            const l = a2.length;
-                            for (let i = 0; i < l; i++) if (s1.has(a2[i])) s3.add(a2[i]);
-                            return s3;
-                        }
-                        case "OR": {
-                            //取并集
-                            return new Set([...getSpellDatas(exp.data1), ...getSpellDatas(exp.data2)]);
-                        }
-                        case "NOT": {
-                            //取补集
-                            const a2 = Array.from(getSpellDatas(exp.data2));
-                            const result = new Set(this.data.all);
-                            const l = a2.length;
-                            for (let i = 0; i < l; i++) result.delete(a2[i]);
-                            return result;
-                        }
-                    }
-            }
-        };
-        /**
-         * 通过 `表达式` 获取法术数据
-         * @param {SpellTagEnum|SpellId} exp 查询表达式
-         * @returns {Array<SpellData>} 法术数据
-         */
-        return exp => {
-            console.groupCollapsed("法术查询表达式解析: %c`%s`", "color:#25AFF3", exp);
-            currentToken = undefined;
-            console.groupCollapsed("🏷️ Tokenization");
-            //#region 令牌化 Tokenization
-            const tokens = [];
-            Token.logData.init();
-            const EL = exp.length;
-            for (let i = 0; i < EL; i++) {
-                const char = exp[i];
-                if (Token.regs.word.test(char)) {
-                    //属于单词成分
-                    //作为token开头字符
-                    if (currentToken === undefined) currentToken = new Token(tokenEnum.SI, i);
-                    currentToken.push(char);
-                } else {
-                    //遇到以下字符需要结束当前token
-                    if (currentToken) {
-                        currentToken.finish();
-                        tokens.push(currentToken);
-                        currentToken = undefined;
-                    }
-                    // 跳过空白符
-                    if (!Token.regs.blank.test(char))
-                        switch (char) {
-                            case "#":
-                                currentToken = new Token(tokenEnum.ST, i);
-                                currentToken.push(char);
-                                break;
-                            case "(":
-                                tokens.push(new Token(tokenEnum.BRACKET_SL, i));
-                                break;
-                            case ")":
-                                tokens.push(new Token(tokenEnum.BRACKET_SR, i));
-                                break;
-                            case "!":
-                                tokens.push(new Token(tokenEnum.NOT, i));
-                                break;
-                            case "|":
-                                tokens.push(new Token(tokenEnum.OR, i));
-                                break;
-                            case "&":
-                                tokens.push(new Token(tokenEnum.AND, i));
-                                break;
-                            default:
-                                currentToken = new Token(tokenEnum.UND, i);
-                                und.data = char;
-                                consoleError(`不合法的字符: "${char}"`);
-                                return [];
-                        }
-                }
-            }
-            if (currentToken) {
-                currentToken.finish();
-                tokens.push(currentToken);
-                currentToken = undefined;
-            }
-            //#endregion
-            Token.log();
-            console.groupEnd();
-
-            console.groupCollapsed("🍁 AST");
-            //#region 生成AST
-            const TL = tokens.length;
-            /** @type {Array<Object>} 表达式栈 */
-            const exps = [];
-
-            currentExp = undefined;
-            /** @type {SpellGroup|undefined} 根表达式 */
-            let rootExp = undefined;
-            for (let j = 0; j < TL; j++) {
-                currentToken = tokens[j];
-                currentExp = exps.at(-1);
-                switch (currentToken.type) {
-                    case "SPELL_ID": {
-                        const spellId = new SpellId(currentToken.data);
-                        if (currentExp) {
-                            if (currentExp.dataState === 0) {
-                                currentExp.data1 = spellId;
-                                currentExp.dataState = 1;
-                            } else if (currentExp.dataState === 2) {
-                                const subExp = new SpellGroup();
-                                subExp.data1 = spellId;
-                                // 子表达式更新匹配状态 已匹配第一个法术ID
-                                subExp.dataState = 1;
-                                currentExp.data2 = subExp;
-                                //更新匹配状态 完成匹配!
-                                currentExp.dataState = -1;
-                                exps.push(subExp);
-                            } else {
-                                consoleError(`缺少运算符连接`);
-                                return [];
-                            }
-                        } else {
-                            rootExp = new SpellGroup();
-
-                            rootExp.data1 = spellId;
-                            rootExp.dataState = 1;
-                            exps.push(rootExp);
-                        }
-                        break;
-                    }
-                    case "SPELL_TAG":
-                        if (currentExp) {
-                            if (currentExp.dataState === 0) {
-                                currentExp.data1 = new SpellTag(currentToken.data.slice(1));
-                                currentExp.dataState = 1;
-                            } else if (currentExp.dataState === 2) {
-                                const subExp = new SpellGroup();
-
-                                subExp.data1 = new SpellTag(currentToken.data.slice(1));
-                                // 子表达式更新匹配状态 已匹配第一个法术标签
-                                subExp.dataState = 1;
-
-                                currentExp.data2 = subExp;
-                                //更新匹配状态 完成匹配!
-                                currentExp.dataState = -1;
-                                exps.push(subExp);
-                            } else {
-                                consoleError(`缺少运算符连接`);
-                                return [];
-                            }
-                        } else {
-                            rootExp = new SpellGroup();
-                            rootExp.data1 = new SpellTag(currentToken.data.slice(1));
-                            rootExp.dataState = 1;
-                            exps.push(rootExp);
-                        }
-                        break;
-                    case "BRACKET_SMALL_LEFT": {
-                        const subExp = new SpellGroup();
-                        subExp.dataState = 0;
-                        subExp.bracketState = 1;
-                        if (currentExp) {
-                            if (currentExp.dataState === 0) {
-                                currentExp.data1 = subExp;
-                                exps.push(subExp);
-                                currentExp.dataState = 1;
-                            } else if (currentExp.dataState === 2) {
-                                currentExp.data2 = subExp;
-                                exps.push(subExp);
-                                currentExp.dataState = -1; //完成匹配
-                            } else {
-                                consoleError(`缺少运算符连接`);
-                                return [];
-                            }
-                        } else {
-                            // 根表达式不存在时 左括号开头 这里应该默认多一层表达式 否则右括号完成该表达式匹配后仍然有后续逻辑运算符会导致匹配出错
-                            rootExp = new SpellGroup();
-                            rootExp.data1 = subExp;
-                            rootExp.dataState = 1;
-                            exps.push(rootExp, subExp);
-                        }
-                        break;
-                    }
-                    case "BRACKET_SMALL_RIGHT":
-                        if (currentExp) {
-                            if (currentExp.dataState === 2) {
-                                consoleError(`${currentToken.data} 缺少法术标签或法术ID连接`);
-                                return [];
-                            } else {
-                                let pairedBracket = false; //取消无意义法术组时可能会丢失需要匹配的左括号 这里需要记录是否在取消无意义法术组中已经完成了括号配对
-                                if (currentExp.dataState === 1) {
-                                    pairedBracket = currentExp.bracketState === 1;
-                                    const parentExp = exps.at(-2);
-                                    if (parentExp.dataState === 1) parentExp.data1 = currentExp.data1;
-                                    else if (parentExp.dataState === -1) parentExp.data2 = currentExp.data1;
-                                    exps.pop();
-                                    currentExp = exps.at(-1);
-                                }
-                                if (!pairedBracket) {
-                                    while (currentExp.bracketState !== 1) {
-                                        if (exps.length > 1) {
-                                            exps.pop();
-                                            currentExp = exps.at(-1);
-                                        } else {
-                                            consoleError(`不成对的括号`);
-                                            return [];
-                                        }
-                                    }
-                                    currentExp.bracketState = -1;
-                                }
-                                // 你永远也等不到运算符了 所以你应该是一个法术标签/ID 而不是法术标签组
-                                if (currentExp.dataState === 1) {
-                                    const parentExp = exps.at(-2);
-                                    if (parentExp.dataState === 1) parentExp.data1 = currentExp.data1;
-                                    else if (parentExp.dataState === -1) parentExp.data2 = currentExp.data1;
-                                    exps.pop();
-                                    currentExp = exps.at(-1);
-                                }
-                                //防止根表达式弹出
-                                if (exps.length > 1) exps.pop();
-                            }
-                        } else {
-                            consoleError(`不成对的括号`);
-                            return [];
-                        }
-                        break;
-                    case "NOT": {
-                        const subExp = new SpellGroup();
-                        subExp.dataState = 2;
-                        subExp.data1 = null;
-                        subExp.operator = "NOT";
-                        if (currentExp) {
-                            if (currentExp.dataState === 0) {
-                                currentExp.data1 = subExp;
-                                currentExp.dataState = 1;
-                                exps.push(subExp);
-                            } else if (currentExp.dataState === 2) {
-                                currentExp.data2 = subExp;
-                                currentExp.dataState = -1;
-                                exps.push(subExp);
-                            } else if (currentExp.dataState === 1) {
-                                consoleError("! 不可以用于连接两个法术标签或法术ID");
-                                return [];
-                            }
-                        } else {
-                            rootExp = subExp;
-                            exps.push(subExp);
-                        }
-                        break;
-                    }
-                    case "OR":
-                        if (currentExp) {
-                            if (currentExp.dataState === 1) {
-                                currentExp.dataState = 2;
-                                currentExp.operator = "OR";
-                            } else if (currentExp.dataState === 2) {
-                                consoleError("已存在逻辑运算符");
-                                return [];
-                            }
-                        } else {
-                            consoleError("缺少被连接的法术标签或ID");
-                            return [];
-                        }
-                        break;
-                    case "AND":
-                        if (currentExp) {
-                            if (currentExp.dataState === 1) {
-                                currentExp.dataState = 2;
-                                currentExp.operator = "AND";
-                            } else if (currentExp.dataState === 2) {
-                                consoleError("已存在逻辑运算符");
-                                return [];
-                            }
-                        } else {
-                            consoleError("缺少被连接的法术标签或ID");
-                            return [];
-                        }
-                        break;
-                }
-            }
-            currentExp = exps[exps.length - 1];
-            // 你永远也等不到运算符了 所以你应该是一个法术标签/ID 而不是法术标签组
-            if (currentExp.dataState === 1) {
-                const parentExp = exps.at(-2);
-                if (parentExp) {
-                    if (parentExp.dataState === 1) parentExp.data1 = currentExp.data1;
-                    else if (parentExp.dataState === -1) parentExp.data2 = currentExp.data1;
-                    exps.pop();
-                    currentExp = exps.at(-1);
-                } else rootExp = currentExp.data1;
-            }
-            if (rootExp.data2 === null) {
-                consoleError("缺少连接的法术标签或ID");
-                return [];
-            }
-
-            //#endregion
-            console.log(rootExp);
-            //#region 解析AST
-            const result = getSpellDatas(rootExp);
-            console.table(result, ["id", "name", "description"]);
-            //#endregion
-            console.groupEnd();
-            console.groupEnd();
-            return [...result];
-        };
+        //prettier-ignore
+        embed(`#expParser.js`)
+        return parse;
     })();
 
     /** 初始化数据库 */
     static init() {
-        this.$NULL = Object.freeze(new this(["_NULL", "空白", "NULL", "额外描述", 0, -1, 0, 0, "", "", 0, "", "", "", 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 1, 1, 0, 0, 0, 0, 0, 0, 0, "", 0, "", 0, 0, 0, 0, "", "", 0, 0, "", ""]));
+        /** ⚫ 空法术 @type {SpellData & {$projectile:SpellData,$staticProjectile:SpellData,$modifier:SpellData,$drawMany:SpellData,$material:SpellData,$other:SpellData,$utility:SpellData,$passive:SpellData}} */
+        this.$NULL = new this(["_NULL", "空白", "", "未能获得指定法术", 0, 0, 0, 0, "", {}, "", 0, "", "", ""]);
 
-        /** #data: [法术数据](data.js) @type {Array} */
+        /** 🔴 空法术`投射物` @type {SpellData} */
+        this.$NULL.$projectile = freeze(new this(["$projectile", "投射物法术", "", "占位符", 1, 0, 0, 0, "", {}, "", 0, "", "", ""]));
+
+        /** 🟠 空法术`静态投射物` @type {SpellData} */
+        this.$NULL.$staticProjectile = freeze(new this(["$staticProjectile", "静态投射物法术", "", "占位符", 2, 0, 0, 0, "", {}, "", 0, "", "", ""]));
+
+        /** 🔵 空法术`投射修正` @type {SpellData} */
+        this.$NULL.$modifier = freeze(new this(["$staticProjectile", "投射修正法术", "", "占位符", 3, 0, 0, 0, "", {}, "", 0, "", "", ""]));
+
+        /** ⚪ 空法术`多重施放` @type {SpellData} */
+        this.$NULL.$drawMany = freeze(new this(["$drawMany", "多重法术", "", "占位符", 4, 0, 0, 0, "", {}, "", 0, "", "", ""]));
+
+        /** 🟢 空法术`材料` @type {SpellData} */
+        this.$NULL.$material = freeze(new this(["$material", "材料法术", "", "占位符", 5, 0, 0, 0, "", {}, "", 0, "", "", ""]));
+
+        /** 🟡 空法术`其他` @type {SpellData} */
+        this.$NULL.$other = freeze(new this(["$other", "其他法术", "", "占位符", 6, 0, 0, 0, "", {}, "", 0, "", "", ""]));
+
+        /** 🟣 空法术`实用` @type {SpellData} */
+        this.$NULL.$utility = freeze(new this(["$utility", "实用法术", "", "占位符", 7, 0, 0, 0, "", {}, "", 0, "", "", ""]));
+
+        /** 🟤 空法术`被动` @type {SpellData} */
+        this.$NULL.$passive = freeze(new this(["$passive", "被动法术", "", "占位符", 8, 0, 0, 0, "", {}, "", 0, "", "", ""]));
+
+        freeze(this.$NULL);
+
+        const storage = this.data;
         const datas = embed(`#data.js`);
-        for (let i = 0; i < datas.length; i++) {
-            const data = Object.freeze(new this(datas[i]));
-            const storage = this.data;
+        for (let i = 0, j = 0; i < datas.length; i += 17, j++) {
+            const data = new this(datas.slice(i, i + 17), j);
+
+            //#region 向数据库中写入
             storage.all.add(data);
-            storage.id_map.set(data.id, data);
-            storage.name_map.set(data.name, data);
-            switch (data.type) {
-                case "projectile":
-                    storage.type_projectile.add(data);
-                    break;
-                case "staticProjectile":
-                    storage.type_staticProjectile.add(data);
-                    break;
-                case "modifier":
-                    storage.type_modifier.add(data);
-                    break;
-                case "drawMany":
-                    storage.type_drawMany.add(data);
-                    break;
-                case "material":
-                    storage.type_material.add(data);
-                    break;
-                case "other":
-                    storage.type_other.add(data);
-                    break;
-                case "utility":
-                    storage.type_utility.add(data);
-                    break;
-                case "passive":
-                    storage.type_passive.add(data);
-                    break;
-            }
-            const spawningData = data.spawningData;
-            if (spawningData.prob_lv0 > -1) storage.level_0.add(data);
-            if (spawningData.prob_lv1 > -1) storage.level_1.add(data);
-            if (spawningData.prob_lv2 > -1) storage.level_2.add(data);
-            if (spawningData.prob_lv3 > -1) storage.level_3.add(data);
-            if (spawningData.prob_lv4 > -1) storage.level_4.add(data);
-            if (spawningData.prob_lv5 > -1) storage.level_5.add(data);
-            if (spawningData.prob_lv6 > -1) storage.level_6.add(data);
-            if (spawningData.prob_lv7 > -1) storage.level_7.add(data);
-            if (spawningData.prob_lv10 > -1) storage.level_10.add(data);
-            if (spawningData.requiresFlag !== "None") storage.spawnRequiresFlag.add(data);
-            const draw = data.draw;
-            if (draw.common > 0) {
-                storage.draw.add(data);
-                storage.draw_common.add(data);
-            }
-            if (draw.hit > 0) {
-                storage.draw.add(data);
-                storage.draw_hit.add(data);
-            }
-            if (draw.timer.count > 0) {
-                storage.draw.add(data);
-                storage.draw_timer.add(data);
-            }
-            if (draw.death > 0) {
-                storage.draw.add(data);
-                storage.draw_death.add(data);
+            // id, 正式名, 别名均创建映射
+            for (const mapKey of [...data.alias, data.id, data.name]) storage.map.set(mapKey, data);
+
+            storage[`type_${data.type}`].add(data);
+
+            for (const lv of data.spawn.lvs) storage[lv].add(data);
+
+            if (data.spawn.requiresFlag) storage.spawnRequiresFlag.add(data);
+
+            if (data.draw) storage.draw_common.add(data);
+
+            for (let j = 0; j < data.offeredProjectile.length; j++) {
+                const { drawCount_Hit, drawCount_Timer, drawCount_Death } = data.offeredProjectile[j];
+                if (drawCount_Death) storage.draw_death.add(data);
+                if (drawCount_Hit) storage.draw_hit.add(data);
+                if (drawCount_Timer) storage.draw_timer.add(data);
             }
 
-            if (data.lifetime) {
-                storage.lifetime_mod.add(data);
-                if (data.lifetime > 0) storage.lifetime_up.add(data);
-                else storage.lifetime_down.add(data);
+            if ("lifetime" in data.modifierAction) {
+                if (data.modifierAction.lifetime.type === "+") storage.lifetime_up.add(data);
+                else if (data.modifierAction.lifetime.type === "-") storage.lifetime_down.add(data);
             }
 
-            if (data.manaDrain < 5) {
+            if ("speed" in data.modifierAction) storage.speed_mod.add(data);
+
+            for (const type of DamageData.types) {
+                if (`${type}Damage` in data.modifierAction) storage[`damage_mod_${type}`].add(data);
+            }
+
+            if (data.mana < 5) {
                 storage.mana_drainlowly.add(data);
-                if (data.manaDrain === 0) storage.mana_0.add(data);
+                if (data.mana === 0) storage.mana_0.add(data);
                 else storage.mana_increase.add(data);
             }
 
-            if (data.speedMultiplier !== 1) {
-                storage.speed_mod.add(data);
-            }
+            //#endregion
 
-            const damageMod = data.damageMod;
-
-            if (damageMod.projectile) {
-                storage.damage_mod_projectile.add(data);
-                storage.damage_mod.add(data);
-            }
-            if (damageMod.melee) {
-                storage.damage_mod_melee.add(data);
-                storage.damage_mod.add(data);
-            }
-            if (damageMod.electricity) {
-                storage.damage_mod_electricity.add(data);
-                storage.damage_mod.add(data);
-            }
-            if (damageMod.fire) {
-                storage.damage_mod_fire.add(data);
-                storage.damage_mod.add(data);
-            }
-            if (damageMod.explosion) {
-                storage.damage_mod_explosion.add(data);
-                storage.damage_mod.add(data);
-            }
-            if (damageMod.ice) {
-                storage.damage_mod_ice.add(data);
-                storage.damage_mod.add(data);
-            }
-            if (damageMod.slice) {
-                storage.damage_mod_slice.add(data);
-                storage.damage_mod.add(data);
-            }
-            if (damageMod.healing) {
-                storage.damage_mod_healing.add(data);
-                storage.damage_mod.add(data);
-            }
-            if (damageMod.curse) {
-                storage.damage_mod_curse.add(data);
-                storage.damage_mod.add(data);
-            }
-            if (damageMod.drill) {
-                storage.damage_mod_drill.add(data);
-                storage.damage_mod.add(data);
-            }
-            if (damageMod.holy) {
-                storage.damage_mod_holy.add(data);
-                storage.damage_mod.add(data);
-            }
+            freeze(data);
         }
     }
-};
+}

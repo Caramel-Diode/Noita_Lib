@@ -1,6 +1,6 @@
 /** 实体数据 */
-const EntityData = class {
-    static OfferedEntityData = class {
+class EntityData {
+    static OfferedEntityData = class OfferedEntityData {
         constructor(entityId, num_min, num_max) {
             /** @type {EntityData} 实体数据 */
             this.entityData = EntityData.queryById(entityId);
@@ -57,13 +57,13 @@ const EntityData = class {
         };
     };
     /** 投射物组件 */
-    static ProjectileComponent = class {
+    static ProjectileComponent = class ProjectileComponent {
         constructor(offeredDamage, explosionRadius, spreadDegrees, lifetime_base, lifetime_fluctuation, speed_min, speed_max, bounces, knockbackForce, friendlyFire, friendlyExplode, speedDiffDamage, physicsImpulseCoeff, materialGenerate, canExplode, damageFrequency, offeredEntities) {
             /** @type {DamageData} 提供伤害 */ this.offeredDamage = new DamageData(offeredDamage);
             /** @type {Number} 爆炸半径 */ this.explosionRadius = explosionRadius;
             /** @type {Number} 散射角度 */ this.spreadDegrees = spreadDegrees;
             /** @type {NumRange} 存在时间 */ this.lifetime = { base: lifetime_base, fluctuation: lifetime_fluctuation };
-            /** @type {NumRange} 速度 */ this.speed = { min: speed_min, max: speed_max };
+            /** @type {NumRange} 速度 */ this.speed = new RangeValue(speed_min, speed_max);
             /** @type {Number} 弹跳次数 */ this.bounces = bounces;
             /** @type {Number} 击退力度 */ this.knockbackForce = knockbackForce;
             /** @type {Boolean} 命中友军 */ this.friendlyFire = friendlyFire;
@@ -77,7 +77,7 @@ const EntityData = class {
         }
     };
     /** 伤害模型组件 */
-    static DamageModelComponent = class {
+    static DamageModelComponent = class DamageModelComponent {
         constructor(maxHp, airInLungsMax, damageMaterialList, bloodMaterial, corpseMaterial, damageMultipler) {
             /** @type {Number} 最大生命 */ this.maxHp = maxHp;
             /** @type {Number} 氧气储备 */ this.airInLungsMax = airInLungsMax; /* -1 代表无需呼吸 */
@@ -89,12 +89,12 @@ const EntityData = class {
         }
     };
     /** 动物行为组件 */
-    static AnimalAIComponent = class {};
+    static AnimalAIComponent = class AnimalAIComponent {};
 
     static $NULL;
     static data = {
         id_map: new Map(),
-        /** @type {Array<EntityData>} 在进展中显示的敌人 */enemy:[]
+        /** @type {Array<EntityData>} 在进展中显示的敌人 */ enemy: []
     };
 
     /** @param {Array} datas */
@@ -126,13 +126,12 @@ const EntityData = class {
         if (data) return data;
         else return this.$NULL;
     };
+    /** 初始化数据库 */
     static init() {
         this.$NULL = new this(["_NULL", "空白"]);
-        /** #data: [实体数据](data.js) @type {Array} */
-        const datas = embed(`#data.js`);
-        for (let i = 0; i < datas.length; i++) {
-            const data = Object.freeze(new this(datas[i]));
+        embed(`#data.js`).forEach(v => {
+            const data = Object.freeze(new this(v));
             this.data.id_map.set(data.id, data);
-        }
+        });
     }
-};
+}

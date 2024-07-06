@@ -1,0 +1,13 @@
+{
+    "compilerOptions": {
+        // "lib": ["DOM", "ES2017"],
+        "allowSyntheticDefaultImports": true,
+        "declaration": true,
+        "allowJs": true,
+        "module": "None",
+        "target": "esnext",
+        "checkJs": true,
+        "paths": {}
+    },
+    "include": ["script.js", "entityComponents.js", "animation.js", "../../public/xmlParser.js", "../../public/csvParser.js", "../../public/damageData.js", "../util.js"]
+}

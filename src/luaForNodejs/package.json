@@ -1,0 +1,10 @@
+{
+  "dependencies": {
+    "node-addon-api": "*"
+  },
+  "scripts": {
+    "configure": "node-gyp configure",
+    "build": "node-gyp build",
+    "test": "node js/test.js"
+  }
+}

@@ -1,18 +1,19 @@
+//prettier-ignore
 [
     ["spellType", new this(1, "法术类型")],
     ["materialType", new this(1, "材料类型")], //材料属性
-    ["shuffle", new this(2, "乱序")],
-    ["draw", new this(3, "抽取数")],
-    ["capacity", new this(4, "容量")],
+    ["shuffle", new this(2, "乱序", "shuffle")],
+    ["draw", new this(3, "抽取数", "draw")],
+    ["capacity", new this(4, "容量", "capacity")],
     ["staticSpells", new this(5, "始终施放")],
-    ["manaMax", new this(6, "法力上限")],
-    ["manaChargeSpeed", new this(7, "法力恢复速度")],
+    ["manaMax", new this(6, "法力上限", "mana-max")],
+    ["manaChargeSpeed", new this(7, "法力恢复速度", "mana-charge-speed")],
     ["manaDrain", new this(8, "法力消耗")],
     ["maxUse", new this(9, "最大使用次数")],
     ["remainingUse", new this(9, "剩余使用次数")],
-    ["fireRateWait", new this(10, "施放延迟")],
-    ["reloadTime", new this(11, "充能时间")],
-    ["spreadDegrees", new this(12, "散射")],
+    ["fireRateWait", new this(10, "施放延迟", "fire-rate-wait")],
+    ["reloadTime", new this(11, "充能时间", "reload-time")],
+    ["spreadDegrees", new this(12, "散射", "spread-degrees")],
     ["projectileDamage", new this(13, "投射物伤害")],
     ["projectileDamageMultiplier", new this(13, "投射物承伤")],
     ["fireDamage", new this(14, "火焰伤害")],
@@ -38,7 +39,7 @@
     ["holyDamage", new this(23, "神圣伤害")],
     ["holyDamageMultiplier", new this(23, "神圣承伤")],
     ["overeatingDamage", new this(24, "吃撑伤害")],
-    ["overeatingMultiplier", new this(24, "吃撑承伤")],
+    ["overeatingDamageMultiplier", new this(24, "吃撑承伤")],
     ["ingestionStatusEffects", new this(24, "摄入效果")], //材料属性
     ["physicsHitDamage", new this(25, "物理伤害")],
     ["physicsHitDamageMultiplier", new this(25, "物理承伤")],
@@ -51,21 +52,23 @@
     ["speed", new this(29, "投射速度")],
     ["speedMultiplier", new this(29, "投射速度倍数")],
     ["explosionRadius", new this(30, "爆炸半径")],
-    ["bounces", new this(31, "弹跳次数")],
+    ["bounces", new this(31, "弹起次数")],
     ["knockbackForce", new this(32, "击退")],
     ["lifetime", new this(33, "存在时间")],
     ["projectilesProvided", new this(34, "提供投射物")],
+    ["projectilesRelated", new this(34, "关联投射物")],
     ["projectilesUsed", new this(34, "使用投射物")],
     ["passiveEffect", new this(35, "被动效果")],
     ["bloodMaterial", new this(36, "血液材料")],
+    ["friendlyFire", new this(36, "友方命中")],
     ["maxHp", new this(37, "生命值")],
     ["immunity", new this(38, "免疫能力")],
     ["#1", new this(39, "#1")], /// 未启用图标
-    ["recoilKnockback", new this(40, "后座力")],
+    ["recoil", new this(40, "后座力")],
     ["draw_common", new this(41, "抽取|普通")],
-    ["draw_hit", new this(42, "抽取|碰撞触发")],
-    ["draw_timer", new this(43, "抽取|定时触发")],
-    ["draw_death", new this(44, "抽取|失效触发")],
+    ["draw_hit", new this(42, "碰撞触发")],
+    ["draw_timer", new this(43, "定时触发")],
+    ["draw_death", new this(44, "失效触发")],
     ["#2", new this(45, "#2")], /// 未启用图标
     ["camp", new this(46, "阵营")],
     ["maxStack", new this(47, "堆叠极限")],
@@ -86,5 +89,7 @@
     ["#9", new this(62, "#扳手")], /// 未启用图标
     ["#10", new this(63, "#双刃斧")], /// 未启用图标
     ["#11", new this(64, "#图钉")], /// 未启用图标
-    ["#12", new this(65, "#魔杖")] /// 未启用图标
-];
+    ["wand", new this(65, "魔杖")], /// 未启用图标
+    ["orbitProjectile", new this(66, "环绕投射物")],//未启用图标
+    ["probs", new this(67, "生成概率")]
+]

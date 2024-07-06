@@ -1,0 +1,86 @@
+id,法术名,被动描述
+SLOW_BULLET,能量球,微光 迸射蓝色粒子
+SLOW_BULLET_TRIGGER,触发能量球,微光 迸射蓝色粒子
+SLOW_BULLET_TIMER,定时能量球,微光 迸射蓝色粒子
+BLACK_HOLE,黑洞,微光 逸散粉色粒子
+BLACK_HOLE_DEATH_TRIGGER,失效触发黑洞,微光 逸散粉色粒子
+BLACK_HOLE_BIG,巨型黑洞,微光 逸散粉色粒子
+WHITE_HOLE_BIG,巨型白洞,微光 逸散白色粒子
+BLACK_HOLE_GIGA,终极黑洞,微光 逸散粉色粒子
+LANCE,闪耀长枪,微光 迸射蓝色粒子
+LANCE_HOLY,神圣长枪,微光 迸射金色粒子
+ROCKET,魔法飞弹,微光 迸射橙色粒子
+ROCKET_TIER_2,大型魔法飞弹,微光 迸射绿色粒子
+ROCKET_TIER_3,巨型魔法飞弹,微光 迸射紫色粒子
+GRENADE,火焰弹,逸散火花 冒烟
+GRENADE_TRIGGER,触发火焰弹,逸散火花 冒烟
+GRENADE_TIER_2,大型火焰弹,迸射绿色粒子
+GRENADE_TIER_3,巨型火焰弹,迸射紫色粒子
+GRENADE_ANTI,怪异火焰弹,逸散火花 冒烟
+GRENADE_LARGE,坠落火焰弹,逸散火花 冒烟
+LASER,汇聚之光,迸射绿色粒子与火花
+LIGHTNING,雷击,微光 萦绕电弧 漏电
+BALL_LIGHTNING,球状闪电,微光 萦绕电弧 漏电
+TENTACLE,触手,萦绕恐怖粒子
+TENTACLE_TIMER,定时触手,萦绕恐怖粒子
+HEAL_BULLET,治疗魔弹,微光 逸散绿色粒子
+SPIRAL_SHOT,螺旋魔弹,迸射蓝色粒子与火花
+FIREBALL,火球,逸散火花 冒烟
+FLAMETHROWER,火焰喷射器,逸散火花 冒烟
+ICEBALL,冰球,逸散蓝色火花 冒烟
+SLIMEBALL,粘液球,泄露可燃气与挥发性性辐射液滴
+DARKFLAME,黑焰,微光 逸散黑焰
+GLITTER_BOMB,闪烁炸弹,glitter_bomb
+BOMB_HOLY,神圣炸弹,逸散火花 冒烟
+BOMB_HOLY_GIGA,巨型神圣炸弹,逸散火花 冒烟
+ACIDSHOT,酸液球,泄露可燃气与挥发性性辐射液滴
+THUNDERBALL,雷霆放射,微光 萦绕电弧 漏电
+FIREBOMB,微型火焰弹,逸散火花 冒烟
+DEATH_CROSS,死亡十字,迸射蓝色粒子与火花
+DEATH_CROSS_BIG,巨型死亡十字,迸射蓝色粒子与火花
+TELEPORT_PROJECTILE,传送魔弹,微光 逸散传送粒子
+TELEPORT_PROJECTILE_SHORT,小传送魔弹,微光 逸散传送粒子
+TELEPORT_PROJECTILE_STATIC,返回传送魔弹,微光 逸散传送粒子
+NUKE,核弹,迸射大型橙色火花与橙色粒子
+NUKE_GIGA,巨型核弹,迸射大型橙色火花与橙色粒子
+LIFETIME,延长存在时间,迸射红色粒子
+LIFETIME_DOWN,缩减存在时间,迸射绿色粒子
+MANA_REDUCE,提升法力,迸射蓝色粒子
+BLOOD_MAGIC,血液魔法,迸射挥发性血液
+MONEY_MAGIC,黄金转伤害,迸射金色粒子
+BLOOD_TO_POWER,血液转伤害,迸射挥发性血液
+DAMAGE,伤害增强,迸射大型橙色火花
+DAMAGE_RANDOM,随机伤害,迸射大型橙红色火花
+DAMAGE_FOREVER,法力转伤害,迸射大型橙色火花
+CRITICAL_HIT,暴击增强,迸射大型橙色火花
+HEAVY_SHOT,沉重一击,迸射大型橙色火花
+LIGHT_SHOT,轻盈一击,迸射大型蓝色火花
+SPEED,加速,逸散绿色粒子
+ACCELERATING_SHOT,逐渐加速,迸射绿色粒子
+DECELERATING_SHOT,逐渐减速,迸射红色粒子
+EXPLOSIVE_PROJECTILE,易爆,迸射火花 冒烟
+EXPLOSION,爆炸,迸射火花 冒烟
+EXPLOSION_LIGHT,魔法爆炸,迸射火花 冒烟
+FIRE_BLAST,火焰爆炸,迸射火花 冒烟
+POISON_BLAST,毒液爆炸,泄露紫毒气体
+ALCOHOL_BLAST,烈酒爆炸,泄露橙色气体
+THUNDER_BLAST,雷霆爆炸,微光 萦绕电弧 漏电
+ELECTRIC_CHARGE,电荷,微光 萦绕电弧 迸射蓝色粒子 漏电
+FREEZE,冰冻,微光 逸散雪花
+LIGHTNING_RAY,闪电发射器,微光 萦绕电弧 迸射蓝色粒子 漏电
+ARC_ELECTRIC,电弧,微光 萦绕大型电弧 迸射蓝色粒子
+ARC_FIRE,火焰弧,微光 迸射橙色火花 泄露橙色气体
+X_RAY,全知之眼,微光 逸散粉色粒子
+UNSTABLE_GUNPOWDER,爆竹,微光 迸射大型橙色火花与粒子
+ACID_TRAIL,酸液轨迹,泄露可燃气体
+POISON_TRAIL,毒液轨迹,泄露紫毒气体
+FIRE_TRAIL,火焰轨迹,迸射橙色粒子 泄露橙色气体 冒烟
+BURN_TRAIL,燃烧,逸散火花 冒烟
+TORCH,火把,强光 迸射橙色粒子 冒烟 燃烧
+TORCH_ELECTRIC,电子火把,强光 萦绕电弧 迸射蓝色粒子 放电
+ENERGY_SHIELD,能量盾,能量护盾
+ENERGY_SHIELD_SECTOR,半圆能量盾,残缺能量护盾
+TINY_GHOST,迷你幽灵,小幽灵跟随
+SUMMON_PORTAL,召唤传送门,summon_portal.xml
+METEOR_RAIN,陨石雨,逸散火花 冒烟
+WORM_RAIN,蠕虫雨,微光 逸散粉色粒子

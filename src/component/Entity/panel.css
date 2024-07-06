@@ -1,4 +1,4 @@
-:host {
+main {
     grid-template:
         "name" 30px
         "." 14px

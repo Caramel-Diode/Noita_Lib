@@ -1,33 +1,31 @@
 {
-    // 使用 IntelliSense 了解相关属性。
-    // 悬停以查看现有属性的描述。
-    // 欲了解更多信息，请访问: https://go.microsoft.com/fwlink/?linkid=830387
     "version": "0.2.0",
     "configurations": [
         {
             "name": "📦️ Build",
-            "program": "${workspaceFolder}/util/build.js",
             "request": "launch",
-            "type": "node",
-            "presentation": {
-                "hidden": false,
-                "group": "build",
-                "order": 1
-            }
-        },
-        {
-            "name": "📦️ npm Build",
-            "request": "launch",
-            "runtimeArgs": ["run-script", "build"],
+            "runtimeArgs": ["run", "build"],
             "runtimeExecutable": "npm",
             "type": "node",
             "presentation": {
                 "hidden": false,
-                "group": "build",
+                "group": "1",
                 "order": 1
             }
         },
-
+        {
+            "name": "🛠️ Parser Server",
+            "request": "launch",
+            "runtimeArgs": ["run", "parser server"],
+            "runtimeExecutable": "npm",
+            "skipFiles": ["<node_internals>/**"],
+            "type": "node",
+            "presentation": {
+                "hidden": false,
+                "group": "1",
+                "order": 2
+            }
+        },
         {
             "name": "🐞 Run Firefox",
             "type": "firefox",
@@ -38,7 +36,7 @@
             "presentation": {
                 "hidden": false,
                 "group": "debug",
-                "order": 3
+                "order": 5
             }
         },
         {
@@ -48,10 +46,10 @@
             "presentation": {
                 "hidden": false,
                 "group": "debug",
-                "order": 4
+                "order": 6
             }
         },
-
+        // 下面三个配置是为了 Edge 调试配置的子配置 不需要显示
         {
             "name": "launch msedge",
             "request": "launch",
@@ -78,34 +76,16 @@
             "url": "${workspaceFolder}/test/index.html",
             "webRoot": "${workspaceFolder}",
             "presentation": { "hidden": true }
-        },
-
-        // {
-        //     "name": "📦️Build",//旧版配置
-        //     "program": "${workspaceFolder}/build.js",
-        //     "request": "launch",
-        //     "skipFiles": ["<node_internals>/**"],
-        //     "type": "node",
-        //     "console": "integratedTerminal"
-        // }
+        }
     ],
     "compounds": [
-        // {
-        //     "name": "📦️ 构建",
-        //     "configurations": [],
-        //     "presentation": {
-        //         "hidden": false,
-        //         "group": "构建",
-        //         "order": 1
-        //     }
-        // },
         {
             "name": "🐞 Edge Debug",
             "configurations": ["launch msedge", "open devtools"],
             "presentation": {
                 "hidden": false,
                 "group": "debug",
-                "order": 1
+                "order": 3
             }
         },
         {
@@ -114,7 +94,7 @@
             "presentation": {
                 "hidden": false,
                 "group": "debug",
-                "order": 2
+                "order": 4
             }
         }
     ]

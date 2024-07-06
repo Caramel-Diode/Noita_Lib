@@ -1,0 +1,30 @@
+{
+	"version": "2.0.0",
+	"tasks": [
+		{
+			"type": "npm",
+			"script": "build",
+			"group": "build",
+			"problemMatcher": [],
+			"label": "Build",
+			"detail": "构建",
+			"icon": {
+				"id": "package",
+				"color": "terminal.ansiCyan"
+			},
+			
+
+		},
+		{
+			"type": "npm",
+			"script": "configure",
+			"problemMatcher": [],
+			"label": "Configure",
+			"detail": "生成构建配置",
+			"icon": {
+				"id": "code",
+				"color": "terminal.ansiYellow"
+			}
+		}
+	]
+}

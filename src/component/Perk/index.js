@@ -1,27 +1,26 @@
-/** ## [`🛡️ 天赋`](https://noita.wiki.gg/zh/wiki/天赋) */
 const Perk = (() => {
     embed(`#db.js`);
     PerkData.init();
-    const HTMLNoitaPerkElement = class extends Base {
-        static queryById = id => PerkData.queryById(id);
-        static queryByName = id => PerkData.queryByName(this.name);
-        static observedAttributes = Object.freeze([...super.observedAttributes, "perk.id", "perk.name", "perk.count"]);
-        static {
-            const superStyleSheets = super.prototype.publicStyleSheets;
-            this.prototype.publicStyleSheets = {
-                /** @type {Array<CSSStyleSheet>} */
-                icon: [...superStyleSheets.icon, gss(embed(`#icon.css`))],
-                /** @type {Array<CSSStyleSheet>} */
-                panel: [...superStyleSheets.panel, gss(embed(`#panel.css`))]
-            };
-        }
+    const styleSheet = {
+        icon: gss(embed(`#icon.css`)),
+        panel: gss(embed(`#panel.css`))
+    };
 
-        /** @type {ShadowRoot} */
-        #shadowRoot = this.attachShadow({ mode: "closed" });
-        #displayMode;
+    return class HTMLNoitaPerkElement extends $class(Base, {
+        /** @type {$ValueOption<"icon"|"panel">} */
+        displayMode: { name: "display", $default: "icon" },
+        /** @type {$ValueOption<PerkId|PerkName>} */
+        perkId: { name: "perk.id" },
+        /** @type {$ValueOption<String>} */
+        perkCount: { name: "perk.count" }
+    }) {
+        static query = PerkData.query;
 
+        //prettier-ignore
+        static get datas() { return [...PerkData.data.all];}
+
+        /** @type {ShadowRoot} */ #shadowRoot = this.attachShadow({ mode: "closed" });
         /** @type {PerkData} */ perkData;
-
         instanceData = { count: 1 };
 
         constructor(...param) {
@@ -46,91 +45,61 @@ const Perk = (() => {
             }
         }
 
-        async #loadIconContent() {
-            const fragment = document.createDocumentFragment();
-            this.#shadowRoot.adoptedStyleSheets = this.publicStyleSheets.icon;
-            const div_background = document.createElement("div");
-            div_background.classList.add("background", this.perkData.type);
-            div_background.append(await this.perkData.getIcon());
-            fragment.append(div_background);
+        #loadIconContent() {
+            const fragment = new DocumentFragment();
+            fragment.append($html`<div class="background ${this.perkData.type}">${this.perkData.icon}</div>`);
             if (this.instanceData.count !== 1) {
-                const data_count = document.createElement("data");
+                const data_count = createElement("data");
                 data_count.append(this.instanceData.count.toString());
                 fragment.append(data_count);
             }
             this.#shadowRoot.append(fragment);
-            this.title = `${this.perkData.name}\n${this.perkData.id}\n${this.perkData.description}`;
+            this.title = `${this.perkData.name}\n${this.perkData.id}\n${this.perkData.desc}`;
         }
 
-        async #loadPanelContent() {
-            const fragment = document.createDocumentFragment();
-            this.#shadowRoot.adoptedStyleSheets = this.publicStyleSheets.panel;
+        #loadPanelContent() {
+            const template = createElement("template");
             const pd = this.perkData;
-            const p = document.createElement("p"); //描述
-            p.innerText = pd.description;
-            /*###############################################################################*/
-            const table = document.createElement("table");
-            const tbody = document.createElement("tbody");
-            table.append(tbody);
-            const loader = new Base.panelAttrLoader(tbody);
-            loader.default("maxStack", pd.maxStack); //堆叠极限
-            if (pd.maxInPool) loader.default("maxInPool", pd.maxInPool); //天赋池最大数量
-            /*###############################################################################*/
-            fragment.append(await pd.getIcon(), this.createPanelH1(pd.id, pd.name), p, table);
-            this.#shadowRoot.append(fragment);
+            //prettier-ignore
+            const loader = new Base.PanelAttrLoader({
+                maxStack:  { value: pd.maxStack                              }, //堆叠极限
+                maxInPool: { value: pd.maxInPool,  hidden:pd.maxInPool === 0 } //天赋池最大数量
+            });
+
+            template.content.append(pd.icon, this.createPanelH1(pd.id, pd.name), $html`<p>${pd.desc}</p>`, loader.container);
+            this.loadPanelContent([template]);
+        }
+
+        /** @param {Array<CSSStyleSheet>} [extraStyleSheets] 额外样式表 */
+        [$symbols.initStyle](extraStyleSheets = []) {
+            // extraStyleSheets.push(styleSheet.base);
+            //prettier-ignore
+            switch(this.displayMode) {
+                case "panel": extraStyleSheets.push(styleSheet.panel); break;
+                case "icon": extraStyleSheets.push(styleSheet.icon)
+            }
+            super[$symbols.initStyle](extraStyleSheets);
         }
 
         contentUpdate() {
             this.#shadowRoot.innerHTML = "";
-            this.#shadowRoot.adoptedStyleSheets = [];
-            const displayMode = this.getAttribute("display");
-            if (displayMode) this.#displayMode = displayMode;
-            else {
-                this.setAttribute("display", "icon");
-                this.#displayMode = "icon";
+            this.perkData = PerkData.query(this.perkId);
+            const perkCount = this.perkCount;
+            if (perkCount) this.instanceData.count = Number(perkCount);
+            this[$symbols.initStyle]();
+            //prettier-ignore
+            switch(this.displayMode) {
+                case "panel": this.#loadPanelContent(); break;
+                case "icon": this.#loadIconContent(); break;
+                default: throw new TypeError("不支持的显示模式");
             }
-            const perkId = this.getAttribute("perk.id");
-            if (perkId) this.perkData = PerkData.queryById(perkId);
-            else {
-                const perkName = this.getAttribute("perk.name");
-                if (perkName) this.perkData = PerkData.queryByName(perkName);
-                else {
-                    if (this.perkData === undefined) this.perkData = PerkData.$NULL;
-                }
-            }
-            const perkCount = this.getAttribute("perk.count");
-            if (perkCount !== null && perkCount !== "") {
-                this.instanceData.count = Number(perkCount);
-            }
-            if (this.#displayMode === "panel") this.#loadPanelContent();
-            else this.#loadIconContent();
         }
 
-        connectedCallback() {
-            this.contentUpdate();
-        }
+        //prettier-ignore
+        connectedCallback() { this.contentUpdate(); }
 
-        toString() {
-            return `[obejct HTMLNoitaPerkElement #${this.perkData.id}]`;
-        }
-
-        attributeChangedCallback(name, oldValue, newValue) {
-            if (oldValue === null) return;
-            else if (newValue === oldValue) return;
-            else {
-                switch (name) {
-                    case "perk.id":
-                    case "perk.name":
-                    case "perk.count":
-                        this.perkData = null;
-                        break;
-                    case "display":
-                        this.#displayMode = undefined;
-                }
-                this.contentUpdate();
-            }
-        }
+        //prettier-ignore
+        get [Symbol.toStringTag]() { return `HTMLNoitaPerkElement #${this.perkData.id}` }
     };
-    return Object.freeze(HTMLNoitaPerkElement);
 })();
-customElements.define("noita-perk", Perk);
+customElements.define("noita-perk", freeze(Perk));

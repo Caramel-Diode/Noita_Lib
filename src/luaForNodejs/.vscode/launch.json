@@ -1,0 +1,19 @@
+{
+    "version": "0.2.0",
+    "configurations": [
+        {
+            "name": "Build",
+            "request": "launch",
+            "runtimeArgs": ["run","build"],
+            "runtimeExecutable": "npm",
+            "type": "node"
+        },
+        {
+            "name": "Configure",
+            "request": "launch",
+            "runtimeArgs": ["run","configure"],
+            "runtimeExecutable": "npm",
+            "type": "node"
+        }
+    ]
+}

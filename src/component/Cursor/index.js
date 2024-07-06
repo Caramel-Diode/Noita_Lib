@@ -1,57 +1,15 @@
-const Cursor = (() => {
-    /** @type {Cursor} */ let instance = null;
-    const HTMLNoitaCursorElement = class extends HTMLElement {
-        #shadowRoot = this.attachShadow({ mode: "closed" });
-        constructor() {
-            super();
+const cursor = (() => {
+    const svg = `<svg xmlns="http://www.w3.org/2000/svg" height="39" width="39"><path d="M17.5 2.5h4v13h-4zm0 21h4v13h-4zm-15-6h13v4h-13zm21 0h13v4h-13z" fill="#fff" stroke="#000"/></svg>`;
+    const svgUrl = URL.createObjectURL(new Blob([svg], { type: "image/svg+xml" }));
+    const styleSheet = new CSSStyleSheet();
+    styleSheet.replaceSync(`*{cursor:url("${svgUrl}") 19 19,default !important}`);
+    document.addEventListener("DOMContentLoaded", () => (document.adoptedStyleSheets = [...document.adoptedStyleSheets, styleSheet]));
+    return Object.freeze({
+        get disable() {
+            return styleSheet.disabled;
+        },
+        set disable(value) {
+            styleSheet.disabled = value;
         }
-
-        connectedCallback() {
-            document.body.style.cursor = "none";
-            this.#shadowRoot.adoptedStyleSheets = [gss(embed(`#base.css`))];
-            document.addEventListener("mousemove", event => {
-                const targetStyle = getComputedStyle(event.target);
-                const cursorStyle = targetStyle.cursor;
-                if (cursorStyle !== "none") {
-                    event.target.style.setProperty("--noita-cursor", cursorStyle);
-                    event.target.style.setProperty("cursor", "none");
-                } else {
-                    this.className = "";
-                }
-                const noitaCursorStyle = targetStyle.getPropertyValue("--noita-cursor");
-                if (noitaCursorStyle) {
-                    this.className = noitaCursorStyle;
-                }
-                this.style.left = `${event.clientX}px`;
-                this.style.top = `${event.clientY}px`;
-            });
-        }
-
-        /** @type {Array<String>} 属性变化监听列表 */
-        static observedAttributes = [];
-
-        /**
-         * @param {String} name 更新的属性名
-         * @param {String} oldValue 旧值
-         * @param {String} newValue 新值
-         */
-        attributeChangedCallback(name, oldValue, newValue) {}
-
-        static add() {
-            if (instance) console.warn("你为什么两次鼠标指针捏?");
-            else if (matchMedia("(pointer:fine)").matches) {
-                // 检测设备是否使用鼠标
-                instance = new this();
-                document.body.append(instance);
-            }
-        }
-        static remove() {
-            if (instance) {
-                instance.remove();
-                instance = null;
-            } else console.warn("不存在鼠标指针");
-        }
-    };
-    return Object.freeze(HTMLNoitaCursorElement);
+    });
 })();
-customElements.define("noita-cursor", Cursor);

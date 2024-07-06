@@ -1,0 +1,6 @@
+id,name,desc,type,maxStack,maxInPool,gameEffect,usableByEnemies,nameKey,descKey,icon,//对于精粹需要手动填充数据
+ESSENCE_AIR,气之精粹,你的存在影响着周围的空气！,3,128,0,,0,$item_essence_air,$itemdesc_essence_air,data/items_gfx/essences/essence_air.png
+ESSENCE_ALCOHOL,酒之精粹,这可不是个好点子...,3,128,0,,0,$item_essence_alcohol,$itemdesc_essence_alcohol,data/items_gfx/essences/essence_alcohol.png
+ESSENCE_FIRE,火之精粹,你的全身都在震荡！,3,128,0,,0,$item_essence_fire,$itemdesc_essence_fire,data/items_gfx/essences/essence_fire.png
+ESSENCE_LASER,土之精粹,你的存在散发出破坏之光！,3,128,0,,0,$item_essence_laser,$itemdesc_essence_laser,data/items_gfx/essences/essence_laser.png
+ESSENCE_WATER,水之精粹,大地在你周围流动！,3,128,0,,0,$item_essence_water,$itemdesc_essence_water,data/items_gfx/essences/essence_water.png

@@ -125,13 +125,13 @@ import noitaLib from "noitaLib.js";
 入口常量: `noitaLib`
 ```js
 
-noitaLib.entity.HTMLElement // HTMLElement 构造器 <noita-entity>
+noitaLib.entity // 构造器 <noita-entity>
 noitaLib.entity.queryById("BOMB") //DB.entity {id: 'BOMB', name: '炸弹'... }
-noitaLib.spell.HTMLElement // HTMLElement 构造器 <noita-spell>
+noitaLib.spell // 构造器 <noita-spell>
 noitaLib.spell.queryByName("炸弹") //DB.spell {id: "BOMB", name: "炸弹", 
 noitaLib.spell.queryById("BOMB") //DB.spell {id: "BOMB", name: "炸弹", description: "召唤一枚对地形破坏力极大的炸弹" ...}
-noitaLib.wand.HTMLElement // HTMLElement 构造器 <noita-wand>
-noitaLib.perk.HTMLElement // HTMLElement 构造器 <noita-perk>
+noitaLib.wand // 构造器 <noita-wand>
+noitaLib.perk // 构造器 <noita-perk>
 noitaLib.perk.queryByName("暴击率 +") // DB.perk {id: 'CRITICAL_HIT', name: '暴击率 +', description: '提高你所有法术的暴击率' ...}
 noitaLib.perk.queryById("CRITICAL_HIT") // DB.perk {id: 'CRITICAL_HIT', name: '暴击率 +', description: '提高你所有法术的暴击率' ...}
 

@@ -1,20 +1,25 @@
 const Base = (() => {
-    embed(`#db.js`);
-    const styleSheet_base = gss(embed(`#base.css`));
+    const styleSheet = {
+        base: gss(embed(`#base.css`)),
+        icon: gss(embed(`#icon.css`)),
+        panel: gss(embed(`#panel.css`))
+    };
 
-    /** @type {Listeners} */ const panelTitleSwitch = (() => {
+    embed(`#db.js`);
+
+    PanelAttrInfo.Icon.urls.then(urls => urls.forEach(url => styleSheet.panel.insertRule(`[src="${url}"]{mask:url("${url}") center/100% 100%}`)));
+
+    embed(`#input-range.js`);
+
+    const panelTitleSwitch = (() => {
         const main = event => {
             /** @type {HTMLHeadingElement} */
             const h1 = event.target;
             const id = h1.getAttribute("switch.id");
             const name = h1.getAttribute("switch.name");
-            if (h1.innerText === id) {
-                h1.innerText = name;
-            } else if (h1.innerText === name) {
-                h1.innerText = id;
-            } else {
-                console.error("内容意外修改");
-            }
+            if (h1.innerText === id) h1.innerText = name;
+            else if (h1.innerText === name) h1.innerText = id;
+            else console.error("内容意外修改");
         };
         return {
             /**
@@ -29,26 +34,72 @@ const Base = (() => {
             keydown: event => {
                 if (event.key === "Enter") main(event);
                 else if (event.key === "Escape") event.target.blur();
+                else if (event.ctrlKey || event.metaKey) {
+                    if (event.key.toLocaleUpperCase() === "C") {
+                        navigator.clipboard.writeText(event.currentTarget.innerText);
+                    }
+                } else if (event.key === "ArrowUp") {
+                    /** @type {ShadowRoot} */
+                    const shadowRoot = event.currentTarget.getRootNode();
+                    shadowRoot.querySelector("li.selected").focus();
+                }
             }
         };
     })();
 
-    /**
-     * @param {DisplayMode} display 展示模式
-     */
-    const HTMLNoitaElement = class extends HTMLElement {
-        static observedAttributes = Object.freeze(["display"]);
+    const panelTabsSwitch = (() => {
+        /**
+         * ### 左右方向键导航
+         * @param {HTMLLIElement} element
+         * @param {Number} offset
+         */
+        const navigate = (element, offset) => {
+            /** @type {NodeListOf<HTMLLIElement>} */
+            const elements = element.parentElement.childNodes;
+            for (let i = 0; i < elements.length; i++) {
+                if (elements[i] === element) return elements[i + offset]?.focus();
+            }
+        };
+        /** @param {Event} event */
+        const main = event => {
+            /** @type {HTMLLIElement} */ const li = event.currentTarget;
+            /** @type {HTMLElement} */ const targetMain = li.content;
+            if (targetMain.isConnected) return; // 判断当前main是否需要改变
+            /** @type {ShadowRoot} */ const shadowRoot = li.getRootNode();
+            for (const e of li.parentElement.childNodes) e.classList.remove("selected");
+            li.classList.add("selected");
+            shadowRoot.querySelector("main")?.remove();
+            shadowRoot.append(targetMain);
+        };
+        return {
+            /**
+             * 用于鼠标触发 `左键`
+             * @param {MouseEvent} event
+             */
+            click: event => main(event),
+            /**
+             * 用于键盘触发 `Enter`
+             * @param {KeyboardEvent} event
+             */
+            keydown: event => {
+                if (event.key === "Enter") main(event);
+                else if (event.key === "Escape") event.target.blur();
+                else if (event.key === "ArrowLeft") navigate(event.currentTarget, -1);
+                else if (event.key === "ArrowRight") navigate(event.currentTarget, 1);
+                else if (event.key === "ArrowDown") {
+                    /** @type {ShadowRoot} */
+                    const shadowRoot = event.currentTarget.getRootNode();
+                    shadowRoot.querySelector("h1").focus();
+                }
+            }
+        };
+    })();
 
-        static {
-            //初始化原型上的属性 但是这样似乎无法让vscode进行智能补全
-            /** @type {PublicStyleSheets} */
-            this.prototype.publicStyleSheets = Object.freeze({
-                base: [styleSheet_base],
-                icon: [styleSheet_base, gss(embed(`#icon.css`))],
-                panel: [styleSheet_base, gss(embed(`#panel.css`))]
-            });
-        }
-
+    return class HTMLNoitaElement extends $class(HTMLElement, {
+        /** @type {$ValueOption<"panel">} */
+        displayMode: { name: "display", $default: "panel" }
+    }) {
+        /** @type {ShadowRoot} */ #shadowRoot;
         /**
          * 创建面板 **`<h1>`** 标题
          * @param {String} id
@@ -56,37 +107,35 @@ const Base = (() => {
          * @returns {HTMLHeadingElement} `<h1>` 元素
          */
         createPanelH1(id, name) {
-            const h1 = document.createElement("h1");
-            h1.setAttribute("switch.id", id);
-            h1.setAttribute("switch.name", name);
-            h1.innerText = name;
+            const h1 = $html`<h1 switch.id="${id}" switch.name="${name}">${name}</h1>`;
             util.addFeatureTo(h1, panelTitleSwitch);
             return h1;
         }
 
+        static PanelAttrInfo = PanelAttrInfo;
+
         /** 面板属性加载器 */
-        static panelAttrLoader = (() => {
-            const fts = util.frameToSecond;
-            const aps = util.addPlusSign;
-            const ged = util.getExactDegree;
+        static PanelAttrLoader = (() => {
+            const roundTo = math_.roundTo;
+
+            // const ged = math_.getExactDegree;
             const addFeatureTo = util.addFeatureTo;
             /** @type {Listeners} */
             const panelInfoSwitch = (() => {
+                /** @param {KeyboardEvent|MouseEvent} event */
                 const main = event => {
-                    const forceToHidden = event.target.classList.contains("selected"); // 再次点击已选中的target时强制隐藏
-                    const relatedSectionElements = event.target.relatedSectionElements;
-                    const relatedLiElements = event.target.relatedLiElements;
-                    for (let element of relatedSectionElements) {
-                        element.hidden = element.getAttribute("related-id") !== event.target.getAttribute("related-id") || forceToHidden;
+                    /** @type {HTMLLIElement & {relatedSectionElements: Array<HTMLElement>}} */
+                    const target = event.currentTarget;
+                    const selectedLi = target.parentElement.querySelector(".selected");
+                    const forceToHidden = selectedLi === target; // 再次点击已选中的target时强制隐藏
+                    if (forceToHidden) target.toggleAttribute("class");
+                    else {
+                        if (selectedLi) selectedLi.toggleAttribute("class");
+                        target.className = "selected";
                     }
-                    for (let element of relatedLiElements) {
-                        element.classList.replace("selected", "unselected");
-                        // element.setAttribute("aria-selected", "false");// 无障碍标注
-                    }
-                    if (!forceToHidden) {
-                        event.target.classList.replace("unselected", "selected");
-                        // event.target.setAttribute("aria-selected", "true");// 无障碍标注
-                    }
+                    //prettier-ignore
+                    for (let element of target.relatedSectionElements)
+                        element.hidden = element.getAttribute("related-id") !== target.getAttribute("related-id") || forceToHidden;
                 };
                 return {
                     click: event => main(event),
@@ -126,342 +175,315 @@ const Base = (() => {
                  * @param {HTMLElement} element
                  */
                 const main = element => {
-                    if (element instanceof HTMLTableCellElement) element = element.parentElement; //目标元素为<tr> 而不是<th>或<td>
                     if (element.getAttribute("display") === "false") {
                         element.innerHTML = "";
-                        element.append(element.th_unlock, element.td_unlock);
+
+                        element.append(element.th1_unlock, element.th2_unlock, element.td_unlock);
                         element.setAttribute("display", "true");
                         element.title = "点击隐藏解锁条件";
                     } else {
                         element.innerHTML = "";
-                        element.append(element.th_lock, element.td_lock);
+                        element.append(element.th1_lock, element.th2_lock, element.td_lock);
                         element.setAttribute("display", "false");
                         element.title = "点击查看解锁条件";
                     }
                 };
                 return {
-                    click: event => main(event.target),
+                    click: event => main(event.currentTarget),
                     keydown: event => {
-                        if (event.key === "Enter") main(event.target);
-                        else if (event.key === "Escape") event.target.blur();
+                        if (event.key === "Enter") main(event.currentTarget);
+                        else if (event.key === "Escape") event.currentTarget.blur();
                     }
                 };
             })();
-            return class {
-                /** @type {Node} 目标容器 */ #container;
-                constructor(target) {
-                    this.#container = target;
+            return class PanelAttrLoader {
+                /**
+                 * @type {HTMLTableSectionElement}
+                 * #### tableBody容器
+                 * *不对外开放*
+                 * ```html
+                 * <tbody> ... </tbody>
+                 * ```
+                 */
+                #tbody = createElement("tbody");
+                /**
+                 * @type {HTMLTableElement} 表格容器
+                 */
+                container = createElement("table");
+                /**
+                 * @param {HTMLTableSectionElement} target
+                 * @param {Array<{type:String,value:*, needSign:Boolean?,hidden:Boolean?}>} datas
+                 */
+                constructor(datas) {
+                    if (datas) this.load(datas);
+                    this.container.append(this.#tbody);
+                    this.container.className = "attrs";
                 }
+                /** @param {{[key: string]: {value:*,needSign:Boolean?,hidden:Boolean?}}} datas */
+                load(datas) {
+                    for (const prop in datas) {
+                        let { value, hidden, type = "", pos } = datas[prop];
+                        if (hidden) continue;
+                        /** @type {HTMLTableRowElement} */
+                        let target = null;
+                        //prettier-ignore
+                        switch (prop) {
+                            case "fireRateWait": //====== 施放延迟
+                            case "reloadTime": //======== 充能时间
+                                target = this.castCD(prop, value,type);
+                                break;
+                            case "lifetime": //========== 存在时间
+                                target = this.lifetime(value, type);
+                                break;
+                            case "manaChargeSpeed": //=== 法力充能速度
+                                target = this.manaChargeSpeed(value);
+                                break;
+                            case "spreadDegrees": //===== 散射角度
+                                target = this.spreadDegrees(value, type);
+                                break;
+                            case "speed": //============= 投射物速度
+                            case "speedMultiplier": //=== 投射物速度倍数
+                                target = this.#tr(prop,type + value);
+                                break;
+                            case "damageCriticalChance": // 暴击率
+                                target = this.#tr("damageCriticalChance", type + value + "%");
+                                break;
+                            case "maxUse": //============== 最大使用次数
+                            case "remainingUse": //======== 剩余使用次数
+                                target = this.timesUsed(prop, value);
+                                break;
+                            case "draw": //================ 抽取数
+                                target = this.draw(value);
+                                break;
+                            case "manaMax": //============= 最大法力
+                            case "capacity": //============ 容量
+                                target = this.#tr(prop, value.toString());
+                                break;
+                            /*===============*\
+                                伤害/承伤
+                            \*===============*/
+                            case "projectileDamage": case "projectileDamageMultiplier":
+                            case "fireDamage": case "fireDamageMultiplier":
+                            case "iceDamage": case "iceDamageMultiplier":
+                            case "explosionDamage": case "explosionDamageMultiplier":
+                            case "sliceDamage": case "sliceDamageMultiplier":
+                            case "drillDamage": case "drillDamageMultiplier":
+                            case "electricityDamage": case "electricityDamageMultiplier":
+                            case "healingDamage": case "healingDamageMultiplier":
+                            case "meleeDamage": case "meleeDamageMultiplier":
+                            case "curseDamage": case "curseDamageMultiplier":
+                            case "holyDamage": case "holyDamageMultiplier":
+                            case "overeatingDamage": case "overeatingDamageMultiplier":
+                            case "physicsHitDamage": case "physicsHitDamageMultiplier":
+                            case "poisonDamage": case "poisonDamageMultiplier":
+                            case "radioactiveDamage": case "radioactiveDamageMultiplier":
+                                target = this.#tr(prop, type + value);
+                                break;
+                            
+                            case "unlock":
+                                target = this.unlock(value);
+                                break;
+                            case "projectilesProvided":
+                            case "projectilesUsed":
+                                target = this.offerEntity(prop, value);
+                                break;
+                            case "bloodMaterial":
+                                target = this.bloodMaterial(value.hurt, value.die);
+                                break;
+                            default:
+                                target = this.default(prop,value,type);
+                        }
+                        if (pos === "before") {
+                            target.children[1].title = "前置修正";
+                            target.children[1].classList.add("before");
+                        } else if (pos === "after") {
+                            target.children[1].title = "后置修正";
+                            target.children[1].classList.add("after");
+                        }
+                        this.#tbody.append(target);
+                    }
+                }
+
                 /**
                  * 加载属性表行
                  * @param {PanelAttrIDEnum} type
                  * @param {String|Node|{second:Number,frame:Number}} content
+                 * @returns {HTMLTableRowElement}
                  */
-                async #loadTr(type, content) {
-                    const tr = document.createElement("tr");
-                    const th = document.createElement("th");
-                    const td = document.createElement("td");
-                    let attrInfo = PanelAttrInfo.query(type);
-                    th.append(await attrInfo.getIcon(), attrInfo.name);
+                #tr(type, content) {
+                    let inner = "",
+                        attrs = "",
+                        listeners;
                     const contentType = typeof content;
-                    if (contentType === "string") {
-                        td.append(content);
-                    } else if (contentType === "object") {
-                        if (content instanceof Node) {
-                            // html节点 直接插入
-                            td.append(content);
-                        } else {
+                    if (contentType === "string" || contentType === "number") inner = content;
+                    else if (contentType === "object") {
+                        if (content instanceof Node) inner = content; // html节点 直接插入
+                        else {
                             // 单位换算信息 默认显示`秒`
-                            td.setAttribute("display", "SECOND");
-                            td.setAttribute("value.second", content.second);
-                            td.setAttribute("value.frame", content.frame);
-                            td.append(content.second);
-                            addFeatureTo(td, unitConvert);
+                            attrs = `display="SECOND" value.second="${content.second}" value.frame="${content.frame}"`;
+                            inner = content.second;
+                            listeners = unitConvert;
                         }
                     }
-                    tr.append(th, td);
-                    this.#container.append(tr);
+                    const { icon, name, className = "" } = PanelAttrInfo.query(type);
+                    return $html`<tr><th>${icon}</th><th>${name}</th><td class="${className}" ${attrs} on-event=${listeners}>${inner}</td></tr>`;
                 }
+
                 /**
                  * 加载`施放延迟`|`充能时间`面板属性
-                 * @param {"fireRateWait"|"lifetime"} type CD类型
-                 * @param {NumRangeOrConstant} value
-                 * @param {Boolean} [needSign]
+                 * @param {"fireRateWait"|"reloadTime"} type CD类型
+                 * @param {Number|RangeValue} value
+                 * @param {Boolean|String} [sign]
                  */
-                castCD(type, value, needSign = false) {
+                castCD(type, value, sign) {
                     let s, f;
                     if (typeof value === "number") {
-                        s = fts(value);
-                        f = value;
-                        if (needSign) {
-                            s = aps(s);
-                            f = aps(f);
-                        }
-                        s = `${s}s`;
-                        f = `${f}f`;
+                        const time = new GameTime(value);
+                        s = sign + time.s;
+                        f = sign + time.f;
                     } else if (typeof value === "object") {
-                        if (value.min === -Infinity) {
-                            if (needSign) {
-                                s = `≤ ${aps(fts(value.max))}s`;
-                                f = `≤ ${aps(value.max)}f`;
-                            } else {
-                                s = `≤ ${fts(value.max)}s`;
-                                f = `≤ ${value.max}f`;
-                            }
-                        } else if (value.max === Infinity) {
-                            if (needSign) {
-                                s = `≥ ${aps(fts(value.min))}s`;
-                                f = `≥ ${aps(value.min)}f`;
-                            } else {
-                                s = `≥ ${fts(value.min)}s`;
-                                f = `≥ ${value.min}f`;
-                            }
-                        } else if (needSign) {
-                            s = `${aps(fts(value.min))}s ~ ${aps(fts(value.max))}s`;
-                            f = `${aps(value.min)}f ~ ${aps(value.max)}f`;
-                        } else {
-                            convertData.second = `${fts(value.min)}s ~ ${fts(value.max)}s`;
-                            f = `${value.min}f ~ ${value.max}f`;
-                        }
+                        // 魔杖范围值
+                        s = value.withChange(GameTime.toS).withChange(roundTo).toString("s");
+                        f = value.toString("f");
                     }
-                    this.#loadTr(type, { second: s, frame: f });
+                    return this.#tr(type, { second: s, frame: f });
                 }
                 /**
                  * 加载`存在时间`面板属性
                  * @param {Number|{base:Number,fluctuation:Number}} value
-                 * @param {Boolean} [needSign]
+                 * @param {Boolean|String} [sign]
                  */
-                lifetime(value, needSign = false) {
+                lifetime(value, sign) {
                     let s, f;
                     if (typeof value === "number") {
-                        if (needSign) {
-                            s = `${aps(fts(value))}s`;
-                            f = `${aps(value)}f`;
-                        } else {
-                            s = `${fts(value)}s`;
-                            f = `${value}f`;
-                        }
+                        const time = new GameTime(value.base);
+                        s = sign + time.s;
+                        f = sign + time.f;
                     } else if (value.fluctuation === 0) {
-                        if (needSign) {
-                            s = `${aps(fts(value.base))}s`;
-                            f = `${aps(value.base)}f`;
-                        } else {
-                            s = `${fts(value.base)}s`;
-                            f = `${value.base}f`;
-                        }
-                        if (value.base === -1) {
-                            s = `永久`;
-                            f = `-1`;
-                        }
+                        // 实体存在时间 范围显示
+                        const time = new GameTime(value.base);
+                        s = time.s;
+                        f = time.f;
+                        if (value.base === -1) s = `永久`;
                     } else {
-                        const min = value.base - value.fluctuation;
-                        const max = value.base + value.fluctuation;
-                        if (needSign) {
-                            s = `${aps(fts(min))}s ~ ${aps(fts(max))}s`;
-                            f = `${aps(min)}f ~ ${aps(max)}f`;
-                        } else {
-                            s = `${fts(min)}s ~ ${fts(max)}s`;
-                            f = `${min}f ~ ${max}f`;
-                        }
+                        const min = new GameTime(value.base - value.fluctuation);
+                        const max = new GameTime(value.base + value.fluctuation);
+                        s = min.s + " ~ " + max.s;
+                        f = min.f + " ~ " + max.f;
                     }
-                    this.#loadTr("lifetime", { second: s, frame: f });
+                    return this.#tr("lifetime", { second: s, frame: f });
                 }
                 /**
                  * 加载`法力恢复速度`面板属性
-                 * @param {NumRangeOrConstant} value
+                 * @param {Number|RangeValue} value
                  */
                 manaChargeSpeed(value) {
                     let s, f;
                     if (typeof value === "number") {
-                        s = `${value}/s`;
-                        f = `${fts(value)}/f`;
+                        s = value + "/s";
+                        f = roundTo(GameTime.toS(value)) + "/f";
                     } else {
-                        if (value.min === -Infinity) {
-                            s = `≤ ${fts(value.max)}/s`;
-                            f = `≤ ${value.max}/f`;
-                        } else if (value.max === Infinity) {
-                            s = `≥ ${fts(value.min)}/s`;
-                            f = `≥ ${value.min}/f`;
-                        } else {
-                            s = `${fts(value.min)}/s ~ ${fts(value.max)}/s`;
-                            f = `${value.min}/f ~ ${value.max}/f`;
-                        }
+                        s = value.toString("/s");
+                        f = value.withChange(GameTime.toS).withChange(roundTo).toString("/f");
                     }
-                    this.#loadTr("manaChargeSpeed", { second: s, frame: f });
+                    return this.#tr("manaChargeSpeed", { second: s, frame: f });
                 }
                 /**
                  * 加载`散射角度`面板属性
-                 * @param {NumRangeOrConstant} value
-                 * @param {Boolean} [needSign]
+                 * @param {Number|RangeValue} value
+                 * @param {Boolean|String} [sign]
                  */
-                spreadDegrees(value, needSign = false) {
+                spreadDegrees(value, sign) {
                     let content;
-                    if (typeof value === "number") content = ged(value, needSign);
-                    else if (typeof value === "object") {
-                        if (value.min === -Infinity) content = `≤ ${ged(value.max, needSign)}`;
-                        else if (value.max === Infinity) content = `≥ ${ged(value.min, needSign)}`;
-                        else content = `${ged(value.min, needSign)} ~ ${ged(value.max, needSign)}`;
-                    }
-                    this.#loadTr("spreadDegrees", content);
+                    if (typeof value === "number") content = sign + roundTo(value) + "°";
+                    else content = value.withChange(roundTo).toString("°");
+                    return this.#tr("spreadDegrees", content);
                 }
-                /**
-                 * 加载`投射物速度`|`投射物速度倍数`面板属性
-                 * @param {"speed"|"speedMultiplier"} type
-                 * @param {NumRangeOrConstant} value
-                 * @param {Boolean} [needSign]
-                 */
-                speed(type, value, needSign = false) {
-                    let content;
-                    if (typeof value === "object") {
-                        if (value.min === -Infinity) content = `≤ ${value.max}`;
-                        else if (value.max === Infinity) content = `≥ ${value.min}`;
-                        else if (value.min !== value.max) content = `${value.min} ~ ${value.max}`;
-                        else content = `${value.min}`;
-                    } else content = `${value}`;
 
-                    if (needSign) content = `× ${content}`;
-                    this.#loadTr(type, content);
-                }
-                /**
-                 * 加载`暴击率`面板属性
-                 * @param {Number} value
-                 */
-                damageCriticalChance(value) {
-                    this.#loadTr("damageCriticalChance", `${aps(value)}%`);
-                }
                 /**
                  * 加载`最大使用次数`|`剩余使用次数`面板属性
                  * @param {"maxUse"|"remainingUse"} type
-                 * @param {{max:Number,remaining:Number?,neverUnlimited:Boolean}} value
+                 * @param {{max:Number,remaining:Number?,unlimited:Boolean}} value
                  */
                 timesUsed(type, value) {
-                    const content = document.createElement("data");
-                    if (value.neverUnlimited) {
-                        content.classList.add("never-unlimited");
-                        content.title = "不可无限化";
-                    } else {
+                    const content = createElement("data");
+                    if (value.unlimited) {
                         content.classList.add("unlimited");
                         content.title = "可无限化";
+                    } else {
+                        content.classList.add("never-unlimited");
+                        content.title = "不可无限化";
                     }
                     if (type === "remainingUse") {
                         content.append(`${value.remaining}/`);
                     }
                     content.append(`${value.max}`);
-                    this.#loadTr(type, content);
+                    return this.#tr(type, content);
                 }
+
                 /**
-                 * 加载`抽取数`面板属性
-                 * @param {Number|{min:Number?,max:Number?,common:Number?,hit:Number?,timer:{count:Number,delay:Number}?,death:Number?}} [value]
+                 * @param {Number|SpellData.ProjectileData&RangeValue} [value]
                  */
-                async draw(value = 1) {
-                    /** @type {DocumentFragment|String} */
-                    let content;
-                    if (typeof value === "number") content = `${value}`; //法杖固定抽取数
-                    else if (typeof value === "object") {
-                        if (value.min !== undefined) content = `${value.min} ~ ${value.max}`; //法杖不定数量抽取
-                        else {
-                            //法术多类型抽取
-                            const ul = document.createElement("ul");
-                            // 普通抽取
-                            if (value.common) {
-                                const li = document.createElement("li");
-                                li.append(await PanelAttrInfo.query("draw_common").getIcon(), value.common);
-                                ul.append(li);
-                            }
-                            // 碰撞抽取
-                            if (value.hit) {
-                                const li = document.createElement("li");
-                                li.append(await PanelAttrInfo.query("draw_hit").getIcon(), value.hit);
-                                li.title = "碰撞触发抽取";
-                                ul.append(li);
-                            }
-                            // 定时抽取
-                            if (value.timer.count) {
-                                const li = document.createElement("li");
-                                li.append(await PanelAttrInfo.query("draw_timer").getIcon(), `${value.timer.count} (${value.timer.delay}f)`);
-                                li.title = `定时触发抽取\n延迟:${value.timer.delay}f`;
-                                ul.append(li);
-                            }
-                            // 失效触发
-                            if (value.death) {
-                                const li = document.createElement("li");
-                                li.append(await PanelAttrInfo.query("draw_death").getIcon(), value.death);
-                                li.title = "失效触发抽取";
-                                ul.append(li);
-                            }
-                            content = ul;
-                        }
-                    }
-                    this.#loadTr("draw", content);
+                draw(value = 1) {
+                    if (typeof value === "number") return this.#tr("draw", `${value}`);
+                    else if (value.drawCount_Death) return this.#tr("draw_death", `${value.drawCount_Death}`);
+                    else if (value.drawCount_Hit) return this.#tr("draw_hit", `${value.drawCount_Hit}`);
+                    else if (value.drawCount_Timer) {
+                        const time = new GameTime(value.drawDelay_Timer);
+                        return this.#tr("draw_timer", {
+                            second: `${value.drawCount_Timer} (${time.s})`,
+                            frame: `${value.drawCount_Timer} (${time.f})`
+                        });
+                    } else if (value.min) return this.#tr("draw", value.toString()); //魔杖不定抽取
                 }
-                /**
-                 * 加载`最大法力值`|`容量`面板属性
-                 * @param {"manaMax"|"capacity"} type
-                 * @param {NumRangeOrConstant} value
-                 */
-                manaMaxOrCapacity(type, value) {
-                    let content;
-                    if (typeof value === "object") {
-                        if (value.min === -Infinity) content = `≤ ${value.max}`;
-                        else if (value.max === Infinity) content = `≥ ${value.min}`;
-                        else content = `${value.min} ~ ${value.max}`;
-                    } else content = `${value}`;
-                    this.#loadTr(type, content);
-                }
-                /**
-                 * 加载`伤害`|`承伤`面板属性
-                 * @param {PanelAttrID_damageEnum} type
-                 * @param {Number} value
-                 * @param {Boolean} [needSign]
-                 */
-                damage(type, value, needSign = false) {
-                    let content;
-                    if (needSign) content = `${aps(value)}`; // 伤害修正
-                    else content = `${value}`; //投射物本体伤害/承伤系数
-                    this.#loadTr(type, content);
-                }
+
                 /**
                  * 加载`生成锁 ⇌ 解锁条件`
                  * @param {String} flag 解锁条件
                  */
-                async unlock(flag) {
-                    const tr = document.createElement("tr");
+                unlock(flag) {
+                    const tr = createElement("tr");
                     const attrInfo_lock = PanelAttrInfo.query("lock");
                     const attrInfo_unlock = PanelAttrInfo.query("unlock");
 
-                    tr.th_lock = document.createElement("th");
-                    tr.th_lock.append(await attrInfo_lock.getIcon(), attrInfo_lock.name);
-                    tr.td_lock = document.createElement("td");
-                    tr.td_lock.innerText = " * ".repeat(flag.length);
+                    tr.th1_lock = createElement("th");
+                    tr.th2_lock = createElement("th");
+                    tr.th1_lock.append(attrInfo_lock.icon);
+                    tr.th2_lock.append(attrInfo_lock.name);
+                    tr.td_lock = createElement("td");
+                    tr.td_lock.innerText = "* ".repeat(Math.min(flag.length, 5));
 
-                    tr.th_unlock = document.createElement("th");
-                    tr.th_unlock.append(await attrInfo_unlock.getIcon(), attrInfo_unlock.name);
-                    tr.td_unlock = document.createElement("td");
+                    tr.th1_unlock = createElement("th");
+                    tr.th2_unlock = createElement("th");
+                    tr.th1_unlock.append(attrInfo_unlock.icon);
+                    tr.th2_unlock.append(attrInfo_unlock.name);
+                    tr.td_unlock = createElement("td");
                     tr.td_unlock.innerText = flag;
 
                     tr.setAttribute("display", "false");
                     addFeatureTo(tr, showOrHideunlockFlag);
-                    tr.append(tr.th_lock, tr.td_lock);
+                    tr.append(tr.th1_lock, tr.th2_lock, tr.td_lock);
                     tr.title = "点击查看解锁条件";
-                    this.#container.append(tr);
+
+                    return tr;
                 }
+
                 /**
                  * 加载`提供投射物`|`使用投射物`属性
                  * @param {"projectilesProvided"|"projectilesUsed"} type
-                 * @param {Array<Node>} value
+                 * @param {Array<HTMLLIElement>} value
                  */
                 offerEntity(type, value) {
-                    const ul = document.createElement("ul");
+                    const menu = $html`<menu class=entities-tablist role=tablist></menu>`; //无障碍: 选项卡列表
                     for (let i = 0; i < value.length; i++) {
                         const li = value[i];
+                        li.role = "tab"; //无障碍: 选项卡
                         addFeatureTo(li, panelInfoSwitch);
-                        li.setAttribute("roles", "tab");
-                        ul.append(li);
+                        menu.append(li);
                     }
+                    // console.log(value[0]);
                     value[0].click(); //提供的数据会全部展示 此处点击以实现仅显示首个投射物信息
-                    ul.className = "entities-tabpanel";
-                    ul.setAttribute("roles", "tablist"); // 无障碍标注
-                    this.#loadTr(type, ul);
+                    return this.#tr(type, menu);
                 }
                 /**
                  * 加载`血液材料(尸体材料)`属性
@@ -471,42 +493,92 @@ const Base = (() => {
                 bloodMaterial(value_hurt, value_die) {
                     let content = value_hurt;
                     if (value_die !== value_hurt && value_die !== "") content += ` ${value_die}`;
-                    this.#loadTr("bloodMaterial", content);
+                    return this.#tr("bloodMaterial", content);
                 }
-                /**
-                 * 加载自定义面板属性 内容自定义
-                 * @param {PanelAttrIDEnum} type
-                 * @param {Array<Node>} value
-                 */
-                custom(type, value) {
-                    const content = document.createDocumentFragment();
-                    content.append(...value);
-                    this.#loadTr(type, content);
-                }
+
                 /**
                  * 加载面板属性(无特殊处理)
                  * @param {PanelAttrIDEnum} type
                  * @param {Number|String} value
-                 * @param {Boolean} needSign
+                 * @param {Boolean|String} sign
                  */
-                default(type, value, needSign = false) {
+                default(type, value, sign) {
                     let content;
-                    if (needSign) content = `${aps(value)}`;
-                    else content = `${value}`;
-                    this.#loadTr(type, content);
+                    if (value instanceof Node) content = value;
+                    else content = sign + value;
+                    return this.#tr(type, content);
                 }
             };
         })();
 
-        /** @type {DisplayMode} */ #displayMode = undefined;
-        constructor(display) {
+        constructor() {
             super();
-            if (display) this.#displayMode = display;
         }
 
-        toString() {
-            return "[Obejct HTMLNoitaElement]";
+        /** @param {ShadowRootInit} init  */
+        attachShadow(init) {
+            return (this.#shadowRoot = super.attachShadow(init));
+        }
+
+        /** @param {Array<CSSStyleSheet>} [extraStyleSheets] 额外样式表 */
+        [$symbols.initStyle](extraStyleSheets = []) {
+            extraStyleSheets.push(styleSheet.base);
+            //prettier-ignore
+            switch(this.displayMode) {
+                case "icon": extraStyleSheets.push(styleSheet.icon); break;
+                case "panel": extraStyleSheets.push(styleSheet.panel)
+            }
+            this.#shadowRoot.adoptedStyleSheets = extraStyleSheets;
+        }
+
+        /** 内容更新函数 子类需要重写此函数以供属性变化时自动更新内容 */
+        contentUpdate() {
+            this[$symbols.initStyle]();
+            this.loadPanelContent();
+        }
+
+        /** 加载 template 内容 (多选项卡) */
+        async loadPanelContent(templates) {
+            if (templates === undefined) {
+                // 从html中解析内容
+                await DOMContentLoaded;
+                templates = [...this.querySelectorAll("template")];
+                for (let i = 0; i < templates.length; i++) templates[i].remove();
+            }
+            if (templates.length) {
+                const fragment = new DocumentFragment();
+                const lis = [];
+                for (let i = 0; i < templates.length; i++) {
+                    const template = templates[i];
+                    const li = $html`<li role=tab tabindex=0 on-event=${panelTabsSwitch /*增加切换选项卡对应内容功能*/}><span>${template.title /*title属性将作为选项卡标题*/}</span></li>`;
+                    const main = $html`<main role=tabpanel>${template.content /*不进行克隆 需要保留节点上的事件等原始数据*/}</main>`;
+                    if (template.hasAttribute("default")) lis.$default = li;
+                    li.content = main; //绑定main元素
+                    lis.push(li);
+                }
+                //视口容器 适配滚动条 内容存在多个时需要显示选项卡
+                const header = $html`<header><menu role=tablist>${lis}</menu></header>`;
+                header.hidden = templates.length < 2;
+                fragment.append(header);
+                this.#shadowRoot.append(fragment);
+                (lis.$default ?? lis[0]).click();
+            } else this.#shadowRoot.innerHTML = `<main class=custom><slot></slot></main>`;
+        }
+
+        connectedCallback() {
+            this.attachShadow({ mode: "closed" });
+            this.contentUpdate();
+        }
+
+        //prettier-ignore
+        get [Symbol.toStringTag]() { return "HTMLNoitaPanelElement" }
+
+        attributeChangedCallback(name, oldValue, newValue) {
+            if (oldValue === null || oldValue === void 0) return;
+            if (newValue !== oldValue) {
+                if (this.isConnected) this.contentUpdate(); //contentUpdate 会优先调用子类重写的版本
+            }
         }
     };
-    return Object.freeze(HTMLNoitaElement);
 })();
+customElements.define("noita-panel", freeze(Base));

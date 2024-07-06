@@ -1,0 +1,9 @@
+id,name,//lua 无法识别一次性天赋 需要手动列举一次性天赋
+EXTRA_HP,额外生命值（一次性）
+RESPAWN,额外生命（一次性）
+ALWAYS_CAST,始终施放（一次性）
+EXTRA_MANA,高魔低容（一次性）
+FASTER_WANDS,魔杖加速（一次性）
+EXTRA_SLOTS,魔杖扩容（一次性）
+GAMBLE,赌博（一次性）
+MEGA_BEAM_STONE,召唤光石（一次性）

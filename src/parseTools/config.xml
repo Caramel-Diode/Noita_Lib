@@ -1,0 +1,19 @@
+<Config>
+    <FileType extension=".html" mime-type="text/html" />
+    <FileType extension=".css" mime-type="text/css" />
+    <FileType extension=".js" mime-type="text/javascript" />
+    <FileType extension=".csv" mime-type="text/csv" />
+    <FileType extension=".xml" mime-type="application/xml" />
+    <FileType extension=".png" mime-type="image/png" />
+    <!-- 材料缺少air对应的图标 -->
+    <Path url="/data/generated/material_icons/air.png" map="./src/parseTools/material/air.png" />
+    <!-- 映射到 data.wak 解包目录 -->
+    <Path url="/data/" map="D:/Project/Noita_data_wak/2024.3.27/data/" />
+    <Path url="/public/" map="./src/public/" />
+    <!-- 执行Lua 不做映射处理 -->
+    <Path url="/call.lua/" map="/call.lua/" />
+    <Path url="/" map="./src/parseTools/" />
+    <File name="404.html" map="./src/parseTools/404.html" />
+    <File name="index.html" map="./src/parseTools/index.html" />
+    <File name="util.js" map="./src/parseTools/util.js" />
+</Config>

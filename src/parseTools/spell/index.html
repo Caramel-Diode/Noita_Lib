@@ -1,0 +1,41 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>生成法术数据</title>
+    <style desc="base-style">
+        body {
+            display: grid;
+            place-items: center;
+            place-content: center;
+            height: 100vh;
+            width: 100vw;
+        }
+
+        canvas {
+            outline: 1px solid black;
+            height: 48px;
+        }
+
+        #canvas-viewport {
+            width: 1000px;
+            height: 100px;
+            padding: 4px;
+            overflow: auto;
+            border: 1px solid #cccccc;
+        }
+    </style>
+    <script src="/public/damageData.js"></script>
+    <!-- <script src="/call.lua/data.js?path=gen_js_datas.lua"></script> -->
+    <script src="/call.lua/data.js?path=generate_js_code.lua"></script>
+    <script src="script.js" defer></script>
+</head>
+
+<body>
+    <button id="gen-data"> 生成法术数据 </button>
+    <div id="canvas-viewport"></div>
+</body>
+
+</html>

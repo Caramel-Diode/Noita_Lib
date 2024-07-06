@@ -1,0 +1,19 @@
+:host {
+    grid-template: "main" 36px/36px;
+    --size: 36px;
+}
+
+img {
+    zoom: 2;
+}
+
+/* 轮播胶卷 */
+ol {
+    grid-area: main;
+}
+
+li {
+    display: grid;
+    place-content: center;
+    place-items: center;
+}

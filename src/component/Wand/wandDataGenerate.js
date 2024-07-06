@@ -14,9 +14,9 @@ const generateData = (() => {
      * @prop {Number} prop_drawMany 多重抽取概率
      * @prop {Number} prop_unshuffle 非乱序概率
      */
-    const random = util.math.random;
-    const clamp = util.math.clamp;
-    const shuffle = util.math.shuffle;
+    const random = math_.random;
+    const clamp = math_.clamp;
+    const shuffle = math_.shuffle;
     const vars1 = ["reloadTime", "fireRateWait", "spreadDegrees", "speedMultiplier"];
     /** 给指定属性分配值 */
     const distribute = (() => {
@@ -129,7 +129,7 @@ const generateData = (() => {
                 let r = Math.random() * probs_.totalprob;
                 for (let i = 0; i < probs_.items.length; i++) {
                     const item = probs_.items[i];
-                    if(r > item.prob) r -= item.prob;
+                    if (r > item.prob) r -= item.prob;
                     else return item;
                 }
             }

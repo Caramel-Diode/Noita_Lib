@@ -5,3 +5,12 @@
 .prettierrc
 dsektop.ini
 log/build.log
+src/component/Spell/tool/gun_actions
+src/component/Spell/tool/gun_actions.lua
+src/component/Material/tool/material_icons
+src/component/Material/tool/materials.xml
+src/component/Perk/tool/perks
+src/component/Perk/tool/perk_list.lua
+src/public/tool/lang/**
+src/luaForNodejs/lua_lib/**
+src/luaForNodejs/node_modules/**

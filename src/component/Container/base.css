@@ -3,23 +3,50 @@ path {
     stroke-width: 0;
     stroke-linecap: round;
     stroke-linejoin: round;
+    &.fill-5a5a5a {
+        fill: color-mix(in srgb, var(--mix-color, #5a5a5a) 80%, #5a5a5a 20%);
+    }
+    &.fill-777777 {
+        fill: color-mix(in srgb, var(--mix-color, #777777) 80%, #777777 20%);
+    }
+    &.fill-959595 {
+        fill: color-mix(in srgb, var(--mix-color, #959595) 80%, #959595 20%);
+    }
+    &.fill-c3c3c3 {
+        fill: color-mix(in srgb, var(--mix-color, #c3c3c3) 80%, #c3c3c3 20%);
+    }
+    &.fill-7a6a44 {
+        fill: color-mix(in srgb, var(--mix-color, #7a6a44) 80%, #7a6a44 20%);
+    }
+    &.fill-937f52 {
+        fill: color-mix(in srgb, var(--mix-color, #937f52) 80%, #937f52 20%);
+    }
 }
 
-.fill-5a5a5a {
-    fill: color-mix(in srgb, var(--mix-color, #5a5a5a) 80%, #5a5a5a 20%);
-}
-.fill-777777 {
-    fill: color-mix(in srgb, var(--mix-color, #777777) 80%, #777777 20%);
-}
-.fill-959595 {
-    fill: color-mix(in srgb, var(--mix-color, #959595) 80%, #959595 20%);
-}
-.fill-c3c3c3 {
-    fill: color-mix(in srgb, var(--mix-color, #c3c3c3) 80%, #c3c3c3 20%);
-}
-.fill-7a6a44 {
-    fill: color-mix(in srgb, var(--mix-color, #7a6a44) 80%, #7a6a44 20%);
-}
-.fill-937f52 {
-    fill: color-mix(in srgb, var(--mix-color, #937f52) 80%, #937f52 20%);
+/*==================*\
+      裁剪对应高度
+\*==================*/
+svg {
+    transition: clip-path 500ms linear;
+    /* 仅对材料图层生效 仅材料图层会使用style属性设置变量 */
+    &[style] {
+        clip-path: inset(calc(var(--padding-top) + (100 - var(--percentage, 100)) / 100 * var(--container-height)) 0 0 0);
+        /* --padding-top 用于限制液位最大高度 */
+        &.common {
+            --container-height: 11px;
+            --padding-top: 3px;
+        }
+        &.conical {
+            --container-height: 11px;
+            --padding-top: 3px;
+        }
+        &.jar {
+            --container-height: 11px;
+            --padding-top: 3px;
+        }
+        &.bag {
+            --container-height: 10px;
+            --padding-top: 4px;
+        }
+    }
 }
