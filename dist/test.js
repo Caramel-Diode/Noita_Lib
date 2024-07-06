@@ -10,9 +10,9 @@ addEventListener("load", () => {
     //     document.body.append(_);
     // });
 
-    const cache = [];
-    for (let i = 1; i < 1001; i++) {
-        cache.push(`<img style="zoom: 4;" is="noita--wand" wand.icon="#${i}" title="${i - 1}.png">`);
-    }
-    document.body.innerHTML = cache.join("");
+    // const cache = [];
+    // for (let i = 1; i < 1001; i++) {
+    //     cache.push(`<img style="zoom: 4;" is="noita--wand" wand.icon="#${i}" title="${i - 1}.png">`);
+    // }
+    // document.body.innerHTML = cache.join("");
 });
