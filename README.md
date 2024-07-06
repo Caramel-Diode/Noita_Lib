@@ -12,14 +12,14 @@
 ## 引入
 ### 通过html script元素引入
 ```html
-<script src="noitaLib.js"></script>
+<script src="noitaLi.sf.js"></script>
 ```
 ### 通过js impot语句引入
 * 使用index.mjs的版本
 * 或者在普通版本的`"use strict";`后加上`export `
 ```js
 // ES6 module
-import noitaLib from "noitaLib.js";
+import noitaLib from "noitaLib.esm.js";
 ```
 
 ## 构建
@@ -31,14 +31,13 @@ import noitaLib from "noitaLib.js";
 ### 法术
 ```html
 <noita-spell
-    spell.id="法术ID"
-    spell.name="法术名(伟大汉化)"
-    spell.expression="法术查询表达式"
+    spell.id="法术ID 法术名 法术别名"
+    spell.exp="法术查询表达式"
     display="显示模式"
 ><noita-spell/>
 ```
 ### 图标模式
-#### 通过 `id/name` 指定单个法术
+#### 通过 `id` 指定单个法术
 ```html
 <noita-spell spell.id="BOMB" display="icon"></noita-spell>
 ```
@@ -49,19 +48,17 @@ import noitaLib from "noitaLib.js";
 ```
 ![](img/icon%20passive.webp)
 ### 面板模式
-#### 通过 `id/name` 指定单个法术
-
-
+#### 通过 `id` 指定单个法术
 
 ```html
 <noita-spell spell.id="BOMB" display="panel"></noita-spell>
 ```
-![](img/panel%20BOMB.webp)
+![](img/panel-bomb.png)
 #### 通过 `expression` 指定多个法术
 ```html
 <noita-spell spell.expression="#type_passive" display="panel"></noita-spell>
 ```
-![](img/panel%20passive.webp)
+![](img/panel-type_passive.webp)
 
 ### 法杖
 ```html
@@ -125,18 +122,16 @@ import noitaLib from "noitaLib.js";
 入口常量: `noitaLib`
 ```js
 
-noitaLib.entity // 构造器 <noita-entity>
-noitaLib.entity.queryById("BOMB") //DB.entity {id: 'BOMB', name: '炸弹'... }
-noitaLib.spell // 构造器 <noita-spell>
-noitaLib.spell.queryByName("炸弹") //DB.spell {id: "BOMB", name: "炸弹", 
-noitaLib.spell.queryById("BOMB") //DB.spell {id: "BOMB", name: "炸弹", description: "召唤一枚对地形破坏力极大的炸弹" ...}
-noitaLib.wand // 构造器 <noita-wand>
-noitaLib.perk // 构造器 <noita-perk>
-noitaLib.perk.queryByName("暴击率 +") // DB.perk {id: 'CRITICAL_HIT', name: '暴击率 +', description: '提高你所有法术的暴击率' ...}
-noitaLib.perk.queryById("CRITICAL_HIT") // DB.perk {id: 'CRITICAL_HIT', name: '暴击率 +', description: '提高你所有法术的暴击率' ...}
 
-noitaLib.cursor.add() // 添加游戏风格十字光标
-noitaLib.cursor.remove() // 移除游戏风格十字光标
+noitaLib.Spell // 构造器 <noita-spell>
+noitaLib.Spell.query("炸弹") //SpellData {id: "BOMB", name: "炸弹", 
+noitaLib.Spell.query("BOMB") //SpellData {id: "BOMB", name: "炸弹", description: "召唤一枚对地形破坏力极大的炸弹" ...}
+noitaLib.Wand // 构造器 <noita-wand>
+noitaLib.Perk // 构造器 <noita-perk>
+noitaLib.Perk.query("暴击率 +") // PerkData {id: 'CRITICAL_HIT', name: '暴击率 +', description: '提高你所有法术的暴击率' ...}
+noitaLib.Perk.query("CRITICAL_HIT") // PerkData {id: 'CRITICAL_HIT', name: '暴击率 +', description: '提高你所有法术的暴击率' ...}
+
+noitaLib.cursor.disable = false // 移除游戏风格十字光标
 ```
 ## 法术查询表达式
 ### Token
