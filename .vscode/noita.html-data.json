@@ -463,6 +463,20 @@
             "description": "### Noita魔杖组件",
             "attributes": [
                 {
+                    "name": "display",
+                    "description": "显示模式",
+                    "values": [
+                        {
+                            "name": "icon",
+                            "description": "### 图标模式"
+                        },
+                        {
+                            "name": "panel",
+                            "description": "### 面板模式"
+                        }
+                    ]
+                },
+                {
                     "name": "wand.icon",
                     "description": "魔杖图标  \n关键字枚举或`#数字`索引",
                     "values": [
@@ -1487,6 +1501,275 @@
                         { "name": "许愿骨", "description": "![](data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAAEgAAAAhCAYAAAB6Fu3VAAAAAXNSR0IArs4c6QAAAW5JREFUaENjZBgFeEOAcTR88IfAaAARSCEjIoASk/z+w8KBl48bHiSTJiwn6H+CCoZDFhwNIAKxOOICCNnDz569gQfPzh3H4DnC3cMKnq2QxUnNEUMyi40GEAlZZtimIORUMH/eJnhKxiVOTNZAzlZSUiJwLVP6pmDV/uT6Rri4umUu1tw0YFlsNIBIyCbDKgXlFUTCa4fPn74STPnInselmJJshawXOSshZx8ZTX+41WH+rnD2qo274Wxc2Y3kLDYaQATSxIgOIFztC+QaAVe1ihyuyObgCm9kc9Q15OHKiMm2uPTevPEQbs66FSvg7I7KeDi7on0hSTUaShYbDSBI2CFX+aMBBE1Po4U0NCBGazEsKWK0mocGyqBoBxFsGRKpYLSrMVK7GkQmEILKRlMQwSAiX8HogBkJ2XPYDpiRn34YGEZTECWhh0XviJvVIDX8RgOIhDJrdGaV1ORFQD3JI4pUtn/QGzcaQASiCADuG6QxkVdcUQAAAABJRU5ErkJggg==)" },
                         { "name": "魔法扫帚", "description": "![](data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAAEsAAAAhCAYAAACRIVbWAAAAAXNSR0IArs4c6QAAAadJREFUaENjZBgFRIcAI9EqRxUyjAYWCYlgyARWUrTjf5i/5i3dT7a72ysC4eaoKYnDgyo4bQZBMwkqICHgaap0NLBICN7RwMISWLa2hvBsgix9+PB5knIBcnbbdvQB3ChSzUF2A0kOICEhkK10NLBICLrRwCIQWMjlkaqsAFz17ccf4GxSxXHVmLjsIqZmHBTZcDSwSMh6QzKwkMsLL2sFuHdx1Sa4qnNkc5BrH2RxVTlEdkPOYgVS/+D2nt27Ec4+8RIR+htZDQlGBbL5tx8hsjPVasPRwMIfByhl1mhgkRBYa2dlwBuE4ltnIBpymoFYTUHOnsjZFrkWQ9aInN1w6bW9vh6rXRxyunDx3dwqBGtM5Nrt1j1EHsZlLy7xyo718ASFkrJGAwsSB8gRPxpY0HSJqxIjKrAGQ5nFegCRDR1MEVnvx6PL8KxX+W60NgQHxmhgQdMEMe2sIRNYBFt6NFIwJFvwNAoLgsaOBhbBIEIoGA0sEgILWenoeBYJATcaWKOBRUIIUEHp6OwOCYE4GlijgUVCCAwxpYNiwmKohNloYJEQUwDexOMx8cBOOgAAAABJRU5ErkJggg==)" },
                         { "name": "电锯", "description": "![](data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAAE4AAAAbCAYAAADS6blZAAAAAXNSR0IArs4c6QAAAWFJREFUaENjZBgFZIUAI1m6RjUxjAYcmYkAJeAWV0T/J2TO7hN34UoWHThB04AfbO5BDpvRgCOUUnDIjwYctQMutmMp1mzYGuoGz843X3+CW8ur4wVn6+trwdkXL14jSTwtNQRuL3JWJdU9NtElZLsB2c1Tp9RhDQecKY5Uh44GHDSeRgMOEhBEpTjkbEhq1n8mbkOSlocPb8PVy8urYs3Or3fNIslMZMXUcg+ymciBiJJVRwMOEkzIETkacATSLq4cQFTAxTlYEGwAq4vywc0SdUujSs2FXAsj16qkugc5e1JSs5Ncq5Lq0NGAg6ab0YCDBATJKQ5X4xY5e1av3oW1QUhMY5XUKnKwuQfZ/ThrVeRewWjAYUb5aMCRmg2g6kkeFsI11IOrp0Gmu4jWNlDuGQ04oqMIVeFowNEr4Mi0Z9hpIznFDbsQINNDowE3GnBkhgCZ2kZT3GjAkRkCZGoDAPwqcSusqEcYAAAAAElFTkSuQmCC)" }
+                    ]
+                },
+                {
+                    "name": "wand.name",
+                    "description": "魔杖名 默认值为`魔杖`"
+                },
+                {
+                    "name": "wand.capacity",
+                    "description": "容量 `整数`",
+                    "values": [{ "name": "26" }]
+                },
+                {
+                    "name": "wand.draw",
+                    "description": "抽取数 `整数`",
+                    "values": [{ "name": "1" }]
+                },
+                {
+                    "name": "wand.fire-rate-wait",
+                    "description": "施放延迟 `整数 f`",
+                    "values": [{ "name": "1" }]
+                },
+                {
+                    "name": "wand.reload-time",
+                    "description": "充能时间 `整数 f`",
+                    "values": [{ "name": "1" }]
+                },
+                {
+                    "name": "wand.shuffle",
+                    "description": "乱序 `true/false`",
+                    "values": [{ "name": "false" }]
+                },
+                {
+                    "name": "wand.spread-degrees",
+                    "description": "散射 `数值 °`",
+                    "values": [{ "name": "0" }]
+                },
+                {
+                    "name": "wand.speed-multiplier",
+                    "description": "速度倍数 `数值`",
+                    "values": [{ "name": "1" }]
+                },
+                {
+                    "name": "wand.mana-charge-speed",
+                    "description": "法力恢复速度 `整数 /s`",
+                    "values": [{ "name": "0" }]
+                },
+                {
+                    "name": "wand.mana-max",
+                    "description": "法力上限 `整数`",
+                    "values": [{ "name": "1000" }]
+                },
+                {
+                    "name": "wand.static-spells",
+                    "description": "始终法术 `法术序列`",
+                    "values": [{ "name": "BOMB^3:1~2" }]
+                },
+                {
+                    "name": "wand.dynamic-spells",
+                    "description": "槽位法术 `法术序列`",
+                    "values": [{ "name": "TNT^16:1~5" }]
+                }
+            ]
+        },
+        {
+            "name": "noita-message",
+            "description": "### Noita通知框组件",
+            "attributes": [
+                {
+                    "name": "message.style",
+                    "description": "样式",
+                    "values": [
+                        {
+                            "name": "important",
+                            "description": "默认"
+                        },
+                        {
+                            "name": "fungal_shift",
+                            "description": "你听见“?”这个词在回响，变换着色彩"
+                        },
+                        {
+                            "name": "booby_trapped",
+                            "description": "这里陷阱遍布"
+                        },
+                        {
+                            "name": "conductive",
+                            "description": "空气像是被电离了"
+                        },
+                        {
+                            "name": "fog_of_war",
+                            "description": "神秘的黑暗笼罩在这里"
+                        },
+                        {
+                            "name": "fog_of_war_clear_at_player",
+                            "description": "这里非常昏暗"
+                        },
+                        {
+                            "name": "freezing",
+                            "description": "空气寒冷刺骨"
+                        },
+                        {
+                            "name": "fungal",
+                            "description": "空气中弥漫着孢子"
+                        },
+                        {
+                            "name": "furnished",
+                            "description": "这里让你感觉很舒适"
+                        },
+                        {
+                            "name": "gas",
+                            "description": "空气中有燃气的味道"
+                        },
+                        {
+                            "name": "gold",
+                            "description": "你感觉这里埋藏着(巨大的)财富"
+                        },
+                        {
+                            "name": "gravity_fields",
+                            "description": "你感到一股无形的力量在拉扯着你"
+                        },
+                        {
+                            "name": "high_gravity",
+                            "description": "空气很是沉重"
+                        },
+                        {
+                            "name": "hot",
+                            "description": "一股热浪扑面而来"
+                        },
+                        {
+                            "name": "invisible",
+                            "description": "你突然无法聚焦视线"
+                        },
+                        {
+                            "name": "low_gravity",
+                            "description": "空气很是轻盈"
+                        },
+                        {
+                            "name": "moist",
+                            "description": "这些水是从哪里来的？"
+                        },
+                        {
+                            "name": "ominous",
+                            "description": "一切都感觉要被黑暗吞噬"
+                        },
+                        {
+                            "name": "perforated",
+                            "description": "这里感觉很宽敞"
+                        },
+                        {
+                            "name": "plant_infested",
+                            "description": "闻起来好像雨后泥土的气味"
+                        },
+                        {
+                            "name": "shielded",
+                            "description": "这里真是太安全了"
+                        },
+                        {
+                            "name": "spooky",
+                            "description": "你的后背发凉，汗毛直竖"
+                        },
+                        {
+                            "name": "sunlight",
+                            "description": "一切都沐浴在神秘的光芒之中"
+                        },
+                        {
+                            "name": "wormy",
+                            "description": "可怕的爬动声到处都是"
+                        }
+                    ]
+                },
+                {
+                    "name": "message.preset",
+                    "description": "预设",
+                    "values": [
+                        {
+                            "name": "FUNGAL_SHIFT",
+                            "description": "你听见“?”这个词在回响，变换着色彩"
+                        },
+                        {
+                            "name": "BOOBY_TRAPPED",
+                            "description": "这里陷阱遍布"
+                        },
+                        {
+                            "name": "CONDUCTIVE",
+                            "description": "空气像是被电离了"
+                        },
+                        {
+                            "name": "FOG_OF_WAR_REAPPEARS",
+                            "description": "神秘的黑暗笼罩在这里"
+                        },
+                        {
+                            "name": "FOG_OF_WAR_CLEAR_AT_PLAYER",
+                            "description": "这里非常昏暗"
+                        },
+                        {
+                            "name": "FREEZING",
+                            "description": "空气寒冷刺骨"
+                        },
+                        {
+                            "name": "FUNGAL",
+                            "description": "空气中弥漫着孢子"
+                        },
+                        {
+                            "name": "FURNISHED",
+                            "description": "这里让你感觉很舒适"
+                        },
+                        {
+                            "name": "GAS",
+                            "description": "空气中有燃气的味道"
+                        },
+                        {
+                            "name": "GOLD_VEIN",
+                            "description": "你感觉这里埋藏着财富"
+                        },
+                        {
+                            "name": "GOLD_VEIN_SUPER",
+                            "description": "你感觉这里埋藏着巨大的财富"
+                        },
+                        {
+                            "name": "GRAVITY_FIELDS",
+                            "description": "你感到一股无形的力量在拉扯着你"
+                        },
+                        {
+                            "name": "HIGH_GRAVITY",
+                            "description": "空气很是沉重"
+                        },
+                        {
+                            "name": "HOT",
+                            "description": "一股热浪扑面而来"
+                        },
+                        {
+                            "name": "INVISIBLE",
+                            "description": "你突然无法聚焦视线"
+                        },
+                        {
+                            "name": "LOW_GRAVITY",
+                            "description": "空气很是轻盈"
+                        },
+                        {
+                            "name": "FLOODED",
+                            "description": "这些水是从哪里来的？"
+                        },
+                        {
+                            "name": "OMINOUS",
+                            "description": "一切都感觉要被黑暗吞噬"
+                        },
+                        {
+                            "name": "PERFORATED",
+                            "description": "这里感觉很宽敞"
+                        },
+                        {
+                            "name": "PLANT_INFESTED",
+                            "description": "闻起来好像雨后泥土的气味"
+                        },
+                        {
+                            "name": "SHIELDED",
+                            "description": "这里真是太安全了"
+                        },
+                        {
+                            "name": "SPOOKY",
+                            "description": "你的后背发凉，汗毛直竖"
+                        },
+                        {
+                            "name": "PROTECTION_FIELDS",
+                            "description": "一切都沐浴在神秘的光芒之中"
+                        },
+                        {
+                            "name": "WORMY",
+                            "description": "可怕的爬动声到处都是"
+                        }
                     ]
                 }
             ]
