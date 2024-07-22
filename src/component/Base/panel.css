@@ -152,7 +152,8 @@ ul {
     grid-area: tabs;
     place-self: center;
     height: 60px;
-    max-width: 560px;
+    /* max-width: 560px; */
+    max-width: calc(100% - 20px);
     padding: 0 10px;
     overflow: auto;
     position: relative;

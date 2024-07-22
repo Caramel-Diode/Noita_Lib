@@ -112,31 +112,24 @@ const Container = (() => {
         }
 
         async #loadPanelContent() {
-            const template = createElement("template");
             const { name, desc } = this.containerData;
-            let h1_innerText = "空" + name;
+            let h1Text = "空" + name;
             const svgs = this.#getCascadingSVGs();
-            const table = createElement("table");
-
-            const tbody = createElement("tbody");
-            const h1_contentCache = [];
-            const table_contentCache = [];
-            table.className = "attrs";
+            const h1Cache = [];
+            const tableCache = [];
             for (let i = 0; i < this.#content.length; i++) {
                 const item = this.#content[i];
                 if (item.type === "COLOR") {
-                    h1_contentCache.push(item.color);
-                    table_contentCache.push(`<tr><td>${item.amount}%</td><th style="color:${item.color}">${item.color}</th></tr>`);
+                    h1Cache.push(item.color);
+                    tableCache.push(`<tr><td>${item.amount}%</td><th style="color:${item.color}">${item.color}</th></tr>`);
                 } else {
-                    h1_contentCache.push(item.material.name);
-                    table_contentCache.push(`<tr><td>${item.amount}%</td><th>${item.material.name}</th></tr>`);
+                    h1Cache.push(item.material.name);
+                    tableCache.push(`<tr><td>${item.amount}%</td><th>${item.material.name}</th></tr>`);
                 }
             }
-            if (this.#amount_all !== 0) h1_innerText = `${h1_contentCache.join("+")}${name}(${this.#amount_all}%)`;
-            table.innerHTML = table_contentCache.join("");
-
-            template.content.append($html`<h1>${h1_innerText}</h1>`, svgs, table, $html`<p>${desc}</p>`);
-            this.loadPanelContent([template]);
+            if (this.#amount_all !== 0) h1Text = `${h1Cache.join("+")}${name}(${this.#amount_all}%)`;
+            const table = h.table({ class: "attrs", HTML: tableCache.join("") });
+            this.loadPanelContent([h.template(h.h1(h1Text), svgs, table, h.p(desc))]);
         }
 
         /**

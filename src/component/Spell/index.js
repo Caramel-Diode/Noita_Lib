@@ -65,11 +65,21 @@ const Spell = (() => {
         /** @type {$ValueOption<String>} */
         spellRemain: { name: "spell.remain" }
     }) {
-        static {}
         static query = SpellData.query;
         static queryByExp = SpellData.queryByExp;
-        //prettier-ignore
-        static get datas() { return [...SpellData.data.all]; }
+        static registerTag = SpellData.registerTag;
+        /// prettier-ignore
+
+        static get datas() {
+            const result = [];
+            SpellData.data.all.forEach(e => {
+                result[e.id] = e;
+                result[e.name] = e;
+                for (const i of e.alias) result[i] = e;
+                result.push(e);
+            });
+            return result;
+        }
 
         /** @type {ShadowRoot} */ #shadowRoot = this.attachShadow({ mode: "closed" });
         #needDefaultFn = true;
@@ -138,28 +148,27 @@ const Spell = (() => {
             dialog.showModal();
         }
 
-        /** 加载图标模式内容 */
-        #loadIconContent() {
+        /** 加载图标模式内容
+         * @param {String} markIconId
+         */
+        #loadIconContent(markIconId) {
             this.#shadowRoot.innerHTML = "";
             const length = this.spellDatas.length;
             if (!length) return;
-            const fragment = new DocumentFragment();
+            const fragment = h();
             const titles = [];
-            const lis = [];
+            const ol = h.ol({ part: "tape", style: { "--amount": length } });
             for (let i = 0; i < length; i++) {
                 const data = this.spellDatas[i];
                 const typeInfo = typeInfoMap[data.type];
-                lis.push($html`<li class=${typeInfo[2]}>${data.icon}</li>`);
+                ol.append(h.li({ class: typeInfo[2] }, data.icon));
                 titles.push(`${typeInfo[1]}${data.name}\n${data.id}\n${data.desc}`);
             }
-            const ol = $html`<ol part=tape style="--amount:${length}">${lis}</ol>`;
             this.title = titles.join("\n\n");
             fragment.append(ol);
-            if (this.instanceData.remain !== Infinity) {
-                const dataRemain = createElement("data");
-                dataRemain.append(this.instanceData.remain.toString());
-                fragment.append(dataRemain);
-            }
+            if (this.instanceData.remain !== Infinity) fragment.append(h.data(this.instanceData.remain));
+            if (markIconId) fragment.append(Base.PanelAttrInfo.query(markIconId).icon);
+            fragment.append(h.slot());
             this.#shadowRoot.append(fragment);
             this.setAttribute("role", "button");
             this.setAttribute("tabindex", "0");
@@ -207,18 +216,18 @@ const Spell = (() => {
          * @param {Number} [index] 法术数据索引
          */
         #loadPanelContent(index = 0) {
+            const ignore = this.ignoredPanelAttrs;
             /** @type {Array<HTMLTemplateElement>} */
             const templates = [];
             for (let i = 0; i < this.spellDatas.length; i++) {
                 const sd = this.spellDatas[i];
-                const template = createElement("template");
-                template.title = sd.name;
+                const template = h.template({ title: sd.name });
                 if (i === index) template.toggleAttribute("default");
                 templates.push(template);
 
                 //#region 属性区
                 /*###############################################################################*/
-                const section = $html`<section class=attrs></section>`;
+                const section = h.section({ class: "attrs" });
 
                 //#region 投射物信息
 
@@ -248,9 +257,9 @@ const Spell = (() => {
                     }
 
                     // 获取实体的数据
-                    const section_offeredProjectile = Entity.getDataSection(projectile, data);
+                    const section_offeredProjectile = Entity.getDataSection(projectile, data, ignore);
                     section_offeredProjectile.setAttribute("related-id", i);
-                    const li = $html`<li class=unselected related-id=${i} entity.relation=${type} title="${title}">${projectile.name}${amount}</li>`;
+                    const li = h.li({ class: "unselected", "related-id": i, "entity.relation": type, title }, projectile.name, amount);
                     relatedSectionElements.push(section_offeredProjectile);
                     section.append(section_offeredProjectile); // 在修正信息和基本信息之间添加投射物信息
                     li.relatedSectionElements = relatedSectionElements;
@@ -260,13 +269,14 @@ const Spell = (() => {
                 //#endregion
 
                 //#region 修正信息
-                const modLoader = new Base.PanelAttrLoader(sd.modifierAction);
+                const modLoader = new Base.PanelAttrLoader(ignore).load(sd.modifierAction);
+
                 section.append(modLoader.container); //添加到最后
                 //#endregion
 
                 //#region 基本信息
                 //prettier-ignore
-                const baseLoader = new Base.PanelAttrLoader({
+                const baseLoader = new Base.PanelAttrLoader(ignore).load({
                     spellType:           { value: typeInfoMap[sd.type][0]                                                                     },
                     manaDrain:           { value: sd.mana                                                                                     },
                     maxUse:              { value: { max: sd.maxUse, unlimited: sd.unlimited },               hidden: !Number.isFinite(sd.maxUse)},
@@ -280,25 +290,28 @@ const Spell = (() => {
                 /*###############################################################################*/
                 //#endregion
 
+                template.content.append(sd.icon, this.createPanelH1(sd.id, sd.name), h.p(sd.desc), section);
                 //#region 生成权重
-                const probsTable = $html`<table class=probs tabindex=0 display=prop></table>`;
-                const { name, icon } = Base.PanelAttrInfo.query("probs");
-                util.addFeatureTo(probsTable, switchWeightAndProp);
-                const tr_lv = $html`<tr><th rowspan=2>${icon}</th><th rowspan=2 class=title>${name}</th></tr>`;
-                const tr_prob = createElement("tr");
+                if (!ignore.includes("probs")) {
+                    const table = h.table({ class: "probs", tabindex: 0, display: "prop", Event: switchWeightAndProp });
+                    const { name, icon } = Base.PanelAttrInfo.query("probs");
 
-                probsTable.append(tr_lv, tr_prob);
-                const { spawn } = sd;
+                    const tr_lv = h.tr(h.th({ rowspan: 2 }, icon), h.th({ rowspan: 2, class: "title" }, name));
+                    const tr_prob = createElement("tr");
 
-                tr_lv.append($html`<td class=mark-left rowspan=2></td>`);
-                for (const lv of spawn.lvs) {
-                    const prop = `${spawn.percentage(lv).toFixed(3)}%`;
-                    tr_lv.append($html`<th class=lv>${lv.toLocaleUpperCase()}</th>`);
-                    tr_prob.append($html`<td class=value switch.weight="${spawn[`prob_${lv}`]}" switch.prop="${prop}">${prop}</td>`);
+                    table.append(tr_lv, tr_prob);
+                    const { spawn } = sd;
+
+                    tr_lv.append(h.td({ class: "mark-left", rowspan: 2 }));
+                    for (const lv of spawn.lvs) {
+                        const prop = `${spawn.percentage(lv).toFixed(3)}%`;
+                        tr_lv.append(h.th({ class: "lv" }, lv.toUpperCase()));
+                        tr_prob.append(h.td({ class: "value", "switch.weight": spawn[`prob_${lv}`], "switch.prop": prop }, prop));
+                    }
+                    tr_lv.append(h.td({ class: "mark-right", rowspan: 2 }));
+                    template.content.append(table);
                 }
-                tr_lv.append($html`<td class=mark-right rowspan=2></td>`);
                 //#endregion
-                template.content.append(sd.icon, this.createPanelH1(sd.id, sd.name), $html`<p>${sd.desc}</p>`, section, probsTable);
             }
             this.loadPanelContent(templates);
         }
@@ -306,12 +319,16 @@ const Spell = (() => {
         /** @param {Array<CSSStyleSheet>} [extraStyleSheets] 额外样式表 */
         [$symbols.initStyle](extraStyleSheets = []) {
             // extraStyleSheets.push(styleSheet.base);
-            //prettier-ignore
-            switch(this.displayMode) {
-                case "panel": extraStyleSheets.push(styleSheet.panel); break;
-                case "icon": extraStyleSheets.push(styleSheet.icon)
+            /** @type {String} */
+            let mode = this.displayMode;
+            if (mode.startsWith("panel")) {
+                extraStyleSheets.push(styleSheet.panel);
+                mode = "panel";
+            } else if (mode.startsWith("icon")) {
+                extraStyleSheets.push(styleSheet.icon);
+                mode = "icon";
             }
-            super[$symbols.initStyle](extraStyleSheets);
+            super[$symbols.initStyle](extraStyleSheets, mode);
         }
 
         contentUpdate() {
@@ -332,7 +349,15 @@ const Spell = (() => {
             switch(this.displayMode) {
                 case "panel": this.#loadPanelContent(); break;
                 case "icon": this.#loadIconContent(); break;
-                default: throw new TypeError("不支持的显示模式");
+                default: 
+                    if(this.displayMode.startsWith("panel")) {
+                        this.#loadPanelContent(Number(this.displayMode.split(":")[1]));
+                        break;
+                    }
+                    if(this.displayMode.startsWith("icon")) {
+                        this.#loadIconContent(this.displayMode.split(":")[1]);
+                        break;
+                    }
             }
         }
 

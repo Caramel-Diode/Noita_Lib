@@ -86,7 +86,7 @@ type SpellIdNameMap = {
     SLIMEBALL: "黏液球";
     DARKFLAME: "黑焰";
     MISSILE: "导弹";
-    FUNKY_SPELL: "？？？";
+    FUNKY_SPELL: "???";
     PEBBLE: "召唤岩石精灵";
     DYNAMITE: "炸药";
     GLITTER_BOMB: "闪烁炸弹";
@@ -123,7 +123,7 @@ type SpellIdNameMap = {
     WALL_SQUARE: "方形粒子屏障";
     TEMPORARY_WALL: "召唤墙壁";
     TEMPORARY_PLATFORM: "召唤平台";
-    PURPLE_EXPLOSION_FIELD: "闪烁领域";
+    PURPLE_EXPLOSION_FIELD: "盛大场面";
     DELAYED_SPELL: "延迟施法";
     LONG_DISTANCE_CAST: "远程施法";
     TELEPORT_CAST: "传送施法";
@@ -156,6 +156,7 @@ type SpellIdNameMap = {
     TOUCH_OIL: "油液之触";
     TOUCH_ALCOHOL: "烈酒之触";
     TOUCH_PISS: "黄金之触？";
+    TOUCH_GRASS: "草之触";
     TOUCH_BLOOD: "鲜血之触";
     TOUCH_SMOKE: "烟雾之触";
     DESTRUCTION: "毁灭";
@@ -225,11 +226,11 @@ type SpellIdNameMap = {
     HOMING_CURSOR: "手动制导";
     HOMING_AREA: "迫近传送";
     PIERCING_SHOT: "穿刺";
-    CLIPPING_SHOT: "穿凿射击";
+    CLIPPING_SHOT: "穿透射击";
     DAMAGE: "伤害增强";
     DAMAGE_RANDOM: "随机伤害";
     BLOODLUST: "嗜血";
-    DAMAGE_FOREVER: "法力变力量";
+    DAMAGE_FOREVER: "法力转伤害";
     CRITICAL_HIT: "暴击率+";
     AREA_DAMAGE: "伤害领域";
     SPELLS_TO_POWER: "法术变力量";
@@ -283,6 +284,7 @@ type SpellIdNameMap = {
     SEA_SWAMP: "沼泽之海";
     SEA_ACID: "酸液之海";
     SEA_ACID_GAS: "燃气之海";
+    SEA_MIMIC: "拟态之海";
     CLOUD_WATER: "雨云";
     CLOUD_OIL: "油云";
     CLOUD_BLOOD: "血云";
@@ -418,6 +420,7 @@ type SpellIdNameMap = {
     COLOUR_RAINBOW: "彩虹闪光";
     COLOUR_INVIS: "隐形法术";
     RAINBOW_TRAIL: "彩虹轨迹";
+    CESSATION: "遁入虚空";
 };
 
 /** `🔤 法术ID` */
@@ -501,7 +504,7 @@ export declare namespace SpellData {
     };
 
     type ModifierAction = {
-        /** 
+        /**
          * ![](data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAAA4AAAAOCAYAAAAfSC3RAAAAAXNSR0IArs4c6QAAADBJREFUOE9jZCATMJKpj2FEafz///9/UEAxMjKC/U2IDw8cQgrR5UdUqJKa9MgOHACz6hgPHJngWAAAAABJRU5ErkJggg==) [`施放延迟`](http://localhost)
          */
         fireRateWait?: {
@@ -509,7 +512,7 @@ export declare namespace SpellData {
             pos: "before" | "after" | "none";
             value: Number;
         };
-        
+
         speed?: {
             type: "*" | "=";
             pos: "before" | "after" | "none";
@@ -682,7 +685,7 @@ export declare namespace SpellData {
 type ConstructorOption = {
     id?: SpellId | SpellName | SpellAlias;
     exp?: SpellId | SpellTag;
-    datas?: Array<SpellData>;
+    datas?: Array<SpellData<SpellId>>;
     display?: "icon" | "panel";
     instance?: {
         remain: Number;
@@ -690,7 +693,7 @@ type ConstructorOption = {
 };
 
 type HTMLNoitaSpellElement = HTMLElement & {
-    spellDatas: Array<SpellData>;
+    spellDatas: Array<SpellData<SpellId>>;
     contentUpdate(): never;
     instance: {
         remain: Number;
@@ -704,9 +707,9 @@ type HTMLNoitaSpellElement = HTMLElement & {
 /** ## [`✨ 法术`](https://noita.wiki.gg/zh/wiki/法术) */
 export type Class = {
     new (option: ConstructorOption): HTMLNoitaSpellElement;
-    new (datas: Array<SpellData>, option: ConstructorOption?): HTMLNoitaSpellElement;
+    new (datas: Array<SpellData<SpellId>>, option: ConstructorOption | undefined): HTMLNoitaSpellElement;
 
-    readonly datas: Array<SpellData>;
+    readonly datas: Array<SpellData<SpellId>>;
     /**
      * 获取法术数据
      * @param key 查询键
@@ -715,6 +718,6 @@ export type Class = {
      * * {@linkcode SpellAlias|`别名`}
      * @returns 法术数据
      */
-    query: (key: SpellId | SpellName | SpellAlias) => SpellData;
-    queryByExp: (exp: SpellId | SpellTag) => Array<SpellData>;
+    query: <T extends SpellId>(key: T) => SpellData<T>;
+    queryByExp: (exp: SpellId | SpellTag) => Array<SpellData<SpellId>>;
 };

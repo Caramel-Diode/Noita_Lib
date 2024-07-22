@@ -46,28 +46,21 @@ const Perk = (() => {
         }
 
         #loadIconContent() {
-            const fragment = new DocumentFragment();
-            fragment.append($html`<div class="background ${this.perkData.type}">${this.perkData.icon}</div>`);
-            if (this.instanceData.count !== 1) {
-                const data_count = createElement("data");
-                data_count.append(this.instanceData.count.toString());
-                fragment.append(data_count);
-            }
+            const { icon, type, name, id, desc } = this.perkData;
+            const fragment = h(h.div({ class: ["background", type] }, icon));
+            if (this.instanceData.count !== 1) fragment.append(h.data(this.instanceData.count));
             this.#shadowRoot.append(fragment);
-            this.title = `${this.perkData.name}\n${this.perkData.id}\n${this.perkData.desc}`;
+            this.title = `${name}\n${id}\n${desc}`;
         }
 
         #loadPanelContent() {
-            const template = createElement("template");
             const pd = this.perkData;
             //prettier-ignore
-            const loader = new Base.PanelAttrLoader({
+            const loader = new Base.PanelAttrLoader().load({
                 maxStack:  { value: pd.maxStack                              }, //堆叠极限
                 maxInPool: { value: pd.maxInPool,  hidden:pd.maxInPool === 0 } //天赋池最大数量
             });
-
-            template.content.append(pd.icon, this.createPanelH1(pd.id, pd.name), $html`<p>${pd.desc}</p>`, loader.container);
-            this.loadPanelContent([template]);
+            this.loadPanelContent([h.template(pd.icon, this.createPanelH1(pd.id, pd.name), h.p(pd.desc), loader.container)]);
         }
 
         /** @param {Array<CSSStyleSheet>} [extraStyleSheets] 额外样式表 */

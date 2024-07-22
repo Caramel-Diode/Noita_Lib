@@ -3,7 +3,8 @@ const Material = (() => {
     MaterialData.init();
     const styleSheet = {
         icon: gss(embed(`#icon.css`)),
-        panel: gss(embed(`#panel.css`))
+        panel: gss(embed(`#panel.css`)),
+        mathml: gss(embed(`#MathML.css`))
     };
     const typeInfoMap = {
         null: ["NULL", "⚫"],
@@ -47,26 +48,59 @@ const Material = (() => {
             for (let i = 0; i < length; i++) {
                 const data = this.materialDatas[i];
                 const typeInfo = typeInfoMap[data.type];
-                lis.push($html`<li>${data.icon}</li>`);
+                lis.push(h.li(data.icon));
                 titles.push(`${typeInfo[1]}${data.name}\n${data.id}`);
             }
             this.title = titles.join("\n\n");
-            const ol = $html`<ol part=tape style="--amount:${length}">${lis}</ol>`;
-            this.#shadowRoot.append(ol);
+            this.#shadowRoot.append(h.ol({ part: "tape", style: { "--amount": length } }, lis));
+        }
+
+        #loadReactionContent() {
+            const data = this.materialDatas[0];
+            const { asCatalyzer, asInput, asOutput } = MaterialData.ReactionData.query(data.id);
+            /** @type {Array<HTMLTemplateElement>} */
+            const templates = [];
+            if (asCatalyzer.length) {
+                const templateAsCatalyzer = h.template({ title: "作为催化剂" });
+                templates.push(templateAsCatalyzer);
+                const cache = [];
+                for (let i = 0; i < asCatalyzer.length; i++) cache.push(asCatalyzer[i].toString(data.id, "MathML"));
+                templateAsCatalyzer.innerHTML = cache.join("");
+            }
+            if (asInput.length) {
+                const templateAsInput = h.template({ title: "作为原料" });
+                templates.push(templateAsInput);
+                const cache = [];
+                for (let i = 0; i < asInput.length; i++) cache.push(asInput[i].toString(data.id, "MathML"));
+                templateAsInput.innerHTML = cache.join("");
+            }
+            if (asOutput.length) {
+                const template = h.template({ title: "作为产物" });
+                templates.push(template);
+                const cache = [];
+                for (let i = 0; i < asOutput.length; i++) cache.push(asOutput[i].toString(data.id, "MathML"));
+                template.innerHTML = cache.join("");
+            }
+            this.loadPanelContent(templates);
         }
 
         /** @param {Array<CSSStyleSheet>} [extraStyleSheets] 额外样式表 */
         [$symbols.initStyle](extraStyleSheets = []) {
             // extraStyleSheets.push(styleSheet.base);
+            let mode = this.displayMode;
             //prettier-ignore
-            switch(this.displayMode) {
+            switch(mode) {
                 case "panel": extraStyleSheets.push(styleSheet.panel); break;
-                case "icon": extraStyleSheets.push(styleSheet.icon)
+                case "icon": extraStyleSheets.push(styleSheet.icon); break;
+                case "reaction":
+                    extraStyleSheets.push(styleSheet.mathml);
+                    mode = "panel"
             }
-            super[$symbols.initStyle](extraStyleSheets);
+            super[$symbols.initStyle](extraStyleSheets, mode);
         }
 
         contentUpdate() {
+            this.#shadowRoot.innerHTML = "";
             const materialId = this.materialId;
             if (materialId) this.materialDatas = [MaterialData.queryById(materialId)];
             else {
@@ -84,6 +118,7 @@ const Material = (() => {
                     //TODO: 等待面板内容加载函数
                     break;
                 case "icon": this.#loadIconContent(); break;
+                case "reaction": this.#loadReactionContent(); break;
                 default: throw new TypeError("不支持的显示模式");
             }
         }

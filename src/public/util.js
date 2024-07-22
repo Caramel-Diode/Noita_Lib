@@ -3,89 +3,112 @@ const DOMContentLoaded = new Promise((resolve, reject) => window.addEventListene
 const createElement = document.createElement.bind(document);
 /** @type {typeof document.createElementNS} */
 const createElementNS = document.createElementNS.bind(document);
+const freeze = Object.freeze;
+// /**
+//  * 从html字符串生成元素
+//  * * 带有id 的元素可从返回值的成员中获取 成员名为`#id`
+//  * * 允许插入Node类型
+//  * * `on-event` 属性绑定事件
+//  * * `style` 属性可用对象形式样式
+//  */
+// const $html = (() => {
+//     const parser = new DOMParser();
+//     /** @returns {Node} */
+//     return (strings, ...values) => {
+//         const valueMap = {};
+//         for (let i = 0; i < values.length; i++) {
+//             const value = values[i];
+//             if (typeof value === "object") {
+//                 valueMap[i] = value;
+//                 if (value instanceof Node || Array.isArray(value)) values[i] = `<!--${i}-->`;
+//                 else values[i] = i;
+//             }
+//         }
+//         const doc = parser.parseFromString(`<template>${String.raw(strings, ...values)}</template>`, "text/html");
+
+//         /** @type {DocumentFragment} */
+//         const content = document.adoptNode(doc.head.children[0].content);
+//         /** @type {Node} */
+//         let root;
+//         // 大于一个元素时返回文档片段
+//         if (content.childNodes.length > 1) root = content;
+//         else root = content.childNodes[0];
+//         const iterator = document.createNodeIterator(root);
+//         let node;
+//         while ((node = iterator.nextNode()))
+//             switch (node.nodeType) {
+//                 case node.COMMENT_NODE:
+//                     const target = valueMap[node.data];
+//                     if (target) {
+//                         if (Array.isArray(target)) node.replaceWith(...target);
+//                         else node.replaceWith(target);
+//                     }
+//                     break;
+//                 case node.ELEMENT_NODE:
+//                     if (node.id) {
+//                         root["#" + node.id] = node;
+//                         node.toggleAttribute("id");
+//                     }
+//                     if (node.hasAttribute("on-event")) {
+//                         const listener = valueMap[node.getAttribute("on-event")];
+//                         if (listener) util.addFeatureTo(node, listener);
+//                         node.toggleAttribute("on-event");
+//                     }
+//                     if (node.hasAttribute("style")) {
+//                         const style = valueMap[node.getAttribute("style")];
+//                         if (style) {
+//                             for (const key in style) {
+//                                 const value = style[key];
+//                                 if (key.startsWith("--")) node.style.setProperty(key, value);
+//                                 else node.style[key] = value;
+//                             }
+//                         }
+//                     }
+//             }
+
+//         return root;
+//     };
+// })();
 
 /**
- * 从html字符串生成元素
- * * 带有id 的元素可从返回值的成员中获取 成员名为`#id`
- * * 允许插入Node类型
- * * `on-event` 属性绑定事件
- * * `style` 属性可用对象形式样式
+ * ### 数组分块
+ * @template T
+ * @param {Array<T>} array 待分块数组
+ * @param {Number} size 块大小
+ * @returns {Array<Array<T>>}
  */
-const $html = (() => {
-    const parser = new DOMParser();
-    /** @returns {Node} */
-    return (strings, ...values) => {
-        const valueMap = {};
-        for (let i = 0; i < values.length; i++) {
-            const value = values[i];
-            if (typeof value === "object") {
-                valueMap[i] = value;
-                if (value instanceof Node || Array.isArray(value)) values[i] = `<!--${i}-->`;
-                else values[i] = i;
-            }
-        }
-        const doc = parser.parseFromString(`<template>${String.raw(strings, ...values)}</template>`, "text/html");
+const toChunks = (array, size) => {
+    const len = array.length;
+    const chunkAmount = Math.ceil(len / size);
+    const chunks = new Array(chunkAmount);
 
-        /** @type {DocumentFragment} */
-        const content = document.adoptNode(doc.head.children[0].content);
-        /** @type {Node} */
-        let root;
-        // 大于一个元素时返回文档片段
-        if (content.childNodes.length > 1) root = content;
-        else root = content.childNodes[0];
-        const iterator = document.createNodeIterator(root);
-        let node;
-        while ((node = iterator.nextNode()))
-            switch (node.nodeType) {
-                case node.COMMENT_NODE:
-                    const target = valueMap[node.data];
-                    if (target) {
-                        if (Array.isArray(target)) node.replaceWith(...target);
-                        else node.replaceWith(target);
-                    }
-                    break;
-                case node.ELEMENT_NODE:
-                    if (node.id) {
-                        root["#" + node.id] = node;
-                        node.toggleAttribute("id");
-                    }
-                    if (node.hasAttribute("on-event")) {
-                        const listener = valueMap[node.getAttribute("on-event")];
-                        if (listener) util.addFeatureTo(node, listener);
-                        node.toggleAttribute("on-event");
-                    }
-                    if (node.hasAttribute("style")) {
-                        const style = valueMap[node.getAttribute("style")];
-                        if (style) {
-                            for (const key in style) {
-                                const value = style[key];
-                                if (key.startsWith("--")) node.style.setProperty(key, value);
-                                else node.style[key] = value;
-                            }
-                        }
-                    }
-            }
+    for (let i = 0, currentIndex = 0; i < chunkAmount; i++) {
+        const nextIndex = currentIndex + size;
+        chunks[i] = array.slice(currentIndex, nextIndex);
+        currentIndex = nextIndex;
+    }
 
-        return root;
-    };
-})();
+    return chunks;
+};
 
-const freeze = Object.freeze;
+/**
+ * 将数字转为8位 bit 数组
+ * @param {Number} num
+ * @param {Boolean} toBoolean
+ * @returns {[0|1, 0|1, 0|1, 0|1, 0|1, 0|1, 0|1, 0|1]}
+ */
+const toBits = (num, toBoolean = false) => {
+    const bits = [];
+    if (toBoolean) {
+        for (let i = 7; i >= 0; i--) bits.unshift((num >> i) & 1) === 1;
+    } else {
+        for (let i = 7; i >= 0; i--) bits.unshift((num >> i) & 1);
+    }
+    return bits;
+};
 
 /** `🔧 工具包` */
 const util = {
-    /**
-     * 向元素添加指定交互功能
-     * @param {Node} target 目标节点
-     * @param {Listeners} listeners 监听器
-     */
-    addFeatureTo(target, listeners) {
-        if (listeners.click) target.addEventListener("click", listeners.click);
-        if (listeners.keydown) {
-            target.setAttribute("tabindex", "0"); // 无障碍 允许tab聚焦
-            target.addEventListener("keydown", listeners.keydown);
-        }
-    },
     /**
      * 将图像中的白色像素切换为指定颜色
      * @param {ImageData} imageData
@@ -306,7 +329,7 @@ const asyncImg = async url => {
 
 /** 空白 1px * 1px 图片 */
 const $blankImg = new Promise(resolve => {
-    const canvas = document.createElement("canvas");
+    const canvas = createElement("canvas");
     canvas.width = 1;
     canvas.height = 1;
     canvas.toBlob(blob => resolve(URL.createObjectURL(blob)));
@@ -368,7 +391,7 @@ const $icon = (() => {
                 _h = this.naturalHeight * zoom,
                 w = this.naturalWidth,
                 h = this.naturalHeight;
-            const canvas = document.createElement("canvas");
+            const canvas = createElement("canvas");
             canvas.width = _w;
             canvas.height = _h;
             const ctx = canvas.getContext("2d");
@@ -608,3 +631,487 @@ const $class = (constructor, propAttrMap) => class extends constructor {
         freeze(this);
     }
 };
+
+const Callable = new Proxy(Function, {
+    construct(_, [fn], { name, prototype }) {
+        if (typeof fn !== "function") throw "应传入函数作为构造参数 " + fn;
+        Object.defineProperty(fn, "name", { value: `fn<${name}>`, enumerable: false });
+        return Object.setPrototypeOf(fn, prototype);
+    }
+});
+
+/**
+ *
+ * @param {HTMLCanvasElement} canvas
+ * @returns {Promise<String>}
+ */
+const canvasToUrl = canvas => new Promise(res => canvas.toBlob(blob => res(URL.createObjectURL(blob)), "image/png"));
+
+/** @typedef {"a"|"abbr"|"address"|"area"|"article"|"aside"|"audio"|"b"|"base"|"bdi"|"bdo"|"blockquote"|"body"|"br"|"button"|"canvas"|"caption"|"cite"|"code"|"col"|"colgroup"|"data"|"datalist"|"dd"|"del"|"details"|"dfn"|"dialog"|"div"|"dl"|"dt"|"em"|"embed"|"fieldset"|"figcaption"|"figure"|"footer"|"form"|"h1"|"h2"|"h3"|"h4"|"h5"|"h6"|"head"|"header"|"hgroup"|"hr"|"html"|"i"|"iframe"|"img"|"input"|"ins"|"kbd"|"label"|"legend"|"li"|"link"|"main"|"map"|"mark"|"menu"|"meta"|"meter"|"nav"|"noscript"|"object"|"ol"|"optgroup"|"option"|"output"|"p"|"picture"|"pre"|"progress"|"q"|"rp"|"rt"|"ruby"|"s"|"samp"|"script"|"search"|"section"|"select"|"slot"|"small"|"source"|"span"|"strong"|"style"|"sub"|"summary"|"sup"|"table"|"tbody"|"td"|"template"|"textarea"|"tfoot"|"th"|"thead"|"time"|"title"|"tr"|"track"|"u"|"ul"|"var"|"video"|"wbr"} HTML_TAG */
+
+/**
+ * @typedef {Object} ElementInitOption
+ * @prop {String|Array<String>} class 类名
+ * @prop {String|CSSStyleDeclaration} style 样式
+ * @prop {Boolean} hidden 隐藏
+ * @prop {0} tabindex
+ * @prop {Object} Event 事件监听器
+ * @prop {Array} shadowRoot 开启shadowRoot并添加元素
+ * @prop {String|Array<String>} HTML innerHTML
+ * @prop {Object} $ 挂载到元素对象上的属性
+ */
+
+/**
+ * ## 创建`HTML`节点
+ * @type {{
+ *   (option:ElementInitOption): DocumentFragment;
+ *   "[]"(option:ElementInitOption): Array<Node>;
+ *   $attach(element:HTMLElement): HTMLElement;
+ *   $comment(option:ElementInitOption): Comment;
+ *   a(option:ElementInitOption): HTMLAnchorElement;
+ *   abbr(option:ElementInitOption): HTMLElement;
+ *   address(option:ElementInitOption): HTMLElement;
+ *   area(option:ElementInitOption): HTMLAreaElement;
+ *   article(option:ElementInitOption): HTMLElement;
+ *   aside(option:ElementInitOption): HTMLElement;
+ *   audio(option:ElementInitOption): HTMLAudioElement;
+ *   b(option:ElementInitOption): HTMLElement;
+ *   base(option:ElementInitOption): HTMLBaseElement;
+ *   bdi(option:ElementInitOption): HTMLElement;
+ *   bdo(option:ElementInitOption): HTMLElement;
+ *   blockquote(option:ElementInitOption): HTMLQuoteElement;
+ *   body(option:ElementInitOption): HTMLBodyElement;
+ *   br(option:ElementInitOption): HTMLBRElement;
+ *   button(option:ElementInitOption): HTMLButtonElement;
+ *   canvas(option:ElementInitOption): HTMLCanvasElement;
+ *   caption(option:ElementInitOption): HTMLTableCaptionElement;
+ *   cite(option:ElementInitOption): HTMLElement;
+ *   code(option:ElementInitOption): HTMLElement;
+ *   col(option:ElementInitOption): HTMLTableColElement;
+ *   colgroup(option:ElementInitOption): HTMLTableColElement;
+ *   data(option:ElementInitOption): HTMLDataElement;
+ *   datalist(option:ElementInitOption): HTMLDataListElement;
+ *   dd(option:ElementInitOption): HTMLElement;
+ *   del(option:ElementInitOption): HTMLModElement;
+ *   details(option:ElementInitOption): HTMLDetailsElement;
+ *   dfn(option:ElementInitOption): HTMLElement;
+ *   dialog(option:ElementInitOption): HTMLDialogElement;
+ *   div(option:ElementInitOption): HTMLDivElement;
+ *   dl(option:ElementInitOption): HTMLDListElement;
+ *   dt(option:ElementInitOption): HTMLElement;
+ *   em(option:ElementInitOption): HTMLElement;
+ *   embed(option:ElementInitOption): HTMLEmbedElement;
+ *   fieldset(option:ElementInitOption): HTMLFieldSetElement;
+ *   figcaption(option:ElementInitOption): HTMLElement;
+ *   figure(option:ElementInitOption): HTMLElement;
+ *   footer(option:ElementInitOption): HTMLElement;
+ *   form(option:ElementInitOption): HTMLFormElement;
+ *   h1(option:ElementInitOption): HTMLHeadingElement;
+ *   h2(option:ElementInitOption): HTMLHeadingElement;
+ *   h3(option:ElementInitOption): HTMLHeadingElement;
+ *   h4(option:ElementInitOption): HTMLHeadingElement;
+ *   h5(option:ElementInitOption): HTMLHeadingElement;
+ *   h6(option:ElementInitOption): HTMLHeadingElement;
+ *   head(option:ElementInitOption): HTMLHeadElement;
+ *   header(option:ElementInitOption): HTMLElement;
+ *   hgroup(option:ElementInitOption): HTMLElement;
+ *   hr(option:ElementInitOption): HTMLHRElement;
+ *   html(option:ElementInitOption): HTMLHtmlElement;
+ *   i(option:ElementInitOption): HTMLElement;
+ *   iframe(option:ElementInitOption): HTMLIFrameElement;
+ *   img(option:ElementInitOption): HTMLImageElement;
+ *   input(option:ElementInitOption): HTMLInputElement;
+ *   inputButton(option:ElementInitOption): HTMLInputElement;
+ *   inputCheckbox(option:ElementInitOption): HTMLInputElement;
+ *   inputColor(option:ElementInitOption): HTMLInputElement;
+ *   inputDate(option:ElementInitOption): HTMLInputElement;
+ *   inputEmail(option:ElementInitOption): HTMLInputElement;
+ *   inputFile(option:ElementInitOption): HTMLInputElement;
+ *   inputHidden(option:ElementInitOption): HTMLInputElement;
+ *   inputImage(option:ElementInitOption): HTMLInputElement;
+ *   inputMonth(option:ElementInitOption): HTMLInputElement;
+ *   inputNumber(option:ElementInitOption): HTMLInputElement;
+ *   inputPassword(option:ElementInitOption): HTMLInputElement;
+ *   inputRadio(option:ElementInitOption): HTMLInputElement;
+ *   inputRange(option:ElementInitOption): HTMLInputElement;
+ *   inputReset(option:ElementInitOption): HTMLInputElement;
+ *   inputSearch(option:ElementInitOption): HTMLInputElement;
+ *   inputSubmit(option:ElementInitOption): HTMLInputElement;
+ *   inputTel(option:ElementInitOption): HTMLInputElement;
+ *   inputText(option:ElementInitOption): HTMLInputElement;
+ *   inputTime(option:ElementInitOption): HTMLInputElement;
+ *   inputUrl(option:ElementInitOption): HTMLInputElement;
+ *   inputWeek(option:ElementInitOption): HTMLInputElement;
+ *   ins(option:ElementInitOption): HTMLModElement;
+ *   kbd(option:ElementInitOption): HTMLElement;
+ *   label(option:ElementInitOption): HTMLLabelElement;
+ *   legend(option:ElementInitOption): HTMLLegendElement;
+ *   li(option:ElementInitOption): HTMLLIElement;
+ *   link(option:ElementInitOption): HTMLLinkElement;
+ *   main(option:ElementInitOption): HTMLElement;
+ *   map(option:ElementInitOption): HTMLMapElement;
+ *   mark(option:ElementInitOption): HTMLElement;
+ *   menu(option:ElementInitOption): HTMLMenuElement;
+ *   meta(option:ElementInitOption): HTMLMetaElement;
+ *   meter(option:ElementInitOption): HTMLMeterElement;
+ *   nav(option:ElementInitOption): HTMLElement;
+ *   noscript(option:ElementInitOption): HTMLElement;
+ *   object(option:ElementInitOption): HTMLObjectElement;
+ *   ol(option:ElementInitOption): HTMLOListElement;
+ *   optgroup(option:ElementInitOption): HTMLOptGroupElement;
+ *   option(option:ElementInitOption): HTMLOptionElement;
+ *   output(option:ElementInitOption): HTMLOutputElement;
+ *   p(option:ElementInitOption): HTMLParagraphElement;
+ *   picture(option:ElementInitOption): HTMLPictureElement;
+ *   pre(option:ElementInitOption): HTMLPreElement;
+ *   progress(option:ElementInitOption): HTMLProgressElement;
+ *   q(option:ElementInitOption): HTMLQuoteElement;
+ *   rp(option:ElementInitOption): HTMLElement;
+ *   rt(option:ElementInitOption): HTMLElement;
+ *   ruby(option:ElementInitOption): HTMLElement;
+ *   s(option:ElementInitOption): HTMLElement;
+ *   samp(option:ElementInitOption): HTMLElement;
+ *   script(option:ElementInitOption): HTMLScriptElement;
+ *   search(option:ElementInitOption): HTMLElement;
+ *   section(option:ElementInitOption): HTMLElement;
+ *   select(option:ElementInitOption): HTMLSelectElement;
+ *   slot(option:ElementInitOption): HTMLSlotElement;
+ *   small(option:ElementInitOption): HTMLElement;
+ *   source(option:ElementInitOption): HTMLSourceElement;
+ *   span(option:ElementInitOption): HTMLSpanElement;
+ *   strong(option:ElementInitOption): HTMLElement;
+ *   style(option:ElementInitOption): HTMLStyleElement;
+ *   sub(option:ElementInitOption): HTMLElement;
+ *   summary(option:ElementInitOption): HTMLElement;
+ *   sup(option:ElementInitOption): HTMLElement;
+ *   table(option:ElementInitOption): HTMLTableElement;
+ *   tbody(option:ElementInitOption): HTMLTableSectionElement;
+ *   td(option:ElementInitOption): HTMLTableCellElement;
+ *   template(option:ElementInitOption): HTMLTemplateElement;
+ *   textarea(option:ElementInitOption): HTMLTextAreaElement;
+ *   tfoot(option:ElementInitOption): HTMLTableSectionElement;
+ *   th(option:ElementInitOption): HTMLTableCellElement;
+ *   thead(option:ElementInitOption): HTMLTableSectionElement;
+ *   time(option:ElementInitOption): HTMLTimeElement;
+ *   title(option:ElementInitOption): HTMLTitleElement;
+ *   tr(option:ElementInitOption): HTMLTableRowElement;
+ *   track(option:ElementInitOption): HTMLTrackElement;
+ *   u(option:ElementInitOption): HTMLElement;
+ *   ul(option:ElementInitOption): HTMLUListElement;
+ *   var(option:ElementInitOption): HTMLElement;
+ *   video(option:ElementInitOption): HTMLVideoElement;
+ *   wbr(option:ElementInitOption): HTMLElement;
+ * }}
+ */
+const h = (() => {
+    const doc = window.document;
+    /** @param {HTMLElement} $ */
+    const attach = ($, attr) => {
+        for (const key in attr) {
+            const value = attr[key];
+            /** 尝试事件绑定 */
+            if (key.startsWith("on")) {
+                if (key in $) {
+                    let fn, option, useCapture;
+                    if (typeof value === "function") fn = value;
+                    else [fn, option = {}, useCapture = false] = value;
+                    $.addEventListener(key.slice(2), fn, option, useCapture);
+                }
+            } else
+                switch (key) {
+                    case "class": //类名
+                        if (Array.isArray(value)) $.className = value.join(" ");
+                        else $.className = value;
+                        continue;
+                    case "style": //样式
+                        if (typeof value === "string") $.style = value;
+                        else
+                            for (const prop in value)
+                                if (prop.includes("-")) $.style.setProperty(prop, value[prop]);
+                                else $.style[prop] = value[prop];
+                        continue;
+                    case "hidden": //隐藏
+                        $.hidden = value;
+                        continue;
+                    case "Event": //绑定事件
+                        if (value.click) $.addEventListener("click", value.click);
+                        if (value.keydown) {
+                            $.setAttribute("tabindex", "0"); // 无障碍 允许tab聚焦
+                            $.addEventListener("keydown", value.keydown);
+                        }
+                        continue;
+                    case "shadowRoot": //想shadowRoot中添加元素
+                        const shadowRoot = $.attachShadow({ mode: value.mode ?? "open" });
+                        const styleSheets = [];
+                        const fragment = h();
+                        for (let i = 0; i < value.length; i++) {
+                            const e = value[i];
+                            if (e instanceof CSSStyleSheet) styleSheets.push(e);
+                            else fragment.append(e);
+                        }
+                        shadowRoot.adoptedStyleSheets = styleSheets;
+                        shadowRoot.append(fragment);
+                        continue;
+                    case "HTML":
+                        if (Array.isArray(value)) $.innerHTML = value.join("");
+                        else $.innerHTML = value;
+                        continue;
+                    case "$":
+                        Object.assign($, value);
+                        continue;
+                    default:
+                        $.setAttribute(key, value);
+                }
+        }
+    };
+    const fnMap = {
+        $attach(element, ...args) {
+            const attr = args[0];
+            if (typeof attr === "object" && !(attr instanceof Node)) {
+                args.shift();
+                attach(element, attr);
+            }
+            element.append(...args.flat(Infinity));
+            return element;
+        },
+        $comment: (...args) => new Comment(String.raw(...args)),
+        "[]": (...args) => [...h(...args).childNodes],
+        template(...args) {
+            const $ = doc.createElement("template");
+            const attr = args[0];
+            if (typeof attr === "object" && !(attr instanceof Node)) {
+                args.shift();
+                attach($, attr);
+            }
+            $.content.append(...args.flat(Infinity));
+            return $;
+        }
+    };
+
+    //prettier-ignore
+    ["a", "abbr", "address", "area", "article", "aside", "audio", "b", "bdi", "bdo", "bgckquote", "body", "button", "canvas", "caption", "cite", "code", "colgroup", "data", "datalist", "dd", "del", "details", "dfn", "dialog", "div", "dl", "dt", "em", "fieldset", "figcaption", "figure", "footer", "form", "h1", "h2", "h3", "h4", "h5", "h6", "head", "header", "hgroup", "html", "i", "iframe", "input", "ins", "kbd", "label", "legend", "li", "main", "map", "mark", "menu", "meta", "meter", "nav", "noscript", "object", "ol", "optgroup", "option", "output", "p", "picture", "pre", "progress", "q", "rp", "rt", "ruby", "s", "samp", "search", "section", "select", "slot", "small", "span", "strong", "sub", "summary", "sup", "table", "tbody", "td", "textarea", "tfoot", "th", "thead", "time", "tr", "u", "ul", "var", "video"].forEach(e =>
+       fnMap[e] = function (...args) {
+           const $ = doc.createElement(e);
+           const attr = args[0];
+           if (typeof attr === "object" && !(attr instanceof Node)) {
+               args.shift();
+               attach($, attr);
+           }
+           $.append(...args.flat(Infinity));
+           return $;
+       }
+   );
+
+    // 空元素
+    //prettier-ignore
+    ["area", "base", "br", "col", "embed", "hr", "img", "input", "link", "meta", "source", "track", "wbr"].forEach(e =>
+       fnMap[e] = function (attr) {
+           const $ = doc.createElement(e);
+           if (attr) attach($, attr);
+           return $;
+       }
+   );
+
+    // 字符串直接嵌入
+    //prettier-ignore
+    ["script", "style", "title"].forEach(e =>
+       fnMap[e] = function (...args) {
+           const $ = doc.createElement(e);
+           const attr = args[0];
+           if (typeof attr === "object" && !(attr instanceof Node)) {
+               args.shift();
+               attach($, attr);
+           }
+           $.innerHTML = args.flat(Infinity).join("");
+           return $;
+       }
+   );
+
+    // input类
+    ["inputButton", "inputCheckbox", "inputColor", "inputDate", "inputEmail", "inputFile", "inputHidden", "inputImage", "inputMonth", "inputNumber", "inputPassword", "inputRadio", "inputRange", "inputReset", "inputSearch", "inputSubmit", "inputTel", "inputText", "inputTime", "inputUrl", "inputWeek"].forEach(e => {
+        const type = e.slice(5).toLowerCase();
+        fnMap[e] = function (attr) {
+            /** @type {HTMLInputElement} */
+            const $ = doc.createElement("input");
+            $.type = type;
+            if (attr) attach($, attr);
+            return $;
+        };
+    });
+
+    return Object.assign((...args) => {
+        const $ = new DocumentFragment();
+        $.append(...args.flat(Infinity));
+        return $;
+    }, fnMap);
+})();
+
+/**
+ * 生成样式表
+ */
+const css = (() => {
+    /**
+     * @param {CSSStyleDeclaration} declaration
+     */
+    const cssText = declaration => {
+        const style = document.createElement("html").style;
+        const nestData = [];
+        for (const prop in declaration) {
+            const data = declaration[prop];
+            if (typeof data === "object") nestData.push(`${prop}{${cssText(data)}}`);
+            else if (prop.startsWith("--")) style.setProperty(prop, data);
+            //允许使用$简化自定义css属性的"--"前缀
+            else if (prop.startsWith("$")) style.setProperty("--" + prop.slice(1), data);
+            else if (prop in style) style[prop] = data;
+        }
+        return style.cssText + nestData.join("");
+    };
+    /**
+     * @param {{
+     * a:CSSStyleDeclaration;
+     * abbr:CSSStyleDeclaration;
+     * address:CSSStyleDeclaration;
+     * area:CSSStyleDeclaration;
+     * article:CSSStyleDeclaration;
+     * aside:CSSStyleDeclaration;
+     * audio:CSSStyleDeclaration;
+     * b:CSSStyleDeclaration;
+     * base:CSSStyleDeclaration;
+     * bdi:CSSStyleDeclaration;
+     * bdo:CSSStyleDeclaration;
+     * blockquote:CSSStyleDeclaration;
+     * body:CSSStyleDeclaration;
+     * br:CSSStyleDeclaration;
+     * button:CSSStyleDeclaration;
+     * canvas:CSSStyleDeclaration;
+     * caption:CSSStyleDeclaration;
+     * cite:CSSStyleDeclaration;
+     * code:CSSStyleDeclaration;
+     * col:CSSStyleDeclaration;
+     * colgroup:CSSStyleDeclaration;
+     * data:CSSStyleDeclaration;
+     * datalist:CSSStyleDeclaration;
+     * dd:CSSStyleDeclaration;
+     * del:CSSStyleDeclaration;
+     * details:CSSStyleDeclaration;
+     * dfn:CSSStyleDeclaration;
+     * dialog:CSSStyleDeclaration;
+     * div:CSSStyleDeclaration;
+     * dl:CSSStyleDeclaration;
+     * dt:CSSStyleDeclaration;
+     * em:CSSStyleDeclaration;
+     * embed:CSSStyleDeclaration;
+     * fieldset:CSSStyleDeclaration;
+     * figcaption:CSSStyleDeclaration;
+     * figure:CSSStyleDeclaration;
+     * footer:CSSStyleDeclaration;
+     * form:CSSStyleDeclaration;
+     * h1:CSSStyleDeclaration;
+     * h2:CSSStyleDeclaration;
+     * h3:CSSStyleDeclaration;
+     * h4:CSSStyleDeclaration;
+     * h5:CSSStyleDeclaration;
+     * h6:CSSStyleDeclaration;
+     * head:CSSStyleDeclaration;
+     * header:CSSStyleDeclaration;
+     * hgroup:CSSStyleDeclaration;
+     * hr:CSSStyleDeclaration;
+     * html:CSSStyleDeclaration;
+     * i:CSSStyleDeclaration;
+     * iframe:CSSStyleDeclaration;
+     * img:CSSStyleDeclaration;
+     * input:CSSStyleDeclaration;
+     * ins:CSSStyleDeclaration;
+     * kbd:CSSStyleDeclaration;
+     * label:CSSStyleDeclaration;
+     * legend:CSSStyleDeclaration;
+     * li:CSSStyleDeclaration;
+     * link:CSSStyleDeclaration;
+     * main:CSSStyleDeclaration;
+     * map:CSSStyleDeclaration;
+     * mark:CSSStyleDeclaration;
+     * menu:CSSStyleDeclaration;
+     * meta:CSSStyleDeclaration;
+     * meter:CSSStyleDeclaration;
+     * nav:CSSStyleDeclaration;
+     * noscript:CSSStyleDeclaration;
+     * object:CSSStyleDeclaration;
+     * ol:CSSStyleDeclaration;
+     * optgroup:CSSStyleDeclaration;
+     * option:CSSStyleDeclaration;
+     * output:CSSStyleDeclaration;
+     * p:CSSStyleDeclaration;
+     * picture:CSSStyleDeclaration;
+     * pre:CSSStyleDeclaration;
+     * progress:CSSStyleDeclaration;
+     * q:CSSStyleDeclaration;
+     * rp:CSSStyleDeclaration;
+     * rt:CSSStyleDeclaration;
+     * ruby:CSSStyleDeclaration;
+     * s:CSSStyleDeclaration;
+     * samp:CSSStyleDeclaration;
+     * script:CSSStyleDeclaration;
+     * search:CSSStyleDeclaration;
+     * section:CSSStyleDeclaration;
+     * select:CSSStyleDeclaration;
+     * slot:CSSStyleDeclaration;
+     * small:CSSStyleDeclaration;
+     * source:CSSStyleDeclaration;
+     * span:CSSStyleDeclaration;
+     * strong:CSSStyleDeclaration;
+     * style:CSSStyleDeclaration;
+     * sub:CSSStyleDeclaration;
+     * summary:CSSStyleDeclaration;
+     * sup:CSSStyleDeclaration;
+     * table:CSSStyleDeclaration;
+     * tbody:CSSStyleDeclaration;
+     * td:CSSStyleDeclaration;
+     * template:CSSStyleDeclaration;
+     * textarea:CSSStyleDeclaration;
+     * tfoot:CSSStyleDeclaration;
+     * th:CSSStyleDeclaration;
+     * thead:CSSStyleDeclaration;
+     * time:CSSStyleDeclaration;
+     * title:CSSStyleDeclaration;
+     * tr:CSSStyleDeclaration;
+     * track:CSSStyleDeclaration;
+     * u:CSSStyleDeclaration;
+     * ul:CSSStyleDeclaration;
+     * var:CSSStyleDeclaration;
+     * video:CSSStyleDeclaration;
+     * wbr:CSSStyleDeclaration;
+     * ":host":CSSStyleDeclaration;
+     * "*":CSSStyleDeclaration;
+     * [key: string]:CSSStyleDeclaration;
+     * }} datas
+     * @param {CSSStyleSheetInit} init
+     */
+    const fn = (datas, init) => {
+        const styleSheet = new CSSStyleSheet(init);
+        const cache = [];
+        for (const key in datas) {
+            const data = datas[key];
+            if (key.startsWith("@keyframes")) {
+                const _cache = [];
+                for (const frame in data) {
+                    let frameName = frame;
+                    if (!isNaN(frame)) frameName += "%";
+                    _cache.push(`${frameName}{${cssText(data[frame])}}`);
+                }
+                cache.push(`${key}{${_cache.join("")}}`);
+            } else if (key.startsWith("@property")) {
+                const _cache = [];
+                if (data.syntax) _cache.push(`syntax:${data.syntax}`);
+                if (data.inherits) _cache.push(`inherits:${data.syntax}`);
+                if (data.initialValue) _cache.push(`initial-value:${data.initialValue}`);
+                cache.push(`${key}{${_cache.join(";")}}`);
+            } else cache.push(`${key}{${cssText(data)}}`);
+        }
+        styleSheet.replaceSync(cache.join(""));
+        return styleSheet;
+    };
+    return fn;
+})();
+
+window.h = h;
+window.css = css;

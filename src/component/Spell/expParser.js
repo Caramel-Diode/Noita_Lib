@@ -118,15 +118,11 @@ const getSpellDatas = exp => {
         case "SPELL_GROUP":
             switch (exp.operator) {
                 case "AND":
-                    //取交集
-                    return getSpellDatas(exp.data1).intersection(getSpellDatas(exp.data2)); // 采用polyfill函数
+                    return getSpellDatas(exp.data1).intersection(getSpellDatas(exp.data2)); //取交集 采用polyfill函数
                 case "OR":
-                    //取并集
-                    return getSpellDatas(exp.data1).union(getSpellDatas(exp.data2)); // 采用polyfill函数
-                case "NOT": {
-                    //取补集
-                    return SpellData.data.all.difference(getSpellDatas(exp.data2)); // 采用polyfill函数
-                }
+                    return getSpellDatas(exp.data1).union(getSpellDatas(exp.data2)); //取并集 采用polyfill函数
+                case "NOT":
+                    return SpellData.data.all.difference(getSpellDatas(exp.data2)); //取补集 采用polyfill函数
             }
     }
 };
@@ -182,7 +178,7 @@ const parse = exp => {
                         break;
                     default:
                         currentToken = new Token(tokenEnum.UND, i);
-                        und.data = char;
+                        currentToken.data = char;
                         return err([`不合法的字符: "${char}"`]);
                 }
         }
@@ -373,5 +369,5 @@ const parse = exp => {
     //#endregion
     console.groupEnd();
     console.groupEnd();
-    return [...result];
+    return Object.assign([...result], { exp });
 };

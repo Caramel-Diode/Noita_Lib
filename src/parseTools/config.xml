@@ -5,10 +5,13 @@
     <FileType extension=".csv" mime-type="text/csv" />
     <FileType extension=".xml" mime-type="application/xml" />
     <FileType extension=".png" mime-type="image/png" />
+    <FileType extension=".txt" mime-type="text/plain" />
     <!-- 材料缺少air对应的图标 -->
     <Path url="/data/generated/material_icons/air.png" map="./src/parseTools/material/air.png" />
+    <Path url="/data/generated/material_icons/plastic_grey.png" map="./src/parseTools/material/air.png" />
+    <Path url="/data/generated/material_icons/plastic_grey_molten.png" map="./src/parseTools/material/air.png" />
     <!-- 映射到 data.wak 解包目录 -->
-    <Path url="/data/" map="D:/Project/Noita_data_wak/2024.3.27/data/" />
+    <Path url="/data/" map="D:/Project/Noita_data_wak/2024.7.10/data/" />
     <Path url="/public/" map="./src/public/" />
     <!-- 执行Lua 不做映射处理 -->
     <Path url="/call.lua/" map="/call.lua/" />

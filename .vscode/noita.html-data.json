@@ -14,6 +14,18 @@
                             "description": "### 图标模式"
                         },
                         {
+                            "name": "icon:projectilesProvided",
+                            "description": "### 图标模式  \n`提供投射物`"
+                        },
+                        {
+                            "name": "icon:projectilesRelated",
+                            "description": "### 图标模式  \n`关联投射物`"
+                        },
+                        {
+                            "name": "icon:staticSpells",
+                            "description": "### 图标模式  \n`始终施放`"
+                        },
+                        {
                             "name": "panel",
                             "description": "### 面板模式"
                         }
@@ -452,7 +464,36 @@
                     "description": "指定多个法术",
                     "values": [
                         {
-                            "name": ""
+                            "name": "#type_projectile",
+                            "description": "投射物类型"
+                        },
+                        {
+                            "name": "#type_staticProjectile",
+                            "description": "静态投射物类型"
+                        },
+                        {
+                            "name": "#type_modifier",
+                            "description": "修正类型"
+                        },
+                        {
+                            "name": "#type_drawMany",
+                            "description": "多重类型"
+                        },
+                        {
+                            "name": "#type_material",
+                            "description": "材料类型"
+                        },
+                        {
+                            "name": "#type_other",
+                            "description": "其他类型"
+                        },
+                        {
+                            "name": "#type_utility",
+                            "description": "实用类型"
+                        },
+                        {
+                            "name": "#type_passive",
+                            "description": "实用类型"
                         }
                     ]
                 }
@@ -1769,6 +1810,106 @@
                         {
                             "name": "WORMY",
                             "description": "可怕的爬动声到处都是"
+                        }
+                    ]
+                }
+            ]
+        },
+        {
+            "name": "noita-orb",
+            "description": "### Noita魔球组件",
+            "attributes": [
+                {
+                    "name": "orb.id",
+                    "description": "魔球id",
+                    "values": [
+                        {
+                            "name": "common",
+                            "description": "普通空魔球"
+                        },
+                        {
+                            "name": "red",
+                            "description": "红色空魔球"
+                        },
+                        {
+                            "name": "discovered",
+                            "description": "熟悉的真理魔球"
+                        },
+                        {
+                            "name": "evil",
+                            "description": "腐烂的魔球"
+                        },
+                        {
+                            "name": "0",
+                            "description": "岩浆之海 魔球"
+                        },
+                        {
+                            "name": "1",
+                            "description": "地震 魔球"
+                        },
+                        {
+                            "name": "2",
+                            "description": "召唤触手 魔球"
+                        },
+                        {
+                            "name": "3",
+                            "description": "核弹 魔球"
+                        },
+                        {
+                            "name": "4",
+                            "description": "死灵术 魔球"
+                        },
+                        {
+                            "name": "5",
+                            "description": "神圣炸弹 魔球"
+                        },
+                        {
+                            "name": "6",
+                            "description": "螺旋魔弹 魔球"
+                        },
+                        {
+                            "name": "7",
+                            "description": "雷云 魔球"
+                        },
+                        {
+                            "name": "8",
+                            "description": "烟火 魔球"
+                        },
+                        {
+                            "name": "9",
+                            "description": "召唤鹿 魔球"
+                        },
+                        {
+                            "name": "10",
+                            "description": "水泥 魔球"
+                        }
+                    ]
+                }
+            ]
+        },
+        {
+            "name": "orb-container",
+            "description": "### Noita容器组件",
+            "attributes": [
+                {
+                    "name": "container.type",
+                    "descriptn": "容器类型",
+                    "values": [
+                        {
+                            "name": "common",
+                            "description": "圆形烧瓶"
+                        },
+                        {
+                            "name": "conical",
+                            "description": "锥形瓶"
+                        },
+                        {
+                            "name": "jar",
+                            "description": "罐子"
+                        },
+                        {
+                            "name": "bag",
+                            "description": "袋子"
                         }
                     ]
                 }

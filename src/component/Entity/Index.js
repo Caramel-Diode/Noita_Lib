@@ -34,14 +34,12 @@ const Entity = (() => {
          * @param {import("@spell").SpellData.ProjectileData} [extraData] 附加数据
          * @returns {HTMLElement}
          */
-        static getDataSection(entityData, extraData = { drawCount_Death: 0, drawCount_Hit: 0, drawCount_Timer: 0 }) {
+        static getDataSection(entityData, extraData = { drawCount_Death: 0, drawCount_Hit: 0, drawCount_Timer: 0 }, ignore = []) {
             const pc = entityData.projectileComponent;
             const dmc = entityData.damageModelComponent;
 
-            const section = createElement("section");
-            section.role = "tabpanel"; // 无障碍: 选项卡面板
-            const loader = new this.PanelAttrLoader();
-            section.append(loader.container);
+            const loader = new this.PanelAttrLoader(ignore);
+            const section = h.section({ role: "tabpanel" }, loader.container);
 
             //#region 投射物组件
             if (pc) {

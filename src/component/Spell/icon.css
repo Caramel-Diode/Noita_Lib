@@ -1,13 +1,32 @@
 :host {
     grid-template: "main" 40px/40px;
     --size: 40px;
+    /* 角标 */
+    > img {
+        zoom: 2;
+        place-self: start end;
+        grid-area: main;
+    }
+}
+/* 自定义角标 */
+::slotted(*) {
+    z-index: 1;
+    grid-area: main;
+    /* 默认右上角 */
+    place-self: start end;
 }
 
-img {
-    zoom: 2;
-    &::selection {
-        background-color: color-mix(in srgb, var(--c1) 30%, #0000 70%);
-    }
+::slotted(:is(.\[left-top\], .\[lt\], .\[1\])) {
+    place-self: start;
+}
+::slotted(:is(.\[right-top\], .\[rt\], .\[2\])) {
+    place-self: start end;
+}
+::slotted(:is(.\[left-bottom\], .\[lb\], .\[3\])) {
+    place-self: end start;
+}
+::slotted(:is(.\[right-bottom\], .\[rb\], .\[4\])) {
+    place-self: end;
 }
 
 /* 剩余次数 */
@@ -17,9 +36,6 @@ data {
     --font-weight: 400;
     display: grid;
     place-content: start;
-    position: relative;
-    top: -3px;
-    left: -3px;
     user-select: none;
 }
 
@@ -30,6 +46,8 @@ ol {
 
 /* 轮播项 */
 li {
+    height: var(--size);
+    width: var(--size);
     display: grid;
     place-content: center;
     place-items: center;
@@ -79,6 +97,12 @@ li {
         var(--bg4) left bottom/ var(--p);
     /* 聚焦时使用聚焦边框 否则回退使用正常边框 */
     background: var(--focus\#border, var(--common\#border)), /* 底色 */ var(--b);
+    > img {
+        zoom: 2;
+        &::selection {
+            background-color: color-mix(in srgb, var(--c1) 30%, #0000 70%);
+        }
+    }
 }
 
 /* 聚焦时 替换中心光晕底色色盘 */

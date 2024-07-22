@@ -25,7 +25,9 @@ Icon.$defineElement("-spell");
  * @typedef {import("TYPE").SpellData<T>} SpellData
  */
 
-class SpellData {
+class SpellData extends Callable {
+    //prettier-ignore
+    static { delete this.prototype.constructor; } // 禁止从实例访问构造器
     /** 法术等级 */
     static lvs = ["lv0", "lv1", "lv2", "lv3", "lv4", "lv5", "lv6", "lv7", "lv10"];
 
@@ -361,37 +363,33 @@ class SpellData {
 
     static #typeList = [/* 无 */ "null", /* 投射物 */ "projectile", /* 静态投射物 */ "staticProjectile", /* 修正 */ "modifier", /* 多重 */ "drawMany", /* 材料 */ "material", /* 其它 */ "other", /* 实用 */ "utility", /* 被动 */ "passive"];
     /** @type {String} 图标url */ #iconIndex;
-
+    name;
     /**
-     * @param {Array<String>} datas
+     * @param {Array<String>} data
+     * @param {Number} index
      */
     constructor(data, index) {
+        super(() => {});
         this.#iconIndex = index;
+        //prettier-ignore
         [
             this.id, //===============[0] id
             this.name, //=============[1] 名称
-            ,
-            //========================[2] 别名
+            , //======================[2] 别名
             this.desc, //=============[3] 描述
-            ,
-            ,
-            //========================[4] 类型
-            //========================[5] 最大使用次数
+            , //======================[4] 类型
+            , //======================[5] 最大使用次数
             this.mana, //=============[6] 蓝耗
             this.price, //============[7] 售价
             this.passive = "", //=====[8] 被动效果
-            ,
-            ,
-            //=======================[9] 生成概率
-            //=======================[10] 生成条件
-            this.draw = 0, //========[11] 抽取数
-            ,
-            ,
-            //=======================[12] 提供投射物
-            //=======================[13] 修正行为
-            this.action, //==========[14] 法术行为
-            this.nameKey = "", //====[15] 名称键 用于csv翻译映射
-            this.descKey = "" //=====[16] 描述键 用于csv翻译映射
+            , //======================[9] 生成概率
+            , //======================[10] 生成条件
+            this.draw = 0, //=========[11] 抽取数
+            , //======================[12] 提供投射物
+            , //======================[13] 修正行为
+            this.action, //===========[14] 法术行为
+            this.nameKey = "", //=====[15] 名称键 用于csv翻译映射
+            this.descKey = "" //======[16] 描述键 用于csv翻译映射
         ] = data;
         this.alias = freeze(data[2] ? data[2].split(" ") : []);
         this.type = SpellData.#typeList[data[4]];
@@ -438,6 +436,16 @@ class SpellData {
         return parse;
     })();
 
+    /**
+     * 注册自定义的法术标签
+     * @param {String} tag
+     * @param {(data:SpellData) => Boolean } predicate
+     */
+    static registerTag = (tag, predicate) => {
+        this.data[tag] = new Set([...this.data.all].filter(predicate));
+        return "#" + tag;
+    };
+
     /** 初始化数据库 */
     static init() {
         /** ⚫ 空法术 @type {SpellData & {$projectile:SpellData,$staticProjectile:SpellData,$modifier:SpellData,$drawMany:SpellData,$material:SpellData,$other:SpellData,$utility:SpellData,$passive:SpellData}} */
@@ -470,10 +478,8 @@ class SpellData {
         freeze(this.$NULL);
 
         const storage = this.data;
-        const datas = embed(`#data.js`);
-        for (let i = 0, j = 0; i < datas.length; i += 17, j++) {
-            const data = new this(datas.slice(i, i + 17), j);
-
+        toChunks(embed(`#data.js`), 17).forEach((v, i) => {
+            const data = new this(v, i);
             //#region 向数据库中写入
             storage.all.add(data);
             // id, 正式名, 别名均创建映射
@@ -514,6 +520,6 @@ class SpellData {
             //#endregion
 
             freeze(data);
-        }
+        });
     }
 }

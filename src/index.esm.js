@@ -24,4 +24,4 @@ const noitaLib = mode => {
 // 允许按需导入
 export { translation, Material, Entity, Spell, Wand, Perk, Container, Message, cursor, save };
 // 提供默认导出 允许直接使用 import noitaLib form "./noitaLib.esm.js" 的方式进行导入
-export default Object.freeze(Object.assign(noitaLib, { translation, Material, Entity, Spell, Wand, Perk, Container, Message, State: {}, Orb: {}, cursor, save }));
+export default Object.freeze(Object.assign(noitaLib, { translation, Material, Entity, Spell, Wand, Perk, Container, Message, State: {}, Orb, cursor, save }));

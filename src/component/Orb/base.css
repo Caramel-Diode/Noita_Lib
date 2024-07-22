@@ -1,0 +1,35 @@
+:host {
+    place-items: end center;
+    height: 126px;
+    width: 66px;
+    background-size: 462px 126px;
+    background-image: var(--bg);
+    background-position: 0% 0%;
+    animation-name: play;
+    animation-duration: 1s;
+    animation-timing-function: steps(6);
+    animation-iteration-count: infinite;
+}
+
+.insert {
+    height: 60px;
+    width: 60px;
+    position: relative;
+    bottom: 1px;
+    display: grid;
+    place-items: center;
+    place-content: center;
+}
+
+img {
+    user-select: none;
+    zoom: 3;
+    position: relative;
+    bottom: 1px;
+}
+
+@keyframes play {
+    to {
+        background-position: 100% 0%;
+    }
+}

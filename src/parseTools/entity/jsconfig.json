@@ -9,5 +9,5 @@
         "checkJs": true,
         "paths": {}
     },
-    "include": ["script.js", "entityComponents.js", "animation.js", "../../public/xmlParser.js", "../../public/csvParser.js", "../../public/damageData.js", "../util.js"]
+    "include": ["script.js", "xml.list.js", "entityComponents.js", "animation.js", "../../public/XML.js", "../../public/CSV.js", "../../public/damageData.js", "../util.js"]
 }

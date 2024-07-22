@@ -21,7 +21,7 @@ main {
             width: 60px;
             text-align: center;
             text-wrap: nowrap;
-            font-family: monospace;
+            font-family: var(--mono-font);
             --font-size: 24px;
             --font-weight: 300;
         }
@@ -32,6 +32,7 @@ main {
                 text-align: left;
             }
             &:nth-child(2) {
+                color: #cfcfcf;
                 width: 180px;
                 text-align: left;
             }

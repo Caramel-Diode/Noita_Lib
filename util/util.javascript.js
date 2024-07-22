@@ -100,6 +100,6 @@ const min = d => {
             }
         }
     }
-    return result.join("").replaceAll(/0+\.(?=[d])/g, "."); // 压缩小数表达式
+    return result.join("").replaceAll(";;", ";");
 };
 export default { min };

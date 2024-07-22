@@ -27,7 +27,7 @@ Promise.withResolvers ??= () => {
     return { promise, resolve, reject };
 };
 
-const dataPath = `D:/Project/Noita_data_wak/2024.3.27/data`;
+const dataPath = `D:/Project/Noita_data_wak/2024.7.10/data`;
 
 class LuaError extends Error {
     constructor(msg) {
@@ -95,6 +95,7 @@ const config = (() => {
 const server = http.createServer(async (req, res) => {
     if (req.url) {
         const $path = config.getPath(req.url);
+        // console.log($path);
         if ($path.startsWith(`/call.lua/`)) {
             const url = new URL($path, `http://localhost:${port}`);
             const tempLuaPath = url.searchParams.get("path") ?? "";

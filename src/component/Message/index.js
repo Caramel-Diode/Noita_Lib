@@ -17,13 +17,13 @@ const Message = (() => {
         data.background.url.then(v => styleSheet.base.insertRule(String.raw`:host([message\.preset="${id}"]){--url:url("${v}")}`));
 
     return class HTMLNoitaMessageElement extends $class(Base, {
-        displayMode: { attrName: "display", $default: "#" },
+        displayMode: { name: "display", $default: "#" },
         /** @type {$ValueOption<MessageBackgroundId>} */
-        messageStyle: { attrName: "message.style", $default: "important" },
+        messageStyle: { name: "message.style", $default: "important" },
         /** @type {$ValueOption<MessagePresetContent>} */
-        messageContent: { attrName: "message.content", $default: "使用 message.content 属性设置或者直接在内部填充内容" },
+        messageContent: { name: "message.content", $default: "使用 message.content 属性设置或者直接在内部填充内容" },
         /** @type {$ValueOption<MessagePresetId>} */
-        messagePreset: { attrName: "message.preset" }
+        messagePreset: { name: "message.preset" }
     }) {
         /** @type {ShadowRoot} */ #shadowRoot = this.attachShadow({ mode: "closed" });
 
@@ -43,9 +43,7 @@ const Message = (() => {
 
         contentUpdate() {
             const preset = this.messagePreset;
-            /** @type {MessagePresetData?} */ let presetData;
-            if (preset) presetData = MessagePresetData.query(preset);
-            const background = presetData?.background ?? MessageBackgroundData.query(this.messageStyle);
+            const presetData = MessagePresetData.query(this.messagePreset);
             this.#shadowRoot.innerHTML = `<h1><slot>${presetData?.text ?? this.messageContent}</slot></h1>`;
             this[$symbols.initStyle]();
         }

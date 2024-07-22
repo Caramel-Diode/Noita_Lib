@@ -91,5 +91,19 @@
     ["#11", new this(64, "#图钉")], /// 未启用图标
     ["wand", new this(65, "魔杖")], /// 未启用图标
     ["orbitProjectile", new this(66, "环绕投射物")],//未启用图标
-    ["probs", new this(67, "生成概率")]
+    ["probs", new this(67, "生成概率")],
+    ["action", new this(68, "法术行为")],
+    ["action_", new this(69, "法术行为_")],
+    ["menu", new this(70, "菜单")],
+    ["box", new this(71, "盒子")],
+    ["#12", new this(72, "??")],
+    ["filter", new this(73, "过滤器")],
+    ["gnaw", new this(74, "啃咬")],
+    ["chip1", new this(75, "芯片1")],
+    ["chip2", new this(76, "芯片2")],
+    ["stack", new this(77, "栈")],
+    ["#13", new this(78, "??")],
+    ["#14", new this(79, "??")],
+    ["#15", new this(80, "??")],
+    ["#16", new this(81, "??")]
 ]

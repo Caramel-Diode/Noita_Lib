@@ -33,5 +33,5 @@ const noitaLib = (() => {
             `${font_style}font-size:12px;`);
         return ver;
     };
-    return Object.freeze(Object.assign(noitaLib, { translation, Material, Entity, Spell, Wand, Perk, Container, Message, State: {}, Orb: {}, cursor, save }));
+    return Object.freeze(Object.assign(noitaLib, { translation, Material, Entity, Spell, Wand, Perk, Container, Message, State: {}, Orb, cursor, save }));
 })();

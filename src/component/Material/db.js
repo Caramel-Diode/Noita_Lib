@@ -23,45 +23,102 @@ Icon.$defineElement("-material");
 /** @typedef {import("TYPE").MaterialData.ReactionData} MaterialData.ReactionData */
 /** @typedef {import("TYPE").MaterialData.DataGroup} MaterialData.DataGroup */
 class MaterialData {
-    static iconUrls = asyncSpriteUrls(embed(`#icon.png`));
+    //prettier-ignore
+    static { delete this.prototype.constructor; } // 禁止从实例访问构造器
 
     static ReactionData = class {
+        //prettier-ignore
+        static { delete this.prototype.constructor; } // 禁止从实例访问构造器
         /** @type {Array<MaterialData.ReactionData>} */ static data = [];
 
-        /** @param {String} data */
+        /**
+         * @param {String} data
+         * @returns {Array<MaterialDataGroup>}
+         */
         #getMaterialDatas(data) {
             const items = data.split(" ");
-            /**  @type {Array<MaterialDataGroup>} */ const result = [];
             for (let i = 0; i < items.length; i++) {
-                const item = items[i];
-                // 判断是否含有标签
-                if (item.startsWith("[")) {
-                    if (item.endsWith("]")) result.push(MaterialData.queryByTag(item));
+                const keyword = items[i];
+                if (keyword.startsWith("[")) {
+                    if (keyword.endsWith("]")) items[i] = MaterialData.queryByTag(keyword);
                     // 针对形如`[标签]_abc`组合表示格式做特殊处理
                     else {
-                        const splitData = item.split("]");
-                        const item_ = { tag: splitData[0] + "]", idPart: splitData[1], list: [] };
-                        const baseMaterialDatas = MaterialData.queryByTag(item_.tag).list;
-                        for (let j = 0; j < baseMaterialDatas.length; j++) item_.list.push(MaterialData.queryById(baseMaterialDatas[j].id + item_.idPart));
-                        result.push(item_);
+                        const p = keyword.lastIndexOf("]") + 1;
+                        //prettier-ignore
+                        const data = items[i] = freeze({
+                            tag: keyword.slice(0, p),
+                            idPart: keyword.slice(p),
+                            list: []
+                        });
+                        const raw = MaterialData.queryByTag(data.tag).list;
+                        for (let j = 0; j < raw.length; j++) data.list.push(MaterialData.queryById(raw[j].id + data.idPart));
+                        freeze(data.list);
                     }
-                } else result.push(MaterialData.queryByInherit(item));
+                } else {
+                    //prettier-ignore
+                    const { parent, list: [self, ...children] } = MaterialData.queryByInherit(MaterialData.data.all[keyword].id);
+                    //prettier-ignore
+                    const valid = items[i] = freeze({ parent, list: [self] });
+                    // 仅使用继承反应的子材料
+                    for (let j = i; j < children.length; j++) {
+                        const e = children[j];
+                        if (e.inheritReactions) valid.list.push(e);
+                    }
+                    freeze(valid.list);
+                }
+                // // 判断是否含有标签
+                // if (keyword.startsWith("[")) {
+                //     if (keyword.endsWith("]")) items[i] = MaterialData.queryByTag(keyword);
+                //     // 针对形如`[标签]_abc`组合表示格式做特殊处理
+                //     else {
+                //         const p = keyword.lastIndexOf("]") + 1;
+                //         //prettier-ignore
+                //         const data = items[i] = freeze({
+                //             tag: keyword.slice(0, p),
+                //             idPart: keyword.slice(p),
+                //             list: []
+                //         });
+                //         const raw = MaterialData.queryByTag(data.tag).list;
+                //         for (let j = 0; j < raw.length; j++) data.list.push(MaterialData.queryById(raw[j].id + data.idPart));
+                //         freeze(data.list);
+                //     }
+                // } else {
+                //     const raw = MaterialData.queryByInherit(keyword);
+                //     //prettier-ignore
+                //     const { parent, list: [self, ...children] } = MaterialData.queryByInherit(keyword);
+                //     //prettier-ignore
+                //     const valid = items[i] = freeze({ parent, list: [self] });
+                //     // 仅使用继承反应的子材料
+                //     for (let j = i; j < children.length; j++) {
+                //         const e = children[j];
+                //         if (e.inheritReactions) valid.list.push(e);
+                //     }
+                //     freeze(valid.list);
+                // }
             }
-            return result;
+            // console.warn(items);
+            return items;
         }
 
-        /** @param {Array} datas */
-        constructor(datas) {
-            /** @type {Number} 反应速度 */ this.speed = datas[0];
-            /** @type {Boolean} 快速反应 */ this.rapidly = datas[1] === 1;
-            /** @type {Array<MaterialDataGroup>} 原料 */ this.inputs = this.#getMaterialDatas(datas[2]);
-            /** @type {Array<MaterialDataGroup>} 产物 */ this.outputs = this.#getMaterialDatas(datas[3]);
+        /** @param {[number,string]} data */
+        constructor(data) {
+            if (data[0] < 0) {
+                this.rapidly = true;
+                this.speed = -data[0];
+            } else {
+                this.rapidly = false;
+                this.speed = data[0];
+            }
+            const [inputs, part] = data[1].split("=");
+            const [outputs, entity] = part.split("$");
+            this.inputs = this.#getMaterialDatas(inputs);
+            this.outputs = this.#getMaterialDatas(outputs);
         }
 
         /**
          * 某种/类材料与该反应之间的联系
          * @param {MaterialId|MaterialTag} keyword
-         * @returns {"asInput"|"asOutput"|"asCatalyzer"|"none"} `作为原料` | `作为产物` | `作为催化剂` | `不参与反应`
+         * @returns {"asInput"|"asOutput"|"asCatalyzer"|undefined} `作为原料` | `作为产物` | `作为催化剂` | `不参与反应`
          */
         getRelationship(keyword) {
             let asInput = false;
@@ -81,16 +138,11 @@ class MaterialData {
                 }
             }
             $outputs: for (let i = 0; i < this.outputs.length; i++) {
-                if (this.outputs[i].tag === keyword) {
-                    asOutput = true;
-                    break;
-                } else {
-                    const list = this.outputs[i].list;
-                    for (let j = 0; j < list.length; j++) {
-                        if (list[j].id === keyword) {
-                            asOutput = true;
-                            break $outputs;
-                        }
+                const list = this.outputs[i].list;
+                for (let j = 0; j < list.length; j++) {
+                    if (list[j].id === keyword) {
+                        asOutput = true;
+                        break $outputs;
                     }
                 }
             }
@@ -98,7 +150,7 @@ class MaterialData {
             if (asInput && asOutput) return "asCatalyzer";
             else if (asInput) return "asInput";
             else if (asOutput) return "asOutput";
-            else return "none";
+            return;
         }
 
         /**
@@ -179,7 +231,7 @@ class MaterialData {
                             // 使用parent作为默认代理
                             if (input.list.length > 1) {
                                 mItem.plainText = `@${input.list[0].name}:${input.list[0].id}`;
-                                mItem.mathML = `<munderover title="${key}"><msup><ms>${input.list[0].name}</ms><mo>*<mo></msup><mi>${input.list[0].id}</mi><mspace/></munderover>`;
+                                mItem.mathML = `<munderover title="${key}"><msup><ms>${input.list[0].name}</ms><mo>*</mo></msup><mi>${input.list[0].id}</mi><mspace/></munderover>`;
                             } else {
                                 mItem.plainText = `${input.list[0].name}:${input.list[0].id}`;
                                 mItem.mathML = `<munderover title="${key}"><ms>${input.list[0].name}</ms><mi>${input.list[0].id}</mi><mspace/></munderover>`;
@@ -260,30 +312,56 @@ class MaterialData {
         }
 
         /**
-         * @param {String} data
+         * @param {String} keyword
          */
-        static query(data) {
+        static query(keyword) {
             const result = {
                 /** @type {Array<MaterialData.ReactionData>} */ asInput: [],
                 /** @type {Array<MaterialData.ReactionData>} */ asOutput: [],
                 /** @type {Array<MaterialData.ReactionData>} */ asCatalyzer: []
             };
-            /** @type {Array<String>} */ const keywords = [];
-            if (data.startsWith("[")) keywords.push(data);
-            else keywords.push(data, ...MaterialData.queryById(data).tags);
-            for (let i = 0; i < this.data.length; i++) {
-                const reactionData = this.data[i];
-                $keywords: for (let j = 0; j < keywords.length; j++) {
-                    switch (reactionData.getRelationship(keywords[j])) {
+            if (keyword.startsWith("[")) {
+                // 查询标签相关反应
+                for (let i = 0; i < this.data.length; i++) {
+                    const reactionData = this.data[i];
+                    console.log("# # #", keyword);
+                    console.log(reactionData.inputs);
+                    console.log(reactionData.outputs);
+                    console.log("# # #");
+                    switch (reactionData.getRelationship(keyword)) {
                         case "asInput":
                             result.asInput.push(reactionData);
-                            break $keywords;
+                            break;
                         case "asOutput":
                             result.asOutput.push(reactionData);
-                            break $keywords;
+                            break;
                         case "asCatalyzer":
                             result.asCatalyzer.push(reactionData);
-                            break $keywords;
+                            break;
+                    }
+                }
+            } else {
+                const { id, tags } = MaterialData.queryById(keyword);
+                //查询具体材料相关反应
+                for (let i = 0; i < this.data.length; i++) {
+                    const reactionData = this.data[i];
+                    switch (reactionData.getRelationship(id)) {
+                        case "asInput":
+                            result.asInput.push(reactionData);
+                            break;
+                        case "asOutput":
+                            result.asOutput.push(reactionData);
+                            break;
+                        case "asCatalyzer":
+                            result.asCatalyzer.push(reactionData);
+                            break;
+                    }
+                    for (let j = 0; j < tags.length; j++) {
+                        // 标签仅查询作为原料(/催化剂)的反应
+                        if (reactionData.getRelationship(tags[j])) {
+                            result.asInput.push(reactionData);
+                            break;
+                        }
                     }
                 }
             }
@@ -292,8 +370,7 @@ class MaterialData {
 
         /** 初始化数据库 */
         static init() {
-            const storage = MaterialData.ReactionData.data;
-            embed(`#reaction.data.js`).forEach(v => storage.push(Object.freeze(new this(v))));
+            this.data = toChunks(embed(`#reaction.data.js`), 2).map(e => freeze(new this(e)));
         }
     };
 
@@ -309,42 +386,45 @@ class MaterialData {
     static #typeList = ["null", "fire", "liquid", "solid", "gas"];
     /** @type {Number} 图标索引 */ #iconIndex;
 
-    /** @param {Array} datas @param {Number} index */
-    constructor(datas, index) {
+    /** @param {Array} data @param {Number} index */
+    constructor(data, index) {
         this.#iconIndex = index;
-        /** @type {String} `★主键` 实体标识符 */ this.id = datas[0];
-        /** @type {String} 名称 */ this.name = datas[1];
-        if (datas[2]) /** @type {Array<MaterialTag_Enum>} 标签 */ this.tags = datas[2].split(",");
-        else this.tags = [];
-        if (datas[3]) /** @type {String|null} 父类 */ this.parent = datas[3];
-        else this.parent = null;
-        /** @type {Boolean} 反应继承 */ this.inheritReactions = datas[4] === 1;
-        /** @type {Boolean} 可燃性 */ this.burnable = datas[5];
-        /** @type {Number} 密度 */ this.density = datas[6];
-        /** @type {MaterialType_Enum} 类型 */ this.type = MaterialData.#typeList[datas[7]];
-        /** @type {Number} 硬度 */ this.durability = datas[8];
-        /** @type {Number} 血量 */ this.hp = datas[9];
-        /** @type {Number} 燃烧血量 */ this.fireHp = datas[10];
-        /** @type {Boolean} 导电性 */ this.electricalConductivity = datas[11] === 1;
-        /** @type {Boolean} 生成烟雾 */ this.generatesSmoke = datas[12] === 1;
-        /** @type {Number} 液体重力 */ this.liquidGravity = datas[13];
-        /** @type {Boolean} 流沙类型 */ this.liquidSand = datas[14] === 1;
-        /** @type {Number} 摩擦力 */ this.solidFriction = datas[15];
-        /** @type {Number} 火焰温度 */ this.temperatureOfFire = datas[16];
-        /** @type {Number} 自燃温度 */ this.autoignitionTemperature = datas[17];
-        /** @type {Boolean} 始终燃烧 */ this.onFire = datas[18] === 1;
-        /** @type {Boolean} 需要氧气 */ this.requiresOxygen = datas[19] === 1;
-        /** @type {String} 颜色 */ this.color = datas[20];
-        /** @type {String} 摄入效果 */ this.statusEffects_ingestion = datas[21];
-        /** @type {String} 沾染效果 */ this.statusEffects_stains = datas[22];
-        ///== 等待后续创建引用 ==///
-        /** @type {MaterialData} 冻结转化 */ this.coldFreezesToMaterial = null; // datas[23]
-        /** @type {MaterialData} 加热转化 */ this.warmthMeltsToMaterial = null; // datas[24]
-        /** @type {MaterialData} 碎裂转化 */ this.solidBreakToType = null; // datas[25]
-
-        /** @type {Number} 存在时间 */ this.lifetime = datas[26];
-        /** @type {Boolean} 平台类型 */ this.platformType = datas[27] === 1;
-        /** @type {String} 名称翻译键 */ this.nameKey = datas[28];
+        [
+            this.inheritReactions, //=========[0] 继承反应
+            this.burnable, //=================[1] 可燃性
+            this.electricalConductivity, //===[2] 导电性
+            this.generatesSmoke, //===========[3] 生成烟雾
+            this.liquidSand, //===============[4] 流沙
+            this.onFire, //===================[5] 始终燃烧
+            this.requiresOxygen, //===========[6] 燃烧需氧
+            this.platformType //==============[7] 平台类型
+        ] = toBits(data[4], true); //解析二进制位为Boolean值
+        //prettier-ignore
+        [
+            this.id, //=======================[0] id
+            this.name, //=====================[1] 材料名
+            this.tags = [], //================[2] 标签
+            , //==============================[3] 父材料 (等待后续创建引用)
+            , //==============================[4] BitsNumber
+            this.density, //==================[5] 密度
+            , //==============================[6] 类型
+            this.durability, //===============[7] 耐久?
+            this.hp, //=======================[8] 血量
+            this.fireHp, //===================[9] 燃烧血量
+            this.liquidGravity, //============[10] 液体重力
+            this.solidFriction, //============[11] 固体摩擦力
+            this.temperatureOfFire, //========[12] 火焰温度
+            this.autoignitionTemperature, //==[13] 自燃温度
+            this.color, //====================[14] 容器中的颜色
+            this.statusEffects_ingestion, //==[15] 摄入效果
+            this.statusEffects_stains, //=====[16] 沾染效果
+            , //==============================[17] 冻结转化 (等待后续创建引用)
+            , //==============================[18] 加热转化 (等待后续创建引用)
+            , //==============================[19] 碎裂转化 (等待后续创建引用)
+            this.lifetime, //=================[20] 存在时间
+            this.nameKey //===================[21] 名称翻译键
+        ] = data;
+        this.type = MaterialData.#typeList[data[6]];
     }
 
     get asyncIconUrl() {
@@ -378,12 +458,12 @@ class MaterialData {
 
     /** 初始化数据库 */
     static init() {
-        const datas = embed(`#material.data.js`);
-        this.$NULL = Object.freeze(new this(["NULL", "空", "", "", 1, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 1, "", "", "", "", "", "", -1, 0], 0));
-        const all = this.data.all;
-        datas.forEach((v, i) => {
-            /** @type {MaterialData} */ const data = new this(v, i);
-            all.push(data);
+        const datas = toChunks(embed(`#material.data.js`), 22);
+        this.$NULL = Object.freeze(new this(["_NULL", "空白", , , 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, "000000FF", "", "", , , , -1, "mat_air"], 0));
+
+        this.data.all = datas.map((v, i) => {
+            /** @type {MaterialData} */
+            const data = new this(v, i);
             this.data.id_map.set(data.id, data);
             for (let j = 0; j < data.tags.length; j++) {
                 const tag = data.tags[j];
@@ -392,19 +472,24 @@ class MaterialData {
                 else this.data.tag_map.set(tag, { tag: tag, list: [data] });
             }
             if (data.inheritReactions) this.data.InheritReactions.push(data);
+            return data;
         });
 
+        //创建引用
         datas.forEach((v, i) => {
-            if (v[23]) all[i].coldFreezesToMaterial = this.queryById(v[23]); //冻结转化
-            if (v[24]) all[i].warmthMeltsToMaterial = this.queryById(v[24]); //加热转化
-            if (v[25]) all[i].solidBreakToType = this.queryById(v[25]); //碎裂转化
-            if (all[i].parent) {
-                const data = all[i];
-                const materialGroup = this.data.inherit_map.get(data.parent);
-                if (materialGroup) materialGroup.list.push(data);
-                else this.data.inherit_map.set(data.parent, { parent: data.parent, list: [this.queryById(data.parent), data] });
+            const target = this.data.all[i];
+            // 父材料 值为索引
+            if (v[3] !== void 0) {
+                //prettier-ignore
+                const { id } = target.parent = this.data.all[v[3]];
+                const materialGroup = this.data.inherit_map.get(id);
+                if (materialGroup) materialGroup.list.push(target);
+                else this.data.inherit_map.set(id, { parent: id, list: [target.parent, target] });
             }
-            Object.freeze(all[i]);
+            if (v[17]) target.coldFreezesToMaterial = this.queryById(v[17]); //冻结转化
+            if (v[18]) target.warmthMeltsToMaterial = this.queryById(v[18]); //加热转化
+            if (v[19]) target.solidBreakToType = this.queryById(v[19]); //碎裂转化
+            Object.freeze(target);
         });
 
         this.ReactionData.init();

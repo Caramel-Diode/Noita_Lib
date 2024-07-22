@@ -12,32 +12,26 @@ const Base = (() => {
     embed(`#input-range.js`);
 
     const panelTitleSwitch = (() => {
-        const main = event => {
-            /** @type {HTMLHeadingElement} */
-            const h1 = event.target;
-            const id = h1.getAttribute("switch.id");
-            const name = h1.getAttribute("switch.name");
+        const main = h1 => {
+            const { switchId: id, switchName: name } = h1;
             if (h1.innerText === id) h1.innerText = name;
             else if (h1.innerText === name) h1.innerText = id;
-            else console.error("内容意外修改");
         };
         return {
             /**
              * 用于鼠标触发 `左键`
              * @param {MouseEvent} event
              */
-            click: event => main(event),
+            click: ({ currentTarget }) => main(currentTarget),
             /**
              * 用于键盘触发 `Enter`
              * @param {KeyboardEvent} event
              */
             keydown: event => {
-                if (event.key === "Enter") main(event);
-                else if (event.key === "Escape") event.target.blur();
+                if (event.key === "Enter") main(event.currentTarget);
+                else if (event.key === "Escape") event.currentTarget.blur();
                 else if (event.ctrlKey || event.metaKey) {
-                    if (event.key.toLocaleUpperCase() === "C") {
-                        navigator.clipboard.writeText(event.currentTarget.innerText);
-                    }
+                    if (event.key.toLocaleUpperCase() === "C") navigator.clipboard.writeText(event.currentTarget.innerText);
                 } else if (event.key === "ArrowUp") {
                     /** @type {ShadowRoot} */
                     const shadowRoot = event.currentTarget.getRootNode();
@@ -107,9 +101,7 @@ const Base = (() => {
          * @returns {HTMLHeadingElement} `<h1>` 元素
          */
         createPanelH1(id, name) {
-            const h1 = $html`<h1 switch.id="${id}" switch.name="${name}">${name}</h1>`;
-            util.addFeatureTo(h1, panelTitleSwitch);
-            return h1;
+            return h.h1({ $: { switchId: id, switchName: name }, Event: panelTitleSwitch }, name);
         }
 
         static PanelAttrInfo = PanelAttrInfo;
@@ -119,7 +111,6 @@ const Base = (() => {
             const roundTo = math_.roundTo;
 
             // const ged = math_.getExactDegree;
-            const addFeatureTo = util.addFeatureTo;
             /** @type {Listeners} */
             const panelInfoSwitch = (() => {
                 /** @param {KeyboardEvent|MouseEvent} event */
@@ -175,53 +166,42 @@ const Base = (() => {
                  * @param {HTMLElement} element
                  */
                 const main = element => {
-                    if (element.getAttribute("display") === "false") {
-                        element.innerHTML = "";
-
-                        element.append(element.th1_unlock, element.th2_unlock, element.td_unlock);
-                        element.setAttribute("display", "true");
-                        element.title = "点击隐藏解锁条件";
-                    } else {
-                        element.innerHTML = "";
-                        element.append(element.th1_lock, element.th2_lock, element.td_lock);
-                        element.setAttribute("display", "false");
+                    element.innerHTML = "";
+                    if (element.$display) {
+                        element.append(...element.lockNodes);
                         element.title = "点击查看解锁条件";
+                    } else {
+                        element.append(...element.unlockNodes);
+                        element.title = "点击隐藏解锁条件";
                     }
+                    element.$display = !element.$display;
                 };
                 return {
-                    click: event => main(event.currentTarget),
-                    keydown: event => {
-                        if (event.key === "Enter") main(event.currentTarget);
-                        else if (event.key === "Escape") event.currentTarget.blur();
+                    click: ({ currentTarget }) => main(currentTarget),
+                    keydown: ({ key, currentTarget }) => {
+                        if (key === "Enter") main(currentTarget);
+                        else if (key === "Escape") currentTarget.blur();
                     }
                 };
             })();
             return class PanelAttrLoader {
-                /**
-                 * @type {HTMLTableSectionElement}
-                 * #### tableBody容器
-                 * *不对外开放*
-                 * ```html
-                 * <tbody> ... </tbody>
-                 * ```
-                 */
-                #tbody = createElement("tbody");
-                /**
-                 * @type {HTMLTableElement} 表格容器
-                 */
-                container = createElement("table");
+                /** @type {HTMLTableElement} 表格容器 */
+                container = h.table({ class: "attrs" });
+                #ignore;
                 /**
                  * @param {HTMLTableSectionElement} target
-                 * @param {Array<{type:String,value:*, needSign:Boolean?,hidden:Boolean?}>} datas
+                 * @param {Array<String>} ignore
                  */
-                constructor(datas) {
-                    if (datas) this.load(datas);
-                    this.container.append(this.#tbody);
-                    this.container.className = "attrs";
+                constructor(ignore = []) {
+                    this.#ignore = ignore;
+                }
+                #isIgnored(prop) {
+                    return this.#ignore.includes(prop);
                 }
                 /** @param {{[key: string]: {value:*,needSign:Boolean?,hidden:Boolean?}}} datas */
                 load(datas) {
                     for (const prop in datas) {
+                        if (this.#isIgnored(prop)) continue; //跳过被忽略的面板属性
                         let { value, hidden, type = "", pos } = datas[prop];
                         if (hidden) continue;
                         /** @type {HTMLTableRowElement} */
@@ -300,33 +280,34 @@ const Base = (() => {
                             target.children[1].title = "后置修正";
                             target.children[1].classList.add("after");
                         }
-                        this.#tbody.append(target);
+                        this.container.append(target);
                     }
+                    return this;
                 }
 
                 /**
                  * 加载属性表行
                  * @param {PanelAttrIDEnum} type
-                 * @param {String|Node|{second:Number,frame:Number}} content
+                 * @param {String|Node|GameTime} content
                  * @returns {HTMLTableRowElement}
                  */
                 #tr(type, content) {
-                    let inner = "",
-                        attrs = "",
-                        listeners;
-                    const contentType = typeof content;
-                    if (contentType === "string" || contentType === "number") inner = content;
-                    else if (contentType === "object") {
-                        if (content instanceof Node) inner = content; // html节点 直接插入
-                        else {
-                            // 单位换算信息 默认显示`秒`
-                            attrs = `display="SECOND" value.second="${content.second}" value.frame="${content.frame}"`;
-                            inner = content.second;
-                            listeners = unitConvert;
-                        }
-                    }
                     const { icon, name, className = "" } = PanelAttrInfo.query(type);
-                    return $html`<tr><th>${icon}</th><th>${name}</th><td class="${className}" ${attrs} on-event=${listeners}>${inner}</td></tr>`;
+                    let attrs = { class: className };
+                    let inner = [];
+                    if (typeof content === "object") {
+                        if (content instanceof Node) inner.push(content); // html节点 直接插入
+                        else
+                            attrs = {
+                                ...attrs,
+                                display: "SECOND",
+                                "value.second": content.s,
+                                "value.frame": content.f,
+                                Event: unitConvert,
+                                HTML: content.s // 单位换算信息 默认显示`秒`
+                            };
+                    } else inner.push(content);
+                    return h.tr(h.th(icon), h.th(name), h.td(attrs, inner));
                 }
 
                 /**
@@ -346,7 +327,7 @@ const Base = (() => {
                         s = value.withChange(GameTime.toS).withChange(roundTo).toString("s");
                         f = value.toString("f");
                     }
-                    return this.#tr(type, { second: s, frame: f });
+                    return this.#tr(type, { s, f });
                 }
                 /**
                  * 加载`存在时间`面板属性
@@ -356,7 +337,7 @@ const Base = (() => {
                 lifetime(value, sign) {
                     let s, f;
                     if (typeof value === "number") {
-                        const time = new GameTime(value.base);
+                        const time = new GameTime(value);
                         s = sign + time.s;
                         f = sign + time.f;
                     } else if (value.fluctuation === 0) {
@@ -371,7 +352,7 @@ const Base = (() => {
                         s = min.s + " ~ " + max.s;
                         f = min.f + " ~ " + max.f;
                     }
-                    return this.#tr("lifetime", { second: s, frame: f });
+                    return this.#tr("lifetime", { s, f });
                 }
                 /**
                  * 加载`法力恢复速度`面板属性
@@ -386,7 +367,7 @@ const Base = (() => {
                         s = value.toString("/s");
                         f = value.withChange(GameTime.toS).withChange(roundTo).toString("/f");
                     }
-                    return this.#tr("manaChargeSpeed", { second: s, frame: f });
+                    return this.#tr("manaChargeSpeed", { s, f });
                 }
                 /**
                  * 加载`散射角度`面板属性
@@ -406,7 +387,7 @@ const Base = (() => {
                  * @param {{max:Number,remaining:Number?,unlimited:Boolean}} value
                  */
                 timesUsed(type, value) {
-                    const content = createElement("data");
+                    const content = h.data();
                     if (value.unlimited) {
                         content.classList.add("unlimited");
                         content.title = "可无限化";
@@ -431,8 +412,8 @@ const Base = (() => {
                     else if (value.drawCount_Timer) {
                         const time = new GameTime(value.drawDelay_Timer);
                         return this.#tr("draw_timer", {
-                            second: `${value.drawCount_Timer} (${time.s})`,
-                            frame: `${value.drawCount_Timer} (${time.f})`
+                            s: `${value.drawCount_Timer} (${time.s})`,
+                            f: `${value.drawCount_Timer} (${time.f})`
                         });
                     } else if (value.min) return this.#tr("draw", value.toString()); //魔杖不定抽取
                 }
@@ -442,47 +423,34 @@ const Base = (() => {
                  * @param {String} flag 解锁条件
                  */
                 unlock(flag) {
-                    const tr = createElement("tr");
-                    const attrInfo_lock = PanelAttrInfo.query("lock");
-                    const attrInfo_unlock = PanelAttrInfo.query("unlock");
-
-                    tr.th1_lock = createElement("th");
-                    tr.th2_lock = createElement("th");
-                    tr.th1_lock.append(attrInfo_lock.icon);
-                    tr.th2_lock.append(attrInfo_lock.name);
-                    tr.td_lock = createElement("td");
-                    tr.td_lock.innerText = "* ".repeat(Math.min(flag.length, 5));
-
-                    tr.th1_unlock = createElement("th");
-                    tr.th2_unlock = createElement("th");
-                    tr.th1_unlock.append(attrInfo_unlock.icon);
-                    tr.th2_unlock.append(attrInfo_unlock.name);
-                    tr.td_unlock = createElement("td");
-                    tr.td_unlock.innerText = flag;
-
-                    tr.setAttribute("display", "false");
-                    addFeatureTo(tr, showOrHideunlockFlag);
-                    tr.append(tr.th1_lock, tr.th2_lock, tr.td_lock);
-                    tr.title = "点击查看解锁条件";
-
-                    return tr;
+                    let lockNodes, unlockNodes;
+                    {
+                        const { icon, name } = PanelAttrInfo.query("lock");
+                        lockNodes = h["[]"](h.th(icon), h.th(name), h.td("* ".repeat(Math.min(flag.length, 5))));
+                    }
+                    {
+                        const { icon, name } = PanelAttrInfo.query("unlock");
+                        unlockNodes = h["[]"](h.th(icon), h.th(name), h.td(flag));
+                    }
+                    return h.tr(
+                        {
+                            title: "点击查看解锁条件",
+                            Event: showOrHideunlockFlag,
+                            $: { lockNodes, unlockNodes, $display: false }
+                        },
+                        lockNodes
+                    );
                 }
 
                 /**
                  * 加载`提供投射物`|`使用投射物`属性
                  * @param {"projectilesProvided"|"projectilesUsed"} type
-                 * @param {Array<HTMLLIElement>} value
+                 * @param {Array<HTMLLIElement>} lis
                  */
-                offerEntity(type, value) {
-                    const menu = $html`<menu class=entities-tablist role=tablist></menu>`; //无障碍: 选项卡列表
-                    for (let i = 0; i < value.length; i++) {
-                        const li = value[i];
-                        li.role = "tab"; //无障碍: 选项卡
-                        addFeatureTo(li, panelInfoSwitch);
-                        menu.append(li);
-                    }
-                    // console.log(value[0]);
-                    value[0].click(); //提供的数据会全部展示 此处点击以实现仅显示首个投射物信息
+                offerEntity(type, lis) {
+                    const menu = h.menu({ class: "entities-tablist", role: "tablist" }, lis); //无障碍: 选项卡列表
+                    for (let i = 0; i < lis.length; i++) h.$attach(lis[i], { role: "tab", Event: panelInfoSwitch });
+                    lis[0].click(); //提供的数据会全部展示 此处点击以实现仅显示首个投射物信息
                     return this.#tr(type, menu);
                 }
                 /**
@@ -515,16 +483,24 @@ const Base = (() => {
             super();
         }
 
+        /** 从css中获取不需要显示的面板属性 */
+        //prettier-ignore
+        get ignoredPanelAttrs() {
+            return window.getComputedStyle(this).getPropertyValue("--ignore-panel-attr").split(" ");
+            // return this.computedStyleMap().get("--ignore-panel-attr")?.toString()?.split(" ") ?? [];
+        }
+
         /** @param {ShadowRootInit} init  */
         attachShadow(init) {
+            if (this.#shadowRoot) return this.#shadowRoot;
             return (this.#shadowRoot = super.attachShadow(init));
         }
 
         /** @param {Array<CSSStyleSheet>} [extraStyleSheets] 额外样式表 */
-        [$symbols.initStyle](extraStyleSheets = []) {
+        [$symbols.initStyle](extraStyleSheets = [], mode = this.displayMode) {
             extraStyleSheets.push(styleSheet.base);
             //prettier-ignore
-            switch(this.displayMode) {
+            switch(mode) {
                 case "icon": extraStyleSheets.push(styleSheet.icon); break;
                 case "panel": extraStyleSheets.push(styleSheet.panel)
             }
@@ -537,8 +513,12 @@ const Base = (() => {
             this.loadPanelContent();
         }
 
-        /** 加载 template 内容 (多选项卡) */
+        /**
+         * 加载 template 内容 (多选项卡)
+         * @param {Array<HTMLTemplateElement>} templates
+         */
         async loadPanelContent(templates) {
+            this.#shadowRoot.innerHTML = "";
             if (templates === undefined) {
                 // 从html中解析内容
                 await DOMContentLoaded;
@@ -546,21 +526,22 @@ const Base = (() => {
                 for (let i = 0; i < templates.length; i++) templates[i].remove();
             }
             if (templates.length) {
-                const fragment = new DocumentFragment();
                 const lis = [];
                 for (let i = 0; i < templates.length; i++) {
                     const template = templates[i];
-                    const li = $html`<li role=tab tabindex=0 on-event=${panelTabsSwitch /*增加切换选项卡对应内容功能*/}><span>${template.title /*title属性将作为选项卡标题*/}</span></li>`;
-                    const main = $html`<main role=tabpanel>${template.content /*不进行克隆 需要保留节点上的事件等原始数据*/}</main>`;
+                    const main = h.main({ role: "tabpanel" });
+                    const fns = [];
+                    for (const script of template.content.querySelectorAll("script")) {
+                        script.remove();
+                        fns.push(Function("h", script.innerHTML).bind(main));
+                    }
+                    main.append(template.content);
+                    for (const fn of fns) fn(h);
+                    const li = h.li({ role: "tab", tabindex: 0, Event: panelTabsSwitch, $: { content: main } }, h.span(template.title));
                     if (template.hasAttribute("default")) lis.$default = li;
-                    li.content = main; //绑定main元素
                     lis.push(li);
                 }
-                //视口容器 适配滚动条 内容存在多个时需要显示选项卡
-                const header = $html`<header><menu role=tablist>${lis}</menu></header>`;
-                header.hidden = templates.length < 2;
-                fragment.append(header);
-                this.#shadowRoot.append(fragment);
+                this.#shadowRoot.append(h.header({ hidden: templates.length < 2 }, h.menu({ role: "tablist" }, lis)));
                 (lis.$default ?? lis[0]).click();
             } else this.#shadowRoot.innerHTML = `<main class=custom><slot></slot></main>`;
         }

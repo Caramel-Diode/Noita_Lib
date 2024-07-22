@@ -27,6 +27,8 @@ class Material {
         solid: 3,
         gas: 4
     };
+    /** @type {Map<String,Symbol>} */
+    static tagMap = new Map();
     /** `name` */
     id = "";
     /** `ui_name` */
@@ -99,16 +101,31 @@ class Material {
         const attr = element.attr;
         this.id = attr.get("name");
         this.name = attr.get("ui_name") ?? parentData?.name ?? "";
-        this.tags = attr.get("tags") ?? parentData?.tags ?? "";
+
+        /** @type {String} */
+        const tagsStr = attr.get("tags");
+        if (tagsStr) {
+            this.tags = tagsStr.split(",").map(tag => {
+                if (Material.tagMap.has(tag)) return Material.tagMap.get(tag);
+                else {
+                    const symbol = Symbol(`$${Material.tagMap.size + 1}`);
+                    Material.tagMap.set(tag, symbol);
+                    return symbol;
+                }
+            });
+        } else this.tags = parentData?.tags ?? [];
+
         this.parent = attr.get("_parent") ?? "";
         this.inheritReactions = Number(attr.get("_inherit_reactions") ?? 0); // 材料反应是默认不会继承的
         this.burnable = Number(attr.get("burnable") ?? parentData?.burnable ?? 0);
         this.density = Number(attr.get("density") ?? parentData?.density ?? 0);
-        this.type = attr.get("cell_type") ?? parentData?.type ?? 0;
+        this.type = attr.get("cell_type") ?? parentData?.type ?? "null";
         this.durability = Number(attr.get("durability") ?? parentData?.durability ?? 0);
         this.hp = Number(attr.get("hp") ?? parentData?.hp ?? 0);
         this.fireHp = Number(attr.get("fire_hp") ?? parentData?.fireHp ?? 0);
-        this.electricalConductivity = Number(attr.get("electrical_conductivity") ?? parentData?.electricalConductivity ?? 0);
+        // 默认导电性 当它是液体的时候默认导电
+        const defult_electricalConductivity = tagsStr?.includes("[liquid]") ?? false ? 1 : 0;
+        this.electricalConductivity = Number(attr.get("electrical_conductivity") ?? parentData?.electricalConductivity ?? defult_electricalConductivity);
         this.generatesSmoke = Number(attr.get("generates_smoke") ?? parentData?.generatesSmoke ?? 0);
         this.liquidGravity = Number(attr.get("liquid_gravity") ?? parentData?.liquidGravity ?? 0);
         this.liquidSand = Number(attr.get("liquid_sand") ?? parentData?.liquidSand ?? 0);
@@ -154,41 +171,94 @@ class Material {
         this.lifetime = Number(attr.get("lifetime") ?? parentData?.lifetime ?? -1);
         this.platformType = Number(attr.get("platform_type") ?? parentData?.platformType ?? 0);
     }
-    toString() {
+    /**
+     *
+     * @param {Boolean} spread 展开[]
+     * @param {Map<String,Number>} id_index_map id索引映射表
+     * @returns {String}
+     */
+    toString(spread = false, id_index_map) {
+        const blank = Symbol("");
         let name = "";
         if (this.name.length) name = zh_cn(this.name.slice(1));
         else name = this.id;
-        return JSON5.stringify([
+
+        const coldFreezesToMaterial = this.coldFreezesToMaterial ? this.coldFreezesToMaterial : blank;
+        const warmthMeltsToMaterial = this.warmthMeltsToMaterial ? this.warmthMeltsToMaterial : blank;
+        const solidBreakToType = this.solidBreakToType ? this.solidBreakToType : blank;
+        const tags = this.tags.length ? this.tags : blank;
+        const parent = this.parent ? id_index_map.get(this.parent) : blank;
+        //prettier-ignore
+        const bitsNumber = bitsToNum([ //======== Bits Array
+            this.inheritReactions, //=======[0] 继承反应
+            this.burnable, //===============[1] 可燃性
+            this.electricalConductivity, //=[2] 导电性
+            this.generatesSmoke, //=========[3] 生成烟雾
+            this.liquidSand, //=============[4] 流沙
+            this.onFire, //=================[5] 始终燃烧
+            this.requiresOxygen, //=========[6] 燃烧需氧
+            this.platformType //============[7] 平台类型
+        ]);
+
+        const str = JSON5.stringify([
             this.id, //========================[0] id
             name, //===========================[1] 材料名
-            this.tags, //======================[2] 标签
-            this.parent, //====================[3] 父材料
-            this.inheritReactions, //==========[4] 继承反应
-            this.burnable, //==================[5] 可燃
-            this.density, //===================[6] 密度
-            Material.#typeMap[this.type], //===[7] 类型
-            this.durability, //================[8] 耐久?
-            this.hp, //========================[9] 血量
-            this.fireHp, //====================[10] 燃烧血量
-            this.electricalConductivity, //====[11] 导电性
-            this.generatesSmoke, //============[12] 生成烟雾
-            this.liquidGravity, //=============[13] 液体重力
-            this.liquidSand, //================[14] 液体沙?
-            this.solidFriction, //=============[15] 固体摩擦力
-            this.temperatureOfFire, //=========[16] 火焰温度
-            this.autoignitionTemperature, //===[17] 自燃温度
-            this.onFire, //====================[18] 燃烧中
-            this.requiresOxygen, //============[19] 燃烧需氧
-            this.color.toUpperCase(), //=======[20] 容器中的颜色
-            this.statusEffects_ingestion, //===[21] 摄入效果
-            this.statusEffects_stains, //======[22] 沾染效果
-            this.coldFreezesToMaterial, //=====[23] 冻结转化
-            this.warmthMeltsToMaterial, //=====[24] 加热转化
-            this.solidBreakToType, //==========[25] 碎裂转化
-            this.lifetime, //==================[26] 存在时间
-            this.platformType, //==============[27] 平台类型
-            this.name.slice(1) //=======[28] 名称翻译键
+            tags, //===========================[2] 标签
+            parent, //=========================[3] 父材料
+            bitsNumber, //=====================[4] Bits Number
+            this.density, //===================[5] 密度
+            Material.#typeMap[this.type], //===[6] 类型
+            this.durability, //================[7] 耐久?
+            this.hp, //========================[8] 血量
+            this.fireHp, //====================[9] 燃烧血量
+            this.liquidGravity, //=============[10] 液体重力
+            this.solidFriction, //=============[11] 固体摩擦力
+            this.temperatureOfFire, //=========[12] 火焰温度
+            this.autoignitionTemperature, //===[13] 自燃温度
+            this.color.toUpperCase(), //=======[14] 容器中的颜色
+            this.statusEffects_ingestion, //===[15] 摄入效果
+            this.statusEffects_stains, //======[16] 沾染效果
+            coldFreezesToMaterial, //==========[17] 冻结转化
+            warmthMeltsToMaterial, //==========[18] 加热转化
+            solidBreakToType, //===============[19] 碎裂转化
+            this.lifetime, //==================[20] 存在时间
+            this.name.slice(1) //=======[21] 名称翻译键
         ]);
+
+        // console.log(bits, bitsToNum(bits));
+        // const str = JSON5.stringify([
+        //     this.id, //========================[0] id
+        //     name, //===========================[1] 材料名
+        //     this.tags, //======================[2] 标签
+        //     this.parent, //====================[3] 父材料
+        //     this.inheritReactions, //==========[4] 继承反应
+        //     this.burnable, //==================[5] 可燃
+        //     this.density, //===================[6] 密度
+        //     Material.#typeMap[this.type], //===[7] 类型
+        //     this.durability, //================[8] 耐久?
+        //     this.hp, //========================[9] 血量
+        //     this.fireHp, //====================[10] 燃烧血量
+        //     electricalConductivity, //=========[11] 导电性
+        //     generatesSmoke, //=================[12] 生成烟雾
+        //     this.liquidGravity, //=============[13] 液体重力
+        //     liquidSand, //=====================[14] 液体沙?
+        //     this.solidFriction, //=============[15] 固体摩擦力
+        //     this.temperatureOfFire, //=========[16] 火焰温度
+        //     this.autoignitionTemperature, //===[17] 自燃温度
+        //     onFire, //=========================[18] 燃烧中
+        //     requiresOxygen, //=================[19] 燃烧需氧
+        //     this.color.toUpperCase(), //=======[20] 容器中的颜色
+        //     this.statusEffects_ingestion, //===[21] 摄入效果
+        //     this.statusEffects_stains, //======[22] 沾染效果
+        //     coldFreezesToMaterial, //==========[23] 冻结转化
+        //     warmthMeltsToMaterial, //==========[24] 加热转化
+        //     solidBreakToType, //===============[25] 碎裂转化
+        //     this.lifetime, //==================[26] 存在时间
+        //     this.platformType, //==============[27] 平台类型
+        //     this.name.slice(1) //=======[28] 名称翻译键
+        // ]);
+        if (spread) return str.slice(1, -1);
+        return str;
     }
 }
 
@@ -216,12 +286,18 @@ class Reaction {
         this.entity = attr.get("entity") ?? "";
     }
 
-    toString() {
-        return JSON5.stringify([this.probability, this.fastReaction, this.inputs, this.outputs, this.entity]);
+    toString(spread = false) {
+        const blank = Symbol("");
+        const entity = this.entity ? "$" + this.entity : "";
+        const probability = this.fastReaction ? -this.probability : this.probability; // 负数表示快速反应
+        const str = JSON5.stringify([probability, this.inputs + "=" + this.outputs + entity]);
+        if (spread) return str.slice(1, -1);
+        return str;
     }
 }
 
 addEventListener("DOMContentLoaded", async () => {
+    await langData.ready;
     const matrialXMLdata = await (await fetch(`/data/materials.xml`)).text();
     console.time("XML解析耗时");
     const $doc = XML.parse(matrialXMLdata, { ignore: ["#text", "#comment"] });
@@ -234,6 +310,7 @@ addEventListener("DOMContentLoaded", async () => {
 
     materialDataElements.forEach(e => Material.map.set(e.attr.get("name"), e));
 
+    /** @type {Array<Material>} */
     const materialDatas = [];
     const imgs_ = [];
     materialDataElements.forEach(e => {
@@ -241,17 +318,36 @@ addEventListener("DOMContentLoaded", async () => {
         materialDatas.push(data);
         imgs_.push(PNG.removeGAMA(`/data/generated/material_icons/${data.id}.png`));
     });
+    /** @type {Map<String,Number>} */
+    const id_index_map = new Map(materialDatas.map(({ id }, i) => [id, i]));
+    console.log(id_index_map);
     const canvas = await createSprite(await Promise.all(imgs_), { clip: { sx: 1, sy: 1 }, size: { width: 18, height: 18 } });
     document.querySelector("#canvas-viewport").append(canvas);
 
     document.querySelector("#genMaterialData").addEventListener("click", async () => {
-        const fileContent = `${getCommentText(`共${materialDatas.length}条材料数据`)}\n[\n    ${materialDatas.join(",\n    ")}\n]`;
+        const params_str = [...Material.tagMap].map(([data, $var]) => `${$var.description}=${JSON.stringify(data)}`).join(",\n    ");
+        const materials_str = materialDatas.map(e => e.toString(true, id_index_map)).join(",\n    ");
+        const comment = getCommentText(`共${materialDatas.length}条材料数据`);
+        const fileContent = `${comment}\n((\n    ${params_str}\n)=>[\n    ${materials_str}\n])()`;
         download(fileContent, "material.data.js");
     });
 
     document.querySelector("#genReactionData").addEventListener("click", () => {
-        const reactionDatas = reactionDataElements.map(e => new Reaction(e).toString());
-        const fileContent = `${getCommentText(`共${reactionDatas.length}条材料反应数据`)}\n[\n    ${reactionDatas.join(",\n    ")}\n]`;
+        // const reactionDatas = reactionDataElements.map(e => new Reaction(e).toString(true));
+        /** @type {Array<Reaction>} */
+        const reactionDatas = reactionDataElements.map(e => new Reaction(e));
+        const reaction_str = reactionDatas
+            .map(e => {
+                const inputs = e.inputs.split(" ").map(e => id_index_map.get(e) ?? e);
+                const outputs = e.outputs.split(" ").map(e => id_index_map.get(e) ?? e);
+
+                const entity = e.entity ? "$" + e.entity : "";
+                const probability = e.fastReaction ? -e.probability : e.probability; // 负数表示快速反应
+                const str = JSON5.stringify([probability, inputs.join(" ") + "=" + outputs.join(" ") + entity]);
+                return str.slice(1, -1);
+            })
+            .join(",\n    ");
+        const fileContent = `${getCommentText(`共${reactionDatas.length}条材料反应数据`)}\n[\n    ${reaction_str}\n]`;
         download(fileContent, "reaction.data.js");
     });
 });

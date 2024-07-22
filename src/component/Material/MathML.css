@@ -1,0 +1,29 @@
+:host > main {
+    place-content: start;
+    place-items: start;
+    gap: 10px;
+}
+math {
+    font-family: "fira code", "HarmonyOS Sans SC";
+    color: #fff;
+}
+
+math > mi {
+    color: #26b2f3;
+}
+
+munderover:has(mi) {
+    padding: 6px;
+    border: 1px solid #ffffff20;
+}
+
+munderover > mi {
+    color: #ffffff80;
+}
+
+munderover > mo {
+    color: #00000000;
+    background: linear-gradient(#fff, #fff) 50% calc(50% + 3px) / calc(100%) 1px no-repeat, linear-gradient(#fff, #fff) 50% calc(50% - 3px) / calc(100%) 1px no-repeat;
+    min-height: 10px;
+    min-width: 80px;
+}

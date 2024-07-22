@@ -13,13 +13,13 @@ const Wand = (() => {
      * @param {HTMLOListElement|HTMLUListElement} container
      * @param {Array<SpellRecipeItem>} datas
      */
-    const loadSpellListItems = datas => {
+    const loadSpellLi = datas => {
         /** @type {Array<HTMLLIElement>} */
         const lis = [];
         for (const data of datas) {
             let j = 0;
-            for (; j < data.min; j++) lis.push($html`<li>${new Spell(data)}</li>`);
-            for (; j < data.max; j++) lis.push($html`<li class=optional>${new Spell(data)}</li>`);
+            for (; j < data.min; j++) lis.push(h.li(new Spell(data)));
+            for (; j < data.max; j++) lis.push(h.li({ class: "optional" }, new Spell(data)));
         }
         return lis;
     };
@@ -90,7 +90,6 @@ const Wand = (() => {
 
         #loadPanelContent() {
             const wd = this.wandData;
-            const template = createElement("template");
 
             //#region 属性区
             /*###############################################################################*/
@@ -107,21 +106,20 @@ const Wand = (() => {
                 capacity:        { value: wd.capacity                                            },
                 spreadDegrees:   { value: wd.spreadDegrees                                       },
                 speedMultiplier: { value: wd.speedMultiplier,   hidden: wd.speedMultiplier == 1  }, //这里用的就是非严格相等
-                staticSpells:    { value: $html`<ol class=static-spells>${loadSpellListItems(wd.staticSpells)}</ol>`, hidden:!wd.staticSpells.length }
+                staticSpells:    { value: h.ol({class:"static-spells"},loadSpellLi(wd.staticSpells)), hidden:!wd.staticSpells.length }
             });
 
             /*###############################################################################*/
             //#endregion
             const type = wd.shuffle ? "ul" : "ol";
+          
             //prettier-ignore
-            template.content.append(
+            this.loadPanelContent([h.template(
                 wd.icon,
-                $html`<h1>${wd.name}</h1>`,
+                h.h1(wd.name),
                 loader.container,
-                $html`<${type} class=dynamic-spells>${loadSpellListItems(wd.dynamicSpells)}</${type}>`
-            );
-
-            this.loadPanelContent([template]);
+                h[type]({ class: "dynamic-spells" }, loadSpellLi(wd.dynamicSpells))
+            )]);
         }
 
         /** @param {Array<CSSStyleSheet>} [extraStyleSheets] 额外样式表 */

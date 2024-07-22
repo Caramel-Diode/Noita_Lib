@@ -7,14 +7,17 @@ class HTMLNoitaInputRangeElement extends $class(HTMLElement, {
     static #styleSheet = [styleSheet.base, gss(embed(`#input-range.css`))];
     #shadowRoot = this.attachShadow({ mode: "closed" });
     /** @type {HTMLButtonElement} 滑块 */
-    #thumb = $html`<button class=thumb tabindex=-114514></button>`;
+    #thumb = h.button({ class: "thumb", tabindex: -114514 });
     /** @type {HTMLInputElement} 内置input:range */
-    #range = $html`<input type=range>`;
+    #range = h.input({ type: "range" });
     constructor() {
         super();
+    }
+
+    connectedCallback() {
         this.role = "slider"; //无障碍: 滑动条
         const thumb = this.#thumb;
-        const track = $html`<div class=track></div>`;
+        const track = h.div({ class: "track" });
         const inputRange = this.#range;
         inputRange.value = this.getAttribute("value") ?? 0;
         inputRange.addEventListener("input", event => {

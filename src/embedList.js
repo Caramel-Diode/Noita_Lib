@@ -14,3 +14,4 @@ embed(`#component/Cursor/index.js`);
 embed(`#component/Message/index.js`);
 embed(`#component/Container/index.js`);
 embed(`#component/Material/index.js`);
+embed(`#component/Orb/index.js`);

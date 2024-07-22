@@ -69,7 +69,6 @@ class MessageBackgroundData {
 
         // ctx_result.drawImage(canvas_left, 0, 0, 18, 24, 0, 0, 18, 24);
         // ctx_result.drawImage(canvas_right, 0, 0, 18, 24, 18, 0, 18, 24);
-
     }
 
     /** @param {MessageBackgroundId} id */
@@ -96,11 +95,9 @@ class MessagePresetData {
     static query = id => this.data_map.get(id);
 
     static init() {
-        /** #data: [生物群系修正数据](data.js) @type {Array} */
-        const datas = embed(`#template.preset.data.js`);
-        for (let i = 0; i < datas.length; i++) {
-            const data = Object.freeze(new this(datas[i]));
+        embed(`#template.preset.data.js`).forEach(e => {
+            const data = freeze(new this(e));
             this.data_map.set(data.id, data);
-        }
+        });
     }
 }

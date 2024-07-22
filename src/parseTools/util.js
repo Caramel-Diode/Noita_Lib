@@ -19,7 +19,8 @@ const download = (content, filename) => {
 };
 
 const langData = (() => {
-    const url_csvDev = `/public/tool/lang/common_dev.csv`;
+    // const url_csvDev = `/public/tool/lang/common_dev.csv`;
+    const url_csvDev = `/public/tool/lang/common_base.csv`; // 现在已经不需要用dev版本了
     const url_csvBase = `/public/tool/lang/common_base.csv`;
     let data_dev = null;
     let data_base = null;
@@ -58,7 +59,7 @@ class Canvas extends HTMLCanvasElement {
     static {
         customElements.define("util-canvas", this, { extends: "canvas" });
     }
-    constructor(height = 150, width = 300) {
+    constructor(width = 300, height = 150) {
         super();
         this.width = width;
         this.height = height;
@@ -438,6 +439,17 @@ class StringBuffer {
         return this.#cache.join("");
     }
 }
+
+/**
+ * 将 bit 数组转为数字
+ * @param {[0|1, 0|1, 0|1, 0|1, 0|1, 0|1, 0|1, 0|1]} bits
+ * @returns {Number}
+ */
+const bitsToNum = bits => {
+    let num = 0;
+    for (let i = 0; i < 8; i++) num += Boolean(bits[i]) * 2 ** i;
+    return num;
+};
 
 /** @type {typeof document.createElement} */
 const createElement = document.createElement.bind(document);

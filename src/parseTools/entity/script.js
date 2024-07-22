@@ -125,36 +125,12 @@ const loadSpriteAnimation = async url => {
 };
 
 (async () => {
-    await langData.ready
-    // await langDataReady;
-    start(`data/entities/animals/boss_wizard/wizard_orb_blood.xml`);
-    start(`data/entities/animals/boss_wizard/wizard_orb_death.xml`);
-    start(`data/entities/projectiles/deck/bullet_slow.xml`);
-    start(`data/entities/projectiles/deck/black_hole.xml`);
-    start(`data/entities/projectiles/deck/white_hole.xml`);
-    start(`data/entities/projectiles/deck/spitter.xml`);
-    start(`data/entities/projectiles/deck/spitter_tier_2.xml`);
-    start(`data/entities/projectiles/deck/spitter_tier_3.xml`);
-    start(`data/entities/projectiles/deck/bubbleshot.xml`);
-    start(`data/entities/projectiles/deck/disc_bullet.xml`);
-    start(`data/entities/projectiles/deck/disc_bullet_big.xml`);
-    start(`data/entities/projectiles/deck/disc_bullet_bigger.xml`);
-    start(`data/entities/projectiles/deck/bouncy_orb.xml`);
-    start(`data/entities/projectiles/deck/pollen.xml`);
-    start(`data/entities/projectiles/deck/lance_holy.xml`);
-    start(`data/entities/projectiles/deck/grenade_tier_3.xml`);
-    start(`data/entities/projectiles/deck/mine.xml`);
-    start(`data/entities/projectiles/deck/duck.xml`);
-    // start(`data/entities/projectiles/deck/fireball.xml`);
-    start(`data/entities/projectiles/deck/flamethrower.xml`);
-    start(`data/entities/projectiles/deck/iceball.xml`);
-    start(`data/entities/projectiles/deck/spore_pod.xml`);
-    start(`data/entities/projectiles/orb_expanding.xml`);
+    await langData.ready;
+    // const animalList = await Promise.all(
+    //     animalList
+    //         .map(async e => XML.parse(await (await fetch(`animal_xmls/${e}.xml`)).text()))
+    // );
 
-    // start(`data/entities/projectiles/deck/glowing_bolt.xml`);
-    // start(`data/entities/projectiles/deck/rocket_player.xml`);
-    // start(`data/entities/projectiles/deck/darkflame.xml`);
-    // start(`data/entities/projectiles/deck/megalaser.xml`);
-    // start(`data/entities/projectiles/deck/black_hole_big.xml`);
-    // loadSpriteAnimation(`data/entities/animals/boss_wizard/orb_death.xml`);
+    animalList.forEach(async (v, i, a) => void (a[i] = XML.parse(await (await fetch(`entity_xmls/${v}.xml`)).text())));
+    console.log(animalList);
 })();

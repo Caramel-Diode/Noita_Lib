@@ -11,3 +11,6 @@
     border-color: transparent;
     border-image: var(--url) 2 17 fill/4px 34px/0 stretch;
 }
+h1 {
+    padding: 0 20px;
+}

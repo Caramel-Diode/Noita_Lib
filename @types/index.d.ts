@@ -1,7 +1,9 @@
 /// @types/index.d.ts
 
+import { SpellId } from "./@spell";
+
 declare const noitaLib: {
-    (): "1.0";
+    (mode: "dev" | undefined): "1.0";
     /**
      * ## [`🧪 材料`](./@material.d.ts)
      * ```html
@@ -55,20 +57,26 @@ declare const noitaLib: {
      * ```
      */
     readonly Message: import("./@message").Class;
+    /** ## [`🔮 真理魔球`](https://noita.wiki.gg/zh/wiki/真理魔球)
+     * ```html
+     * <noita-orb>
+     * ```
+     */
+    readonly Orb: import("./@orb").Class;
+
     /**
      * ## [`🖱️ 指针`](./@cursor.d.ts)
      * ```html
      * <noita-cursor>
      * ```
      */
-    readonly cursor: import("./@cursor").Class;
+    readonly cursor: { disable: Boolean };
 };
 /** ## [`🔥 状态`](https://noita.wiki.gg/zh/wiki/状态) */
 /** ## [`🎲 道具`](https://noita.wiki.gg/zh/wiki/道具) */
-/** ## [`👿 敌人`](https://noita.wiki.gg/zh/wiki/敌人) */
-/** ## [`🔮 真理魔球`](https://noita.wiki.gg/zh/wiki/真理魔球) */
+
 /**  */
-type SpellData = import("./@spell").SpellData;
+type SpellData = import("./@spell").SpellData<SpellId>;
 /** 天赋数据 */
 type PerkData = import("./@perk").PerkData;
 type WandData = import("./@wand").WandData;

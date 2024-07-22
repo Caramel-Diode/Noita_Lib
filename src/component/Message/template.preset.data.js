@@ -1,3 +1,4 @@
+//prettier-ignore
 [
     ["FUNGAL_SHIFT", "你听见“?”这个词在回响，变换着色彩", "fungal_shift"],
     ["BOOBY_TRAPPED", "这里陷阱遍布", "booby_trapped"],
@@ -23,4 +24,4 @@
     ["SPOOKY", "你的后背发凉，汗毛直竖", "spooky"],
     ["PROTECTION_FIELDS", "一切都沐浴在神秘的光芒之中", "sunlight"],
     ["WORMY", "可怕的爬动声到处都是", "wormy"]
-];
+]

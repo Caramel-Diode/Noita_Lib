@@ -236,6 +236,7 @@ class Spell {
 }
 
 (async () => {
+    await langData.ready;
     Spell._aliasCSV = await parseCSVFromUrl("alias.csv");
     Spell._unlockDescCSV = await parseCSVFromUrl("unlockDesc.csv");
     Spell._passiveDescCSV = await parseCSVFromUrl("passiveDesc.csv");

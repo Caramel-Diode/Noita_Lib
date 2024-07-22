@@ -96,8 +96,12 @@ Icon.$defineElement("-wand");
 
 /** 法杖数据 */
 class WandData {
+    //prettier-ignore
+    static { delete this.prototype.constructor; } // 禁止从实例访问构造器
     /** 法杖匹配数据 */
     static MatchData = class MatchData {
+        //prettier-ignore
+        static { delete this.prototype.constructor; } // 禁止从实例访问构造器
         /** @type {Array<WandData.MatchData>} */ static #dataList = [];
 
         /** 查找图标要使用的名称 */
@@ -124,9 +128,7 @@ class WandData {
         }
 
         static init() {
-            /** #data: [常规法杖模板数据](template.match.data.js) @type {Array} */
-            const datas = embed(`#template.match.data.js`);
-            for (let i = 0; i < datas.length; i += 7) this.#dataList.push(Object.freeze(new this(datas.slice(i, i + 7))));
+            this.#dataList = toChunks(embed(`#template.match.data.js`), 7).map(e => freeze(new this(e)));
         }
         /** 通过属性获取部分属性 */
         static getInfo = (() => {
@@ -180,7 +182,9 @@ class WandData {
     };
 
     /** 法杖预设模板 */
-    static presetTemplate = class {
+    static PresetTemplate = class PresetTemplate {
+        //prettier-ignore
+        static { delete this.prototype.constructor; } // 禁止从实例访问构造器
         static generateData = (() => {
             /**
              * 生成法杖数据
@@ -209,12 +213,10 @@ class WandData {
         }
 
         static init() {
-            /** #data: [预设法杖模板数据](template.preset.data.js) @type {Array} */
-            const datas = embed(`#template.preset.data.js`);
-            for (let i = 0; i < datas.length; i++) {
-                const data = Object.freeze(new this(datas[i]));
+            embed(`#template.preset.data.js`).forEach(e => {
+                const data = freeze(new this(e));
                 this.dataMap.set(data.name, data);
-            }
+            });
         }
     };
 
@@ -227,7 +229,7 @@ class WandData {
 
     /** 通过模板获取法杖数据 */
     static getDataByTemplate(name, useRangeValue = false) {
-        const templateData = this.presetTemplate.dataMap.get(name);
+        const templateData = this.PresetTemplate.dataMap.get(name);
         if (templateData) {
             return {
                 icon: templateData.icon,
@@ -285,6 +287,6 @@ class WandData {
 
     static init() {
         this.MatchData.init();
-        this.presetTemplate.init();
+        this.PresetTemplate.init();
     }
 }

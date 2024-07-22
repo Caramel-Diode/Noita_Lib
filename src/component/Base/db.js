@@ -3,7 +3,7 @@ class PanelAttrInfo {
     /** @type {Number} 图标索引 */ #iconIndex;
 
     static Icon = class Icon extends $icon(7, "面板属性") {
-        static urls = asyncSpriteUrls(embed(`#panelAttrIcon.png`));
+        static urls = asyncSpriteUrls(embed(`#panelAttrIcon2.png`));
         /** @type {PanelAttrInfo?} */ #data;
 
         /** @param {PanelAttrInfo} data  */
