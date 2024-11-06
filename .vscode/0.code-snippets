@@ -1,0 +1,8 @@
+{
+    "prettier-ignore": {
+        "scope": "",
+        "prefix": "prettier-ignore",
+        "body": "$BLOCK_COMMENT_START prettier-ignore $BLOCK_COMMENT_END",
+        "description": "description"
+    }
+}

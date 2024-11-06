@@ -1,4 +1,4 @@
-main {
+:host > section {
     grid-template:
         "name" 30px
         "." 14px
@@ -8,4 +8,11 @@ main {
     place-content: center;
     min-width: 250px;
     min-height: 100px;
+}
+h1 {
+    grid-area: name;
+}
+
+section > section {
+    grid-area: attr;
 }

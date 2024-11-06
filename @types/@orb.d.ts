@@ -1,5 +1,5 @@
 /** 魔球ID */
-export type OrbId = "common" | "red" | "discovered" | "evil" | 0 | 1 | 2 | 3 | 4 | 5 | 6 | 7 | 8 | 9 | 10;
+type OrbId = "common" | "red" | "discovered" | "evil" | 0 | 1 | 2 | 3 | 4 | 5 | 6 | 7 | 8 | 9 | 10;
 /** 魔球数据 */
 export type OrbData = {
     id: OrbId;
@@ -7,6 +7,12 @@ export type OrbData = {
     spellIcon: HTMLImageElement;
 };
 
+type HTMLNoitaPerkElement = HTMLElement & {
+    orbData: OrbData;
+    contentUpdate: () => never;
+    orbId: OrbId;
+};
+
 export type Class = {
-    new (id: OrbId | undefined): HTMLElement & { orbData: OrbData };
+    new (id?: OrbId): HTMLNoitaPerkElement;
 };

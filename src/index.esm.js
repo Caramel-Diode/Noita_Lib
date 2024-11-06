@@ -1,7 +1,7 @@
 /** #home: 主入口 @file Noita Web Lib */
 embed(`#public/polyfill.js`);
 /** @type {Console} 代理console实现在非dev模式下不在控制台显示调试信息 */
-let console = window.console;
+let { console } = window;
 embed(`#embedList.js`);
 console = ((blank = _ => 0) => new Proxy({}, { get: () => blank }))();
 const noitaLib = mode => {
@@ -22,6 +22,6 @@ const noitaLib = mode => {
 };
 
 // 允许按需导入
-export { translation, Material, Entity, Spell, Wand, Perk, Container, Message, cursor, save };
+export { translation, Material, Entity, Spell, Wand, Perk, Container, Message, Status, cursor };
 // 提供默认导出 允许直接使用 import noitaLib form "./noitaLib.esm.js" 的方式进行导入
-export default Object.freeze(Object.assign(noitaLib, { translation, Material, Entity, Spell, Wand, Perk, Container, Message, State: {}, Orb, cursor, save }));
+export default Object.freeze(Object.assign(noitaLib, { translation, Material, Entity, Spell, Wand, Perk, Container, Message, Status, Orb, cursor }));

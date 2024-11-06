@@ -110,7 +110,7 @@ class DamageData {
             if ("PMLFEISHCDVYNRO".includes(char)) target = targets[char];
             else target.push(char);
         }
-        const toNumber = data => (data.length ? Number(data.join("")) : defaultValue);
+        const toNumber = data => (data.length ? +data.join("") : defaultValue);
         this.projectile = toNumber(P);
         this.melee = toNumber(M);
         this.electricity = toNumber(L);
@@ -142,7 +142,7 @@ class DamageData {
         cache.push(`slice="`, this.slice, `" `);
         cache.push(`healing="`, this.healing, `" `);
         cache.push(`curse="`, this.curse, `" `);
-        cache.push(`dirll="`, this.dirll, `" `);
+        cache.push(`drill="`, this.drill, `" `);
         cache.push(`overeating="`, this.overeating, `" `);
         cache.push(`physics_hit="`, this.physicsHit, `" `);
         cache.push(`poison="`, this.poison, `" `);
@@ -153,21 +153,39 @@ class DamageData {
 
     get #_exp() {
         const cache = [];
-        if (this.projectile) cache.push("P", this.projectile);
-        if (this.melee) cache.push("M", this.melee);
-        if (this.electricity) cache.push("L", this.electricity);
-        if (this.fire) cache.push("F", this.fire);
-        if (this.explosion) cache.push("E", this.explosion);
-        if (this.ice) cache.push("I", this.ice);
-        if (this.slice) cache.push("S", this.slice);
-        if (this.healing) cache.push("H", this.healing);
-        if (this.curse) cache.push("C", this.curse);
-        if (this.dirll) cache.push("D", this.dirll);
-        if (this.overeating) cache.push("V", this.overeating);
-        if (this.physicsHit) cache.push("Y", this.physicsHit);
-        if (this.poison) cache.push("N", this.poison);
-        if (this.radioactive) cache.push("R", this.radioactive);
-        if (this.holy) cache.push("O", this.holy);
+        if (this.#type === "multipliers") {
+            if (1 !== this.projectile) cache.push("P", this.projectile);
+            if (1 !== this.melee) cache.push("M", this.melee);
+            if (1 !== this.electricity) cache.push("L", this.electricity);
+            if (1 !== this.fire) cache.push("F", this.fire);
+            if (1 !== this.explosion) cache.push("E", this.explosion);
+            if (1 !== this.ice) cache.push("I", this.ice);
+            if (1 !== this.slice) cache.push("S", this.slice);
+            if (1 !== this.healing) cache.push("H", this.healing);
+            if (1 !== this.curse) cache.push("C", this.curse);
+            if (1 !== this.drill) cache.push("D", this.drill);
+            if (1 !== this.overeating) cache.push("V", this.overeating);
+            if (1 !== this.physicsHit) cache.push("Y", this.physicsHit);
+            if (1 !== this.poison) cache.push("N", this.poison);
+            if (1 !== this.radioactive) cache.push("R", this.radioactive);
+            if (1 !== this.holy) cache.push("O", this.holy);
+        } else {
+            if (this.projectile) cache.push("P", this.projectile);
+            if (this.melee) cache.push("M", this.melee);
+            if (this.electricity) cache.push("L", this.electricity);
+            if (this.fire) cache.push("F", this.fire);
+            if (this.explosion) cache.push("E", this.explosion);
+            if (this.ice) cache.push("I", this.ice);
+            if (this.slice) cache.push("S", this.slice);
+            if (this.healing) cache.push("H", this.healing);
+            if (this.curse) cache.push("C", this.curse);
+            if (this.dirll) cache.push("D", this.dirll);
+            if (this.overeating) cache.push("V", this.overeating);
+            if (this.physicsHit) cache.push("Y", this.physicsHit);
+            if (this.poison) cache.push("N", this.poison);
+            if (this.radioactive) cache.push("R", this.radioactive);
+            if (this.holy) cache.push("O", this.holy);
+        }
         return cache.join("");
     }
 
@@ -176,7 +194,7 @@ class DamageData {
      * @param {"XML"|"exp"} [format] 转换格式
      */
     toString(format = "exp") {
-        if ((format = "exp")) return this.#_exp;
+        if (format === "exp") return this.#_exp;
         else return this.#_XML;
     }
 }

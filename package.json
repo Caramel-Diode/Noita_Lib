@@ -32,6 +32,15 @@
             "node": true,
             "es6": true,
             "worker": true
+        },
+        "rules": {
+            "brace-style": [
+                "error",
+                "1tbs",
+                {
+                    "allowSingleLine": true
+                }
+            ]
         }
     },
     "prettier": {

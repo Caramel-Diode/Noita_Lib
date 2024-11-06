@@ -1,8 +1,8 @@
 const Base = (() => {
     const styleSheet = {
-        base: gss(embed(`#base.css`)),
-        icon: gss(embed(`#icon.css`)),
-        panel: gss(embed(`#panel.css`))
+        base: css(embed(`#base.css`)),
+        icon: css(embed(`#icon.css`)),
+        panel: css(embed(`#panel.css`))
     };
 
     embed(`#db.js`);
@@ -10,12 +10,13 @@ const Base = (() => {
     PanelAttrInfo.Icon.urls.then(urls => urls.forEach(url => styleSheet.panel.insertRule(`[src="${url}"]{mask:url("${url}") center/100% 100%}`)));
 
     embed(`#input-range.js`);
+    embed(`#inventory.js`);
 
     const panelTitleSwitch = (() => {
+        /** @param  {HTMLHeadingElement} h1 */
         const main = h1 => {
-            const { switchId: id, switchName: name } = h1;
-            if (h1.innerText === id) h1.innerText = name;
-            else if (h1.innerText === name) h1.innerText = id;
+            const { id, name } = h1.dataset;
+            h1.innerText = h1.innerText === id ? name : id;
         };
         return {
             /**
@@ -56,14 +57,15 @@ const Base = (() => {
         };
         /** @param {Event} event */
         const main = event => {
-            /** @type {HTMLLIElement} */ const li = event.currentTarget;
-            /** @type {HTMLElement} */ const targetMain = li.content;
-            if (targetMain.isConnected) return; // 判断当前main是否需要改变
-            /** @type {ShadowRoot} */ const shadowRoot = li.getRootNode();
+            /** @type {HTMLLIElement} */
+            const li = event.currentTarget;
+            /** @type {HTMLElement} */
+            const targetPanel = li.content;
+            if (!targetPanel.hidden) return;
+            const [, ...sections] = li.getRootNode().childNodes;
+            for (const e of sections) e.hidden = e !== targetPanel;
             for (const e of li.parentElement.childNodes) e.classList.remove("selected");
             li.classList.add("selected");
-            shadowRoot.querySelector("main")?.remove();
-            shadowRoot.append(targetMain);
         };
         return {
             /**
@@ -91,9 +93,16 @@ const Base = (() => {
 
     return class HTMLNoitaElement extends $class(HTMLElement, {
         /** @type {$ValueOption<"panel">} */
-        displayMode: { name: "display", $default: "panel" }
+        displayMode: { name: "display", $default: "panel" },
+        /** @type {$ValueOption<"common"|"white">} */
+        borderStyle: { name: "border-style", $default: "common" },
+        /** @type {$ValueOption<string>} */
+        promptFor: { name: "prompt-for", $default: "" },
+        /** @type {$ValueOption<string>} */
+        promptForSelector: { name: "prompt-for.selector", $default: "" }
     }) {
-        /** @type {ShadowRoot} */ #shadowRoot;
+        /** @type {ShadowRoot} */
+        #shadowRoot;
         /**
          * 创建面板 **`<h1>`** 标题
          * @param {String} id
@@ -101,16 +110,15 @@ const Base = (() => {
          * @returns {HTMLHeadingElement} `<h1>` 元素
          */
         createPanelH1(id, name) {
-            return h.h1({ $: { switchId: id, switchName: name }, Event: panelTitleSwitch }, name);
+            return h.h1({ "data-id": id, "data-name": name, Event: panelTitleSwitch }, name);
         }
 
         static PanelAttrInfo = PanelAttrInfo;
 
         /** 面板属性加载器 */
         static PanelAttrLoader = (() => {
-            const roundTo = math_.roundTo;
+            const { roundTo } = math;
 
-            // const ged = math_.getExactDegree;
             /** @type {Listeners} */
             const panelInfoSwitch = (() => {
                 /** @param {KeyboardEvent|MouseEvent} event */
@@ -119,14 +127,11 @@ const Base = (() => {
                     const target = event.currentTarget;
                     const selectedLi = target.parentElement.querySelector(".selected");
                     const forceToHidden = selectedLi === target; // 再次点击已选中的target时强制隐藏
-                    if (forceToHidden) target.toggleAttribute("class");
-                    else {
-                        if (selectedLi) selectedLi.toggleAttribute("class");
-                        target.className = "selected";
-                    }
+                    target.classList.toggle("selected");
+                    if (!forceToHidden) selectedLi?.classList.toggle("selected");
                     //prettier-ignore
                     for (let element of target.relatedSectionElements)
-                        element.hidden = element.getAttribute("related-id") !== target.getAttribute("related-id") || forceToHidden;
+                        element.hidden = element.dataset.relatedId !== target.dataset.relatedId || forceToHidden;
                 };
                 return {
                     click: event => main(event),
@@ -136,6 +141,7 @@ const Base = (() => {
                     }
                 };
             })();
+
             /** @type {Listeners} */
             const unitConvert = (() => {
                 /**
@@ -143,13 +149,11 @@ const Base = (() => {
                  * @param {HTMLElement} element
                  */
                 const main = element => {
-                    /** @type {HTMLTableCellElement} */
-                    if (element.getAttribute("display") === "SECOND") {
-                        element.innerText = element.getAttribute("value.frame");
-                        element.setAttribute("display", "FRAME");
-                    } else {
-                        element.innerText = element.getAttribute("value.second");
-                        element.setAttribute("display", "SECOND");
+                    const dataElements = element.querySelectorAll("[data-time]");
+                    for (let i = 0; i < dataElements.length; i++) {
+                        /** @type {HTMLElement} */
+                        const e = element.children[i];
+                        e.hidden = !e.hidden;
                     }
                 };
                 return {
@@ -184,30 +188,33 @@ const Base = (() => {
                     }
                 };
             })();
+
             return class PanelAttrLoader {
                 /** @type {HTMLTableElement} 表格容器 */
                 container = h.table({ class: "attrs" });
-                #ignore;
+                /** @type {(prop:String)=>Boolean} */
+                #isIgnored;
+                #timeUnit;
                 /**
-                 * @param {HTMLTableSectionElement} target
                  * @param {Array<String>} ignore
+                 * @param {"s"|"f"} timeUnit 默认显示时间单位
                  */
-                constructor(ignore = []) {
-                    this.#ignore = ignore;
-                }
-                #isIgnored(prop) {
-                    return this.#ignore.includes(prop);
+                constructor(ignore = [], timeUnit = "s") {
+                    this.#timeUnit = timeUnit;
+                    this.#isIgnored = Array.prototype.includes.bind(ignore);
                 }
                 /** @param {{[key: string]: {value:*,needSign:Boolean?,hidden:Boolean?}}} datas */
                 load(datas) {
                     for (const prop in datas) {
                         if (this.#isIgnored(prop)) continue; //跳过被忽略的面板属性
-                        let { value, hidden, type = "", pos } = datas[prop];
+                        let { value, hidden, type = "", pos } = datas[prop]; // type 是修正运算符
                         if (hidden) continue;
                         /** @type {HTMLTableRowElement} */
                         let target = null;
                         //prettier-ignore
                         switch (prop) {
+                            case "effectInterval": //==== 作用间隔
+                            case "damageInterval": //==== 伤害间隔
                             case "fireRateWait": //====== 施放延迟
                             case "reloadTime": //======== 充能时间
                                 target = this.castCD(prop, value,type);
@@ -265,10 +272,19 @@ const Base = (() => {
                                 break;
                             case "projectilesProvided":
                             case "projectilesUsed":
+                            case "loadEntities":
+                            case "extraEntities":
+                            case "gameEffectEntities":
                                 target = this.offerEntity(prop, value);
                                 break;
                             case "bloodMaterial":
                                 target = this.bloodMaterial(value.hurt, value.die);
+                                break;
+                            case "trigger":
+                                target = this.trigger(value);
+                                break;
+                            case "tag":
+                                target = this.tag(value);
                                 break;
                             default:
                                 target = this.default(prop,value,type);
@@ -286,33 +302,32 @@ const Base = (() => {
                 }
 
                 /**
+                 * 创建单位数据单元格
+                 * @param {String} s
+                 * @param {String} f
+                 */
+                #createUnitDataTd(s, f) {
+                    const spanSecond = h.span({ dataset: { time: "second" }, hidden: this.#timeUnit === "f" }, s);
+                    const spanFrame = h.span({ dataset: { time: "frame" }, hidden: this.#timeUnit === "s" }, f);
+                    return h.td({ Event: unitConvert }, spanSecond, spanFrame);
+                }
+
+                /**
                  * 加载属性表行
                  * @param {PanelAttrIDEnum} type
-                 * @param {String|Node|GameTime} content
+                 * @param {String|Node} [content]
                  * @returns {HTMLTableRowElement}
                  */
                 #tr(type, content) {
                     const { icon, name, className = "" } = PanelAttrInfo.query(type);
-                    let attrs = { class: className };
-                    let inner = [];
-                    if (typeof content === "object") {
-                        if (content instanceof Node) inner.push(content); // html节点 直接插入
-                        else
-                            attrs = {
-                                ...attrs,
-                                display: "SECOND",
-                                "value.second": content.s,
-                                "value.frame": content.f,
-                                Event: unitConvert,
-                                HTML: content.s // 单位换算信息 默认显示`秒`
-                            };
-                    } else inner.push(content);
-                    return h.tr(h.th(icon), h.th(name), h.td(attrs, inner));
+                    const tr = h.tr({ class: className }, h.th(icon), h.th(name));
+                    if (content) tr.append(h.td(content));
+                    return tr;
                 }
 
                 /**
                  * 加载`施放延迟`|`充能时间`面板属性
-                 * @param {"fireRateWait"|"reloadTime"} type CD类型
+                 * @param {"fireRateWait"|"reloadTime"|"damageInterval"} type CD类型
                  * @param {Number|RangeValue} value
                  * @param {Boolean|String} [sign]
                  */
@@ -327,11 +342,13 @@ const Base = (() => {
                         s = value.withChange(GameTime.toS).withChange(roundTo).toString("s");
                         f = value.toString("f");
                     }
-                    return this.#tr(type, { s, f });
+                    const tr = this.#tr(type);
+                    tr.append(this.#createUnitDataTd(s, f));
+                    return tr;
                 }
                 /**
                  * 加载`存在时间`面板属性
-                 * @param {Number|{base:Number,fluctuation:Number}} value
+                 * @param {Number|RangeValue} value
                  * @param {Boolean|String} [sign]
                  */
                 lifetime(value, sign) {
@@ -340,19 +357,21 @@ const Base = (() => {
                         const time = new GameTime(value);
                         s = sign + time.s;
                         f = sign + time.f;
-                    } else if (value.fluctuation === 0) {
-                        // 实体存在时间 范围显示
-                        const time = new GameTime(value.base);
-                        s = time.s;
-                        f = time.f;
-                        if (value.base === -1) s = `永久`;
                     } else {
-                        const min = new GameTime(value.base - value.fluctuation);
-                        const max = new GameTime(value.base + value.fluctuation);
-                        s = min.s + " ~ " + max.s;
-                        f = min.f + " ~ " + max.f;
+                        if (value.isFixed) {
+                            const time = new GameTime(value.median);
+                            s = time.s;
+                            f = time.f;
+                        } else {
+                            const min = new GameTime(value.min);
+                            const max = new GameTime(value.max);
+                            s = min.s + " ~ " + max.s;
+                            f = min.f + " ~ " + max.f;
+                        }
                     }
-                    return this.#tr("lifetime", { s, f });
+                    const tr = this.#tr("lifetime");
+                    tr.append(this.#createUnitDataTd(s, f));
+                    return tr;
                 }
                 /**
                  * 加载`法力恢复速度`面板属性
@@ -367,7 +386,9 @@ const Base = (() => {
                         s = value.toString("/s");
                         f = value.withChange(GameTime.toS).withChange(roundTo).toString("/f");
                     }
-                    return this.#tr("manaChargeSpeed", { s, f });
+                    const tr = this.#tr("manaChargeSpeed");
+                    tr.append(this.#createUnitDataTd(s, f));
+                    return tr;
                 }
                 /**
                  * 加载`散射角度`面板属性
@@ -403,19 +424,20 @@ const Base = (() => {
                 }
 
                 /**
-                 * @param {Number|SpellData.ProjectileData&RangeValue} [value]
+                 * @param {Number|{drawCount_Death:Number,drawCount_Hit:Number,drawCount_Timer:Number,drawDelay_Timer:Number}|RangeValue} [value]
                  */
                 draw(value = 1) {
                     if (typeof value === "number") return this.#tr("draw", `${value}`);
-                    else if (value.drawCount_Death) return this.#tr("draw_death", `${value.drawCount_Death}`);
-                    else if (value.drawCount_Hit) return this.#tr("draw_hit", `${value.drawCount_Hit}`);
-                    else if (value.drawCount_Timer) {
-                        const time = new GameTime(value.drawDelay_Timer);
-                        return this.#tr("draw_timer", {
-                            s: `${value.drawCount_Timer} (${time.s})`,
-                            f: `${value.drawCount_Timer} (${time.f})`
-                        });
-                    } else if (value.min) return this.#tr("draw", value.toString()); //魔杖不定抽取
+                    const { drawCount_Death, drawCount_Hit, drawCount_Timer, drawDelay_Timer } = value;
+                    if (drawCount_Death) return this.#tr("draw_death", `${drawCount_Death}`);
+                    else if (drawCount_Hit) return this.#tr("draw_hit", `${drawCount_Hit}`);
+                    else if (drawCount_Timer) {
+                        const { s, f } = new GameTime(drawDelay_Timer);
+                        const tr = this.#tr("draw_timer");
+                        tr.append(this.#createUnitDataTd(drawCount_Timer + ` (${s})`, drawCount_Timer + ` (${f})`));
+                        return tr;
+                    }
+                    return this.#tr("draw", value.toString()); //魔杖不定抽取
                 }
 
                 /**
@@ -426,11 +448,11 @@ const Base = (() => {
                     let lockNodes, unlockNodes;
                     {
                         const { icon, name } = PanelAttrInfo.query("lock");
-                        lockNodes = h["[]"](h.th(icon), h.th(name), h.td("* ".repeat(Math.min(flag.length, 5))));
+                        lockNodes = h(h.th(icon), h.th(name), h.td("* ".repeat(Math.min(flag.length, 5))));
                     }
                     {
                         const { icon, name } = PanelAttrInfo.query("unlock");
-                        unlockNodes = h["[]"](h.th(icon), h.th(name), h.td(flag));
+                        unlockNodes = h(h.th(icon), h.th(name), h.td(flag));
                     }
                     return h.tr(
                         {
@@ -444,15 +466,16 @@ const Base = (() => {
 
                 /**
                  * 加载`提供投射物`|`使用投射物`属性
-                 * @param {"projectilesProvided"|"projectilesUsed"} type
+                 * @param {"projectilesProvided"|"projectilesUsed"|"loadEntities"} type
                  * @param {Array<HTMLLIElement>} lis
                  */
                 offerEntity(type, lis) {
                     const menu = h.menu({ class: "entities-tablist", role: "tablist" }, lis); //无障碍: 选项卡列表
-                    for (let i = 0; i < lis.length; i++) h.$attach(lis[i], { role: "tab", Event: panelInfoSwitch });
+                    for (let i = 0; i < lis.length; i++) h.$(lis[i], { role: "tab", Event: panelInfoSwitch });
                     lis[0].click(); //提供的数据会全部展示 此处点击以实现仅显示首个投射物信息
                     return this.#tr(type, menu);
                 }
+
                 /**
                  * 加载`血液材料(尸体材料)`属性
                  * @param {String} value_hurt
@@ -462,6 +485,48 @@ const Base = (() => {
                     let content = value_hurt;
                     if (value_die !== value_hurt && value_die !== "") content += ` ${value_die}`;
                     return this.#tr("bloodMaterial", content);
+                }
+
+                /**
+                 *
+                 * @param {{type:"ON_HIT"|"ON_TIMER"|"ON_DEATH",delay:RangeValue?}} value
+                 */
+                trigger(value) {
+                    console.log(value);
+
+                    switch (value.type) {
+                        case "ON_HIT":
+                            return this.#tr("trigger", h(PanelAttrInfo.query("on_hit").icon, " 碰撞"));
+                        case "ON_DEATH":
+                            return this.#tr("trigger", h(PanelAttrInfo.query("on_death").icon, " 失效"));
+                        case "ON_TIMER": // 需要重写部分 #tr函数的逻辑
+                            const { delay } = value;
+                            const { icon, name, className = "" } = PanelAttrInfo.query("trigger");
+
+                            const tr = this.#tr("trigger");
+                            let td;
+                            if (delay.isFixed) {
+                                const { s, f } = new GameTime(delay.median);
+                                td = this.#createUnitDataTd(s, f);
+                            } else {
+                                const max = new GameTime(delay.max);
+                                const min = new GameTime(delay.min);
+                                td = this.#createUnitDataTd(` 定时(${min.s}~${max.s})`, ` 定时(${min.f}~${max.f})`);
+                            }
+                            td.prepend(PanelAttrInfo.query("on_timer").icon);
+                            tr.append(td);
+                            return tr;
+                    }
+                }
+
+                /**
+                 *
+                 * @param {Array<String>} value
+                 */
+                tag(value) {
+                    const ul = h.ul({ class: "entity-tag-list" });
+                    for (let i = 0; i < value.length; i++) ul.append(h.li({ class: "entity-tag" }, value[i]));
+                    return this.#tr("tag", ul);
                 }
 
                 /**
@@ -479,18 +544,17 @@ const Base = (() => {
             };
         })();
 
-        constructor() {
-            super();
-        }
-
         /** 从css中获取不需要显示的面板属性 */
         //prettier-ignore
         get ignoredPanelAttrs() {
-            return window.getComputedStyle(this).getPropertyValue("--ignore-panel-attr").split(" ");
-            // return this.computedStyleMap().get("--ignore-panel-attr")?.toString()?.split(" ") ?? [];
+            return getComputedStyle(this).getPropertyValue("--ignore-panel-attr").split(" ");
         }
 
-        /** @param {ShadowRootInit} init  */
+        /**
+         * @type {typeof HTMLElement.prototype.attachShadow}
+         * @override 在 {@linkcode connectedCallback} 中被调用以达到自动创建shadowRoot的目的
+         * @see HTMLElement#attachShadow
+         */
         attachShadow(init) {
             if (this.#shadowRoot) return this.#shadowRoot;
             return (this.#shadowRoot = super.attachShadow(init));
@@ -507,47 +571,134 @@ const Base = (() => {
             this.#shadowRoot.adoptedStyleSheets = extraStyleSheets;
         }
 
-        /** 内容更新函数 子类需要重写此函数以供属性变化时自动更新内容 */
-        contentUpdate() {
+        /**
+         * @abstract
+         * #### 内容更新函数 子类需要重写此函数以供属性变化时自动更新内容
+         * ---
+         * * **添加到文档时** 被 {@linkcode connectedCallback} 调用
+         * * **关联属性更新时** 被 {@linkcode attributeChangedCallback} 调用
+         */
+        async contentUpdate() {
+            this.#shadowRoot.innerHTML = "";
             this[$symbols.initStyle]();
-            this.loadPanelContent();
+            // 此函数被调用时意味着需要从LightDOM中获取内容
+            await DOMContentLoaded;
+            /** @type {Array<HTMLTemplateElement>} */
+            const templates = [];
+            /** @type {Array<HTMLElement>} */
+            const children = [...this.children];
+            for (let i = 0; i < children.length; i++) {
+                /** @type {HTMLTemplateElement} */
+                const element = children[i];
+                if (element.tagName === "TEMPLATE") {
+                    element.dataset.scope = true; //从LightDOM获取的内容需要隔离样式
+                    templates.push(element);
+                    element.remove(); // 不要移除其他元素 允许作为插槽内容嵌入
+                }
+            }
+            if (templates.length) this.loadPanelContent(templates);
+            else this.#loadSlotPanel();
+
+            // 作为悬浮提示挂载到其它元素
+
+            /** @type {Document|ShadowRoot} */
+            const root = this.getRootNode();
+
+            if (this.promptFor) {
+                // 允许指定多个目标
+                for (const id of this.promptFor.split(" ")) {
+                    const target = root.getElementById(id);
+                    if (!target) {
+                        console.warn(`无法找到id=${id}的元素`);
+                        continue;
+                    }
+                    if (target[promptMsg.symbol]) console.warn("被多个<noita-panel>绑定");
+                    else {
+                        target[promptMsg.symbol] = this;
+                        h.$(target, { Event: promptMsg.event });
+                    }
+                }
+                this.promptFor = "";
+                this.remove();
+            }
+            if (this.promptForSelector) {
+                for (const target of root.querySelectorAll(this.promptForSelector)) {
+                    if (target[promptMsg.symbol]) console.warn("被多个<noita-panel>绑定");
+                    else {
+                        target[promptMsg.symbol] = this;
+                        h.$(target, { Event: promptMsg.event });
+                    }
+                }
+                this.promptForSelector = "";
+                this.remove();
+            }
+        }
+
+        #loadSlotPanel() {
+            /* prettier-ignore */
+            this.#shadowRoot.append(
+                h.section({ class: "custom" },
+                    h.slot(
+                        h.p(
+                            h.div(`使用多个<tempalte title="选项卡名称">内容</tempalte>以选项卡模式填充内容`),
+                            h.div("或直接在内部以简易模式填充内容")
+                        )
+                    )
+                )
+            );
         }
 
         /**
          * 加载 template 内容 (多选项卡)
          * @param {Array<HTMLTemplateElement>} templates
          */
-        async loadPanelContent(templates) {
+        loadPanelContent(templates) {
             this.#shadowRoot.innerHTML = "";
-            if (templates === undefined) {
-                // 从html中解析内容
-                await DOMContentLoaded;
-                templates = [...this.querySelectorAll("template")];
-                for (let i = 0; i < templates.length; i++) templates[i].remove();
-            }
-            if (templates.length) {
-                const lis = [];
-                for (let i = 0; i < templates.length; i++) {
-                    const template = templates[i];
-                    const main = h.main({ role: "tabpanel" });
-                    const fns = [];
-                    for (const script of template.content.querySelectorAll("script")) {
-                        script.remove();
-                        fns.push(Function("h", script.innerHTML).bind(main));
+            /** @type {Array<HTMLLIElement>} */
+            const lis = [];
+            for (let i = 0; i < templates.length; i++) {
+                const template = templates[i];
+                const section = h.section({ role: "tabpanel", hidden: true });
+                if (template.hasAttribute("class")) section.className = template.className;
+                if (template.hasAttribute("style")) section.style.cssText = template.style.cssText;
+                const { content, title, dataset } = template;
+                if (dataset.scope) {
+                    const shadowRoot = section.attachShadow({ mode: "open" });
+                    const scriptCodes = [];
+                    const styleCodes = [];
+                    for (let i = 0; i < content.children.length; i++) {
+                        const element = content.children[i];
+                        switch (element.tagName) {
+                            case "SCRIPT":
+                                scriptCodes.push(element.text);
+                                element.remove();
+                                continue;
+                            case "STYLE":
+                                styleCodes.push(element.textContent);
+                                element.remove();
+                                continue;
+                        }
                     }
-                    main.append(template.content);
-                    for (const fn of fns) fn(h);
-                    const li = h.li({ role: "tab", tabindex: 0, Event: panelTabsSwitch, $: { content: main } }, h.span(template.title));
-                    if (template.hasAttribute("default")) lis.$default = li;
-                    lis.push(li);
-                }
-                this.#shadowRoot.append(h.header({ hidden: templates.length < 2 }, h.menu({ role: "tablist" }, lis)));
-                (lis.$default ?? lis[0]).click();
-            } else this.#shadowRoot.innerHTML = `<main class=custom><slot></slot></main>`;
+                    shadowRoot.adoptedStyleSheets = [css(styleCodes.join(""))];
+                    shadowRoot.append(content);
+                    Function("h", scriptCodes.join("\n")).bind(shadowRoot, h)();
+                } else section.append(content);
+
+                const li = h.li({ role: "tab", tabindex: 0, Event: panelTabsSwitch, $: { content: section } }, h.span(title));
+                if (template.hasAttribute("default")) lis.$default = li;
+                lis[i] = li;
+                this.#shadowRoot.append(section);
+            }
+            lis.$default ??= lis[0];
+            if (templates.length > 1) {
+                this.#shadowRoot.prepend(h.menu({ role: "tablist" }, lis));
+                lis.$default.click();
+            } else this.#shadowRoot.childNodes[0].removeAttribute("role"); // 移除选项卡面板无障碍语义
+            lis.$default.content.hidden = false;
         }
 
         connectedCallback() {
-            this.attachShadow({ mode: "closed" });
+            this.attachShadow({ mode: "open" });
             this.contentUpdate();
         }
 
@@ -556,9 +707,7 @@ const Base = (() => {
 
         attributeChangedCallback(name, oldValue, newValue) {
             if (oldValue === null || oldValue === void 0) return;
-            if (newValue !== oldValue) {
-                if (this.isConnected) this.contentUpdate(); //contentUpdate 会优先调用子类重写的版本
-            }
+            if (newValue !== oldValue && this.isConnected) this.contentUpdate(); //contentUpdate 会优先调用子类重写的版本
         }
     };
 })();

@@ -1,0 +1,7 @@
+:host {
+    --size: 36px;
+}
+
+img {
+    zoom: 3;
+}

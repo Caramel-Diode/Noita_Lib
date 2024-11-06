@@ -1,5 +1,5 @@
 class Icon extends $icon(16, "材料") {
-    static urls = asyncSpriteUrls(embed(`#icon.png`));
+    static urls = new SpriteSpliter("MaterialIcons", embed(`#icon.png`)).results;
     /** @type {MaterialData?} */ #data;
 
     /** @param {MaterialData} data  */
@@ -9,7 +9,7 @@ class Icon extends $icon(16, "材料") {
     }
 
     connectedCallback() {
-        const data = this.#data ?? MaterialData.queryById(this.getAttribute("material.id"));
+        const data = this.#data ?? MaterialData.queryById(this.dataset.id);
         this.alt = data.name;
         this.src = data.asyncIconUrl;
     }
@@ -22,11 +22,22 @@ Icon.$defineElement("-material");
 /** @typedef {import("TYPE").MaterialTag} MaterialTag */
 /** @typedef {import("TYPE").MaterialData.ReactionData} MaterialData.ReactionData */
 /** @typedef {import("TYPE").MaterialData.DataGroup} MaterialData.DataGroup */
+
+/**
+ * @typedef MaterialDataGroup
+ * @prop {MaterialTag} [tag] 标签
+ * @prop {String} [idPart] id部分
+ * @prop {MaterialId} [parent] 父材料id
+ * @prop {Array<MaterialData>} list 具体可用材料表
+ */
+
 class MaterialData {
     //prettier-ignore
     static { delete this.prototype.constructor; } // 禁止从实例访问构造器
 
-    static ReactionData = class {
+    static ReactionData = class ReactionData {
+        /** @type {[void,"asInput","asOutput","asCatalyzer"]} */
+        static #relationshipType = [, "asInput", "asOutput", "asCatalyzer"];
         //prettier-ignore
         static { delete this.prototype.constructor; } // 禁止从实例访问构造器
         /** @type {Array<MaterialData.ReactionData>} */ static data = [];
@@ -66,37 +77,7 @@ class MaterialData {
                     }
                     freeze(valid.list);
                 }
-                // // 判断是否含有标签
-                // if (keyword.startsWith("[")) {
-                //     if (keyword.endsWith("]")) items[i] = MaterialData.queryByTag(keyword);
-                //     // 针对形如`[标签]_abc`组合表示格式做特殊处理
-                //     else {
-                //         const p = keyword.lastIndexOf("]") + 1;
-                //         //prettier-ignore
-                //         const data = items[i] = freeze({
-                //             tag: keyword.slice(0, p),
-                //             idPart: keyword.slice(p),
-                //             list: []
-                //         });
-                //         const raw = MaterialData.queryByTag(data.tag).list;
-                //         for (let j = 0; j < raw.length; j++) data.list.push(MaterialData.queryById(raw[j].id + data.idPart));
-                //         freeze(data.list);
-                //     }
-                // } else {
-                //     const raw = MaterialData.queryByInherit(keyword);
-                //     //prettier-ignore
-                //     const { parent, list: [self, ...children] } = MaterialData.queryByInherit(keyword);
-                //     //prettier-ignore
-                //     const valid = items[i] = freeze({ parent, list: [self] });
-                //     // 仅使用继承反应的子材料
-                //     for (let j = i; j < children.length; j++) {
-                //         const e = children[j];
-                //         if (e.inheritReactions) valid.list.push(e);
-                //     }
-                //     freeze(valid.list);
-                // }
             }
-            // console.warn(items);
             return items;
         }
 
@@ -116,41 +97,99 @@ class MaterialData {
         }
 
         /**
-         * 某种/类材料与该反应之间的联系
-         * @param {MaterialId|MaterialTag} keyword
-         * @returns {"asInput"|"asOutput"|"asCatalyzer"|undefined} `作为原料` | `作为产物` | `作为催化剂` | `不参与反应`
+         * 某种材料与该反应之间的联系
+         * @param {MaterialId} id
          */
-        getRelationship(keyword) {
-            let asInput = false;
-            let asOutput = false;
-            $inputs: for (let i = 0; i < this.inputs.length; i++) {
-                if (this.inputs[i].tag === keyword) {
-                    asInput = true;
+        getRelationshipById(id) {
+            /** 关系类型
+             * * `0b00 (0)`: **无关**
+             * * `0b01 (1)`: **asInput**
+             * * `0b10 (2)`: **asOutput**
+             * * `0b11 (3)`: **asCatalyzer**
+             * @type {0|1|2|3}
+             */
+            let type = 0;
+
+            let sourceInput, sourceOutput;
+            const { inputs, outputs } = this;
+            $: for (let i = 0; i < inputs.length; i++) {
+                const input = inputs[i];
+                if (input.parent === id) {
+                    sourceInput = id;
+                    type += 1;
                     break;
-                } else {
-                    const list = this.inputs[i].list;
-                    for (let j = 0; j < list.length; j++) {
-                        if (list[j].id === keyword) {
-                            asInput = true;
-                            break $inputs;
-                        }
-                    }
                 }
-            }
-            $outputs: for (let i = 0; i < this.outputs.length; i++) {
-                const list = this.outputs[i].list;
+                const { list, tag, idPart = "" } = input;
                 for (let j = 0; j < list.length; j++) {
-                    if (list[j].id === keyword) {
-                        asOutput = true;
-                        break $outputs;
+                    if (list[j].id === id) {
+                        type += 1; //0b01
+                        sourceInput = tag + idPart;
+                        break $;
                     }
                 }
             }
 
-            if (asInput && asOutput) return "asCatalyzer";
-            else if (asInput) return "asInput";
-            else if (asOutput) return "asOutput";
-            return;
+            $: for (let i = 0; i < outputs.length; i++) {
+                const output = outputs[i];
+                if (output.parent === id) {
+                    sourceOutput = id;
+                    type += 2;
+                    break;
+                }
+                const { list, tag, idPart = "" } = outputs[i];
+                for (let j = 0; j < list.length; j++) {
+                    if (list[j].id === id) {
+                        type += 2; //0b10
+                        sourceOutput = tag + idPart;
+                        break $;
+                    }
+                }
+            }
+
+            if (type === 3) {
+                // 输入输出来源一致时才认为是催化剂
+                if (sourceInput === sourceOutput) return "asCatalyzer";
+                else if (sourceInput === id) return "asInput";
+                else if (sourceOutput === id) return "asOutput";
+            }
+            return ReactionData.#relationshipType[type];
+        }
+
+        /**
+         * 某类材料与该反应之间的联系
+         * @param {MaterialTag} tag
+         */
+        getRelationshipByTag(tag) {
+            /** 关系类型
+             * * `0b00 (0)`: **无关**
+             * * `0b01 (1)`: **asInput**
+             * * `0b10 (2)`: **asOutput**
+             * * `0b11 (3)`: **asCatalyzer**
+             * @type {0|1|2|3}
+             */
+            let type = 0;
+            const { inputs, outputs } = this;
+            for (let i = 0; i < inputs.length; i++)
+                if (inputs[i].tag === tag) {
+                    type += 1; //0b01
+                    break;
+                }
+            for (let i = 0; i < outputs.length; i++) {
+                const output = outputs[i];
+                if (!("idPart" in output) && output.tag === tag) {
+                    type += 2; //0b10
+                    break;
+                }
+            }
+            return ReactionData.#relationshipType[type];
+        }
+
+        /**
+         * 某种/类材料与该反应之间的联系
+         * @param {MaterialId|MaterialTag} keyword
+         */
+        getRelationship(keyword) {
+            return keyword.startsWith("[") ? this.getRelationshipByTag(keyword) : this.getRelationshipById(keyword);
         }
 
         /**
@@ -160,151 +199,187 @@ class MaterialData {
          * @returns {String}
          */
         toString(agent, format = "PlainText") {
-            /** @type {MaterialData|null} */ let agentMaterial = null;
-            if (agent) agentMaterial = MaterialData.queryById(agent);
+            /** @type {MaterialData} */ let agentMaterial = {},
+                /** @type {"asCatalyzer"|"asInput"|"asOutput"|undefined} */ agentType;
+
+            if (agent) {
+                agentMaterial = MaterialData.queryById(agent);
+                agentType = this.getRelationshipById(agent);
+            }
+
             /**
              * @typedef {Object} MaterialDataItem
              * @prop {Number} amount 数量
              * @prop {String} plainText
              * @prop {String} mathML
              */
-            /** @type {Map<String, MaterialDataItem>} */ const map_input = new Map();
-            /** @type {Map<String, MaterialDataItem>} */ const map_output = new Map();
-            for (let i = 0; i < this.inputs.length; i++) {
-                const input = this.inputs[i];
-                let key = "";
-                if (input.tag) {
-                    if (input.idPart) key = `${input.tag}${input.idPart}`;
-                    else key = input.tag;
-                } else key = input.parent;
-                const r = map_input.get(key);
-                if (r) r.amount++;
-                else {
-                    /** @type {MaterialDataItem} */ const mItem = { amount: 1, mathML: "", plainText: "" };
-                    if (agentMaterial) {
-                        if (input.tag) {
-                            const tag = input.tag;
-                            if (agentMaterial.tags.includes(tag)) {
-                                if (input.idPart) {
-                                    //存在idPart的情况下需要结合idPart寻找映射的材料作为代理
-                                    const correspondingId = agentMaterial.id + input.idPart;
-                                    for (let j = 0; j < input.list.length; j++) {
-                                        if (input.list[j].id === correspondingId) {
-                                            const r = input.list[j];
-                                            mItem.plainText = `${r.name}:${r.id}`;
-                                            mItem.mathML = `<munderover title="${key}"><ms>${r.name}</ms><mi>${r.id}</mi><mspace/></munderover>`;
-                                            break;
-                                        }
-                                    }
-                                } else {
-                                    mItem.plainText = `${agentMaterial.name}:${agentMaterial.id}`; //代理标签材料组
-                                    mItem.mathML = `<munderover title="${key}"><ms>${agentMaterial.name}</ms><mi>${agentMaterial.id}</mi><mspace/></munderover>`;
-                                }
-                            } else {
-                                mItem.plainText = key;
-                                mItem.mathML = `<mi>${key}</mi>`;
-                            }
-                        } //代理继承材料组
-                        else if (input.list.includes(agentMaterial)) {
-                            mItem.plainText = `${agentMaterial.name}:${agentMaterial.id}`;
-                            mItem.mathML = `<munderover title="${key}"><ms>${agentMaterial.name}</ms><mi>${agentMaterial.id}</mi><mspace/></munderover>`;
-                        } else {
-                            // 使用parent作为默认代理
-                            if (input.list.length > 1) {
-                                mItem.plainText = `@${input.list[0].name}:${input.list[0].id}`;
-                                mItem.mathML = `<munderover title="${key}"><msup><ms>${input.list[0].name}</ms><mo>*</mo></msup><mi>${input.list[0].id}</mi><mspace/></munderover>`;
-                            } else {
-                                mItem.plainText = `${input.list[0].name}:${input.list[0].id}`;
-                                mItem.mathML = `<munderover title="${key}"><ms>${input.list[0].name}</ms><mi>${input.list[0].id}</mi><mspace/></munderover>`;
-                            }
-                        }
-                    } else {
-                        if (input.tag) {
-                            if (input.idPart) {
-                                mItem.plainText = `${input.tag}${input.idPart}`;
-                                mItem.mathML = `<mi>${input.tag}${input.idPart}</mi>`;
-                            } else {
-                                mItem.plainText = `${input.tag}`;
-                                mItem.mathML = `<mi>${input.tag}</mi>`;
-                            }
-                        } else {
-                            // 使用parent作为默认代理
-                            if (input.list.length > 1) {
-                                mItem.plainText = `@${input.list[0].name}:${input.list[0].id}`;
-                                mItem.mathML = `<munderover title="${key}"><msup><ms>${input.list[0].name}</ms><mo>*</mo></msup><mi>${input.list[0].id}</mi><mspace/></munderover>`;
-                            } else {
-                                mItem.plainText = `${input.list[0].name}:${input.list[0].id}`;
-                                mItem.mathML = `<munderover title="${key}"><ms>${input.list[0].name}</ms><mi>${input.list[0].id}</mi><mspace/></munderover>`;
-                            }
+            /** @type {Map<String, MaterialDataItem>} */
+            const mapInput = new Map(),
+                /** @type {Map<String, MaterialDataItem>} */
+                mapOutput = new Map();
+
+            const inputs = [...this.inputs];
+            const outputs = [...this.outputs];
+
+            //#region 处理代理材料在产物与原料中存在的映射关系
+            if (agentType === "asInput") {
+                let tag;
+                $: for (let i = 0; i < inputs.length; i++) {
+                    const input = inputs[i];
+                    const { list } = input;
+                    for (let j = 0; j < list.length; j++) {
+                        if (list[j].id === agent) {
+                            const withAgent = Object.create(input);
+                            withAgent.agent = agentMaterial;
+                            inputs[i] = withAgent;
+                            tag = input.tag;
+                            break $;
                         }
                     }
-                    map_input.set(key, mItem);
+                }
+                // 通过[tag]寻找对应的[tag]_idPart 材料
+                if (tag)
+                    for (let i = 0; i < outputs.length; i++) {
+                        const output = outputs[i];
+                        if (output.tag === tag) {
+                            const withAgent = Object.create(output);
+                            if (output.idPart) withAgent.agent = MaterialData.queryById(agent + output.idPart);
+                            else withAgent.agent = agentMaterial;
+                            outputs[i] = withAgent;
+                            break;
+                        }
+                    }
+            } else if (agentType === "asOutput") {
+                let data;
+                $: for (let i = 0; i < outputs.length; i++) {
+                    const output = outputs[i];
+                    const { list } = output;
+                    for (let j = 0; j < list.length; j++) {
+                        if (list[j].id === agent) {
+                            const withAgent = Object.create(output);
+                            withAgent.agent = agentMaterial;
+                            outputs[i] = withAgent;
+                            // 通过_idPart寻找对应的[tag] 材料
+                            if (output.idPart) data = MaterialData.queryById(agent.slice(0, -output.idPart.length));
+                            break $;
+                        }
+                    }
+                }
+                if (data)
+                    for (let i = 0; i < inputs.length; i++) {
+                        const input = inputs[i];
+                        if (input.list.includes(data)) {
+                            const withAgent = Object.create(input);
+                            withAgent.agent = data;
+                            inputs[i] = withAgent;
+                            break;
+                        }
+                    }
+            } else if (agentType === "asCatalyzer") {
+                $: for (let i = 0; i < inputs.length; i++) {
+                    const input = inputs[i];
+                    const { list } = input;
+                    for (let j = 0; j < list.length; j++) {
+                        if (list[j].id === agent) {
+                            const withAgent = Object.create(input);
+                            withAgent.agent = agentMaterial;
+                            inputs[i] = withAgent;
+                            break $;
+                        }
+                    }
+                }
+                $: for (let i = 0; i < outputs.length; i++) {
+                    const output = outputs[i];
+                    const { list } = output;
+                    for (let j = 0; j < list.length; j++) {
+                        if (list[j].id === agent) {
+                            const withAgent = Object.create(output);
+                            withAgent.agent = agentMaterial;
+                            outputs[i] = withAgent;
+                            break $;
+                        }
+                    }
                 }
             }
-            for (let i = 0; i < this.outputs.length; i++) {
-                const output = this.outputs[i];
-                let key = "";
-                if (output.tag) {
-                    if (output.idPart) key = `${output.tag}${output.idPart}`;
-                    else key = output.tag;
-                } else key = output.parent;
-                const r = map_output.get(key);
+            //#endregion
+
+            for (let i = 0; i < inputs.length; i++) {
+                const { parent, tag, idPart, list, agent } = inputs[i];
+                const key = tag ? tag + (idPart ?? "") : parent;
+                const r = mapInput.get(key);
                 if (r) r.amount++;
                 else {
-                    /** @type {MaterialDataItem} */ const mItem = { amount: 1, mathML: "", plainText: "" };
-                    if (agentMaterial) {
-                        if (output.tag) {
-                            const tag = output.tag;
-                            if (agentMaterial.tags.includes(tag)) {
-                                if (output.idPart) {
-                                    //存在idPart的情况下需要结合idPart寻找映射的材料作为代理
-                                    const correspondingId = agentMaterial.id + output.idPart;
-                                    for (let j = 0; j < output.list.length; j++) {
-                                        if (output.list[j].id === correspondingId) {
-                                            const r = output.list[j];
-                                            mItem.plainText = `${r.name}:${r.id}`;
-                                            mItem.mathML = `<munderover title="${key}"><ms>${r.name}</ms><mi>${r.id}</mi><mspace/></munderover>`;
-                                            break;
-                                        }
-                                    }
-                                } else {
-                                    mItem.plainText = `${agentMaterial.name}:${agentMaterial.id}`; //代理标签材料组
-                                    mItem.mathML = `<munderover title="${key}"><ms>${agentMaterial.name}</ms><mi>${agentMaterial.id}</mi><mspace/></munderover>`;
-                                }
+                    let mathML, plainText;
+                    if (agent) {
+                        plainText = `${agent.name}:${agent.id}`;
+                        mathML = `<munderover title="${key}"><ms>${agent.name}</ms><mi>${agent.id}</mi><mspace/></munderover>`;
+                    } else {
+                        if (tag) {
+                            plainText = key;
+                            mathML = `<mi>${key}</mi>`;
+                        } else {
+                            // 使用parent作为默认代理
+                            const { name, id } = list[0];
+                            if (list.length > 1) {
+                                plainText = `@${name}:${id}`;
+                                mathML = `<munderover title="${key}"><msup><ms>${name}</ms><mo>*</mo></msup><mi>${id}</mi><mspace/></munderover>`;
                             } else {
-                                mItem.plainText = key;
-                                mItem.mathML = `<mi>${key}</mi>`;
+                                plainText = `${name}:${id}`;
+                                mathML = `<munderover title="${key}"><ms>${name}</ms><mi>${id}</mi><mspace/></munderover>`;
+                            }
+                        }
+                    }
+                    mapInput.set(key, { amount: 1, mathML, plainText });
+                }
+            }
+
+            for (let i = 0; i < outputs.length; i++) {
+                const { parent, tag, idPart, list, agent } = outputs[i];
+                const key = tag ? tag + (idPart ?? "") : parent;
+                const r = mapOutput.get(key);
+                if (r) r.amount++;
+                else {
+                    let mathML, plainText;
+                    if (agent) {
+                        plainText = `${agent.name}:${agent.id}`;
+                        mathML = `<munderover title="${key}"><ms>${agent.name}</ms><mi>${agent.id}</mi><mspace/></munderover>`;
+                    } else {
+                        if (tag) {
+                            // 针对没有被任何材料使用的标签
+                            if (list.length) {
+                                plainText = `${list[0].name}:${list[0].id}`;
+                                mathML = `<munderover title="${key}"><ms>${list[0].name}</ms><mi>${list[0].id}</mi><mspace/></munderover>`;
+                            } else {
+                                plainText = key;
+                                mathML = `<mi>${key}</mi>`;
                             }
                         } else {
-                            //代理继承材料组 产物继承材料组不使用代理材料 仅使用 parent材料作为唯一项
-                            mItem.plainText = `${output.list[0].name}:${output.list[0].id}`;
-                            mItem.mathML = `<munderover title="${key}"><ms>${output.list[0].name}</ms><mi>${output.list[0].id}</mi><mspace/></munderover>`;
+                            //代理继承材料组 产物继承材料组不使用代理材料 仅使用 parent材料作为唯一项 ☆
+                            plainText = `${list[0].name}:${list[0].id}`;
+                            mathML = `<munderover title="${key}"><ms>${list[0].name}</ms><mi>${list[0].id}</mi><mspace/></munderover>`;
                         }
-                    } else {
-                        mItem.plainText = `${output.list[0].name}:${output.list[0].id}`;
-                        mItem.mathML = `<munderover title="${key}"><ms>${output.list[0].name}</ms><mi>${output.list[0].id}</mi><mspace/></munderover>`;
                     }
-                    map_output.set(key, mItem);
+                    mapOutput.set(key, { amount: 1, mathML, plainText });
                 }
             }
 
             const inputStrCache = [];
             const outputStrCache = [];
             if (format === "MathML") {
-                for (const [key, value] of map_input)
+                for (const [key, value] of mapInput)
                     if (value.amount > 1) inputStrCache.push(`<mn>${value.amount}</mn><mo>×</mo>${value.mathML}`);
                     else inputStrCache.push(value.mathML);
-                for (const [key, value] of map_output)
+                for (const [key, value] of mapOutput)
                     if (value.amount > 1) outputStrCache.push(`<mn>${value.amount}</mn><mo>×</mo>${value.mathML}`);
                     else outputStrCache.push(value.mathML);
                 const equalSign = `<mspace width="10px"/><munderover><mo stretchy="true">=</mo><ms>${this.rapidly ? "快速" : ""}</ms><mrow><mspace width="15px"/><mn>${this.speed}</mn><mo>%/f</mo><mspace width="15px"/></mrow></munderover><mspace width="10px"/>`;
                 const addSign = `<mspace width="10px"/><mo>+</mo><mspace width="10px"/>`;
                 return `<math>${inputStrCache.join(addSign)}${equalSign}${outputStrCache.join(addSign)}</math>`;
             } else {
-                for (const [key, value] of map_input)
+                for (const [key, value] of mapInput)
                     if (value.amount > 1) inputStrCache.push(`${value.amount}×${value.plainText}`);
                     else inputStrCache.push(value.plainText);
-                for (const [key, value] of map_output)
+                for (const [key, value] of mapOutput)
                     if (value.amount > 1) outputStrCache.push(`${value.amount}×${value.plainText}`);
                     else outputStrCache.push(value.plainText);
                 return `${inputStrCache.join(" + ")} ${this.rapidly ? "==" : "="} ${outputStrCache.join(" + ")}`;
@@ -312,60 +387,80 @@ class MaterialData {
         }
 
         /**
-         * @param {String} keyword
+         * @param {MaterialId} id
          */
-        static query(keyword) {
-            const result = {
-                /** @type {Array<MaterialData.ReactionData>} */ asInput: [],
-                /** @type {Array<MaterialData.ReactionData>} */ asOutput: [],
-                /** @type {Array<MaterialData.ReactionData>} */ asCatalyzer: []
-            };
-            if (keyword.startsWith("[")) {
-                // 查询标签相关反应
-                for (let i = 0; i < this.data.length; i++) {
-                    const reactionData = this.data[i];
-                    console.log("# # #", keyword);
-                    console.log(reactionData.inputs);
-                    console.log(reactionData.outputs);
-                    console.log("# # #");
-                    switch (reactionData.getRelationship(keyword)) {
-                        case "asInput":
-                            result.asInput.push(reactionData);
-                            break;
-                        case "asOutput":
-                            result.asOutput.push(reactionData);
-                            break;
-                        case "asCatalyzer":
-                            result.asCatalyzer.push(reactionData);
-                            break;
-                    }
+        static queryById(id) {
+            const /** @type {Set<MaterialData.ReactionData>} */ asInput = new Set(),
+                /** @type {Set<MaterialData.ReactionData>} */ asOutput = new Set(),
+                /** @type {Set<MaterialData.ReactionData>} */ asCatalyzer = new Set();
+            const { tags } = MaterialData.queryById(id);
+            //查询具体材料相关反应
+            for (let i = 0; i < this.data.length; i++) {
+                const reaction = this.data[i];
+                switch (reaction.getRelationshipById(id)) {
+                    case "asInput":
+                        asInput.add(reaction);
+                        break;
+                    case "asOutput":
+                        asOutput.add(reaction);
+                        break;
+                    case "asCatalyzer":
+                        asCatalyzer.add(reaction);
+                        break;
                 }
-            } else {
-                const { id, tags } = MaterialData.queryById(keyword);
-                //查询具体材料相关反应
-                for (let i = 0; i < this.data.length; i++) {
-                    const reactionData = this.data[i];
-                    switch (reactionData.getRelationship(id)) {
-                        case "asInput":
-                            result.asInput.push(reactionData);
-                            break;
-                        case "asOutput":
-                            result.asOutput.push(reactionData);
-                            break;
-                        case "asCatalyzer":
-                            result.asCatalyzer.push(reactionData);
-                            break;
-                    }
-                    for (let j = 0; j < tags.length; j++) {
-                        // 标签仅查询作为原料(/催化剂)的反应
-                        if (reactionData.getRelationship(tags[j])) {
-                            result.asInput.push(reactionData);
-                            break;
-                        }
-                    }
+                // for (let j = 0; j < tags.length; j++) {
+                //     switch (reaction.getRelationshipByTag(tags[j])) {
+                //         case "asInput":
+                //             if (reaction.getRelationshipById(id) === "asInput") asInput.add(reaction);
+                //             break;
+                //         // 标签不应该单独出现在产物中 至少应该是原料和产物同时出现或以id+标签的形式出现
+                //         // case "asOutput":
+                //         //     asInput.add(reaction);
+                //         //     break;
+                //         case "asCatalyzer":
+                //             asCatalyzer.add(reaction);
+                //     }
+                // }
+            }
+            return { asCatalyzer, asInput, asOutput };
+        }
+
+        /**
+         * @param {MaterialTag} tag
+         */
+        static queryByTag(tag) {
+            const /** @type {Set<MaterialData.ReactionData>} */ asInput = new Set(),
+                /** @type {Set<MaterialData.ReactionData>} */ asOutput = new Set(),
+                /** @type {Set<MaterialData.ReactionData>} */ asCatalyzer = new Set();
+            // 查询标签相关反应
+            for (let i = 0; i < this.data.length; i++) {
+                const reaction = this.data[i];
+                switch (reaction.getRelationshipByTag(tag)) {
+                    case "asInput":
+                        asInput.add(reaction);
+                        break;
+                    case "asOutput":
+                        asOutput.add(reaction);
+                        break;
+                    case "asCatalyzer":
+                        asCatalyzer.add(reaction);
+                        break;
                 }
             }
-            return result;
+            return { asCatalyzer, asInput, asOutput };
+        }
+
+        /**
+         * @param {MaterialId|MaterialTag} keyword
+         */
+        static query(keyword) {
+            if (keyword.startsWith("[")) {
+                const { asInput, asOutput, asCatalyzer } = this.queryByTag(keyword);
+                return { asCatalyzer: [...asCatalyzer], asInput: [...asInput], asOutput: [...asOutput] };
+            } else {
+                const { asInput, asOutput, asCatalyzer } = this.queryById(keyword);
+                return { asCatalyzer: [...asCatalyzer], asInput: [...asInput], asOutput: [...asOutput] };
+            }
         }
 
         /** 初始化数据库 */

@@ -1,25 +1,6 @@
 class OrbData {
-    static spellIconUrls = asyncSpriteUrls(embed(`#orb-spells.png`));
-    static orbUrls = (async () => {
-        const _ = await asyncImg(embed(`#orbs.png`));
-        const canvas = createElement("canvas");
-        canvas.width = 154;
-        canvas.height = 42;
-        const ctx = canvas.getContext("2d");
-        const result = { common: "", red: "", discovered: "", evil: "" };
-        ctx.drawImage(_, 0, 0, 154, 42, 0, 0, 154, 42);
-        result.common = await canvasToUrl(canvas);
-        ctx.clearRect(0, 0, 154, 42);
-        ctx.drawImage(_, 0, 42, 154, 42, 0, 0, 154, 42);
-        result.red = await canvasToUrl(canvas);
-        ctx.clearRect(0, 0, 154, 42);
-        ctx.drawImage(_, 0, 42 * 2, 154, 42, 0, 0, 154, 42);
-        result.discovered = await canvasToUrl(canvas);
-        ctx.clearRect(0, 0, 154, 42);
-        ctx.drawImage(_, 0, 42 * 3, 154, 42, 0, 0, 154, 42);
-        result.evil = await canvasToUrl(canvas);
-        return result;
-    })();
+    static spellIconUrls = new SpriteSpliter("OrbSpellIcons", embed(`#orb-spells.png`)).results;
+    static orbUrls = new SpriteSpliter("OrbBackgrounds", embed(`#orbs.png`), 154).results;
     /** @type {Map<String,OrbData>} */
     static data = new Map();
     #spellIndex;

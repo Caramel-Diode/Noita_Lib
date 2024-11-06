@@ -1,7 +1,3 @@
-/// @types/index.d.ts
-
-import { SpellId } from "./@spell";
-
 declare const noitaLib: {
     (mode: "dev" | undefined): "1.0";
     /**
@@ -63,7 +59,13 @@ declare const noitaLib: {
      * ```
      */
     readonly Orb: import("./@orb").Class;
-
+    /**
+     * ## [`💧 状态`](https://noita.wiki.gg/zh/wiki/状态)
+     * ```html
+     * <noita-status>
+     * ```
+     */
+    readonly Status: import("./@status").Class;
     /**
      * ## [`🖱️ 指针`](./@cursor.d.ts)
      * ```html
@@ -72,13 +74,3 @@ declare const noitaLib: {
      */
     readonly cursor: { disable: Boolean };
 };
-/** ## [`🔥 状态`](https://noita.wiki.gg/zh/wiki/状态) */
-/** ## [`🎲 道具`](https://noita.wiki.gg/zh/wiki/道具) */
-
-/**  */
-type SpellData = import("./@spell").SpellData<SpellId>;
-/** 天赋数据 */
-type PerkData = import("./@perk").PerkData;
-type WandData = import("./@wand").WandData;
-type MaterialData = import("./@material").MaterialData;
-type EntityData = import("./@entity").EntityData;

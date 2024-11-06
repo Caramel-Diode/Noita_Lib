@@ -1,13 +1,15 @@
 :host {
     grid-template: "main" 40px/40px;
     --size: 40px;
-    /* 角标 */
-    > img {
-        zoom: 2;
-        place-self: start end;
-        grid-area: main;
-    }
 }
+
+/* 角标 */
+:host > img {
+    zoom: 2;
+    place-self: start end;
+    grid-area: main;
+}
+
 /* 自定义角标 */
 ::slotted(*) {
     z-index: 1;
@@ -52,9 +54,9 @@ li {
     place-content: center;
     place-items: center;
     /* 边框线色1 将会被法术类型选择器提供的色盘覆盖 */
-    --c1: #000;
+    --c1: #0000;
     /* 边框线色2 将会被法术类型选择器提供的色盘覆盖 */
-    --c2: #000;
+    --c2: #0000;
     /* 半透明点色1 (半透明边框线色1) */
     --c3: color-mix(in srgb, var(--c1), #0000);
     /* 半透明点色2 (半透明边框线色2) */
@@ -97,12 +99,14 @@ li {
         var(--bg4) left bottom/ var(--p);
     /* 聚焦时使用聚焦边框 否则回退使用正常边框 */
     background: var(--focus\#border, var(--common\#border)), /* 底色 */ var(--b);
-    > img {
-        zoom: 2;
-        &::selection {
-            background-color: color-mix(in srgb, var(--c1) 30%, #0000 70%);
-        }
-    }
+}
+
+li > img {
+    zoom: 2;
+}
+
+li > img::selection {
+    background-color: color-mix(in srgb, var(--c1) 30%, #0000 70%);
 }
 
 /* 聚焦时 替换中心光晕底色色盘 */
@@ -151,6 +155,7 @@ li {
     根据法术类型为边框提供不同色盘
     允许外部使用特殊css变量覆盖该色盘
 \*================================================*/
+
 /* [投射物] */
 .projectile {
     --c1: var(--border-color\#projectile1, var(--border-color, #5a2323));
@@ -197,4 +202,55 @@ li {
 .passive {
     --c1: var(--border-color\#passive1, var(--border-color, #212f26));
     --c2: var(--border-color\#passive2, var(--border-color, #18211b));
+}
+
+/* 提供低版本回退 */
+@supports not (color-mix(in srgb, #000, #fff)) {
+    /* [投射物] */
+    .projectile {
+        --c3: var(--border-color\#projectile1, var(--border-color, #5a232380));
+        --c4: var(--border-color\#projectile2, var(--border-color, #41191980));
+    }
+
+    /* [静态投射物] */
+    .static-projectile {
+        --c3: var(--border-color\#static-projectile1, var(--border-color, #8d3f1880));
+        --c4: var(--border-color\#static-projectile2, var(--border-color, #55342280));
+    }
+
+    /* [修正] */
+    .modifier {
+        --c3: var(--border-color\#modifier1, var(--border-color, #2d3a7280));
+        --c4: var(--border-color\#modifier2, var(--border-color, #20295280));
+    }
+
+    /* [材料] */
+    .material {
+        --c3: var(--border-color\#material1, var(--border-color, #356f4480));
+        --c4: var(--border-color\#material2, var(--border-color, #2f483680));
+    }
+
+    /* [多重] */
+    .draw-many {
+        --c3: var(--border-color\#draw-many1, var(--border-color, #1c6d7380));
+        --c4: var(--border-color\#draw-many2, var(--border-color, #21434680));
+    }
+
+    /* [其他] */
+    .other {
+        --c3: var(--border-color\#other1, var(--border-color, #714b3380));
+        --c4: var(--border-color\#other2, var(--border-color, #49392e80));
+    }
+
+    /* [实用] */
+    .utility {
+        --c3: var(--border-color\#utility1, var(--border-color, #7b2a7480));
+        --c4: var(--border-color\#utility2, var(--border-color, #4d2a4a80));
+    }
+
+    /* [被动] */
+    .passive {
+        --c3: var(--border-color\#passive1, var(--border-color, #212f2680));
+        --c4: var(--border-color\#passive2, var(--border-color, #18211b80));
+    }
 }

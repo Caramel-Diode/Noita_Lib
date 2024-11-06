@@ -6,7 +6,56 @@
  * @prop {Object} attr 属性
  */
 
+/**
+ * @typedef {((type:"text"|"comment"|"document") => Array<String>|Array<XMLObject>) & { [key: String]: String|Array<XMLObject> }} XMLObject
+ */
+
 const XML = (() => {
+    /**
+     * @param {ElementNode|DocumentNode} node
+     * @returns {XMLObject}
+     */
+    const toXMLObject = node => {
+        /** @type {Array<String>} */
+        const texts = [];
+        /** @type {Array<String>} */
+        const comments = [];
+        /** @type {Array<XMLObject>} */
+        const documents = [];
+        const obj = (type = "text") => {
+            if (type === "text") return texts;
+            if (type === "comment") return comments;
+            if (type === "document") return documents;
+        };
+        Reflect.setPrototypeOf(obj, null);
+
+        const { childNodes, attr } = node;
+        if (attr) {
+            for (const [key, value] of attr) Reflect.defineProperty(obj, key, { value, enumerable: true });
+        }
+
+        for (let i = 0; i < childNodes.length; i++) {
+            const child = childNodes[i];
+            switch (child.type) {
+                case "#document":
+                    documents.push(toXMLObject(child));
+                    break;
+                case "#element":
+                    const { tagName } = child;
+                    if (!obj[tagName]) obj[tagName] = [];
+                    obj[tagName].push(toXMLObject(child));
+                    break;
+                case "#text":
+                    texts.push(child.content);
+                    break;
+                case "#comment":
+                    comments.push(child.content);
+                    break;
+            }
+        }
+        return obj;
+    };
+
     class Converter {
         /** @type {Map<Symbol,Symbol>} 标准实体映射表 */
         static #commonEntityMap = new Map([
@@ -228,6 +277,11 @@ const XML = (() => {
     class DocumentNode extends _Node {
         /** @type {_NodeList} */
         childNodes = new _NodeList(this);
+
+        get xmlObject() {
+            return toXMLObject(this);
+        }
+
         constructor() {
             super("#document");
         }
@@ -260,6 +314,11 @@ const XML = (() => {
             else return content;
         }
         #rawData = { value: null };
+
+        get xmlObject() {
+            return toXMLObject(this);
+        }
+
         /** @param {T} tagName */
         constructor(tagName = "", attrData, converter, rawData) {
             super("#element");
@@ -1028,6 +1087,7 @@ const XML = (() => {
         parse: parseXML,
         Attr: _Attr,
         DocumentNode,
+        ElementNode,
         TextNode,
         CommentNode,
         CDataSectionNode,

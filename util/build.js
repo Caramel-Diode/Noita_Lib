@@ -245,8 +245,16 @@ class File {
 const index_sf = new File(`${path.src}/index.js`);
 await index_sf.embed();
 fs.writeFileSync(`${path.dist}/noitaLib.sf.js`, index_sf.embedingData ?? index_sf.embedingData_base64);
-// 文档测试目录
-fs.writeFileSync(`${path.dist2}/noitaLib.js`, index_sf.embedingData ?? index_sf.embedingData_base64);
+
+// 其它目标
+{
+    // 测试目录
+    fs.writeFileSync(`D:/Project/Web/NoitaTest/js/noitaLib.js`, index_sf.embedingData ?? index_sf.embedingData_base64);
+    // 施法教学文档目录
+    fs.writeFileSync(`D:/Project/Web/Noita 施法教学文档/noitaLib.js`, index_sf.embedingData ?? index_sf.embedingData_base64);
+    // 直播插件目录
+    fs.writeFileSync(`D:/Project/Web/直播插件/noitaLib.js`, index_sf.embedingData ?? index_sf.embedingData_base64);
+}
 
 const index_esm_sf = new File(`${path.src}/index.esm.js`);
 await index_esm_sf.embed();

@@ -22,7 +22,7 @@
         /* 缩放倍数 */
         --focus-scale: 1;
         /* 颜色 */
-        --focus-color: #ffffff;
+        --focus-color: #fff;
         /* 基本渐变参数 */
         --foucs-base: linear-gradient(var(--focus-color), var(--focus-color)) center;
         /* 竖线宽度 */
@@ -49,14 +49,16 @@
         ---foucs-bg: /* ▷ 聚焦三角形背景 ◁ */
         var(---foucs-bg-left), var(---foucs-bg-right);
     }
+
     [tabindex] {
         /* 通过缩放系数隐藏 聚焦三角形背景 */
         --focus-scale: 0;
         /* 通过三角形颜色隐藏 聚焦三角形背景 */
         --focus-color: #0000;
-        > td {
-            --focus-scale: 0;
-        }
+    }
+
+    [tabindex] > td {
+        --focus-scale: 0;
     }
 
     :host {
@@ -68,35 +70,36 @@
         --c3: #0e0d0cf2;
         /* 边框线宽度 */
         --border-width: 3px;
-        /*=====================*\
-            面板属性值的颜色变量
-        \*======================*/
-        table td {
-            --attr-color-red: #ff7f7f;
-            --attr-color-green: #7fff7f;
-            --attr-color-default: #ffffff;
-        }
-        .entities-tablist > li {
-            --focus-scale: 0;
-            --focus-color: #0000;
-            &:hover,
-            &:focus-visible {
-                --focus-scale: 2;
-                --focus-color: #ffffb2;
-            }
-        }
-        > header > menu > li {
-            --c1: #00000099;
-            --c2: #696357;
-            &.selected {
-                --c1: #0e0d0cf2;
-                --c2: #948064;
-                --c3: #b49f81;
-            }
-            > span {
-                --focus-color: #ffffb200;
-            }
-        }
+    }
+
+    :host > menu > li {
+        --c1: #0009;
+        --c2: #696357;
+    }
+    :host > menu > li.selected {
+        --c1: #0e0d0cf2;
+        --c2: #948064;
+        --c3: #b49f81;
+    }
+    :host > menu > li > span {
+        --focus-color: #ffffb200;
+    }
+
+    :host .entities-tablist > li {
+        --focus-scale: 0;
+        --focus-color: #0000;
+    }
+    :host .entities-tablist > li:is(:hover, :focus-visible) {
+        --focus-scale: 2;
+        --focus-color: #ffffb2;
+    }
+    /*=====================*\
+        面板属性值的颜色变量
+    \*======================*/
+    :host table td {
+        --attr-color-red: #ff7f7f;
+        --attr-color-green: #7fff7f;
+        --attr-color-default: #fff;
     }
     /* 为聚焦模式下的背景框提供色盘 */
     :host(:hover),
@@ -107,35 +110,22 @@
         --c2: #c98930;
         /* 聚焦时 底色 */
         --c3: #000000dc;
-
-        > header > menu > li {
-            &.selected {
-                --c1: #000000dc;
-                --c2: #eda949;
-                --c3: #c98930;
-            }
-            &:is(:hover, :focus-within) {
-                --c2: #a59d8f;
-                > span {
-                    --focus-scale: 2;
-                    --focus-color: #ffffb2;
-                }
-            }
-        }
     }
-}
 
-table {
-    border-collapse: collapse;
-}
+    :is(:host(:hover), :host(:focus-within)) > menu > li.selected {
+        --c1: #000000dc;
+        --c2: #eda949;
+        --c3: #c98930;
+    }
 
-menu,
-ol,
-ul {
-    display: flex;
-    list-style: none;
-    width: fit-content;
-    place-content: center;
+    :is(:host(:hover), :host(:focus-within)) > menu > li:is(:hover, :focus-within) {
+        --c2: #a59d8f;
+    }
+
+    :is(:host(:hover), :host(:focus-within)) > menu > li:is(:hover, :focus-within) > span {
+        --focus-scale: 2;
+        --focus-color: #ffffb2;
+    }
 }
 
 :host {
@@ -148,65 +138,70 @@ ul {
 /*===================*\
          选项卡区
 \*===================*/
-:host > header {
+
+:host > menu {
     grid-area: tabs;
     place-self: center;
+    place-content: flex-start;
     height: 60px;
-    /* max-width: 560px; */
     max-width: calc(100% - 20px);
     padding: 0 10px;
     overflow: auto;
     position: relative;
     top: 3px;
     scrollbar-width: none;
-    /*===================*\
-             选项卡
-    \*===================*/
+}
 
-    menu > li {
-        display: flex;
-        height: 60px;
-        width: fit-content;
-        text-wrap: nowrap;
-        padding: 0 10px;
-        margin: 0 0 0 -3px;
-        place-content: center;
-        place-items: center;
-        --bg1: linear-gradient(var(--c1), var(--c1));
-        --bg2: linear-gradient(var(--c2), var(--c2));
-        /* prettier-ignore */
-        background:
+/*===================*\
+         选项卡
+\*===================*/
+:host > menu > li {
+    display: flex;
+    height: 60px;
+    width: fit-content;
+    text-wrap: nowrap;
+    padding: 0 10px;
+    margin: 0 0 0 -3px;
+    place-content: center;
+    place-items: center;
+    --bg1: linear-gradient(var(--c1), var(--c1));
+    --bg2: linear-gradient(var(--c2), var(--c2));
+    /* prettier-ignore */
+    background:
             var(--bg2) top 9px left 3px/3px 3px no-repeat,
             var(--bg2) top 9px right 3px/3px 3px no-repeat,
             var(--bg2) top 6px center/calc(100% - 12px) 3px no-repeat,
             var(--bg2) top 12px right/3px calc(100% - 12px) no-repeat,
             var(--bg2) top 12px left/3px calc(100% - 12px) no-repeat,
             var(--bg1) top 9px center/calc(100% - 6px) calc(100% - 9px) no-repeat;
+    transition: none;
+}
 
-        &.selected {
-            z-index: 1;
-            --bg3: linear-gradient(var(--c3), var(--c3));
-            /* prettier-ignore */
-            background:
-                var(--bg3) top 6px left 3px/3px 3px no-repeat,
-                var(--bg3) top 6px right 3px/3px 3px no-repeat,
-                var(--bg2) top 3px center/calc(100% - 12px) 3px no-repeat,
-                var(--bg2) top 9px right/3px calc(100% - 9px) no-repeat,
-                var(--bg2) top 9px left/3px calc(100% - 9px) no-repeat,
-                var(--bg1) top 6px center/calc(100% - 6px) calc(100% - 9px) no-repeat,
-                linear-gradient(#18191A, #18191A) bottom center/ 100% 3px no-repeat;
-        }
-        > span {
-            padding: 0 10px;
-            background: var(---foucs-bg-left);
-        }
-    }
+:host > menu > li.selected {
+    z-index: 1;
+    --bg3: linear-gradient(var(--c3), var(--c3));
+    /* prettier-ignore */
+    background:
+            var(--bg3) top 6px left 3px/3px 3px no-repeat,
+            var(--bg3) top 6px right 3px/3px 3px no-repeat,
+            var(--bg2) top 3px center/calc(100% - 12px) 3px no-repeat,
+            var(--bg2) top 9px right/3px calc(100% - 9px) no-repeat,
+            var(--bg2) top 9px left/3px calc(100% - 9px) no-repeat,
+            var(--bg1) top 6px center/calc(100% - 6px) calc(100% - 9px) no-repeat,
+            linear-gradient(#18191A, #18191A) bottom center/ 100% 3px no-repeat;
+}
+
+:host > menu > li > span {
+    padding: 0 10px;
+    background: var(---foucs-bg-left);
 }
 
 /*===================*\
          内容区
 \*===================*/
-:host > main {
+:host > section {
+    display: grid;
+    place-content: start center;
     grid-area: main;
     padding: 20px;
 
@@ -221,7 +216,7 @@ ul {
     ---1: calc(100% - var(---1bw));
     ---2: calc(100% - var(---2bw));
     /* 渐变色带 边框线 */
-    ---: var(--c2), var(--c2) var(---1bw), var(--c1) var(---1bw), var(--c1) var(---2), var(--c2) var(---2), var(--c2) var(---1), #00000000 var(---1);
+    ---: var(--c2), var(--c2) var(---1bw), var(--c1) var(---1bw), var(--c1) var(---2), var(--c2) var(---2), var(--c2) var(---1), #0000 var(---1);
     /* prettier-ignore */
     background:
         /* 上框线 */ linear-gradient( 90deg, var(---) ) top / 100% var(---1bw)  var(---nrbb),
@@ -234,24 +229,36 @@ ul {
     overflow: auto;
     /* 清除继承 避免滚动条样式无效 */
     scrollbar-color: initial;
+}
+:host(noita-panel[border-style="white"]) > section {
+    --bg1: linear-gradient(#bbbbbbcf, #bbbbbbcf);
+    /* prettier-ignore */
+    background:
+        /* 上框线 */ var(--bg1) top/100% var(---1bw)  var(---nrbb),
+        /* 下框线 */ var(--bg1) bottom/100% var(---1bw)  var(---nrbb),
+        /* 左框线 */ var(--bg1) left top var(---1bw)/var(---1bw) 100% var(---nrbb),
+        /* 右框线 */ var(--bg1) right /var(---1bw) 100% var(---nrbb),
+        /* 中心底色 */ var(--bg3) center/100% 100% var(---nrpb);
+}
 
-    &::-webkit-scrollbar,
-    &::-webkit-scrollbar-thumb {
-        /* 事实上透明边框是为了实现边距效果 */
-        border: solid 2px #00000000;
-        background-clip: border-box;
-    }
-    /* 滚动条 */
-    &::-webkit-scrollbar {
-        /* 滚动条宽高视觉效果上应该是 25px 需要额外加上边框宽度 25px + 2*2px */
-        /* 控制水平滚动条高度 */
-        height: 29px;
-        /* 控制垂直滚动条宽度 */
-        width: 29px;
-        --c4: #6c6c6b;
-        --bg4: linear-gradient(var(--c4), var(--c4));
-        /* prettier-ignore */
-        background:
+:host > section::-webkit-scrollbar,
+:host > section::-webkit-scrollbar-thumb {
+    /* 事实上透明边框是为了实现边距效果 */
+    border: solid 2px #0000;
+    background-clip: border-box;
+}
+
+/* 滚动条 */
+:host > section::-webkit-scrollbar {
+    /* 滚动条宽高视觉效果上应该是 25px 需要额外加上边框宽度 25px + 2*2px */
+    /* 控制水平滚动条高度 */
+    height: 29px;
+    /* 控制垂直滚动条宽度 */
+    width: 29px;
+    --c4: #6c6c6b;
+    --bg4: linear-gradient(var(--c4), var(--c4));
+    /* prettier-ignore */
+    background:
         /* 边框 */
         /* 高亮点(右上) */ var(--bg4) right top/var(---1bw) var(---1bw) no-repeat,
         /* 高亮点(右下) */ var(--bg4) right bottom/var(---1bw) var(---1bw) no-repeat,
@@ -259,33 +266,34 @@ ul {
         /* 挖空区域 */ var(--bg3) center/calc(100% - var(---2bw)) calc(100% - var(---2bw)) no-repeat,
         /* 边框线 上下左右各留出5px 边距 中心被--bg3覆盖以实现挖空效果 */
         linear-gradient(#464646,#464646) 100% no-repeat;
-    }
+}
 
-    /* 滚动条滑块 */
-    &::-webkit-scrollbar-thumb {
-        --c4: #6c6c6c;
-        --c5: #7e7e7e;
-        --c6: #606060;
-        --c7: #464646;
-        --bg4: linear-gradient(var(--c4), var(--c4));
-        --bg5: linear-gradient(var(--c5), var(--c5));
-        --bg6: linear-gradient(var(--c6), var(--c6));
-        /* prettier-ignore */
-        background:
-        /* 中心图案 */
-        /* 高亮点(右上) */ var(--bg4) calc(50% + 5px) calc(50% - 5px)/3px 3px no-repeat,
-        /* 高亮点(右下) */ var(--bg4) calc(50% + 5px) calc(50% + 5px)/3px 3px no-repeat,
-        /* 高亮点(左下) */ var(--bg4) calc(50% - 5px) calc(50% + 5px)/3px 3px no-repeat,
-        /* 挖空区域 */ var(--bg3) center/7px 7px no-repeat,
-        linear-gradient(var(--c7), var(--c7)) center/13px 13px no-repeat,
-        /* 边框 */
-        /* 高亮点(右上) */ var(--bg5) right top/var(---1bw) var(---1bw) no-repeat,
-        /* 高亮点(右下) */ var(--bg5) right bottom/var(---1bw) var(---1bw) no-repeat,
-        /* 高亮点(左下) */ var(--bg5) left bottom/var(---1bw) var(---1bw) no-repeat,
-        /* 挖空区域 */ var(--bg3) center/calc(100% - var(---2bw)) calc(100% - var(---2bw)) no-repeat,
-        var(--bg6) center/100% 100% no-repeat;
-    }
-
+/* 滚动条滑块 */
+:host > section::-webkit-scrollbar-thumb {
+    --c4: #6c6c6c;
+    --c5: #7e7e7e;
+    --c6: #606060;
+    --c7: #464646;
+    --bg4: linear-gradient(var(--c4), var(--c4));
+    --bg5: linear-gradient(var(--c5), var(--c5));
+    --bg6: linear-gradient(var(--c6), var(--c6));
+    /* prettier-ignore */
+    background:
+    /* 中心图案 */
+    /* 高亮点(右上) */ var(--bg4) calc(50% + 5px) calc(50% - 5px)/3px 3px no-repeat,
+    /* 高亮点(右下) */ var(--bg4) calc(50% + 5px) calc(50% + 5px)/3px 3px no-repeat,
+    /* 高亮点(左下) */ var(--bg4) calc(50% - 5px) calc(50% + 5px)/3px 3px no-repeat,
+    /* 挖空区域 */ var(--bg3) center/7px 7px no-repeat,
+    linear-gradient(var(--c7), var(--c7)) center/13px 13px no-repeat,
+    /* 边框 */
+    /* 高亮点(右上) */ var(--bg5) right top/var(---1bw) var(---1bw) no-repeat,
+    /* 高亮点(右下) */ var(--bg5) right bottom/var(---1bw) var(---1bw) no-repeat,
+    /* 高亮点(左下) */ var(--bg5) left bottom/var(---1bw) var(---1bw) no-repeat,
+    /* 挖空区域 */ var(--bg3) center/calc(100% - var(---2bw)) calc(100% - var(---2bw)) no-repeat,
+    var(--bg6) center/100% 100% no-repeat;
+}
+:host > section {
+    /* 很奇怪 这样写才有效 */
     /* 滚动条滑块悬浮高亮色盘 */
     &::-webkit-scrollbar-thumb:hover {
         --c4: #b5b5b5;
@@ -293,228 +301,271 @@ ul {
         --c6: #9b9b9d;
         --c7: #9b9b9b;
     }
+}
+/* 滚动条转角 */
+:host > section::-webkit-scrollbar-corner {
+    background: transparent;
+    cursor: help;
+}
 
-    /* 滚动条转角 */
-    &::-webkit-scrollbar-corner {
-        background: transparent;
-        cursor: help;
-    }
-    &.custom {
-        display: var(--display, block);
-    }
-    &:not(.custom) {
-        display: grid;
-        place-content: center;
+:host > section[hidden] {
+    display: none !important;
+}
 
-        section:not([hidden]) {
-            display: grid;
-            grid-template-columns: 1fr;
-            place-items: center stretch;
-            place-content: center;
-            gap: 14px;
-        }
+tr:hover {
+    --attr-icon-color: #eda949;
+}
 
-        .unlimited {
-            color: var(--attr-color-green);
-        }
+th.before {
+    /* prettier-ignore */
+    background: 
+        linear-gradient(#00f, #00f) right 11px center/ 4px 4px no-repeat,
+        linear-gradient(#fff8, #fff8) right 10px center/ 6px 6px no-repeat;
+}
 
-        .never-unlimited {
-            color: var(--attr-color-red);
-        }
+th.after {
+    /* prettier-ignore */
+    background: 
+        linear-gradient(#ff0, #ff0) right 11px center/ 4px 4px no-repeat,
+        linear-gradient(#fff8, #fff8) right 10px center/ 6px 6px no-repeat;
+}
 
-        .entities-tablist {
-            gap: 6px;
-            > li {
-                display: flex;
-                place-items: center;
-                cursor: pointer;
-                transition: all 300ms linear 0ms;
-                color: color-mix(in srgb, var(--mark-color), #0000);
-                padding: 0 10px 0 0;
-                /* 选中时 */
-                &.selected {
-                    color: var(--mark-color);
-                }
-                &:hover,
-                &:focus-visible {
-                    padding: 0 10px;
-                    --font-weight: 600;
-                }
-                &[entity\.relation] {
-                    /* prettier-ignore */
-                    background:
-                        var(---foucs-bg-left),
-                        linear-gradient(var(--relation-color), var(--relation-color)) center right/4px 4px no-repeat
-                    ;
-                }
-                &[entity\.relation="common"] {
-                    --relation-color: #0000;
-                }
-                &[entity\.relation="relate"] {
-                    --relation-color: #f08705;
-                }
-                &[entity\.relation="cast"] {
-                    --relation-color: #1cd66c;
-                }
-                &[entity\.relation="orbit"] {
-                    --relation-color: #a200a1;
-                }
-                &[entity\.relation="bounce"] {
-                    --relation-color: #118811;
-                }
-                &[entity\.relation="low-speed"] {
-                    --relation-color: #e21e26;
-                }
-                &[entity\.relation="death"] {
-                    --relation-color: #d8deea;
-                }
-                &[entity\.relation="hit"] {
-                    --relation-color: #f7c34f;
-                }
-                &[entity\.relation="timer"] {
-                    --relation-color: #3b6bcb;
-                }
-            }
-        }
+/* 属性图标 */
+.attr-icon {
+    width: 21px;
+    height: 21px;
+    object-fit: none;
+    object-position: -100% -100%;
+    background: var(--attr-icon-color, #fff);
+}
 
-        /* 享受施法块加成 */
-        [entity\.relation="common"],
-        [entity\.relation="cast"],
-        [entity\.relation="relate"] {
-            --mark-color: var(--attr-color-green);
-        }
+.attr-icon::selection {
+    background-color: #948064;
+}
 
-        /* 不享受施法块加成 */
-        [entity\.relation="orbit"],
-        [entity\.relation="bounce"],
-        [entity\.relation="low-speed"],
-        [entity\.relation="death"],
-        [entity\.relation="hit"],
-        [entity\.relation="timer"],
-        [entity\.relation="null"] {
-            --mark-color: var(--attr-color-red);
-        }
+/* 允许被tab聚焦的元素 */
+tr[tabindex] > td,
+[tabindex]:is(td, h1) {
+    background: var(---foucs-bg);
+}
 
-        [tabindex],
-        [tabindex] > td {
-            transition: all 0.2s linear;
-            will-change: contents;
-            cursor: pointer;
-        }
-        /* 允许被tab聚焦的元素 */
-        tr[tabindex] > td,
-        [tabindex]:is(td, h1) {
-            background: var(---foucs-bg);
-        }
+[tabindex],
+[tabindex] > td {
+    transition: all 0.3s linear;
+    will-change: contents;
+    cursor: pointer;
+}
 
-        /* 允许被tab聚焦的元素 聚焦/鼠标悬停时 */
-        tr:is(:focus-visible, :hover)[tabindex] > td,
-        :is(:is(ol, ul) > li, td, h1)[tabindex]:is(:focus-visible, :hover) {
-            /* 通过缩放系数显示 聚焦三角形背景 */
-            --focus-scale: 2;
-            /* 通过三角形颜色显示 聚焦三角形背景 */
-            --focus-color: var(--mark-color, #fff);
-            text-align: center;
-            /*
-                聚焦三角形背景 的显示需要左右12px留白
-                td元素必须使用padding才生效
-                分别声明左右内边距以继承原有的上下内边距
-            */
-            padding-left: 12px;
-            padding-right: 12px;
-        }
+tr:is(:focus-visible, :hover)[tabindex] > td,
+:is(:is(ol, ul) > li, td, h1)[tabindex]:is(:focus-visible, :hover) {
+    --focus-scale: 2;
+    --focus-color: var(--mark-color, #fff);
+    text-align: center;
+    padding-left: 12px;
+    padding-right: 12px;
+}
 
-        /* 属性图标 */
-        .attr-icon {
-            width: 21px;
-            height: 21px;
-            object-fit: none;
-            object-position: -100% -100%;
-            background: var(--attr-icon-color, #fff);
-            &::selection {
-                background-color: #948064;
-            }
-        }
+/*########## 图标区 ##########*/
+:host > section > :is(canvas, svg, img) {
+    grid-area: icon;
+    place-self: center;
+    zoom: var(--zoom, 5);
+}
 
-        tr:hover {
-            --attr-icon-color: #eda949;
-        }
+/*########## 属性区 ##########*/
+:host > section > .attrs {
+    grid-area: attr;
+    place-self: stretch;
+}
 
-        th.before {
-            /* prettier-ignore */
-            background: 
-                linear-gradient(#00f, #00f) right 11px center/ 4px 4px no-repeat,
-                linear-gradient(#fff8, #fff8) right 10px center/ 6px 6px no-repeat
-            ;
-        }
-        th.after {
-            /* prettier-ignore */
-            background: 
-                linear-gradient(#ff0, #ff0) right 11px center/ 4px 4px no-repeat,
-                linear-gradient(#fff8, #fff8) right 10px center/ 6px 6px no-repeat
-            ;
-        }
+/* 首个th  */
+.attrs th:nth-child(1) {
+    max-width: 21px;
+    width: 21px;
+}
 
-        /*########## 图标区 ##########*/
-        > :is(canvas, svg, img) {
-            grid-area: icon;
-            place-self: center;
-            zoom: var(--zoom, 5);
-        }
-        /*########## 属性区 ##########*/
-        > .attrs {
-            grid-area: attr;
-            place-self: stretch;
+.attrs th:nth-child(2) {
+    padding-left: 10px;
+    min-width: 180px;
+    width: 180px;
+    color: #cfcfcf;
+    --font-weight: 300;
+}
 
-            /* 首个th  */
-            th:nth-child(1) {
-                max-width: 21px;
-                width: 21px;
-            }
+.attrs td {
+    min-width: 80px;
+}
 
-            th:nth-child(2) {
-                padding-left: 10px;
-                /* max-width: 180px;
-                min-width: 180px; */
-                width: 180px;
-                color: #cfcfcf;
-                --font-weight: 300;
-            }
+.attrs th,
+.attrs td {
+    text-align: left;
+    height: 26px;
+    line-height: 100%;
+    border-radius: 3px;
+    white-space: nowrap;
+    --font-size: 24px;
+    --font-weight: 300;
+}
 
-            td {
-                min-width: 80px;
-            }
+[data-time] {
+    pointer-events: none;
+}
+.entity-tag-list {
+    gap: 5px;
+}
 
-            th,
-            td {
-                font-weight: ;
-                text-align: left;
-                height: 26px;
-                line-height: 100%;
-                border-radius: 3px;
-                white-space: nowrap;
-                --font-size: 24px;
-                --font-weight: 300;
-            }
-        }
+.entity-tag {
+    --font-size: 14px;
+    border: 1px solid #ccc4;
+    background: linear-gradient(140deg, #bbb1, #ccc2);
+    padding: 3px;
+    border-radius: 3px;
+    transition: all linear 200ms;
+}
 
-        > :is(h1, p) {
-            grid-area: name;
-            color: #cfcfcf;
-            line-height: 30px;
-            place-self: stretch;
-            --font-size: 24px;
-            --font-weight: 300;
-        }
-        /*########## 标题区 ##########*/
-        > h1 {
-            grid-area: name;
-            place-self: stretch;
-        }
-        /*########## 描述区 ##########*/
-        > p {
-            grid-area: desc;
-            max-width: 400px;
-        }
-    }
+.entity-tag:hover {
+    scale: 1.05;
+    background: linear-gradient(70deg, #bbb1, #ccc2);
+}
+
+h1,
+p {
+    grid-area: name;
+    color: #cfcfcf;
+    line-height: 30px;
+    place-self: stretch;
+    --font-size: 24px;
+    --font-weight: 300;
+}
+
+/*########## 标题区 ##########*/
+h1 {
+    grid-area: name;
+    place-self: stretch;
+}
+
+/*########## 描述区 ##########*/
+p {
+    grid-area: desc;
+    max-width: 400px;
+}
+
+/* 享受施法块加成 */
+.relation\=common,
+.relation\=cast,
+.relation\=relate {
+    --mark-color: var(--attr-color-green);
+}
+
+/* 不享受施法块加成 */
+.relation\=null {
+    --mark-color: var(--attr-color-red);
+}
+
+section.attrs {
+    display: grid;
+    grid-template-columns: 1fr;
+    place-items: center stretch;
+    place-content: center;
+    gap: 14px;
+}
+
+.unlimited {
+    color: var(--attr-color-green);
+}
+
+.never-unlimited {
+    color: var(--attr-color-red);
+}
+
+.entities-tablist {
+    gap: 6px;
+}
+
+.entities-tablist > li {
+    display: flex;
+    place-items: center;
+    cursor: pointer;
+    transition: all 300ms linear 0ms;
+    color: color-mix(in srgb, var(--mark-color, #fff), #0000);
+    padding: 0 10px 0 0;
+    --font-size: 18px;
+    /* prettier-ignore */
+    background:
+        var(---foucs-bg-left),
+        linear-gradient(var(--relation-color,#0000), var(--relation-color,#0000)) center right/4px 4px no-repeat;
+}
+
+/* 选中时 */
+.entities-tablist > .selected {
+    color: var(--mark-color, #fff);
+}
+
+.entities-tablist > :is(:hover, :focus-visible) {
+    padding: 0 10px;
+    --font-weight: 600;
+}
+
+/*==============*\
+    实体关系色盘
+\*==============*/
+.relation\=common {
+    --relation-color: #0000;
+}
+.relation\=relate {
+    --relation-color: #1395d3;
+}
+.relation\=cast {
+    --relation-color: #fd3151;
+}
+
+.relation\=null {
+    --relation-color: #fff;
+}
+
+/* 实体组件 <details> */
+.entity-component {
+    margin-top: 5px;
+}
+
+.entity-component:hover {
+    /*标题色 <summary>*/
+    --tc: #fff;
+    --bc: #fff8;
+}
+
+/* 实体组件标题 <details> / <summary> */
+.entity-component > summary {
+    width: min-content;
+    color: var(--tc, #ccc);
+    --font-size: 12px;
+    border-radius: 4px;
+    --b: 1px solid var(--bc, #ccc3);
+    border-top: var(--b);
+    border-left: var(--b);
+    border-right: var(--b);
+    border-bottom: var(--b);
+    padding: 3px;
+    cursor: pointer;
+}
+/* 实体组件标题[展开] <details> / <summary> */
+.entity-component[open] > summary {
+    margin-left: 5px;
+    border-radius: 4px 4px 0 0;
+    border-bottom: 1px solid #0000;
+}
+
+/* 实体组件数据表 <details> / <div> */
+.entity-component[open] > div {
+    border-top: 1px var(--bc, #ccc4) solid;
+    padding: 10px 0;
+}
+
+.entity-component:hover > div {
+    background: #fff1;
+}
+
+/** 实体组件中引用其它实体信息 缩进10px */
+.entity-component > .entity-component {
+    margin-left: 10px;
 }

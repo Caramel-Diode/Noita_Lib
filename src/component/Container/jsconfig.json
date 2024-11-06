@@ -19,5 +19,5 @@
             "@wand": ["../../../@types/@wand"]
         }
     },
-    "include": ["data.js", "db.js", "index.js", "../Base/index.js", "../../public/util.js", "../../public/damageData.js"]
+    "include": ["data.js", "db.js", "index.js", "../Base/index.js", "../../public/util.js", "../../public/htmlTools.js", "../../public/cssTools.js", "../../public/damageData.js"]
 }

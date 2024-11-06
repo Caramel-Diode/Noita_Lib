@@ -1,8 +1,8 @@
 /**
- * `lua` 生成的天赋数据
- * [lua file](gen_js_datas.lua)
+ * `lua` 生成的法术数据
+ * [lua file](generate_js_code.lua)
  */
-type spellBaseData = {
+type SpellBaseData = {
     id: String;
     name: String;
     desc: String;
@@ -16,7 +16,7 @@ type spellBaseData = {
     price: Number;
     passiveEffect: String;
     relatedProjectiles: [String, Number?];
-    projectiles: Array<String>;
+    projectiles: Array<{ min: Number; max: Number; id: String; draw_death: Number; draw_hit: Number; draw_time_count: Number; draw_time_delay: Number }>;
     damageMod: {
         projectile: Number;
         explosion: Number;
@@ -62,4 +62,4 @@ type spellBaseData = {
     icon: String;
 };
 
-declare const spellBaseDatas: Array<spellBaseData>;
+declare const spellBaseDatas: Array<SpellBaseData>;

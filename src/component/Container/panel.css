@@ -1,4 +1,4 @@
-main {
+:host > section {
     grid-template:
         "name icon" 30px
         ". icon" 14px

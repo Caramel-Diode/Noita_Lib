@@ -29,19 +29,15 @@ type MessageBackgroundId = "important" | "fungal_shift" | "booby_trapped" | "con
 
 type MessagePresetId = keyof Preset$;
 
-type MessageBackgroundData = {
-    /** 背景id */
-    id: MessageBackgroundId;
-    /** 背景图像url */
-    url: Promise<String>;
-};
-
-type MessagePresetData<T extends MessagePresetId> = {
-    id: T;
-    text: Preset$[T];
-    background: MessageBackgroundData;
+type HTMLNoitaMessageElement = HTMLElement & {
+    contentUpdate: () => never;
+    displayMode: "#";
+    messageStyle: MessageBackgroundId;
+    messagePreset: MessagePresetId;
+    messageContent: String;
 };
 
 export type Class = {
-    new (): HTMLElement & {};
+    new (preset?: MessagePresetId): HTMLNoitaMessageElement;
+    new (style?: MessageBackgroundId, content?: String): HTMLNoitaMessageElement;
 };

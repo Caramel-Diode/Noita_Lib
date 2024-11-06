@@ -10,6 +10,7 @@ export type RangeValue = {
     toString: (unitSymbol: String?) => String;
 };
 
+export type RangeValueExp = `>=${number}` | `<=${number}` | `${number}~${number}` | `${number}`;
 /** 伤害相关数据 */
 export type DamageData = {
     /**

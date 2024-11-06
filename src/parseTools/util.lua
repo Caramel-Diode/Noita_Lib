@@ -83,7 +83,7 @@ return {
     --- @param ... V
     --- @return V
     nonNil = function(...)
-        for index, value in ipairs { ... } do
+        for _, value in pairs { ... } do
             if value ~= nil then
                 return value
             end

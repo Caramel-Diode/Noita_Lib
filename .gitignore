@@ -14,4 +14,4 @@ src/component/Perk/tool/perk_list.lua
 src/public/tool/lang/**
 src/luaForNodejs/lua_lib/**
 src/luaForNodejs/node_modules/**
-src/parseTools/entity/entity_xmls/**
+src/parseTools/entity/data/**

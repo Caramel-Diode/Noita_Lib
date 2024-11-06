@@ -10,6 +10,20 @@ const getCommentText = data => `/*
 //prettier-ignore`;
 
 const zh_cn = langData.getZH_CN;
+const blank = Symbol("");
+/**
+ * 最小化xml路径
+ * @param {String} path
+ */
+const minPath = path => {
+    let paths = path.split(",").map(p => p.replace("data/entities/", "").replace(".xml", ""));
+    paths = paths.filter(p => !p.startsWith("particles/"));
+    if (paths.length) return paths.join(",");
+    return blank;
+};
+
+const extraEntities = new Set();
+const gameEffectEntities = new Set();
 
 class Spell {
     /** @type {Map<String,Symbol>} */
@@ -79,7 +93,7 @@ class Spell {
     static _passiveDescCSV;
     /** @type {CSVData} (额外)提供投射物表 */
     static _projectileCSV;
-    /** @param {spellBaseData} data */
+    /** @param {SpellBaseData} data */
     constructor(data) {
         if (data.name.startsWith("$")) {
             this.nameKey = data.name.slice(1);
@@ -128,7 +142,9 @@ class Spell {
         let relatedProjectileHasBeenAdded = false; // 防止重复被添加
         for (let i = 0; i < data.projectiles.length; i++) {
             const p = data.projectiles[i];
-            const id = p.id.match(/[\w]+(?=.xml)/)[0].toUpperCase();
+            // const id = p.id.match(/[\w]+(?=.xml)/)[0].toUpperCase();
+            const id = minPath(p.id);
+            if (id === blank) continue;
             const cache = [id];
 
             if (p.min + p.draw_hit + p.draw_death + p.draw_time_count > 1) {
@@ -156,16 +172,25 @@ class Spell {
             }
         }
         if (!relatedProjectileHasBeenAdded && relatedProjectileName) {
-            const id = relatedProjectileName.match(/[\w]+(?=.xml)/)[0].toUpperCase();
+            const id = minPath(relatedProjectileName);
             if (relatedProjectileAmount > 1) projectilesCache.push(`${id}:${relatedProjectileAmount}#1`);
             else projectilesCache.push(`${id}:#1`);
         }
-        projectilesCache.push(Spell._projectileCSV.get(data.id, 2) ?? "");
+
+        // 如果存在人工维护的投射物数据则丢弃解析数据
+        {
+            const projectiles = Spell._projectileCSV.get(data.id, 2);
+            if (projectiles) {
+                projectilesCache.length = 0;
+                projectilesCache.push(projectiles);
+            }
+        }
+        
         this.projectiles = projectilesCache.join(" ").trimEnd();
 
         this.damageMod = Object.assign(new DamageData(""), data.damageMod).toString();
-        if (data.gameEffectEntities) this.gameEffectEntities = data.gameEffectEntities.match(/[\w]+(?=.xml)/)[0].toUpperCase();
-        if (data.extraEntities) this.extraEntities = data.extraEntities.match(/[\w]+(?=.xml)/)[0].toUpperCase();
+        if (data.gameEffectEntities) this.gameEffectEntities = minPath(data.gameEffectEntities);
+        if (data.extraEntities) this.extraEntities = minPath(data.extraEntities);
         this.id = data.id;
         this.type = data.type;
         this.maxUse = data.maxUse ?? 0;
@@ -189,9 +214,17 @@ class Spell {
                     flag_separator = 1;
                 }
             } else if (e.pos === "before") flag_separator = -1;
-            // 暂不考虑这些属性
+
             const prop = Spell.modifierPropAbbrMap[e.prop];
-            if (["gee", "exe"].includes(prop)) continue;
+            if (["gee", "exe"].includes(prop)) {
+                console.log(prop);
+
+                if (prop === "gee") gameEffectEntities.add(e.value);
+                if (prop === "exe") extraEntities.add(e.value);
+                e.value = minPath(e.value);
+                if (e.value.endsWith(",")) e.value = e.value.slice(0, -1);
+                if (!e.value) continue;
+            }
             if (typeof e.value === "boolean") e.value = Number(e.value);
             if (prop) cache.push(prop, e.type, e.value, ";");
         }
@@ -202,7 +235,7 @@ class Spell {
 
     toString(spread = false) {
         // console.error(this.name, this);
-        const blank = Symbol("");
+
         const alias = this.alias ? this.alias : blank;
         const maxUse = this.maxUse === 0 ? blank : this.maxUse;
         const passive = this.passive ? this.passive : blank;
@@ -241,38 +274,78 @@ class Spell {
     Spell._unlockDescCSV = await parseCSVFromUrl("unlockDesc.csv");
     Spell._passiveDescCSV = await parseCSVFromUrl("passiveDesc.csv");
     Spell._projectileCSV = await parseCSVFromUrl("projectile.csv");
-    /** @type {HTMLButtonElement} */
-    const button = document.querySelector(`#gen-data`);
-    const buttonText = button.innerText;
-    button.innerText = "Loading";
+
     const imgs = await Promise.all(spellBaseDatas.map(e => PNG.removeGAMA(`/${e.icon}`)));
 
     const canvas = await createSprite(imgs, { size: 16 });
     document.querySelector("#canvas-viewport").append(canvas);
-    button.addEventListener("click", async () => {
-        const data = spellBaseDatas.map(e => new Spell(e).toString(true));
-        // console.log(data);
 
-        const params_str = [...Spell.spawnRequiresFlagMap].map(([data, $var]) => `${$var.description}=${JSON.stringify(data)}`).join(",\n    ");
-        const spells_str = data.join(",\n    ");
-        const comment = getCommentText(`共${data.length}条法术数据`);
-        const fileContent = `${comment}\n((\n    ${params_str}\n)=>[\n    ${spells_str}\n])()`;
+    document.body.append(
+        h.button(
+            {
+                async onclick() {
+                    const data = spellBaseDatas.map(e => new Spell(e).toString(true));
+                    // console.log(data);
 
-        download(fileContent, "spell.data.js");
-        // const cache = [];
-        // for (let i = 0; i < data.length; i++) {
-        //     const d = data[i];
-        //     const base64 = await urlToBase64(imgs[i], 2);
-        //     let alias = "";
+                    const params_str = [...Spell.spawnRequiresFlagMap].map(([data, $var]) => `${$var.description}=${JSON.stringify(data)}`).join(",\n    ");
+                    const spells_str = data.join(",\n    ");
+                    const comment = getCommentText(`共${data.length}条法术数据`);
+                    const fileContent = `${comment}\n((\n    ${params_str}\n)=>[\n    ${spells_str}\n])()`;
+                    console.log(fileContent);
 
-        //     if (d.alias)
-        //         alias = `${d.alias
-        //             .split(" ")
-        //             .map(e => `\`${e}\``)
-        //             .join(",")}`;
-        //     cache.push(`{"name":"${d.id}","description":"**\`${Spell.typeEmojis[d.type]}${d.name}\`**  \\n![](${base64})  \\n${alias}"}`);
-        // }
-        // console.log(cache.join(",\n"));
-    });
-    button.innerText = buttonText;
+                    download(fileContent, "spell.data.js");
+                    // const cache = [];
+                    // for (let i = 0; i < data.length; i++) {
+                    //     const d = data[i];
+                    //     const base64 = await urlToBase64(imgs[i], 2);
+                    //     let alias = "";
+
+                    //     if (d.alias)
+                    //         alias = `${d.alias
+                    //             .split(" ")
+                    //             .map(e => `\`${e}\``)
+                    //             .join(",")}`;
+                    //     cache.push(`{"name":"${d.id}","description":"**\`${Spell.typeEmojis[d.type]}${d.name}\`**  \\n![](${base64})  \\n${alias}"}`);
+                    // }
+                    // console.log(cache.join(",\n"));
+                }
+            },
+            "生成法术数据"
+        ),
+        h.button(
+            {
+                onclick() {
+                    const set = new Set(
+                        spellBaseDatas
+                            .map(e => {
+                                const array = [...e.projectiles.map(e => e.id)];
+                                if (e.relatedProjectiles) array.push(e.relatedProjectiles[0]);
+                                return array;
+                            })
+                            .flat(2)
+                    );
+                    const fileContent = `"${[...set].filter(e => Boolean(e)).join(`",\n"`)}"`;
+                    download(fileContent, "projectileList.txt");
+                }
+            },
+            "生成法术引用实体(投射物)列表"
+        ),
+        h.button(
+            {
+                onclick() {
+                    download(
+                        '"' +
+                            [...gameEffectEntities, ...extraEntities]
+                                .filter(e => !e.startsWith("particles/"))
+                                .map(e => e.slice(0, -1))
+                                .join(`",\n"`) +
+                            '"',
+                        "otherEntities.txt"
+                    );
+                }
+            },
+            "生成法术引用实体(额外实体,游戏效果实体)列表"
+        )
+    );
+    console.log(gameEffectEntities, extraEntities);
 })();

@@ -1,8 +1,8 @@
 /**
  * 天赋图标
  */
-class Icon extends $icon(12,"天赋") {
-    static urls = asyncSpriteUrls(embed(`#icon.png`));
+class Icon extends $icon(12, "天赋") {
+    static urls = new SpriteSpliter("PerkIcons", embed(`#icon.png`)).results;
 
     /** @type {PerkData?} */ #data;
 
@@ -13,7 +13,7 @@ class Icon extends $icon(12,"天赋") {
     }
 
     connectedCallback() {
-        const data = this.#data ?? PerkData.query(this.getAttribute("perk.id"));
+        const data = this.#data ?? PerkData.query(this.dataset.id);
         this.alt = data.name;
         this.src = data.asyncIconUrl;
     }
@@ -25,8 +25,6 @@ Icon.$defineElement("-perk");
 /** @typedef {import("TYPE").PerkName} PerkName */
 /** @typedef {import("TYPE").PerkData} PerkData */
 class PerkData {
-    static iconUrls = asyncSpriteUrls(embed(`#icon.png`));
-
     static data = {
         /** @type {Array<PerkData>} */ all: [],
         /** @type {Map<String,PerkData>} */ map: new Map()

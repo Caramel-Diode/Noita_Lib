@@ -112,11 +112,11 @@ const allOrbCanvas = {
 document.querySelector("#gen-data")?.addEventListener("click", () => {
     // document.body.append(allOrbCanvas.blank, allOrbCanvas.red, allOrbCanvas.discovered, allOrbCanvas.evil);
     /** @type {HTMLCanvasElement} */
-    const canvas = new Canvas(154, 42 * 4);
+    const canvas = new Canvas(154 * 4, 42);
     const ctx = canvas.getContext("2d");
     ctx.drawImage(allOrbCanvas.blank, 0, 0);
-    ctx.drawImage(allOrbCanvas.red, 0, 42);
-    ctx.drawImage(allOrbCanvas.discovered, 0, 42 * 2);
-    ctx.drawImage(allOrbCanvas.evil, 0, 42 * 3);
+    ctx.drawImage(allOrbCanvas.red, 154, 0);
+    ctx.drawImage(allOrbCanvas.discovered, 154 * 2, 0);
+    ctx.drawImage(allOrbCanvas.evil, 154 * 3, 0);
     document.body.append(canvas);
 });

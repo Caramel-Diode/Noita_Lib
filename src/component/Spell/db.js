@@ -1,5 +1,5 @@
 class Icon extends $icon(16, "法术") {
-    static urls = asyncSpriteUrls(embed(`#icon.png`));
+    static urls = new SpriteSpliter("SpellIcons", embed(`#icon.png`)).results;
     /** @type {SpellData?} */ #data;
 
     /** @param {SpellData} data  */
@@ -9,7 +9,8 @@ class Icon extends $icon(16, "法术") {
     }
 
     connectedCallback() {
-        const data = this.#data ?? SpellData.query(this.getAttribute("spell.id"));
+        // const data = this.#data ?? SpellData.query(this.getAttribute("spell.id"));
+        const data = this.#data ?? SpellData.query(this.dataset.id);
         this.alt = data.name;
         this.src = data.asyncIconUrl;
     }
@@ -25,7 +26,8 @@ Icon.$defineElement("-spell");
  * @typedef {import("TYPE").SpellData<T>} SpellData
  */
 
-class SpellData extends Callable {
+class SpellData {
+    // static #iconGen = new IconGenerator(embed(`#icon.png`));
     //prettier-ignore
     static { delete this.prototype.constructor; } // 禁止从实例访问构造器
     /** 法术等级 */
@@ -56,67 +58,71 @@ class SpellData extends Callable {
         /** @param {String} exp */
         constructor(exp) {
             const [projectileId, _exp = []] = exp.split(":");
-            /** @type {import("@entity").EntityData} 投射物数据 */
-            this.projectile = Entity.queryById(projectileId);
-            let target = "amountMin"; // 数据目标
-            let cache = [];
-            const temp = {
-                amountMin: 1,
-                amountMax: 1,
-                drawCount_Death: 0,
-                drawCount_Hit: 0,
-                drawCount_Timer: 0,
-                drawDelay_Timer: 0,
-                typeIndex: 0
-            };
-            for (let i = 0; i <= _exp.length; i++) {
-                const char = _exp[i];
-                switch (char) {
-                    case "~":
-                        temp[target] = Number(cache.join(""));
-                        cache = [];
-                        target = "amountMax";
-                        break;
-                    case "D":
-                        temp[target] = Number(cache.join(""));
-                        cache = [];
-                        target = "drawCount_Death";
-                        break;
-                    case "H":
-                        temp[target] = Number(cache.join(""));
-                        cache = [];
-                        target = "drawCount_Hit";
-                        break;
-                    case "T":
-                        temp[target] = Number(cache.join(""));
-                        cache = [];
-                        target = "drawCount_Timer";
-                        break;
-                    case "!":
-                        temp[target] = Number(cache.join(""));
-                        cache = [];
-                        target = "drawDelay_Timer";
-                        break;
-                    case "#":
-                        temp[target] = Number(cache.join(""));
-                        cache = [];
-                        target = "typeIndex";
-                    case undefined: // exp结束
-                        temp[target] = Number(cache.join(""));
-                        break;
-                    default: //数字
-                        cache.push(char);
+            if (projectileId.endsWith("_nil")) this.projectile = null;
+            else {
+                /** @type {import("@entity").EntityData} 投射物数据 */
+                this.projectile = Entity.query(projectileId);
+                let target = "amountMin"; // 数据目标
+                let cache = [];
+                const temp = {
+                    amountMin: 1,
+                    amountMax: 1,
+                    drawCount_Death: 0,
+                    drawCount_Hit: 0,
+                    drawCount_Timer: 0,
+                    drawDelay_Timer: 0,
+                    typeIndex: 0
+                };
+                for (let i = 0; i <= _exp.length; i++) {
+                    const char = _exp[i];
+                    switch (char) {
+                        case "~":
+                            temp[target] = +cache.join("");
+                            cache = [];
+                            target = "amountMax";
+                            break;
+                        case "D":
+                            temp[target] = +cache.join("");
+                            cache = [];
+                            target = "drawCount_Death";
+                            break;
+                        case "H":
+                            temp[target] = +cache.join("");
+                            cache = [];
+                            target = "drawCount_Hit";
+                            break;
+                        case "T":
+                            temp[target] = +cache.join("");
+                            cache = [];
+                            target = "drawCount_Timer";
+                            break;
+                        case "!":
+                            temp[target] = +cache.join("");
+                            cache = [];
+                            target = "drawDelay_Timer";
+                            break;
+                        case "#":
+                            temp[target] = +cache.join("");
+                            cache = [];
+                            target = "typeIndex";
+                            break;
+                        case undefined: // exp结束
+                            temp[target] = +cache.join("");
+                            break;
+                        default: //数字
+                            cache.push(char);
+                    }
                 }
+                if (temp.amountMin === 0) temp.amountMin = 1; //空字符串会被转为0 投射物数量至少为1
+                if (temp.amountMin > temp.amountMax) temp.amountMax = temp.amountMin;
+                this.amountMin = temp.amountMin;
+                this.amountMax = temp.amountMax;
+                this.type = SpellData.ProjectileData.#typeMap[temp.typeIndex];
+                this.drawCount_Death = temp.drawCount_Death;
+                this.drawCount_Hit = temp.drawCount_Hit;
+                this.drawCount_Timer = temp.drawCount_Timer;
+                this.drawDelay_Timer = temp.drawDelay_Timer;
             }
-            if (temp.amountMin === 0) temp.amountMin = 1; //空字符串会被转为0 投射物数量至少为1
-            if (temp.amountMin > temp.amountMax) temp.amountMax = temp.amountMin;
-            this.amountMin = temp.amountMin;
-            this.amountMax = temp.amountMax;
-            this.type = SpellData.ProjectileData.#typeMap[temp.typeIndex];
-            this.drawCount_Death = temp.drawCount_Death;
-            this.drawCount_Hit = temp.drawCount_Hit;
-            this.drawCount_Timer = temp.drawCount_Timer;
-            this.drawDelay_Timer = temp.drawDelay_Timer;
             Object.freeze(this);
         }
 
@@ -125,7 +131,10 @@ class SpellData extends Callable {
             const result = [];
             if (exp) {
                 const exps = exp.split(" ");
-                for (let i = 0; i < exps.length; i++) result[i] = new this(exps[i]);
+                for (let i = 0; i < exps.length; i++) {
+                    const data = new this(exps[i]);
+                    if (data.projectile) result.push(data);
+                }
             }
             return Object.freeze(result);
         }
@@ -135,14 +144,23 @@ class SpellData extends Callable {
     static SpawningData = class SpawningData {
         static sum = { prob_lv0: 0, prob_lv1: 0, prob_lv2: 0, prob_lv3: 0, prob_lv4: 0, prob_lv5: 0, prob_lv6: 0, prob_lv7: 0, prob_lv10: 0 };
         /** @type {Number} */ prob_lv0 = -1;
+        /** @type {Number} */ [0] = -1;
         /** @type {Number} */ prob_lv1 = -1;
+        /** @type {Number} */ [1] = -1;
         /** @type {Number} */ prob_lv2 = -1;
+        /** @type {Number} */ [2] = -1;
         /** @type {Number} */ prob_lv3 = -1;
+        /** @type {Number} */ [3] = -1;
         /** @type {Number} */ prob_lv4 = -1;
+        /** @type {Number} */ [4] = -1;
         /** @type {Number} */ prob_lv5 = -1;
+        /** @type {Number} */ [5] = -1;
         /** @type {Number} */ prob_lv6 = -1;
+        /** @type {Number} */ [6] = -1;
         /** @type {Number} */ prob_lv7 = -1;
+        /** @type {Number} */ [7] = -1;
         /** @type {Number} */ prob_lv10 = -1;
+        /** @type {Number} */ [10] = -1;
         /** @type {String} 生成解锁条件 */ requiresFlag;
         /** @type {Array<"lv0"|"lv1"|"lv2"|"lv3"|"lv4"|"lv5"|"lv6"|"lv7"|"lv10">} */ lvs = [];
         /** @type {Array<"lv0"|"lv1"|"lv2"|"lv3"|"lv4"|"lv5"|"lv6"|"lv7"|"lv10">} */ lvs_nonzero = [];
@@ -157,6 +175,7 @@ class SpellData extends Callable {
                 const probKey = `prob_${lv}`;
                 const value = probs[key];
                 this[probKey] = value;
+                this[key] = value;
                 this.lvs.push(lv);
                 if (value > 0) this.lvs_nonzero.push(lv);
                 SpawningData.sum[probKey] += value * 1e4; // 此处解决精度问题 记得用的时候 /10000
@@ -175,10 +194,33 @@ class SpellData extends Callable {
             // return value * 10000 / SpawningData.sum[key] * 100; 简化计算
             return (1e6 * value) / SpawningData.sum[key];
         }
+
+        /** 原始数据 */
+        get raw() {
+            const lv_cache = [];
+            const prob_cache = [];
+            for (const lv of this.lvs) {
+                const n = lv.slice(2);
+                lv_cache.push(n);
+                prob_cache.push(this[n]);
+            }
+            return {
+                lv: lv_cache.join(","),
+                prob: prob_cache.join(",")
+            };
+        }
+
+        /**
+         * @param {(lv:"lv0"|"lv1"|"lv2"|"lv3"|"lv4"|"lv5"|"lv6"|"lv7"|"lv10",prob:Number) => void} callabck
+         */
+        forEach(callabck) {
+            for (const lv of this.lvs) callabck(lv, this[key.slice(2)]);
+        }
     };
 
     static ModifierAction = class ModifierAction {
-        static modifierPropAbbrMap = {
+        /** 属性缩写映射表 */
+        static #abbrMap = {
             //简写:全称(in js)
             frw: "fireRateWait",
             spm: "speed",
@@ -234,9 +276,10 @@ class SpellData extends Callable {
                 const parts = data.split(";");
                 for (let i = 0; i < parts.length; i++) {
                     const part = parts[i];
-                    /** @type {"fireRateWait"|"speed"|"explosionRadius"|"spreadDegrees"|"patternDegrees"|"meleeDamage"|"projectileDamage"|"electricityDamage"|"fireDamage"|"explosionDamage"|"iceDamage"|"sliceDamage"|"healingDamage"|"curseDamage"|"drillDamage"|"overeatingDamage"|"physicsHitDamage"|"poisonDamage"|"radioactiveDamage"|"holyDamage"|"damageCriticalChance"|"knockbackForce"|"material"|"materialAmount"|"trailMaterial"|"trailMaterialAmount"|"bounces"|"friendlyFire"|"lifetime"|"extraEntities"|"gameEffectEntities"|"reloadTime"|"recoil"} */
-                    const prop = ModifierAction.modifierPropAbbrMap[part.slice(0, 3)];
+                    /** @type {String} */
+                    const prop = ModifierAction.#abbrMap[part.slice(0, 3)];
                     const type = part.slice(3, 4);
+                    const data = part.slice(4);
                     let value;
                     switch (prop) {
                         case "meleeDamage":
@@ -254,7 +297,7 @@ class SpellData extends Callable {
                         case "poisonDamage":
                         case "radioactiveDamage":
                         case "holyDamage":
-                            value = Number(part.slice(4)) * 25;
+                            value = data * 25;
                             break;
                         case "fireRateWait":
                         case "speed":
@@ -268,15 +311,17 @@ class SpellData extends Callable {
                         case "bounces":
                         case "friendlyFire":
                         case "lifetime":
-                        // case "extraEntities":
-                        // case "gameEffectEntities":
                         case "reloadTime":
                         case "recoil":
-                            value = Number(part.slice(4));
+                            value = +data;
+                            break;
+                        case "extraEntities":
+                        case "gameEffectEntities":
+                            value = data.split(",").map(Entity.query);
                             break;
                         case "material":
                         case "trailMaterial":
-                            value = part.slice(4);
+                            value = data;
                     }
                     this[prop] = { pos, type, value };
                 }
@@ -285,8 +330,7 @@ class SpellData extends Callable {
     };
 
     /** @typedef {Set<SpellData>} SpellSet 法术集合 */
-    static data = {
-        /** @type {Map<String,SpellData>} */ map: new Map(),
+    static tagSets = {
         /** @type {SpellSet} 所有法术 */ all: new Set(),
 
         /** @type {SpellSet} 投射物类型法术 */ type_projectile: new Set(),
@@ -335,31 +379,129 @@ class SpellData extends Callable {
 
         /** @type {SpellSet} 影响伤害的法术 [自动管理 直接添加到具体伤害类型中即可] */
         get damage_mod() {
-            const cache = [];
-            for (const type of DamageData.types) {
-                const key = `damage_mod_${type}`;
-                if (key in this) cache.push(...this[key]);
-            }
-            return new Set(...cache);
+            return this.damage_reset.union(this.damage_add.union(this.damage_sub));
         },
 
-        /** @type {SpellSet} 影响[投射物]伤害的法术 */ damage_mod_projectile: new Set(),
-        /** @type {SpellSet} 影响[近战]伤害的法术 */ damage_mod_melee: new Set(),
-        /** @type {SpellSet} 影响[雷电]伤害的法术 */ damage_mod_electricity: new Set(),
-        /** @type {SpellSet} 影响[火焰]伤害的法术 */ damage_mod_fire: new Set(),
-        /** @type {SpellSet} 影响[爆炸]伤害的法术 */ damage_mod_explosion: new Set(),
-        /** @type {SpellSet} 影响[冰冻]伤害的法术 */ damage_mod_ice: new Set(),
-        /** @type {SpellSet} 影响[切割]伤害的法术 */ damage_mod_slice: new Set(),
-        /** @type {SpellSet} 影响[治疗]伤害的法术 */ damage_mod_healing: new Set(),
-        /** @type {SpellSet} 影响[诅咒]伤害的法术 */ damage_mod_curse: new Set(),
-        /** @type {SpellSet} 影响[穿凿]伤害的法术 */ damage_mod_drill: new Set(),
-        /** @type {SpellSet} 影响[神圣]伤害的法术 */ damage_mod_holy: new Set(),
+        get damage_add() {
+            const cache = [];
+            for (const type of DamageData.types) {
+                const key = `damage_add_${type}`;
+                if (key in this) cache.push(...this[key]);
+            }
+            return new Set(cache);
+        },
 
-        /** @type {Array<SpellData>} 生成需要解锁法术 */ spawnRequiresFlag: new Set(),
-        $update() {
-            this.damage_mod = new Set();
-        }
+        get damage_sub() {
+            const cache = [];
+            for (const type of DamageData.types) {
+                const key = `damage_sub_${type}`;
+                if (key in this) cache.push(...this[key]);
+            }
+            return new Set(cache);
+        },
+
+        get damage_reset() {
+            const cache = [];
+            for (const type of DamageData.types) {
+                const key = `damage_reset_${type}`;
+                if (key in this) cache.push(...this[key]);
+            }
+            return new Set(cache);
+        },
+
+        /** @return {SpellSet} 影响[投射物]伤害的法术 */
+        get damage_mod_projectile() {
+            return this.damage_reset_projectile.union(this.damage_add_projectile.union(this.damage_sub_projectile));
+        },
+        /** @type {SpellSet} 增加[投射物]伤害的法术 */ damage_add_projectile: new Set(),
+        /** @type {SpellSet} 减少[投射物]伤害的法术 */ damage_sub_projectile: new Set(),
+        /** @type {SpellSet} 重置[投射物]伤害的法术 */ damage_reset_projectile: new Set(),
+
+        /** @return {SpellSet} 影响[近战]伤害的法术 */
+        get damage_mod_melee() {
+            return this.damage_reset_melee.union(this.damage_add_melee.union(this.damage_sub_melee));
+        },
+        /** @type {SpellSet} 增加[近战]伤害的法术 */ damage_add_melee: new Set(),
+        /** @type {SpellSet} 减少[近战]伤害的法术 */ damage_sub_melee: new Set(),
+        /** @type {SpellSet} 重置[近战]伤害的法术 */ damage_reset_melee: new Set(),
+
+        /** @return {SpellSet} 影响[雷电]伤害的法术 */
+        get damage_mod_electricity() {
+            return this.damage_reset_electricity.union(this.damage_add_electricity.union(this.damage_sub_electricity));
+        },
+        /** @type {SpellSet} 增加[雷电]伤害的法术 */ damage_add_electricity: new Set(),
+        /** @type {SpellSet} 减少[雷电]伤害的法术 */ damage_sub_electricity: new Set(),
+        /** @type {SpellSet} 重置[雷电]伤害的法术 */ damage_reset_electricity: new Set(),
+
+        /** @return {SpellSet} 影响[火焰]伤害的法术 */
+        get damage_mod_fire() {
+            return this.damage_reset_fire.union(this.damage_add_fire.union(this.damage_sub_fire));
+        },
+        /** @type {SpellSet} 增加[火焰]伤害的法术 */ damage_add_fire: new Set(),
+        /** @type {SpellSet} 减少[火焰]伤害的法术 */ damage_sub_fire: new Set(),
+        /** @type {SpellSet} 重置[火焰]伤害的法术 */ damage_reset_fire: new Set(),
+
+        /** @return {SpellSet} 影响[爆炸]伤害的法术 */
+        get damage_mod_explosion() {
+            return this.damage_reset_explosion.union(this.damage_add_explosion.union(this.damage_sub_explosion));
+        },
+        /** @type {SpellSet} 增加[爆炸]伤害的法术 */ damage_add_explosion: new Set(),
+        /** @type {SpellSet} 减少[爆炸]伤害的法术 */ damage_sub_explosion: new Set(),
+        /** @type {SpellSet} 减少[爆炸]伤害的法术 */ damage_reset_explosion: new Set(),
+
+        /** @return {SpellSet} 影响[冰冻]伤害的法术 */
+        get damage_mod_ice() {
+            return this.damage_reset_ice.union(this.damage_add_ice.union(this.damage_sub_ice));
+        },
+        /** @type {SpellSet} 增加[冰冻]伤害的法术 */ damage_add_ice: new Set(),
+        /** @type {SpellSet} 减少[冰冻]伤害的法术 */ damage_sub_ice: new Set(),
+        /** @type {SpellSet} 重置[冰冻]伤害的法术 */ damage_reset_ice: new Set(),
+
+        /** @return {SpellSet} 影响[切割]伤害的法术 */
+        get damage_mod_slice() {
+            return this.damage_reset_slice.union(this.damage_add_slice.union(this.damage_sub_slice));
+        },
+        /** @type {SpellSet} 增加[切割]伤害的法术 */ damage_add_slice: new Set(),
+        /** @type {SpellSet} 减少[切割]伤害的法术 */ damage_sub_slice: new Set(),
+        /** @type {SpellSet} 重置[切割]伤害的法术 */ damage_reset_slice: new Set(),
+
+        /** @return {SpellSet} 影响[治疗]伤害的法术 */
+        get damage_reset_healing() {
+            return this.damage_reset_healing.union(this.damage_add_healing.union(this.damage_sub_healing));
+        },
+        /** @type {SpellSet} 增加[治疗]伤害的法术 */ damage_add_healing: new Set(),
+        /** @type {SpellSet} 减少[治疗]伤害的法术 */ damage_sub_healing: new Set(),
+        /** @type {SpellSet} 重置[治疗]伤害的法术 */ damage_reset_healing: new Set(),
+
+        /** @return {SpellSet} 影响[诅咒]伤害的法术 */
+        get damage_mod_curse() {
+            return this.damage_reset_curse.union(this.damage_add_curse.union(this.damage_sub_curse));
+        },
+        /** @type {SpellSet} 增加[诅咒]伤害的法术 */ damage_add_curse: new Set(),
+        /** @type {SpellSet} 减少[诅咒]伤害的法术 */ damage_sub_curse: new Set(),
+        /** @type {SpellSet} 重置[诅咒]伤害的法术 */ damage_reset_curse: new Set(),
+
+        /** @return {SpellSet} 影响[穿凿]伤害的法术 */
+        get damage_mod_drill() {
+            return this.damage_reset_drill.union(this.damage_add_drill.union(this.damage_sub_drill));
+        },
+        /** @type {SpellSet} 增加[穿凿]伤害的法术 */ damage_add_drill: new Set(),
+        /** @type {SpellSet} 减少[穿凿]伤害的法术 */ damage_sub_drill: new Set(),
+        /** @type {SpellSet} 重置[穿凿]伤害的法术 */ damage_reset_drill: new Set(),
+
+        /** @return {SpellSet} 影响[神圣]伤害的法术 */
+        get damage_mod_holy() {
+            return this.damage_reset_holy.union(this.damage_add_holy.union(this.damage_sub_holy));
+        },
+        /** @type {SpellSet} 增加[神圣]伤害的法术 */ damage_add_holy: new Set(),
+        /** @type {SpellSet} 减少[神圣]伤害的法术 */ damage_sub_holy: new Set(),
+        /** @type {SpellSet} 重置[神圣]伤害的法术 */ damage_reset_holy: new Set(),
+
+        /** @type {Array<SpellData>} 生成需要解锁法术 */ spawnRequiresFlag: new Set()
     };
+
+    /** @type {Map<String,SpellData>} */
+    static data = new Map();
 
     static #typeList = [/* 无 */ "null", /* 投射物 */ "projectile", /* 静态投射物 */ "staticProjectile", /* 修正 */ "modifier", /* 多重 */ "drawMany", /* 材料 */ "material", /* 其它 */ "other", /* 实用 */ "utility", /* 被动 */ "passive"];
     /** @type {String} 图标url */ #iconIndex;
@@ -369,8 +511,10 @@ class SpellData extends Callable {
      * @param {Number} index
      */
     constructor(data, index) {
-        super(() => {});
+        // super(() => {});
         this.#iconIndex = index;
+        // Reflect.defineProperty(this, "canvasIcon", { get: SpellData.#iconGen.getGeneratorFn(index * 16, 16) });
+        // this.getCanvas = SpellData.#iconGen.getGeneratorFn(index * 16, 16, 16);
         //prettier-ignore
         [
             this.id, //===============[0] id
@@ -427,7 +571,7 @@ class SpellData extends Callable {
      */
     static query = key => {
         if (key[0] === "$") return this.$NULL[key] ?? this.$NULL;
-        return this.data.map.get(key) ?? this.$NULL;
+        return this.data.get(key) ?? this.$NULL;
     };
 
     static queryByExp = (() => {
@@ -436,13 +580,17 @@ class SpellData extends Callable {
         return parse;
     })();
 
+    static get spellTags() {
+        return Reflect.ownKeys(this.tagSets).map(tag => "#" + tag);
+    }
+
     /**
      * 注册自定义的法术标签
      * @param {String} tag
      * @param {(data:SpellData) => Boolean } predicate
      */
     static registerTag = (tag, predicate) => {
-        this.data[tag] = new Set([...this.data.all].filter(predicate));
+        this.tagSets[tag] = new Set([...this.tagSets.all].filter(predicate));
         return "#" + tag;
     };
 
@@ -477,13 +625,14 @@ class SpellData extends Callable {
 
         freeze(this.$NULL);
 
-        const storage = this.data;
-        toChunks(embed(`#data.js`), 17).forEach((v, i) => {
+        const storage = this.tagSets;
+        // toChunks(embed(`#data.js`), 17).forEach
+        [...embed(`#data.js`).values().chunks(17)].forEach((v, i) => {
             const data = new this(v, i);
             //#region 向数据库中写入
             storage.all.add(data);
             // id, 正式名, 别名均创建映射
-            for (const mapKey of [...data.alias, data.id, data.name]) storage.map.set(mapKey, data);
+            for (const mapKey of [...data.alias, data.id, data.name]) this.data.set(mapKey, data);
 
             storage[`type_${data.type}`].add(data);
 
@@ -508,7 +657,13 @@ class SpellData extends Callable {
             if ("speed" in data.modifierAction) storage.speed_mod.add(data);
 
             for (const type of DamageData.types) {
-                if (`${type}Damage` in data.modifierAction) storage[`damage_mod_${type}`].add(data);
+                if (`${type}Damage` in data.modifierAction)
+                    /* prettier-ignore */
+                    switch (data.modifierAction[`${type}Damage`].type) {
+                        case "+": storage[`damage_add_${type}`].add(data); break;
+                        case "-": storage[`damage_sub_${type}`].add(data); break;
+                        case "=": storage[`damage_reset_${type}`].add(data);
+                    }
             }
 
             if (data.mana < 5) {
@@ -516,10 +671,135 @@ class SpellData extends Callable {
                 if (data.mana === 0) storage.mana_0.add(data);
                 else storage.mana_increase.add(data);
             }
-
             //#endregion
 
             freeze(data);
         });
+
+        /// 变种 / 同类分组
+        const add = (groupName, ...ids) => (this.tagSets[groupName ?? ids[0]] = new Set(ids.map(id => this.query(id))));
+        const add$ = (...ids) => add(null, ...ids);
+        // 火花弹 及其变种
+        add$("LIGHT_BULLET", "LIGHT_BULLET_TRIGGER", "LIGHT_BULLET_TRIGGER_2", "LIGHT_BULLET_TIMER");
+        // 魔法箭 及其变种
+        add$("BULLET", "BULLET_TRIGGER", "BULLET_TIMER");
+        // 魔法弹 及其变种
+        add$("HEAVY_BULLET", "HEAVY_BULLET_TRIGGER", "HEAVY_BULLET_TIMER");
+        // 能量球 及其变种
+        add$("SLOW_BULLET", "SLOW_BULLET_TRIGGER", "SLOW_BULLET_TIMER");
+        // 黑洞 及其变种
+        add$("BLACK_HOLE", "BLACK_HOLE_DEATH_TRIGGER", "WHITE_HOLE");
+        // 分裂弹 及其变种
+        add$("SPITTER", "SPITTER_TIMER", "SPITTER_TIER_2", "SPITTER_TIER_2_TIMER", "SPITTER_TIER_3", "SPITTER_TIER_3_TIMER");
+        // 锯片 及其变种
+        add$("DISC_BULLET", "DISC_BULLET_BIG", "DISC_BULLET_BIGGER");
+        // 弹性能量球 及其变种
+        add$("DISC_BULLET", "BOUNCY_ORB_TIMER");
+        // 闪耀投枪 及其变种
+        add$("LANCE", "LANCE_HOLY");
+        // 火焰弹 及其变种
+        add$("GRENADE", "GRENADE_TRIGGER", "GRENADE_TIER_2", "GRENADE_TIER_3", "GRENADE_ANTI", "GRENADE_LARGE");
+        // 不稳晶体 及其变种
+        add$("MINE", "MINE_DEATH_TRIGGER");
+        // 电浆类
+        add$("LASER_EMITTER", "LASER_EMITTER_FOUR", "LASER_EMITTER_CUTTER");
+        // 光剑 及其变种
+        add$("LUMINOUS_DRILL", "LASER_LUMINOUS_DRILL");
+        // 触手 及其变种
+        add$("TENTACLE", "TENTACLE_TIMER");
+        // 治疗弹 及其变种
+        add$("HEAL_BULLET", "ANTIHEAL");
+        // 魔法护卫 及其变种
+        add$("MAGIC_SHIELD", "BIG_MAGIC_SHIELD");
+        // 火球 及其变种
+        add$("FIREBALL", "ICEBALL");
+        // 神圣炸弹 及其变种
+        add$("BOMB_HOLY", "BOMB_HOLY_GIGA");
+        // 蛋 及其变种
+        add$("SUMMON_EGG", "SUMMON_HOLLOW_EGG");
+        // 炸药箱 及其变种
+        add$("TNTBOX", "TNTBOX_BIG");
+        // 死亡十字 及其变种
+        add$("DEATH_CROSS", "DEATH_CROSS_BIG");
+        // 雾类
+        add("MIST", "MIST_RADIOACTIVE", "MIST_ALCOHOL", "MIST_SLIME", "MIST_BLOOD");
+        // 传送弹 及其变种
+        add$("TELEPORT_PROJECTILE", "TELEPORT_PROJECTILE_SHORT", "TELEPORT_PROJECTILE_STATIC", "SWAPPER_PROJECTILE", "TELEPORT_PROJECTILE_CLOSER");
+        // 核弹 及其变种
+        add$("NUKE", "NUKE_GIGA");
+        // 巨型黑洞 及其变种
+        add$("BLACK_HOLE_BIG", "WHITE_HOLE_BIG");
+        // 终结黑洞 及其变种
+        add$("BLACK_HOLE_GIGA", "WHITE_HOLE_GIGA");
+        // 召唤类
+        add("SUMMON", "SWARM_FLY", "SWARM_FIREBUG", "SWARM_WASP", "FRIEND_FLY");
+        // 粒子屏障类
+        add("WALL", "WALL_HORIZONTAL", "WALL_VERTICAL", "WALL_SQUARE");
+        // 静态爆炸 及其变种
+        add$("EXPLOSION", "EXPLOSION_LIGHT", "FIRE_BLAST", "POISON_BLAST", "ALCOHOL_BLAST", "THUNDER_BLAST");
+        // 环类
+        add("FIELD", "BERSERK_FIELD", "POLYMORPH_FIELD", "CHAOS_POLYMORPH_FIELD", "ELECTROCUTION_FIELD", "FREEZE_FIELD", "REGENERATION_FIELD", "TELEPORTATION_FIELD", "LEVITATION_FIELD", "SHIELD_FIELD");
+        // 投射物领域类
+        add("PROJECTILE_FIELD", "PROJECTILE_TRANSMUTATION_FIELD", "PROJECTILE_THUNDER_FIELD", "PROJECTILE_GRAVITY_FIELD");
+        // 真空场类
+        add("VACUUM", "VACUUM_POWDER", "VACUUM_LIQUID", "VACUUM_ENTITIES");
+        // 云类
+        add("CLOUD", "CLOUD_WATER", "CLOUD_OIL", "CLOUD_BLOOD", "CLOUD_ACID", "CLOUD_THUNDER");
+        // 弹跳 及其变种
+        add$("BOUNCE", "REMOVE_BOUNCE", "BOUNCE_EXPLOSION", "BOUNCE_SPARK", "BOUNCE_LASER", "BOUNCE_LASER_EMITTER", "BOUNCE_LARPA", "BOUNCE_SMALL_EXPLOSION", "BOUNCE_LIGHTNING", "BOUNCE_HOLE");
+        // 追踪 及其变种
+        add$("HOMING", "ANTI_HOMING", "HOMING_WAND", "HOMING_SHORT", "HOMING_ROTATE", "HOMING_SHOOTER", "AUTOAIM", "HOMING_ACCELERATING", "HOMING_CURSOR", "HOMING_AREA");
+        // 暴击 及其变种
+        add$("CRITICAL_HIT", "HITFX_BURNING_CRITICAL_HIT", "HITFX_CRITICAL_WATER", "HITFX_CRITICAL_OIL", "HITFX_CRITICAL_BLOOD");
+        // 沾染特效类
+        add("HITFX", "HITFX_BURNING_CRITICAL_HIT", "HITFX_CRITICAL_WATER", "HITFX_CRITICAL_OIL", "HITFX_CRITICAL_BLOOD", "HITFX_TOXIC_CHARM", "HITFX_EXPLOSION_SLIME", "HITFX_EXPLOSION_SLIME_GIGA", "HITFX_EXPLOSION_ALCOHOL", "HITFX_EXPLOSION_ALCOHOL_GIGA");
+        // 投射器类
+        add("RAY", "FIREBALL_RAY", "LIGHTNING_RAY", "TENTACLE_RAY", "LASER_EMITTER_RAY", "FIREBALL_RAY_LINE");
+        // 效果附身类
+        add("RAY_ENEMY", "FIREBALL_RAY_ENEMY", "LIGHTNING_RAY_ENEMY", "TENTACLE_RAY_ENEMY", "GRAVITY_FIELD_ENEMY");
+        // 诅咒类
+        add$("CURSE", "CURSE_WITHER_PROJECTILE", "CURSE_WITHER_EXPLOSION", "CURSE_WITHER_ELECTRICITY");
+        // 投射物环绕类
+        add("ORBIT", "ORBIT_DISCS", "ORBIT_FIREBALLS", "ORBIT_NUKES", "ORBIT_LASERS", "ORBIT_LARPA");
+        // 弧类
+        add("ARC", "ARC_ELECTRIC", "ARC_FIRE", "ARC_GUNPOWDER", "ARC_POISON");
+        // 轨迹类
+        add("TRAIL", "ACID_TRAIL", "POISON_TRAIL", "OIL_TRAIL", "WATER_TRAIL", "GUNPOWDER_TRAIL", "FIRE_TRAIL", "LARPA_CHAOS_2", "RAINBOW_TRAIL");
+        // 拉帕类
+        add("LARPA", "BOUNCE_LARPA", "ORBIT_LARPA", "LARPA_CHAOS", "LARPA_DOWNWARDS", "LARPA_UPWARDS", "LARPA_CHAOS_2", "LARPA_DEATH");
+        // 染色类
+        add("COLOR", "COLOUR_RED", "COLOUR_ORANGE", "COLOUR_GREEN", "COLOUR_YELLOW", "LARPA_UPWARDS", "COLOUR_PURPLE", "COLOUR_BLUE", "COLOUR_RAINBOW", "COLOUR_INVIS");
+        // 普通抽取类
+        add("BURST", "BURST_2", "BURST_3", "BURST_4", "BURST_8", "BURST_X");
+        // 散射抽取类
+        add("SCATTER", "SCATTER_2", "SCATTER_3", "SCATTER_4");
+        // 阵型抽取类
+        add("SHAPE", "I_SHAPE", "Y_SHAPE", "T_SHAPE", "W_SHAPE", "CIRCLE_SHAPE", "PENTAGRAM_SHAPE");
+        // 材料环类
+        add("CIRCLE", "CIRCLE_FIRE", "CIRCLE_ACID", "CIRCLE_OIL", "CIRCLE_WATER");
+        // 材料液滴类
+        add("MATERIAL", "MATERIAL_WATER", "MATERIAL_OIL", "MATERIAL_BLOOD", "MATERIAL_ACID", "MATERIAL_CEMENT");
+        // 材料触类
+        add("TOUCH", "TOUCH_GOLD", "TOUCH_WATER", "TOUCH_OIL", "TOUCH_ALCOHOL", "TOUCH_PISS", "TOUCH_GRASS", "TOUCH_BLOOD", "TOUCH_SMOKE");
+        // 材料海类
+        add("SEA", "SEA_LAVA", "SEA_ALCOHOL", "SEA_OIL", "SEA_WATER", "SEA_SWAMP", "SEA_ACID", "SEA_ACID_GAS", "SEA_MIMIC");
+        // 陶笛音符类
+        add("OCARINA", "OCARINA_A", "OCARINA_B", "OCARINA_C", "OCARINA_D", "OCARINA_E", "OCARINA_F", "OCARINA_GSHARP", "OCARINA_A2");
+        // 康特勒琴音符类
+        add("KANTELE", "KANTELE_A", "KANTELE_D", "KANTELE_DIS", "KANTELE_E", "KANTELE_G");
+        // 随机法术类
+        add("RANDOM", "RANDOM_SPELL", "DRAW_RANDOM", "DRAW_RANDOM_X3", "DRAW_3_RANDOM", "RANDOM_PROJECTILE", "RANDOM_STATIC_PROJECTILE", "RANDOM_MODIFIER");
+        // 追加触发类
+        add$("ADD_TRIGGER", "ADD_TIMER", "ADD_DEATH_TRIGGER");
+        // 希腊字母类
+        add("SYMBOL", "ALPHA", "GAMMA", "TAU", "OMEGA", "MU", "PHI", "SIGMA", "ZETA");
+        // 一分多类
+        add("DIVIDE", "DIVIDE_2", "DIVIDE_3", "DIVIDE_4", "DIVIDE_10");
+        // 条件类
+        add("IF", "IF_ENEMY", "IF_PROJECTILE", "IF_HP", "IF_HALF", "IF_END", "IF_ELSE");
+        // 阵型复制类
+        add("SHOT", "I_SHOT", "Y_SHOT", "T_SHOT", "W_SHOT", "QUAD_SHOT", "PENTA_SHOT", "HEXA_SHOT");
+        // 置换术类
+        add("ALL", "ALL_NUKES", "ALL_DISCS", "ALL_ROCKETS", "ALL_DEATHCROSSES", "ALL_BLACKHOLES", "ALL_ACID");
     }
 }

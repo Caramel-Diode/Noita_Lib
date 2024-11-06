@@ -1,10 +1,10 @@
-main {
+:host > section {
     grid-template:
         "name icon" 30px
         "desc icon" auto
         ". icon" 14px
         "attr icon" auto
-        / auto minmax(60px, 1fr);
+        / auto minmax(80px, 1fr);
     min-width: 250px;
     min-height: 100px;
 }

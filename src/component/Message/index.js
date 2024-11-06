@@ -1,55 +1,62 @@
-/** @typedef {import("TYPE").MessageBackgroundId} MessageBackgroundId */
-/** @typedef {import("TYPE").MessagePresetId} MessagePresetId */
-/** @typedef {import("TYPE").Preset$[MessagePresetId]} MessagePresetContent */
 const Message = (() => {
     embed(`#db.js`);
-    MessageBackgroundData.init();
-    MessagePresetData.init();
-    const styleSheet = { base: gss(embed(`#base.css`)) };
+    MessageData.init();
+    const styleSheet = css(embed(`#base.css`));
     // 默认使用 important 样式
-    MessageBackgroundData.query("important").url.then(v => styleSheet.base.insertRule(`:host{--url:url("${v}")}`));
+    MessageData.backgrounds.important.then(url => styleSheet.insertRule(`:host{--url:url("${url}")}`));
 
     //prettier-ignore
-    for (const [id, data] of MessageBackgroundData.data_map) 
-        data.url.then(v => styleSheet.base.insertRule(String.raw`:host([message\.style="${id}"]){--url:url("${v}")}`));
+    for (const id in MessageData.backgrounds) // 根据背景ID设定9点图样式
+        MessageData.backgrounds[id].then(url => styleSheet.insertRule(String.raw`:host([message\.style="${id}"]){--url:url("${url}")}`));
+
     //prettier-ignore
-    for (const [id, data] of MessagePresetData.data_map) 
-        data.background.url.then(v => styleSheet.base.insertRule(String.raw`:host([message\.preset="${id}"]){--url:url("${v}")}`));
+    for (const [id, { background }] of MessageData.data) // 根据预设ID设定9点图样式
+        background.then(url => styleSheet.insertRule(String.raw`:host([message\.preset="${id}"]){--url:url("${url}")}`));
 
     return class HTMLNoitaMessageElement extends $class(Base, {
+        /** @type {$ValueOption<String>} 禁用显示模式 */
         displayMode: { name: "display", $default: "#" },
-        /** @type {$ValueOption<MessageBackgroundId>} */
+        /** @type {$ValueOption<String>} */
         messageStyle: { name: "message.style", $default: "important" },
-        /** @type {$ValueOption<MessagePresetContent>} */
-        messageContent: { name: "message.content", $default: "使用 message.content 属性设置或者直接在内部填充内容" },
-        /** @type {$ValueOption<MessagePresetId>} */
+        /** @type {$ValueOption<String>} */
+        messageContent: { name: "message.content", $default: "" },
+        /** @type {$ValueOption<String>} */
         messagePreset: { name: "message.preset" }
     }) {
-        /** @type {ShadowRoot} */ #shadowRoot = this.attachShadow({ mode: "closed" });
-
-        constructor(...param) {
+        /**
+         * @overload 自定义
+         * @param {String} style 样式
+         * @param {String} content 内容
+         */
+        /**
+         * @overload 预设
+         * @param {String} preset 预设方案
+         */
+        /**
+         * @param {String} [p1]
+         * @param {String} [p2]
+         */
+        constructor(p1, p2) {
             super();
-            if (param.length > 1) {
-                this.messageStyle = param[0];
-                this.messageContent = param[1];
-            } else if (param.length === 1) this.messagePreset = param[0];
+            if (p2) {
+                this.messageStyle = p1;
+                this.messageContent = p2;
+            } else if (p1) this.messagePreset = p1;
         }
 
         /** @param {Array<CSSStyleSheet>} [extraStyleSheets] 额外样式表 */
         [$symbols.initStyle](extraStyleSheets = []) {
-            extraStyleSheets.push(styleSheet.base);
+            extraStyleSheets.push(styleSheet);
             super[$symbols.initStyle](extraStyleSheets);
         }
 
+        /**
+         * @override
+         * @see Base#contentUpdate
+         */
         contentUpdate() {
-            const preset = this.messagePreset;
-            const presetData = MessagePresetData.query(this.messagePreset);
-            this.#shadowRoot.innerHTML = `<h1><slot>${presetData?.text ?? this.messageContent}</slot></h1>`;
+            this.shadowRoot.append(h.h1(h.slot(MessageData.data.get(this.messagePreset)?.text ?? this.messageContent ?? "内部未填充内容")));
             this[$symbols.initStyle]();
-        }
-
-        connectedCallback() {
-            this.contentUpdate();
         }
 
         //prettier-ignore

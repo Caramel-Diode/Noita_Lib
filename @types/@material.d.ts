@@ -1,4 +1,4 @@
-export type MaterialId =
+type MaterialId =
     | "air"
     | "fire"
     | "fire_blue"
@@ -469,10 +469,10 @@ export type MaterialId =
     | "fungal_shift_particle_fx";
 
 /** `🔤 材料标签` */
-export type MaterialTag = "[fire]" | "[hot]" | "[static]" | "[corrodible]" | "[alchemy]" | "[solid]" | "[earth]" | "[meltable_to_blood]" | "[meat]" | "[food]" | "[burnable]" | "[fungus]" | "[meltable_to_lava]" | "[matter_eater_ignore_list]" | "[rust]" | "[meltable_metal_generic]" | "[frozen]" | "[meltable_to_water]" | "[meltable_to_slime]" | "[meltable_to_acid]" | "[meltable_to_cold]" | "[meltable_to_radioactive]" | "[meltable_to_poison]" | "[box2d]" | "[cold]" | "[gold]" | "[gas]" | "[burnable_fast]" | "[vapour]" | "[regenerative_gas]" | "[liquid]" | "[freezable]" | "[water]" | "[liquid_common]" | "[chaotic_transmutation]" | "[mimic_liquid]" | "[magic]" | "[impure]" | "[fire_strong]" | "[evaporable]" | "[magic_liquid]" | "[magic_faster]" | "[regenerative]" | "[magic_polymorph]" | "[radioactive]" | "[blood]" | "[slime]" | "[soluble]" | "[sand_ground]" | "[evaporable_fast]" | "[evaporable_by_fire]" | "[evaporable_custom]" | "[molten]" | "[molten_metal]" | "[meltable_to_lava_fast]" | "[grows_grass]" | "[grows_fungus]" | "[meltable_by_fire]" | "[snow]" | "[meltable]" | "[sand_metal]" | "[meltable_metal]" | "[sand_other]" | "[NO_FUNGAL_SHIFT]" | "[plant]" | "[requires_air]" | "[acid]" | "[fire_lava]" | "[lava]" | "[sunbaby_ignore_list]" | "[rust_box2d]" | "[meltable_plastic]" | "[rust_oxide]" | "[indestructible]" | "[hax]" | "[ice]";
+type MaterialTag = "[fire]" | "[hot]" | "[static]" | "[corrodible]" | "[alchemy]" | "[solid]" | "[earth]" | "[meltable_to_blood]" | "[meat]" | "[food]" | "[burnable]" | "[fungus]" | "[meltable_to_lava]" | "[matter_eater_ignore_list]" | "[rust]" | "[meltable_metal_generic]" | "[frozen]" | "[meltable_to_water]" | "[meltable_to_slime]" | "[meltable_to_acid]" | "[meltable_to_cold]" | "[meltable_to_radioactive]" | "[meltable_to_poison]" | "[box2d]" | "[cold]" | "[gold]" | "[gas]" | "[burnable_fast]" | "[vapour]" | "[regenerative_gas]" | "[liquid]" | "[freezable]" | "[water]" | "[liquid_common]" | "[chaotic_transmutation]" | "[mimic_liquid]" | "[magic]" | "[impure]" | "[fire_strong]" | "[evaporable]" | "[magic_liquid]" | "[magic_faster]" | "[regenerative]" | "[magic_polymorph]" | "[radioactive]" | "[blood]" | "[slime]" | "[soluble]" | "[sand_ground]" | "[evaporable_fast]" | "[evaporable_by_fire]" | "[evaporable_custom]" | "[molten]" | "[molten_metal]" | "[meltable_to_lava_fast]" | "[grows_grass]" | "[grows_fungus]" | "[meltable_by_fire]" | "[snow]" | "[meltable]" | "[sand_metal]" | "[meltable_metal]" | "[sand_other]" | "[NO_FUNGAL_SHIFT]" | "[plant]" | "[requires_air]" | "[acid]" | "[fire_lava]" | "[lava]" | "[sunbaby_ignore_list]" | "[rust_box2d]" | "[meltable_plastic]" | "[rust_oxide]" | "[indestructible]" | "[hax]" | "[ice]";
 
 /** `🔤 材料类型` */
-export type MaterialType = "fire" | "liquid" | "solid" | "gas";
+type MaterialType = "fire" | "liquid" | "solid" | "gas";
 
 /** 材料数据 */
 export type MaterialData = {
@@ -531,7 +531,9 @@ export namespace MaterialData {
          * * `asOutput` 作为产物
          * * `asCatalyzer` 作为催化剂
          */
-        getRelationship: (keyword: String | MaterialTag) => "asInput" | "asOutput" | "asCatalyzer" | undefined;
+        getRelationship: (keyword: MaterialId | MaterialTag) => "asInput" | "asOutput" | "asCatalyzer" | undefined;
+        getRelationshipById: (id: MaterialId) => "asInput" | "asOutput" | "asCatalyzer" | undefined;
+        getRelationshipByTag: (tag: MaterialTag) => "asInput" | "asOutput" | "asCatalyzer" | undefined;
         /**
          * @param agent 代理材料ID (用于反应中的不定材料的确定)
          * @param format 格式
@@ -540,8 +542,17 @@ export namespace MaterialData {
     };
 }
 
+type HTMLNoitaMaterialElement = HTMLElement & {
+    contentUpdate: () => never;
+    panelContentSwitchTo: (index: Number) => never;
+    displayMode: "icon" | "panel" | "reaction";
+    materialId: MaterialId;
+    materialTag: MaterialTag;
+    materialInherit: MaterialId;
+};
+
 export type Class = {
-    new (): HTMLElement & {};
+    new (option?: { display?: "icon" | "panel" | "reaction"; id?: MaterialId; tag?: MaterialTag }): HTMLNoitaMaterialElement;
     readonly datas: Array<MaterialData>;
     readonly reactionDatas: Array<MaterialData.ReactionData>;
     queryById: (id: String) => MaterialData;

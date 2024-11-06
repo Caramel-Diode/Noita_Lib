@@ -1,9 +1,12 @@
-:host > main {
+:host > section {
     place-content: start;
     place-items: start;
     gap: 10px;
+    min-width: 400px;
+    min-height: 150px;
 }
 math {
+    text-wrap: nowrap;
     font-family: "fira code", "HarmonyOS Sans SC";
     color: #fff;
 }

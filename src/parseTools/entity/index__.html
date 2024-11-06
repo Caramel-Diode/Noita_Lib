@@ -1,0 +1,99 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Test</title>
+    <style desc="base-style">
+        :root {
+            background: #1F1F1F;
+            color: #eeeeee;
+        }
+
+        * {
+            padding: 0;
+            margin: 0;
+            box-sizing: border-box;
+            image-rendering: pixelated;
+        }
+
+        body {
+            display: grid;
+            place-items: center;
+            place-content: center;
+            height: 100vh;
+            width: 100vw;
+            gap: 2px;
+        }
+
+        #animations {
+            place-content: center;
+            display: flex;
+            flex-wrap: wrap;
+            width: 600px;
+            gap: 5px;
+        }
+
+        .animation-viewport {
+            display: grid;
+            place-items: center;
+            height: var(--h);
+            width: var(--w);
+            overflow: hidden;
+            scale: 3;
+            grid-area: img;
+        }
+
+        .animation-viewport>canvas {
+            animation-name: ___;
+            animation-timing-function: steps(var(--n));
+            animation-duration: calc(var(--n) * 180ms);
+            animation-iteration-count: infinite;
+            animation-play-state: running;
+        }
+
+        label {
+            display: grid;
+            font-size: 10px;
+            place-items: center;
+            place-content: center;
+            grid-template:
+                "img" 80px
+                "text" 15px
+                /80px
+            ;
+            width: 80px;
+            height: 95px;
+            border: 1px solid #555555;
+            border-radius: 5px;
+            overflow: hidden;
+        }
+
+        label>span {
+            display: block;
+            width: 100%;
+            text-align: center;
+            grid-area: text;
+            background-color: #00000080;
+        }
+
+        @keyframes ___ {
+            100% {
+                translate: -100% 0;
+            }
+        }
+    </style>
+    <script src="/public/damageData.js"></script>
+    <!-- <script src="entityComponents.js"></script> -->
+    <!-- <script src="animation.js"></script> -->
+    <script src="xml.list.js"></script>
+    <script src="script.js"></script>
+</head>
+
+<body>
+    <div id="animations"></div>
+    <div id="components"></div>
+</body>
+
+</html>

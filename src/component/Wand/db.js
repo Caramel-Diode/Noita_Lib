@@ -1,10 +1,14 @@
 class Icon extends $icon(15, "魔杖") {
-    static img = asyncImg(embed(`#icon.png`));
-    /** @typedef {{index:Number,name:String,asyncUrl:Promise<String>,length:Number,frame:Number}} IconInfo */
-    /** @type {Map<String,IconInfo>}  */ static #dataMap = new Map();
-    /** @type {Number} 辅助变量 用于记录法杖图标起始位置 */ static #currentOrigin = 0;
-    /** @type {Number} 辅助变量 用于记录法杖图标索引 */ static #currentIndex = 1;
+    /** @typedef {{index:Number,name:String,url:String,length:Number,frame:Number}} IconInfo */
+    /** @type {Map<String,IconInfo>}  */
+    static #dataMap = new Map();
+    /** @type {Number} 辅助变量 用于记录法杖图标索引 */
+    static #currentIndex = 1;
     #data;
+
+    /** @type {Promise} */
+    static urls;
+
     constructor(name) {
         super(); //后续需要改高度 魔杖高度不固定
         this.#data = Icon.#dataMap.get(name);
@@ -15,8 +19,11 @@ class Icon extends $icon(15, "魔杖") {
         return this.#data?.name;
     }
 
+    /** @type {Promise<String>} */
     get asyncUrl() {
-        return this.#data?.asyncUrl;
+        const { promise, resolve } = Promise.withResolvers();
+        Icon.urls.then(urls => resolve(urls[this.#data?.index - 1]));
+        return promise;
     }
 
     get index() {
@@ -33,7 +40,7 @@ class Icon extends $icon(15, "魔杖") {
 
     connectedCallback() {
         if (!this.#data) {
-            this.#data = Icon.#dataMap.get(this.getAttribute("wand.icon"));
+            this.#data = Icon.#dataMap.get(this.dataset.id);
             this.height = this.#data.length / this.#data.frame;
         }
         if (this.#data.frame > 1) {
@@ -43,8 +50,8 @@ class Icon extends $icon(15, "魔杖") {
             this.style.transition = "unset";
             this.#play();
         }
-        this.alt = this.#data.name;
-        this.src = this.#data.asyncUrl;
+        this.alt = this.name;
+        this.src = this.asyncUrl;
     }
 
     #play() {
@@ -71,20 +78,44 @@ class Icon extends $icon(15, "魔杖") {
      * @param {Number} [frame] 动画帧数 默认1
      */
     static cache(name = "#" + this.#currentIndex, length, frame = 1) {
-        const origin = this.#currentOrigin; // 你猜我为什么要搁着单独存一下起点位置
-        const asyncUrl = new Promise(async resolve => {
-            const canvas = createElement("canvas");
-            canvas.height = length;
-            canvas.width = 15;
-            const ctx = canvas.getContext("2d");
-            ctx.rotate(-Math.PI / 2);
-            ctx.drawImage(await this.img, origin, 0, length, 15, -length, 0, length, 15);
-            canvas.toBlob(blob => resolve(URL.createObjectURL(blob)), "image/webp", 1);
-        });
-        this.#dataMap.set(name, freeze({ asyncUrl, index: this.#currentIndex, name, length, frame }));
-        this.#currentOrigin += length;
+        this.#dataMap.set(name, { index: this.#currentIndex, name, length, frame });
         this.#currentIndex++;
         return name;
+    }
+
+    static async init() {
+        const { promise, resolve } = Promise.withResolvers();
+        this.urls = promise;
+        if (await SpriteSpliter.hasCache) return resolve(await SpriteSpliter.get("Noita:WandIcons"));
+        const values = [...this.#dataMap.values()];
+        const workerFn = async () => {
+            addEventListener("message", async ({ data: buffer }) => {
+                const lengths = new Uint8Array(buffer);
+                const amount = lengths.length;
+                /** @type {Array<Promise<Blob>>} */
+                const blobs = new Array(amount);
+                const bitmap = await createImageBitmap(await (await fetch(embed(`#icon.png`))).blob());
+                const deg = -Math.PI / 2;
+                /** @type {ImageEncodeOptions} */
+                const imageEncodeOptions = { type: "image/webp", quality: 1 };
+                for (let i = 0, origin = 0; i < amount; i++) {
+                    const length = lengths[i];
+                    const canvas = new OffscreenCanvas(15, length);
+                    const ctx = canvas.getContext("2d");
+                    ctx.rotate(-Math.PI / 2);
+                    ctx.drawImage(bitmap, origin, 0, length, 15, -length, 0, length, 15);
+                    blobs[i] = canvas.convertToBlob(imageEncodeOptions);
+                    origin += length;
+                }
+                const reader = new FileReaderSync();
+                postMessage((await Promise.all(blobs)).map(blob => reader.readAsDataURL(blob)));
+                bitmap.close();
+                close();
+            });
+        };
+        const lengths = Uint8Array.from([...this.#dataMap.values()].map(e => e.length));
+        const { buffer } = lengths;
+        resolve(await new SpriteSpliter("WandIcons", workerFn, [buffer, [buffer]]).results);
     }
 }
 
@@ -128,18 +159,19 @@ class WandData {
         }
 
         static init() {
-            this.#dataList = toChunks(embed(`#template.match.data.js`), 7).map(e => freeze(new this(e)));
+            this.#dataList = [...embed(`#template.match.data.js`).values().chunks(7)].map(e => freeze(new this(e)));
+            // this.#dataList = toChunks(embed(`#template.match.data.js`), 7).map(e => freeze(new this(e)));
         }
         /** 通过属性获取部分属性 */
         static getInfo = (() => {
             /**
              * 范围值取中位数
-             * @param {{min:Number,max:Number}|Number} value
+             * @param {RangeValue|Number} value
              * @returns {Number}
              */
-            const median = value => (typeof value === "number" ? value : (value.min + value.max) / 2);
-            const clamp = math_.clamp;
-            const random = math_.random;
+            const median = value => (typeof value === "number" ? value : value.median);
+            const clamp = math.clamp;
+            const random = math.random;
             /**
              * @param {WandData} data
              * @returns {WandData.MatchData}
@@ -221,7 +253,7 @@ class WandData {
     };
 
     /** 解析法术配方  */
-    static #parseRecipe = (() => {
+    static parseRecipe = (() => {
         //prettier-ignore
         embed(`#expParser.js`)
         return parse;
@@ -274,8 +306,8 @@ class WandData {
             /** @type {RangeValue} 法力上限 */
             this.manaMax
         ] = data;
-        /** @type {Array<SpellRecipeItem>} 始终施放 `法术配方表达式` */ this.staticSpells = WandData.#parseRecipe(data[11]);
-        /** @type {Array<SpellRecipeItem>} 活动法术 `法术配方表达式` */ this.dynamicSpells = WandData.#parseRecipe(data[12]);
+        /** @type {Array<SpellRecipeItem>} 始终施放 `法术配方表达式` */ this.staticSpells = WandData.parseRecipe(data[11]);
+        /** @type {Array<SpellRecipeItem>} 活动法术 `法术配方表达式` */ this.dynamicSpells = WandData.parseRecipe(data[12]);
         // 决定法杖图标
         const iconName = data[1];
         if (iconName === "AUTO") {
@@ -288,5 +320,6 @@ class WandData {
     static init() {
         this.MatchData.init();
         this.PresetTemplate.init();
+        Icon.init();
     }
 }

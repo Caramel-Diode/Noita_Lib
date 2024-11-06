@@ -1,115 +1,154 @@
-main {
+:host > section {
+    position: relative;
+    /* prettier-ignore */
     grid-template:
         "name icon" 30px
         ". icon" 10px
         "attr icon" auto
         ". icon" 10px
         "solts solts" auto
+        "named-solts named-solts" auto
         / auto minmax(90px, 1fr);
     max-width: 600px;
-    > img {
-        --zoom: 6;
-        width: 15px;
-        max-height: 30px;
-    }
 }
 
+/* 简易面板布局 */
+:host > .simple {
+    /* prettier-ignore */
+    grid-template:
+        "icon attr" 90px
+        "solts solts" auto
+        "named-solts named-solts" auto
+        / calc(6px * var(--length, 21)) auto;
+    max-width: 1500px;
+    overflow: visible;
+}
+
+/* 简易面板中命名法术法术序列的名称需要小一些 */
+:host > .simple h2,
+:host > .simple h2 > ::slotted(data) {
+    line-height: 22px;
+    --font-size: 20px;
+}
+
+:host > section.simple > img {
+    rotate: 90deg;
+}
+
+:host > section > img {
+    --zoom: 6;
+    width: 15px;
+    max-height: 30px;
+}
+
+:host > .simple > .attrs {
+    place-self: center start;
+}
+
+:host > .simple img.attr-icon, /* 简易面板不显示属性图标 */
+:host > .simple > .attrs th:nth-child(1) {
+    display: none;
+}
+
+:host > .simple .dynamic-spells {
+    margin-top: 6px;
+    max-width: 1500px;
+}
+
+:host > section > .prompts {
+    top: -12px;
+    left: -22px;
+    position: absolute;
+    width: 33px;
+    height: 110px;
+    display: flex;
+    flex-direction: column-reverse;
+    place-content: space-between;
+}
+.prompts > i {
+    zoom: 3;
+}
 .static-spells,
 .dynamic-spells {
     place-content: start;
     gap: 5px;
 }
 
-.dynamic-spells {
-    grid-area: solts;
+noita-inventory {
     max-width: 550px;
     flex-wrap: wrap;
 }
 
-:hover noita-spell::part(tape) {
-    animation-play-state: paused;
+h2,
+h2 > ::slotted(data) {
+    display: flex;
+    gap: 10px;
+    color: #cfcfcf;
+    line-height: 26px;
+    --font-size: 24px;
+    --font-weight: 300;
+    margin-bottom: 3px;
 }
 
-li {
-    display: grid;
-    place-content: center;
-    place-items: center;
-    height: var(--size);
-    width: var(--size);
+.solts {
+    grid-area: solts;
+}
+
+.named-solts {
+    grid-area: named-solts;
+    display: flex;
+    flex-direction: column;
+    gap: 8px;
+    margin-top: 6px;
 }
 
 .static-spells > li {
-    --size: 40px;
-}
-
-.dynamic-spells > li {
-    --size: 50px;
-    --c: #3d302bda;
-    /* 边框线渐变基本参数 0 */
-    --0: #0000 0;
-    /* 边框线渐变基本参数 1 */
-    --1: var(--c) 0;
-    /* 边框线渐变基本参数 2 */
-    --2: #794738 0;
-    /* 边框线渐变基本参数 3 */
-    --3: #582b28 0;
-    /* 边框线渐变基本参数 4 */
-    --4: #5f302c 0;
-    /* 边框线(垂直方向) 宽高参数 */
-    --h: left/100% 6% no-repeat;
-    /* 边框线(水平方向) 宽高参数 */
-    --v: top/6% 100% no-repeat;
-    /* 左/右 边框线渐变参数 */
-    --S: linear-gradient(180deg, var(--0) 6%, var(--2) 12%, var(--4) 22%, var(--1) 28%, var(--2) 34%, var(--4) 38%, var(--1) 44%, var(--2) 50%, var(--4) 56%, var(--1) 62%, var(--2) 66%, var(--4) 72%, var(--1) 78%, var(--2) 84%, var(--3) 94%, var(--0) 100%);
-    /* prettier-ignore */
-    background: /* 法术槽背景 */
-        /* 上侧边框线 */
-        linear-gradient(90deg, var(--0) 6%, var(--2) 22%, var(--1) 28%, var(--2) 38%, var(--1) 44%, var(--2) 56%, var(--1) 62%, var(--2) 72%, var(--1) 78%, var(--2) 94%, var(--0) 100%) top var(--h),
-        /* 下侧边框线 */
-        linear-gradient(90deg, var(--0) 6%, var(--3) 22%, var(--1) 28%, var(--3) 38%, var(--1) 44%, var(--3) 56%, var(--1) 62%, var(--3) 72%, var(--1) 78%, var(--3) 94%, var(--0) 100%) bottom var(--h),
-        /* 左侧边框线 */
-        var(--S) left var(--v),
-        /* 右侧边框线 */
-        var(--S) right var(--v),
-        /* 中心底色 */
-        linear-gradient(var(--c), var(--c)) center/ 88% 88% no-repeat;
+    position: relative;
+    display: grid;
+    place-content: center;
+    place-items: center;
+    height: 40px;
+    width: 40px;
 }
 
 /* 可选位置 */
-.optional > noita-spell {
+noita-inventory::part(optional-spell),
+[part="optional-spell"] {
     animation: fade 0.7s ease-out infinite alternate;
 }
 
-td {
-    &.shuffle {
-        color: var(--attr-color-shuffle, var(--attr-color-default));
-    }
-    &.draw {
-        color: var(--attr-color-draw, var(--attr-color-default));
-    }
-    &.fire-rate-wait {
-        color: var(--attr-color-fire-rate-wait, var(--attr-color-default));
-    }
-    &.reload-time {
-        color: var(--attr-color-reload-time, var(--attr-color-default));
-    }
-    &.mana-max {
-        color: var(--attr-color-mana-max, var(--attr-color-default));
-    }
-    &.mana-charge-speed {
-        color: var(--attr-color-mana-charge-speed, var(--attr-color-default));
-    }
-    &.capacity {
-        color: var(--attr-color-capacity, var(--attr-color-default));
-    }
-    &.spread-degrees {
-        color: var(--attr-color-spread-degrees, var(--attr-color-default));
-    }
+/* 法力不足时的警告图标(仅在简易模式展示) */
+.simple noita-inventory::part(warn-icon) {
+    position: absolute;
+    top: -8px;
 }
 
-@keyframes fade {
-    100% {
-        opacity: 0.5;
-        filter: grayscale(1);
-    }
+/* 隐藏空白槽位 */
+noita-inventory::part(inventory-slot):empty {
+    display: none;
+}
+
+.shuffle > td {
+    color: var(--attr-color-shuffle, var(--attr-color-default));
+}
+.draw > td {
+    color: var(--attr-color-draw, var(--attr-color-default));
+}
+.fire-rate-wait > td {
+    color: var(--attr-color-fire-rate-wait, var(--attr-color-default));
+}
+.reload-time > td {
+    color: var(--attr-color-reload-time, var(--attr-color-default));
+}
+.mana-max > td {
+    color: var(--attr-color-mana-max, var(--attr-color-default));
+}
+.mana-charge-speed > td {
+    color: var(--attr-color-mana-charge-speed, var(--attr-color-default));
+}
+.capacity > td {
+    color: var(--attr-color-capacity, var(--attr-color-default));
+}
+.spread-degrees > td {
+    color: var(--attr-color-spread-degrees, var(--attr-color-default));
 }

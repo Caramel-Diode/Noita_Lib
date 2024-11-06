@@ -4,15 +4,12 @@ class HTMLNoitaInputRangeElement extends $class(HTMLElement, {
     /** @type {$ValueOption<"100">} */
     max: { name: "max", $default: "100" }
 }) {
-    static #styleSheet = [styleSheet.base, gss(embed(`#input-range.css`))];
+    static #styleSheet = [styleSheet.base, css(embed(`#input-range.css`))];
     #shadowRoot = this.attachShadow({ mode: "closed" });
     /** @type {HTMLButtonElement} 滑块 */
     #thumb = h.button({ class: "thumb", tabindex: -114514 });
     /** @type {HTMLInputElement} 内置input:range */
-    #range = h.input({ type: "range" });
-    constructor() {
-        super();
-    }
+    #range = h.inputRange();
 
     connectedCallback() {
         this.role = "slider"; //无障碍: 滑动条
@@ -37,8 +34,8 @@ class HTMLNoitaInputRangeElement extends $class(HTMLElement, {
         this.#shadowRoot.append(thumb, track, inputRange);
         this.#shadowRoot.adoptedStyleSheets = HTMLNoitaInputRangeElement.#styleSheet;
         inputRange.min = 0;
-        inputRange.max = this.offsetWidth - this.offsetHeight;
-        this.title = this.value;
+        addEventListener("load", () => (inputRange.max = this.offsetWidth - this.offsetHeight));
+        this.title = this.value ?? 0;
     }
 
     get value() {
@@ -46,12 +43,13 @@ class HTMLNoitaInputRangeElement extends $class(HTMLElement, {
     }
 
     set value(value) {
-        this.#range.value = (Number(value) * this.#range.max) / (Number(this.max) - Number(this.min));
+        this.#range.value = (+value * this.#range.max) / (+this.max - +this.min);
         this.#thumb.style.left = this.#range.value + "px";
     }
 
-    //prettier-ignore
-    get valueAsNumber() { return Number(this.value); }
+    get valueAsNumber() {
+        return +this.value;
+    }
 }
 
 customElements.define("noita-input-range", freeze(HTMLNoitaInputRangeElement));

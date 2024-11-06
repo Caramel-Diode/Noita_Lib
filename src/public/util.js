@@ -1,74 +1,49 @@
-const DOMContentLoaded = new Promise((resolve, reject) => window.addEventListener("DOMContentLoaded", resolve));
+const DOMContentLoaded = new Promise(resolve => window.addEventListener("DOMContentLoaded", resolve, { once: true }));
 /** @type {typeof document.createElement} */
 const createElement = document.createElement.bind(document);
 /** @type {typeof document.createElementNS} */
 const createElementNS = document.createElementNS.bind(document);
-const freeze = Object.freeze;
-// /**
-//  * 从html字符串生成元素
-//  * * 带有id 的元素可从返回值的成员中获取 成员名为`#id`
-//  * * 允许插入Node类型
-//  * * `on-event` 属性绑定事件
-//  * * `style` 属性可用对象形式样式
-//  */
-// const $html = (() => {
-//     const parser = new DOMParser();
-//     /** @returns {Node} */
-//     return (strings, ...values) => {
-//         const valueMap = {};
-//         for (let i = 0; i < values.length; i++) {
-//             const value = values[i];
-//             if (typeof value === "object") {
-//                 valueMap[i] = value;
-//                 if (value instanceof Node || Array.isArray(value)) values[i] = `<!--${i}-->`;
-//                 else values[i] = i;
-//             }
-//         }
-//         const doc = parser.parseFromString(`<template>${String.raw(strings, ...values)}</template>`, "text/html");
+const { freeze } = Object;
 
-//         /** @type {DocumentFragment} */
-//         const content = document.adoptNode(doc.head.children[0].content);
-//         /** @type {Node} */
-//         let root;
-//         // 大于一个元素时返回文档片段
-//         if (content.childNodes.length > 1) root = content;
-//         else root = content.childNodes[0];
-//         const iterator = document.createNodeIterator(root);
-//         let node;
-//         while ((node = iterator.nextNode()))
-//             switch (node.nodeType) {
-//                 case node.COMMENT_NODE:
-//                     const target = valueMap[node.data];
-//                     if (target) {
-//                         if (Array.isArray(target)) node.replaceWith(...target);
-//                         else node.replaceWith(target);
-//                     }
-//                     break;
-//                 case node.ELEMENT_NODE:
-//                     if (node.id) {
-//                         root["#" + node.id] = node;
-//                         node.toggleAttribute("id");
-//                     }
-//                     if (node.hasAttribute("on-event")) {
-//                         const listener = valueMap[node.getAttribute("on-event")];
-//                         if (listener) util.addFeatureTo(node, listener);
-//                         node.toggleAttribute("on-event");
-//                     }
-//                     if (node.hasAttribute("style")) {
-//                         const style = valueMap[node.getAttribute("style")];
-//                         if (style) {
-//                             for (const key in style) {
-//                                 const value = style[key];
-//                                 if (key.startsWith("--")) node.style.setProperty(key, value);
-//                                 else node.style[key] = value;
-//                             }
-//                         }
-//                     }
-//             }
-
-//         return root;
-//     };
-// })();
+/**
+ * ### 范围数组生成函数
+ * ```js
+ * for (const i of rang(from, to, step)) statement;
+ * ```
+ * @overload
+ * @param {Number} from
+ * @param {Number} to
+ * @param {Number} [step]
+ * @returns {Array<Number>}
+ */
+/**
+ * ### 范围数组生成函数
+ * ```js
+ * for (const i of rang(length)) statement;
+ * ```
+ * @overload
+ * @param {Number} length
+ * @returns {Array<Number>}
+ */
+/**
+ * ### 范围数组生成函数
+ */
+const range = (a, b, step) => {
+    if (b === void 0) {
+        b = a;
+        a = 0;
+    }
+    if (a > b) {
+        step ??= -1;
+        if (step >= 0) throw "step should be negative.";
+    } else if (b > a) {
+        step ??= 1;
+        if (step <= 0) throw "step should be positive.";
+    } else return [];
+    const array = new Array(Math.floor((b - a) / step));
+    for (let i = 0; i < array.length; i++, a += step) array[i] = a;
+    return array;
+};
 
 /**
  * ### 数组分块
@@ -93,130 +68,175 @@ const toChunks = (array, size) => {
 
 /**
  * 将数字转为8位 bit 数组
+ * @callback to8Bits
  * @param {Number} num
  * @param {Boolean} toBoolean
  * @returns {[0|1, 0|1, 0|1, 0|1, 0|1, 0|1, 0|1, 0|1]}
  */
+/**
+ * 将数字转为16位 bit 数组
+ * @callback to16Bits
+ * @param {Number} num
+ * @param {Boolean} toBoolean
+ * @returns {[0|1, 0|1, 0|1, 0|1, 0|1, 0|1, 0|1, 0|1, 0|1, 0|1, 0|1, 0|1, 0|1, 0|1, 0|1, 0|1]}
+ */
+/**
+ * 将数字转为32位 bit 数组
+ * @callback to32Bits
+ * @param {Number} num
+ * @param {Boolean} toBoolean
+ * @returns {[0|1, 0|1, 0|1, 0|1, 0|1, 0|1, 0|1, 0|1, 0|1, 0|1, 0|1, 0|1, 0|1, 0|1, 0|1, 0|1, 0|1, 0|1, 0|1, 0|1, 0|1, 0|1, 0|1, 0|1, 0|1, 0|1, 0|1, 0|1, 0|1, 0|1, 0|1, 0|1]}
+ */
+
+/**
+ * @type {to8Bits & {16: to16Bits, 32: to32Bits}}
+ */
 const toBits = (num, toBoolean = false) => {
-    const bits = [];
-    if (toBoolean) {
-        for (let i = 7; i >= 0; i--) bits.unshift((num >> i) & 1) === 1;
-    } else {
-        for (let i = 7; i >= 0; i--) bits.unshift((num >> i) & 1);
-    }
+    const bits = new Array(8);
+    if (toBoolean) for (let i = 7; i >= 0; i--) bits[i] = ((num >> i) & 1) === 1;
+    else for (let i = 7; i >= 0; i--) bits[i] = (num >> i) & 1;
+    return bits;
+};
+
+toBits[16] = (num, toBoolean = false) => {
+    const bits = new Array(16);
+    if (toBoolean) for (let i = 15; i >= 0; i--) bits[i] = ((num >> i) & 1) === 1;
+    else for (let i = 15; i >= 0; i--) bits[i] = (num >> i) & 1;
+    return bits;
+};
+
+toBits[32] = (num, toBoolean = false) => {
+    const bits = new Array(32);
+    if (toBoolean) for (let i = 31; i >= 0; i--) bits[i] = ((num >> i) & 1) === 1;
+    else for (let i = 31; i >= 0; i--) bits[i] = (num >> i) & 1;
     return bits;
 };
 
 /** `🔧 工具包` */
 const util = {
-    /**
-     * 将图像中的白色像素切换为指定颜色
-     * @param {ImageData} imageData
-     * @param {String} hexColor_str 16进制色值
-     */
-    setImageDataColor: (imageData, hexColor_str) => {
-        console.log(hexColor_str);
-        const hexColor_num = parseInt(hexColor_str, 16);
-        const R = hexColor_num & 0xff,
-            G = (hexColor_num >> 8) & 0xff,
-            B = (hexColor_num >> 16) & 0xff,
-            A = (hexColor_num >> 24) & 0xff;
-        for (let i = 0; i < imageData.data.length; i += 4) {
-            if (imageData.data[i] !== 0) {
-                imageData.data[i] = R;
-                imageData.data[i + 1] = G;
-                imageData.data[i + 2] = B;
-                imageData.data[i + 3] = A;
-            }
-        }
-    },
-    /**
-     * 修改指定像素颜色
-     * @param {ImageData} imageData 图像数据
-     * @param {Number} x X坐标
-     * @param {Number} y Y坐标
-     * @param {String} hexColor_str 16进制色值
-     */
-    setImageDataPixelColor: (imageData, x, y, hexColor_str) => {
-        const colorDataIndex = imageData.width * 4 * y + 4 * x;
-        const hexColor_num = parseInt(hexColor_str, 16);
-        imageData.data[colorDataIndex] = hexColor_num & 0xff; //R
-        imageData.data[colorDataIndex + 1] = (hexColor_num >> 8) & 0xff; //G
-        imageData.data[colorDataIndex + 2] = (hexColor_num >> 16) & 0xff; //B
-        imageData.data[colorDataIndex + 3] = (hexColor_num >> 24) & 0xff; //A
-    },
     /** 解析相关工具 */
     parse: {
         errRestult: Object.freeze([]),
         /** 🏷️ 令牌类 */
-        Token: class {
-            static logData = {
-                tokens: [],
-                main: [],
-                styles: [],
-                baseStyle: "border-radius: 2px;padding: 1px 1px;line-height: 20px;",
-                init() {
-                    this.tokens = [];
-                    this.main = [];
-                    this.styles = [];
+        Token: class Token {
+            /** 令牌类型类 */
+            static Enum = class Enum {
+                /**
+                 * @param {String} id
+                 * @param {String} [color] 前景色
+                 * @param {String} [bgColor] 背景色
+                 * @param {Number} [fontWeight] 字重
+                 * @param {"number"|"string"} [type] 类型
+                 * @param {String|Number|undefined} [data] 默认值
+                 * @param {Boolean} [needBlank]
+                 */
+                constructor(id, color = "#fff", bgColor = "#0000", fontWeight = 400, type = "string", needBlank = false, data) {
+                    this.id = id;
+                    this.type = type;
+                    this.style = `color:${color};background:${bgColor};font-weight:${fontWeight};`;
+                    this.needBlank = needBlank;
+                    this.data = data;
                 }
             };
-            static log() {
-                console.debug(this.logData.main.join(""), ...this.logData.styles);
-                console.table(this.logData.tokens, ["type", "index", "data"]);
-            }
-            /** @type { String } */
-            type = "";
-            /** @type { String|Number } */
-            data = "";
-            /** @type { Array < String >} */
-            #tempData = [];
-            /** @type { String } */
-            index = -1;
-            /** @type { Object } */
-            #enum;
-            finish() {
-                this.constructor.logData.tokens.push(this);
-                if (this.#tempData.length > 0) {
-                    let tempData = this.#tempData.join("");
-                    if (this.#enum.type === "number") {
-                        this.data = Number(tempData);
-                    } else {
-                        this.data = tempData;
+            /**
+             * @param {Array<Token>} tokens
+             */
+            static log(tokens) {
+                const baseStyle = "border-radius:2px;padding:1px 1px;line-height:20px;";
+                const texts = [],
+                    styles = [];
+                for (let i = 0; i < tokens.length; i++) {
+                    const { text, style, needBlank } = tokens[i].logData;
+                    if (needBlank) {
+                        texts.push("%c ");
+                        styles.push(baseStyle);
                     }
-                    this.#tempData = [];
+                    texts.push("%c", text);
+                    styles.push(baseStyle + style);
                 }
-                const logData = this.constructor.logData;
-                if (this.#enum.needBlank) {
-                    logData.main.push("%c ");
-                    logData.styles.push("line-height: 20px;");
-                }
-                logData.main.push(`%c${this.data}`);
-                logData.styles.push(`${logData.baseStyle}color:${this.#enum.color};font-weight:${this.#enum.fontWeight};background-color:${this.#enum.bgColor};`);
-            }
-            push(char) {
-                this.#tempData.push(char);
+                console.log(texts.join(""), ...styles);
+                console.table(tokens, ["type", "index", "data"]);
             }
 
-            constructor(tokenEnum, index) {
+            /** @type {String|Number} */
+            data = "";
+            /** @type {Array<String>} */
+            #cache;
+            /** @type {typeof Token.Enum.prototype} */
+            #enum;
+
+            get logData() {
+                return {
+                    text: this.data,
+                    style: this.#enum.style,
+                    needBlank: this.#enum.needBlank
+                };
+            }
+
+            /** @returns {String} */
+            get type() {
+                return this.#enum.id;
+            }
+
+            finish() {
+                const temp = this.#cache.join("");
+                if (this.#enum.type === "number") this.data = +temp;
+                else this.data = temp;
+                this.#cache = null;
+                return this;
+            }
+
+            /**
+             * @param {String} char
+             */
+            push(char) {
+                this.#cache.push(char);
+                return this;
+            }
+
+            constructor(tokenEnum, index = -1) {
                 if (tokenEnum) {
                     this.#enum = tokenEnum;
-                    this.type = tokenEnum.id;
-                    if (tokenEnum.data) {
-                        this.data = tokenEnum.data;
-                        this.finish();
-                    }
+                    if (tokenEnum.data) this.data = tokenEnum.data;
+                    else this.#cache = [];
                 }
-                if (index !== undefined) {
-                    this.index = index;
-                }
+                this.index = index;
             }
-        }
+        },
+        /** 检查字符是否为空白符
+         * ```javascript
+         * /[\s]/
+         * ```
+         * @type {(char:String) => Boolean}
+         */
+        isBlank: Set.prototype.has.bind(new Set("\r\n\r\t\v 　")),
+        /** 检查字符是数字构成成分
+         * ```javascript
+         * /[0-9+-]/
+         * ```
+         * @type {(char:String) => Boolean}
+         */
+        isNumberPart: Set.prototype.has.bind(new Set("0123456789+-")),
+        /** 检查字符是否为常规字符
+         * ```javascript
+         * /[a-zA-Z0-9_]/
+         * ```
+         * @type {(char:String) => Boolean}
+         */
+        isWordPart: Set.prototype.has.bind(new Set("abcdefghijklmnopqrstuvwxyzABCDEFGHIJKLMNOPQRSTUVWXYZ0123456789_"))
     }
 };
 
-embed(`#XML.js`);
-embed(`#CSV.js`);
+/**
+ * @typedef {`>=${Number}`|`<=${Number}`|`${Number}~${Number}`|`${Number}`} RangeValueExp
+ * ### 范围值表达式
+ * ---
+ * 支持以下三种表示
+ * * `>=min`
+ * * `<=max`
+ * * `min~max`
+ * * `value`
+ */
 
 /** 范围值 */
 class RangeValue {
@@ -224,12 +244,8 @@ class RangeValue {
     isFixed = false;
     /**
      * @overload
-     * @param {String} exp 范围表达式
-     * 支持以下三种表示
-     * * `>=min`
-     * * `<=max`
-     * * `min~max`
-     * * `value`
+     * @param {RangeValueExp} exp 范围表达式
+     
      */
 
     /**
@@ -246,8 +262,8 @@ class RangeValue {
     constructor(...args) {
         if (args.length > 1) {
             let [v1, v2] = args;
-            if (Number.isFinite(v1)) this.median = v2;
-            else if (Number.isFinite(v2)) this.median = v1;
+            if (!Number.isFinite(v1)) this.median = v2;
+            else if (!Number.isFinite(v2)) this.median = v1;
             else this.median = (v1 + v2) / 2;
             if (v1 > v2) [this.max, this.min] = args;
             else if (v1 < v2) [this.min, this.max] = args;
@@ -259,25 +275,33 @@ class RangeValue {
             /** @type {String} */
             const exp = args[0];
             if (exp.startsWith(">=")) {
-                this.median = this.min = Number(exp.slice(2));
+                const value = +exp.slice(2);
+                if (isNaN(value)) throw new SyntaxError("解析失败");
+                this.median = this.min = value;
                 this.max = Infinity;
             } else if (exp.startsWith("<=")) {
-                this.median = this.max = Number(exp.slice(2));
+                const value = +exp.slice(2);
+                if (isNaN(value)) throw new SyntaxError("解析失败");
+                this.median = this.max = value;
                 this.min = -Infinity;
             } else if (exp.includes("~")) {
                 const [min, max] = exp.split("~");
-                this.min = Number(min);
-                this.max = Number(max);
+                if (isNaN(min) || isNaN(max)) throw new SyntaxError("解析失败");
+                this.min = +min;
+                this.max = +max;
                 if (this.max < this.min) [this.min, this.max] = [this.max, this.min];
                 this.median = (this.min + this.max) / 2;
             } else {
-                this.min = this.max = this.median = Number(exp);
+                const value = +exp;
+                if (isNaN(value)) throw new SyntaxError("解析失败");
+                this.min = this.max = this.median = value;
                 this.isFixed = true;
             }
         } else if (typeof args[0] === "number") {
             this.median = this.min = this.max = args[0];
             this.isFixed = true;
         }
+        /** Object.freeze 防止意外修改 */
         freeze(this);
     }
 
@@ -295,6 +319,29 @@ class RangeValue {
      */
     withChange(callback) {
         return new RangeValue(callback(this.min), callback(this.max));
+    }
+
+    /**
+     * @param {Number|RangeValue} value
+     * @returns {Boolean}
+     */
+    include(value) {
+        if (typeof value === "number") {
+            if (isNaN(value)) throw new RangeError("NaN不应用于判断");
+            if (this.isFixed) return this.median === value;
+            return this.min <= value && this.max >= value;
+        }
+        if (value instanceof RangeValue) return value.max <= this.max && value.min >= this.min;
+        throw new TypeError("参数类型不合法");
+    }
+
+    /**
+     *
+     * @param {(value:Number)=>any} callback
+     * @param {Number} [step]
+     */
+    for(callback, step = 1) {
+        for (let i = this.min; i <= this.max; i += step) callback(i);
     }
 }
 
@@ -315,51 +362,152 @@ class GameTime {
     }
 }
 
-/**
- * ### 异步获取图像
- * @param {String} url 可以是base64或者路径
- * @returns {Promise<HTMLImageElement>}
- */
-const asyncImg = async url => {
-    const img = new Image();
-    img.src = url;
-    await img.decode();
-    return img;
-};
-
-/** 空白 1px * 1px 图片 */
-const $blankImg = new Promise(resolve => {
-    const canvas = createElement("canvas");
-    canvas.width = 1;
-    canvas.height = 1;
-    canvas.toBlob(blob => resolve(URL.createObjectURL(blob)));
-});
-
-/**
- * ### 异步获取精灵图的拆分图标url
- * @param {String} url 可以是base64或者路径
- * @returns {Promise<Array<String>>} url数组
- */
-const asyncSpriteUrls = async url => {
-    const img = await asyncImg(url);
-    /** @type {ImageEncodeOptions} */
-    const options = { type: "image/webp", quality: 1 };
-    // 图标为正方形
-    const iconSize = img.height;
-    // 图标是水平排列的
-    const iconAmount = img.width / iconSize;
-    const canvas = new OffscreenCanvas(iconSize, iconSize);
-    const ctx = canvas.getContext("2d");
-    /** @type {Array<String>} */
-    const urls = new Array(iconAmount);
-    // urls["null"] = await $blankImg;
-    for (let i = 0; i < iconAmount; i++) {
-        ctx.drawImage(img, -i * iconSize, 0);
-        urls[i] = URL.createObjectURL(await canvas.convertToBlob(options));
-        ctx.clearRect(0, 0, iconSize, iconSize);
+/** 包围盒 */
+class AABB {
+    /**
+     *
+     * @param {Number} width
+     * @param {Number} height
+     */
+    constructor(width, height) {
+        /** @type {Number} */
+        this.width = width;
+        /** @type {Number} */
+        this.height = height;
     }
-    return urls;
-};
+    toString() {
+        return this.width + "×" + this.height;
+    }
+}
+
+/** 精灵图分割器 */
+class SpriteSpliter {
+    static #defaultWorker = (async (base64, width) => {
+        const bitmap = await createImageBitmap(await (await fetch(base64)).blob());
+        /** @type {ImageEncodeOptions} */
+        const imageEncodeOptions = { type: "image/webp", quality: 1 };
+        // 图标默认为正方形
+        width ??= bitmap.height;
+        // 图标是水平排列的
+        const iconAmount = bitmap.width / width;
+        /** @type {Array<Promise<Blob>>} */
+        const blobs = new Array(iconAmount);
+        for (let i = 0; i < iconAmount; i++) {
+            const canvas = new OffscreenCanvas(width, bitmap.height);
+            const ctx = canvas.getContext("2d");
+            ctx.drawImage(bitmap, -i * width, 0);
+            blobs[i] = canvas.convertToBlob(imageEncodeOptions);
+        }
+        // 非常奇怪的是 Chromium浏览器在file协议下无法使用 worker生成blob-url
+        // const urls = (await Promise.all(blobs)).map(blob => URL.createObjectURL(blob));
+        const reader = new FileReaderSync();
+        postMessage((await Promise.all(blobs)).map(blob => reader.readAsDataURL(blob)));
+        bitmap.close();
+        close(); //使用Blob-URL时不要终止
+    }).toString();
+
+    /**
+     * @param {IDBTransactionMode} [mode]
+     * @returns {Promise<IDBObjectStore>}
+     */
+    static #getStore(mode = "readonly") {
+        const { promise, resolve } = Promise.withResolvers();
+        const req = indexedDB.open("noitaLib", 1);
+        req.addEventListener("success", ({ target }) => {
+            /** @type {IDBDatabase} */
+            const db = target.result;
+            resolve(db.transaction(["Base64URL"], mode).objectStore("Base64URL"));
+        });
+        return promise;
+    }
+
+    /**
+     * 从IndexDB中获取Base64缓存
+     * @param {String} key
+     * @returns {Promise<Array<String>>}
+     */
+    static async get(key) {
+        const { promise, resolve } = Promise.withResolvers();
+        (await this.#getStore()).get(key).addEventListener("success", ({ target }) => resolve(target.result));
+        return await promise;
+    }
+
+    /**
+     * 缓存Base64数据
+     * @param {String} key
+     * @param {Array<String>} value Base64数据
+     */
+    static async set(key, value) {
+        (await this.#getStore("readwrite")).add(value, key);
+    }
+
+    // Base64缓存状态获取
+    static {
+        const { promise, reject, resolve } = Promise.withResolvers();
+        /** @type {Promise<Boolean>} */
+        this.hasCache = promise;
+        const requset = indexedDB.open("noitaLib", 1);
+        /** @param {IDBDatabase} db */
+        const createStroe = db => {
+            db.createObjectStore("Base64URL", { autoIncrement: true });
+            resolve(false);
+        };
+        requset.addEventListener(
+            "success",
+            ({ target }) => {
+                /** @type {IDBDatabase} */
+                const db = target.result;
+                if (db.objectStoreNames.contains("Base64URL")) {
+                    db.close();
+                    resolve(true);
+                } else createStroe(db);
+            },
+            { once: true }
+        );
+        requset.addEventListener("upgradeneeded", ({ target }) => createStroe(target.result), { once: true });
+    }
+
+    /**
+     * @overload 通用简单类型
+     * @param {String} name 解析线程名称
+     * @param {String} url 精灵图路径/Base64URL
+     * @param {Number} [width] 图标宽度
+     */
+    /**
+     * @overload 自定义类型
+     * @param {String} name 解析线程名称
+     * @param {()=>void} workerFn Web Worker 函数
+     * @param {[message:any,transfer:Array<Transferable>]} postData Web Worker 所需参数
+     */
+    constructor(name, a, b) {
+        name = "Noita:" + name;
+        const { promise, resolve } = Promise.withResolvers();
+        /** @type {Promise<Array<String>>} */
+        this.results = promise;
+        SpriteSpliter.hasCache.then(async hasCache => {
+            // 缓存优先
+            if (hasCache) return resolve(await SpriteSpliter.get(name));
+            /** @type {Worker} */
+            let worker, workerUrl, postData;
+            if (typeof a === "function") {
+                workerUrl = URL.createObjectURL(new Blob(["(", a, ")()"]));
+                postData = b;
+            } else workerUrl = URL.createObjectURL(new Blob(["(", SpriteSpliter.#defaultWorker, ")('", a, "',", b, ")"]));
+            worker = new Worker(workerUrl, { name });
+            URL.revokeObjectURL(workerUrl);
+            worker.addEventListener(
+                "message",
+                ({ data }) => {
+                    resolve(data);
+                    SpriteSpliter.set(name, data);
+                    worker.terminate();
+                },
+                { once: true }
+            );
+            if (postData) worker.postMessage(...postData);
+        });
+    }
+}
 
 const $icon = (() => {
     class Icon extends HTMLImageElement {
@@ -394,7 +542,7 @@ const $icon = (() => {
             const canvas = createElement("canvas");
             canvas.width = _w;
             canvas.height = _h;
-            const ctx = canvas.getContext("2d");
+            const ctx = canvas.getContext("2d", { desynchronized: true });
             ctx.imageSmoothingEnabled = false;
             ctx.drawImage(this, 0, 0, w, h, 0, 0, _w, _h);
             return canvas.toDataURL("image/png");
@@ -430,34 +578,7 @@ const $icon = (() => {
     };
 })();
 
-// const base64 = {
-//     /**
-//      * 将Base64转为File对象
-//      * @param {String} data base64数据文本
-//      * @param {String} fileName
-//      * @returns {File}
-//      */
-//     toFile(data, fileName) {
-//         const arr = data.split(",");
-//         const type = arr[0].match(/:(.*?);/)[1];
-//         const StringData = atob(arr[1]);
-//         let i = StringData.length;
-//         const U8ArrayData = new Uint8Array(i);
-//         while (i--) U8ArrayData[i] = StringData.charCodeAt(i);
-//         return new File([U8ArrayData], fileName, { type });
-//     },
-//     /**
-//      * 将Base64转为URL
-//      * @param {String} data base64数据文本
-//      * @param {String} fileName 文件名
-//      * @returns {String}
-//      */
-//     toObjectURL(data, fileName = "") {
-//         return URL.createObjectURL(this.toFile(data, fileName));
-//     }
-// };
-
-const math_ = {
+const math = {
     /**
      * 四舍五入保留x小数
      * @param {Number} num
@@ -475,39 +596,6 @@ const math_ = {
      */
     radianToDegree: rad => (rad * 180) / Math.PI,
     /**
-     * 获取以 **度**`°`**分**`′`**秒**`″` 表示的精确角度
-     * @param {Number} deg 角度
-     * @param {Boolean} [needSign=false] 是否需要前缀`+`
-     * @returns {String} 结果
-     */
-    getExactDegree(deg, needSign = false) {
-        let temp1 = 0;
-        let temp2 = 0;
-        const temp3 = [];
-        const value_temp = Math.abs(deg);
-        const _d = Math.trunc(value_temp);
-        temp1 = value_temp - _d;
-        temp2 = temp1 * 60;
-        const _m = Math.trunc(temp2);
-        temp1 = temp2 - _m;
-        const _s = Math.trunc(temp1 * 60);
-
-        if (_d !== 0) temp3.push(_d, "°");
-        if (_m !== 0) temp3.push(_m, "′");
-        if (_s !== 0) temp3.push(_s, "″");
-        let temp4 = temp3.join("");
-        if (deg < 0) temp4 = "-".concat(temp4);
-        else if (needSign) temp4 = "+".concat(temp4);
-
-        return temp4;
-    },
-    /**
-     * 以帧为单位转换为以秒为单位 60帧每秒 结果保留两位小数
-     * @param {Number} frame 帧
-     * @returns {Number} 秒
-     */
-    frameToSecond: frame => Math.round(frame / 0.6) / 100,
-    /**
      * 获得夹逼后的值
      * @param {Number} value 待夹逼的值
      * @param {Number} min 最小值
@@ -517,8 +605,17 @@ const math_ = {
     clamp: (value, min, max) => Math.min(Math.max(value, min), max),
     /**
      * 返回随机数
-     * @param  {...Number} param 单个参数时返回 0到改参数之间的随机值 两个参数时返回两个参数之间的值
-     * @returns {Number} 随机整数
+     */
+    /**
+     * @overload
+     * @param  {Number} min
+     * @param  {Number} max
+     * @returns {Number}
+     */
+    /**
+     * @overload
+     * @param  {Number} max
+     * @returns {Number}
      */
     random(...param) {
         if (param.length === 1) {
@@ -570,18 +667,6 @@ const math_ = {
     }
 };
 
-/**
- * 生成样式表
- * *generateCSSStyleSheet*
- * @param {String} rules CSS规则表字符串
- * @returns {CSSStyleSheet} CSS样式表
- */
-const gss = rules => {
-    const css = new CSSStyleSheet();
-    css.replaceSync(rules);
-    return css;
-};
-
 const $symbols = {
     initStyle: Symbol("init-style")
 };
@@ -596,35 +681,40 @@ const $symbols = {
  */
 
 /**
- * 为构造器创建子类构造器并返回
- * * 将子类的`prototype`添加`getter`, `setter`
+ * ### 为构造器创建子类构造器并返回
+ * ---
+ * * 为子类的`prototype`添加`getter`, `setter`并绑定到html属性
+ * * * `setter`调用 {@linkcode HTMLElement#setAttribute}
+ * * * `getter`调用 {@linkcode HTMLElement#getAttribute}
  * * 将属性添加到被观察列表中 `observedAttributes`
  * @template {{ [key:string]: $ValueOption }} T
- * @template {Function} C
+ * @template {{prototype: HTMLElement,new(): HTMLElement}} C
  * @param {C} constructor 构造器
  * @param {T} propAttrMap objectProp与HTMLAttribute的映射表
- * @returns {C & {
- *     observedAttributes: Readonly<[keyof T]>
- * }}
+ * @returns {{
+ * prototype: C["prototype"] & {[K in keyof T]: T[K]["$type"]},
+ * new(): C["prototype"] & {[K in keyof T]: T[K]["$type"]};
+ * observedAttributes: Array<keyof T>
+ *}}
  */
 //prettier-ignore
-const $class = (constructor, propAttrMap) => class extends constructor {
+const $class = (constructor = HTMLElement, propAttrMap = {}) => class extends constructor {
     static observedAttributes = [];
     static {
         for (const prop in propAttrMap) {
-            const { name, $default, needObserve = true } = propAttrMap[prop];
+            const { name, $default, needObserve = true, converter } = propAttrMap[prop];
             if (needObserve) this.observedAttributes.push(name);
-            Object.defineProperty(this.prototype, prop, {
-                //prettier-ignore
-                get() { return this.hasAttribute(name) ? this.getAttribute(name) : $default; },
+            Reflect.defineProperty(this.prototype, prop, {
+                get() {
+                    return this.hasAttribute(name) ? this.getAttribute(name) : $default;
+                },
                 set(value = null) {
-                    if (value === null) this.removeAttribute(name);
-                    else {
-                        //防止首次设置属性不能自动更新内容
-                        if (!this.hasAttribute(name)) this.setAttribute(name, "");
-                        this.setAttribute(name, value);
-                    }
-                }
+                    if (value === null) return this.removeAttribute(name);
+                    //防止首次设置属性不能自动更新内容
+                    if (!this.hasAttribute(name)) this.setAttribute(name, "");
+                    this.setAttribute(name, value);
+                },
+                enumerable: false
             });
         }
         freeze(this.observedAttributes);
@@ -640,478 +730,171 @@ const Callable = new Proxy(Function, {
     }
 });
 
-/**
- *
- * @param {HTMLCanvasElement} canvas
- * @returns {Promise<String>}
- */
-const canvasToUrl = canvas => new Promise(res => canvas.toBlob(blob => res(URL.createObjectURL(blob)), "image/png"));
+/** 可重载函数 */
+class OverloadFunction extends Callable {
+    /**
+     * 将函数/成员名 转化为类型表
+     * 函数名应该是仅由 typeof 结果("string" | "number" | "bigint" | "boolean" | "symbol" | "undefined" | "object" | "function") 构成的字符串(大驼峰)
+     * @param {String} name
+     */
+    static #toTypes(name) {
+        return name.replace(/[a-z]([A-Z])/g, ",$1").toLowerCase();
+    }
+    /** @type {Map<String,Function>} */
+    #fnMap = new Map();
+    /** @type {Function} */
+    #defaultFn;
 
-/** @typedef {"a"|"abbr"|"address"|"area"|"article"|"aside"|"audio"|"b"|"base"|"bdi"|"bdo"|"blockquote"|"body"|"br"|"button"|"canvas"|"caption"|"cite"|"code"|"col"|"colgroup"|"data"|"datalist"|"dd"|"del"|"details"|"dfn"|"dialog"|"div"|"dl"|"dt"|"em"|"embed"|"fieldset"|"figcaption"|"figure"|"footer"|"form"|"h1"|"h2"|"h3"|"h4"|"h5"|"h6"|"head"|"header"|"hgroup"|"hr"|"html"|"i"|"iframe"|"img"|"input"|"ins"|"kbd"|"label"|"legend"|"li"|"link"|"main"|"map"|"mark"|"menu"|"meta"|"meter"|"nav"|"noscript"|"object"|"ol"|"optgroup"|"option"|"output"|"p"|"picture"|"pre"|"progress"|"q"|"rp"|"rt"|"ruby"|"s"|"samp"|"script"|"search"|"section"|"select"|"slot"|"small"|"source"|"span"|"strong"|"style"|"sub"|"summary"|"sup"|"table"|"tbody"|"td"|"template"|"textarea"|"tfoot"|"th"|"thead"|"time"|"title"|"tr"|"track"|"u"|"ul"|"var"|"video"|"wbr"} HTML_TAG */
-
-/**
- * @typedef {Object} ElementInitOption
- * @prop {String|Array<String>} class 类名
- * @prop {String|CSSStyleDeclaration} style 样式
- * @prop {Boolean} hidden 隐藏
- * @prop {0} tabindex
- * @prop {Object} Event 事件监听器
- * @prop {Array} shadowRoot 开启shadowRoot并添加元素
- * @prop {String|Array<String>} HTML innerHTML
- * @prop {Object} $ 挂载到元素对象上的属性
- */
-
-/**
- * ## 创建`HTML`节点
- * @type {{
- *   (option:ElementInitOption): DocumentFragment;
- *   "[]"(option:ElementInitOption): Array<Node>;
- *   $attach(element:HTMLElement): HTMLElement;
- *   $comment(option:ElementInitOption): Comment;
- *   a(option:ElementInitOption): HTMLAnchorElement;
- *   abbr(option:ElementInitOption): HTMLElement;
- *   address(option:ElementInitOption): HTMLElement;
- *   area(option:ElementInitOption): HTMLAreaElement;
- *   article(option:ElementInitOption): HTMLElement;
- *   aside(option:ElementInitOption): HTMLElement;
- *   audio(option:ElementInitOption): HTMLAudioElement;
- *   b(option:ElementInitOption): HTMLElement;
- *   base(option:ElementInitOption): HTMLBaseElement;
- *   bdi(option:ElementInitOption): HTMLElement;
- *   bdo(option:ElementInitOption): HTMLElement;
- *   blockquote(option:ElementInitOption): HTMLQuoteElement;
- *   body(option:ElementInitOption): HTMLBodyElement;
- *   br(option:ElementInitOption): HTMLBRElement;
- *   button(option:ElementInitOption): HTMLButtonElement;
- *   canvas(option:ElementInitOption): HTMLCanvasElement;
- *   caption(option:ElementInitOption): HTMLTableCaptionElement;
- *   cite(option:ElementInitOption): HTMLElement;
- *   code(option:ElementInitOption): HTMLElement;
- *   col(option:ElementInitOption): HTMLTableColElement;
- *   colgroup(option:ElementInitOption): HTMLTableColElement;
- *   data(option:ElementInitOption): HTMLDataElement;
- *   datalist(option:ElementInitOption): HTMLDataListElement;
- *   dd(option:ElementInitOption): HTMLElement;
- *   del(option:ElementInitOption): HTMLModElement;
- *   details(option:ElementInitOption): HTMLDetailsElement;
- *   dfn(option:ElementInitOption): HTMLElement;
- *   dialog(option:ElementInitOption): HTMLDialogElement;
- *   div(option:ElementInitOption): HTMLDivElement;
- *   dl(option:ElementInitOption): HTMLDListElement;
- *   dt(option:ElementInitOption): HTMLElement;
- *   em(option:ElementInitOption): HTMLElement;
- *   embed(option:ElementInitOption): HTMLEmbedElement;
- *   fieldset(option:ElementInitOption): HTMLFieldSetElement;
- *   figcaption(option:ElementInitOption): HTMLElement;
- *   figure(option:ElementInitOption): HTMLElement;
- *   footer(option:ElementInitOption): HTMLElement;
- *   form(option:ElementInitOption): HTMLFormElement;
- *   h1(option:ElementInitOption): HTMLHeadingElement;
- *   h2(option:ElementInitOption): HTMLHeadingElement;
- *   h3(option:ElementInitOption): HTMLHeadingElement;
- *   h4(option:ElementInitOption): HTMLHeadingElement;
- *   h5(option:ElementInitOption): HTMLHeadingElement;
- *   h6(option:ElementInitOption): HTMLHeadingElement;
- *   head(option:ElementInitOption): HTMLHeadElement;
- *   header(option:ElementInitOption): HTMLElement;
- *   hgroup(option:ElementInitOption): HTMLElement;
- *   hr(option:ElementInitOption): HTMLHRElement;
- *   html(option:ElementInitOption): HTMLHtmlElement;
- *   i(option:ElementInitOption): HTMLElement;
- *   iframe(option:ElementInitOption): HTMLIFrameElement;
- *   img(option:ElementInitOption): HTMLImageElement;
- *   input(option:ElementInitOption): HTMLInputElement;
- *   inputButton(option:ElementInitOption): HTMLInputElement;
- *   inputCheckbox(option:ElementInitOption): HTMLInputElement;
- *   inputColor(option:ElementInitOption): HTMLInputElement;
- *   inputDate(option:ElementInitOption): HTMLInputElement;
- *   inputEmail(option:ElementInitOption): HTMLInputElement;
- *   inputFile(option:ElementInitOption): HTMLInputElement;
- *   inputHidden(option:ElementInitOption): HTMLInputElement;
- *   inputImage(option:ElementInitOption): HTMLInputElement;
- *   inputMonth(option:ElementInitOption): HTMLInputElement;
- *   inputNumber(option:ElementInitOption): HTMLInputElement;
- *   inputPassword(option:ElementInitOption): HTMLInputElement;
- *   inputRadio(option:ElementInitOption): HTMLInputElement;
- *   inputRange(option:ElementInitOption): HTMLInputElement;
- *   inputReset(option:ElementInitOption): HTMLInputElement;
- *   inputSearch(option:ElementInitOption): HTMLInputElement;
- *   inputSubmit(option:ElementInitOption): HTMLInputElement;
- *   inputTel(option:ElementInitOption): HTMLInputElement;
- *   inputText(option:ElementInitOption): HTMLInputElement;
- *   inputTime(option:ElementInitOption): HTMLInputElement;
- *   inputUrl(option:ElementInitOption): HTMLInputElement;
- *   inputWeek(option:ElementInitOption): HTMLInputElement;
- *   ins(option:ElementInitOption): HTMLModElement;
- *   kbd(option:ElementInitOption): HTMLElement;
- *   label(option:ElementInitOption): HTMLLabelElement;
- *   legend(option:ElementInitOption): HTMLLegendElement;
- *   li(option:ElementInitOption): HTMLLIElement;
- *   link(option:ElementInitOption): HTMLLinkElement;
- *   main(option:ElementInitOption): HTMLElement;
- *   map(option:ElementInitOption): HTMLMapElement;
- *   mark(option:ElementInitOption): HTMLElement;
- *   menu(option:ElementInitOption): HTMLMenuElement;
- *   meta(option:ElementInitOption): HTMLMetaElement;
- *   meter(option:ElementInitOption): HTMLMeterElement;
- *   nav(option:ElementInitOption): HTMLElement;
- *   noscript(option:ElementInitOption): HTMLElement;
- *   object(option:ElementInitOption): HTMLObjectElement;
- *   ol(option:ElementInitOption): HTMLOListElement;
- *   optgroup(option:ElementInitOption): HTMLOptGroupElement;
- *   option(option:ElementInitOption): HTMLOptionElement;
- *   output(option:ElementInitOption): HTMLOutputElement;
- *   p(option:ElementInitOption): HTMLParagraphElement;
- *   picture(option:ElementInitOption): HTMLPictureElement;
- *   pre(option:ElementInitOption): HTMLPreElement;
- *   progress(option:ElementInitOption): HTMLProgressElement;
- *   q(option:ElementInitOption): HTMLQuoteElement;
- *   rp(option:ElementInitOption): HTMLElement;
- *   rt(option:ElementInitOption): HTMLElement;
- *   ruby(option:ElementInitOption): HTMLElement;
- *   s(option:ElementInitOption): HTMLElement;
- *   samp(option:ElementInitOption): HTMLElement;
- *   script(option:ElementInitOption): HTMLScriptElement;
- *   search(option:ElementInitOption): HTMLElement;
- *   section(option:ElementInitOption): HTMLElement;
- *   select(option:ElementInitOption): HTMLSelectElement;
- *   slot(option:ElementInitOption): HTMLSlotElement;
- *   small(option:ElementInitOption): HTMLElement;
- *   source(option:ElementInitOption): HTMLSourceElement;
- *   span(option:ElementInitOption): HTMLSpanElement;
- *   strong(option:ElementInitOption): HTMLElement;
- *   style(option:ElementInitOption): HTMLStyleElement;
- *   sub(option:ElementInitOption): HTMLElement;
- *   summary(option:ElementInitOption): HTMLElement;
- *   sup(option:ElementInitOption): HTMLElement;
- *   table(option:ElementInitOption): HTMLTableElement;
- *   tbody(option:ElementInitOption): HTMLTableSectionElement;
- *   td(option:ElementInitOption): HTMLTableCellElement;
- *   template(option:ElementInitOption): HTMLTemplateElement;
- *   textarea(option:ElementInitOption): HTMLTextAreaElement;
- *   tfoot(option:ElementInitOption): HTMLTableSectionElement;
- *   th(option:ElementInitOption): HTMLTableCellElement;
- *   thead(option:ElementInitOption): HTMLTableSectionElement;
- *   time(option:ElementInitOption): HTMLTimeElement;
- *   title(option:ElementInitOption): HTMLTitleElement;
- *   tr(option:ElementInitOption): HTMLTableRowElement;
- *   track(option:ElementInitOption): HTMLTrackElement;
- *   u(option:ElementInitOption): HTMLElement;
- *   ul(option:ElementInitOption): HTMLUListElement;
- *   var(option:ElementInitOption): HTMLElement;
- *   video(option:ElementInitOption): HTMLVideoElement;
- *   wbr(option:ElementInitOption): HTMLElement;
- * }}
- */
-const h = (() => {
-    const doc = window.document;
-    /** @param {HTMLElement} $ */
-    const attach = ($, attr) => {
-        for (const key in attr) {
-            const value = attr[key];
-            /** 尝试事件绑定 */
-            if (key.startsWith("on")) {
-                if (key in $) {
-                    let fn, option, useCapture;
-                    if (typeof value === "function") fn = value;
-                    else [fn, option = {}, useCapture = false] = value;
-                    $.addEventListener(key.slice(2), fn, option, useCapture);
-                }
-            } else
-                switch (key) {
-                    case "class": //类名
-                        if (Array.isArray(value)) $.className = value.join(" ");
-                        else $.className = value;
-                        continue;
-                    case "style": //样式
-                        if (typeof value === "string") $.style = value;
-                        else
-                            for (const prop in value)
-                                if (prop.includes("-")) $.style.setProperty(prop, value[prop]);
-                                else $.style[prop] = value[prop];
-                        continue;
-                    case "hidden": //隐藏
-                        $.hidden = value;
-                        continue;
-                    case "Event": //绑定事件
-                        if (value.click) $.addEventListener("click", value.click);
-                        if (value.keydown) {
-                            $.setAttribute("tabindex", "0"); // 无障碍 允许tab聚焦
-                            $.addEventListener("keydown", value.keydown);
-                        }
-                        continue;
-                    case "shadowRoot": //想shadowRoot中添加元素
-                        const shadowRoot = $.attachShadow({ mode: value.mode ?? "open" });
-                        const styleSheets = [];
-                        const fragment = h();
-                        for (let i = 0; i < value.length; i++) {
-                            const e = value[i];
-                            if (e instanceof CSSStyleSheet) styleSheets.push(e);
-                            else fragment.append(e);
-                        }
-                        shadowRoot.adoptedStyleSheets = styleSheets;
-                        shadowRoot.append(fragment);
-                        continue;
-                    case "HTML":
-                        if (Array.isArray(value)) $.innerHTML = value.join("");
-                        else $.innerHTML = value;
-                        continue;
-                    case "$":
-                        Object.assign($, value);
-                        continue;
-                    default:
-                        $.setAttribute(key, value);
-                }
-        }
-    };
-    const fnMap = {
-        $attach(element, ...args) {
-            const attr = args[0];
-            if (typeof attr === "object" && !(attr instanceof Node)) {
-                args.shift();
-                attach(element, attr);
+    /**
+     * @overload
+     * @param {...Function} overloads 重载函数表(具名函数的函数名表示类型(大驼峰) 匿名函数表示默认函数)
+     */
+    /**
+     * @overload
+     * @param {{[key: String]: Function}} [overloads] 重载函数表(成员名表示类型(大驼峰))
+     * @param {Function} [defaultFn] 默认函数
+     */
+    constructor(...args) {
+        super((...args) => {
+            const types = args.map(arg => typeof arg);
+            const fn = this.#fnMap.get(types.join()) ?? this.#defaultFn;
+            if (fn) return fn(...args);
+            else this.#error(types);
+        });
+        if (args[0] instanceof Function) {
+            for (let i = 0; i < args.length; i++) {
+                if (args[i].name) this.#fnMap.set(OverloadFunction.#toTypes(args[i].name), args[i]);
+                else this.#defaultFn = args[i];
             }
-            element.append(...args.flat(Infinity));
-            return element;
+        } else {
+            let overloads;
+            [overloads, this.#defaultFn] = args;
+            for (const name in overloads) this.#fnMap.set(OverloadFunction.#toTypes(name), overloads[name]);
+        }
+    }
+    /**
+     * @param {Array<"string" | "number" | "bigint" | "boolean" | "symbol" | "undefined" | "object" | "function">} types
+     */
+    #error(types) {
+        const args = [];
+        const msg = [`未实现的重载形式\nfn(`];
+        for (let i = 0; i < types.length; i++) {
+            msg.push("%c", types[i], "%c,");
+            args.push("background:#1f1f1f80;color:#3ac9b0;padding:1px 3px;margin:1px;border-radius:3px;font-weight:800", "background:none");
+        }
+        msg[msg.length - 1] = "%c)";
+        console.error(msg.join(""), ...args, "\n", this.#fnMap);
+        throw new TypeError("未实现的重载形式");
+    }
+    /**
+     * 实现一个重载
+     * @template {Function} T
+     * @param {T} fn
+     * @param  {..."string" | "number" | "bigint" | "boolean" | "symbol" | "undefined" | "object" | "function"} types
+     */
+    implement(fn, ...types) {
+        this.#fnMap.set(types.join(), fn);
+    }
+}
+
+const promptMsg = {
+    symbol: Symbol("promptMessage"),
+    box: (() => {
+        const box = h.dialog({
+            style: {
+                background: "none",
+                border: "none",
+                display: "block",
+                width: "max-content",
+                height: "max-content",
+                position: "fixed",
+                zIndex: 1024
+            }
+        });
+        DOMContentLoaded.then(() => document.body.append(box));
+        box.addEventListener("click", () => promptMsg.hide());
+        return box;
+    })(),
+    /**
+     * ### 显示提示窗口
+     * @param {Node} node
+     * @param {HTMLElement} targetElement
+     */
+    show(node, targetElement) {
+        const { box } = this;
+        const { style } = box;
+        const { innerHeight, innerWidth } = window;
+
+        const { top, bottom, right, left } = targetElement.getBoundingClientRect();
+        box.append(node);
+        style.display = "block";
+        // 立刻获取尺寸是不准确的 这里需要用一个宏任务
+        requestAnimationFrame(() => {
+            const { height, width } = box.getBoundingClientRect();
+
+            // 左右抉择
+            const overflowRight = right + width - innerWidth;
+            const overflowLeft = -(left - width);
+
+            if (overflowRight <= 0) style.left = right + "px"; // 显示到右侧(最高优先级)
+            else if (overflowLeft < overflowRight) {
+                // 显示到左侧
+                const compensation = overflowLeft > 0 ? overflowLeft : 0; // 溢出补偿
+                style.left = left - width + compensation + "px";
+            } else {
+                // 显示到右侧
+                const compensation = overflowRight > 0 ? overflowRight : 0; // 溢出补偿
+                style.left = style.left = right - compensation + "px";
+            }
+
+            // 上下抉择
+            const overflowBottom = bottom + height - innerHeight;
+            const overflowTop = -(top - height);
+
+            if (overflowBottom <= 0) style.top = bottom + "px"; // 显示到下侧(最高优先级)
+            else if (overflowTop < overflowBottom) {
+                // 显示到上侧
+                const compensation = overflowTop > 0 ? overflowTop : 0; // 溢出补偿
+                style.top = top - height + compensation + "px";
+            } else {
+                // 显示到下侧
+                const compensation = overflowBottom > 0 ? overflowBottom : 0; // 溢出补偿
+                style.top = bottom - compensation + "px";
+            }
+        });
+    },
+    /**
+     * ### 隐藏提示窗口
+     */
+    hide() {
+        this.box.style.display = "none";
+        this.box.innerHTML = "";
+    },
+    /**
+     * 创建消息盒子
+     * @template {HTMLElement} T
+     * @param {T} target 附加悬浮提示的目标元素
+     * @param {Array<Node>} nodes 内容
+     * @param {"common"|"white"} style 盒子样式
+     * @returns {T}
+     */
+    attach(target, nodes, style = "common") {
+        const panel = createElement("noita-panel");
+        panel.borderStyle = style;
+        panel.append(h.div(...nodes));
+        target[this.symbol] = panel;
+        h.$(target, { Event: this.event });
+        return target;
+    },
+    event: {
+        /**
+         * @param {MouseEvent}
+         */
+        mouseenter({ currentTarget }) {
+            promptMsg.show(currentTarget[promptMsg.symbol], currentTarget);
         },
-        $comment: (...args) => new Comment(String.raw(...args)),
-        "[]": (...args) => [...h(...args).childNodes],
-        template(...args) {
-            const $ = doc.createElement("template");
-            const attr = args[0];
-            if (typeof attr === "object" && !(attr instanceof Node)) {
-                args.shift();
-                attach($, attr);
-            }
-            $.content.append(...args.flat(Infinity));
-            return $;
+        mouseleave() {
+            promptMsg.hide();
         }
-    };
-
-    //prettier-ignore
-    ["a", "abbr", "address", "area", "article", "aside", "audio", "b", "bdi", "bdo", "bgckquote", "body", "button", "canvas", "caption", "cite", "code", "colgroup", "data", "datalist", "dd", "del", "details", "dfn", "dialog", "div", "dl", "dt", "em", "fieldset", "figcaption", "figure", "footer", "form", "h1", "h2", "h3", "h4", "h5", "h6", "head", "header", "hgroup", "html", "i", "iframe", "input", "ins", "kbd", "label", "legend", "li", "main", "map", "mark", "menu", "meta", "meter", "nav", "noscript", "object", "ol", "optgroup", "option", "output", "p", "picture", "pre", "progress", "q", "rp", "rt", "ruby", "s", "samp", "search", "section", "select", "slot", "small", "span", "strong", "sub", "summary", "sup", "table", "tbody", "td", "textarea", "tfoot", "th", "thead", "time", "tr", "u", "ul", "var", "video"].forEach(e =>
-       fnMap[e] = function (...args) {
-           const $ = doc.createElement(e);
-           const attr = args[0];
-           if (typeof attr === "object" && !(attr instanceof Node)) {
-               args.shift();
-               attach($, attr);
-           }
-           $.append(...args.flat(Infinity));
-           return $;
-       }
-   );
-
-    // 空元素
-    //prettier-ignore
-    ["area", "base", "br", "col", "embed", "hr", "img", "input", "link", "meta", "source", "track", "wbr"].forEach(e =>
-       fnMap[e] = function (attr) {
-           const $ = doc.createElement(e);
-           if (attr) attach($, attr);
-           return $;
-       }
-   );
-
-    // 字符串直接嵌入
-    //prettier-ignore
-    ["script", "style", "title"].forEach(e =>
-       fnMap[e] = function (...args) {
-           const $ = doc.createElement(e);
-           const attr = args[0];
-           if (typeof attr === "object" && !(attr instanceof Node)) {
-               args.shift();
-               attach($, attr);
-           }
-           $.innerHTML = args.flat(Infinity).join("");
-           return $;
-       }
-   );
-
-    // input类
-    ["inputButton", "inputCheckbox", "inputColor", "inputDate", "inputEmail", "inputFile", "inputHidden", "inputImage", "inputMonth", "inputNumber", "inputPassword", "inputRadio", "inputRange", "inputReset", "inputSearch", "inputSubmit", "inputTel", "inputText", "inputTime", "inputUrl", "inputWeek"].forEach(e => {
-        const type = e.slice(5).toLowerCase();
-        fnMap[e] = function (attr) {
-            /** @type {HTMLInputElement} */
-            const $ = doc.createElement("input");
-            $.type = type;
-            if (attr) attach($, attr);
-            return $;
-        };
-    });
-
-    return Object.assign((...args) => {
-        const $ = new DocumentFragment();
-        $.append(...args.flat(Infinity));
-        return $;
-    }, fnMap);
-})();
-
-/**
- * 生成样式表
- */
-const css = (() => {
-    /**
-     * @param {CSSStyleDeclaration} declaration
-     */
-    const cssText = declaration => {
-        const style = document.createElement("html").style;
-        const nestData = [];
-        for (const prop in declaration) {
-            const data = declaration[prop];
-            if (typeof data === "object") nestData.push(`${prop}{${cssText(data)}}`);
-            else if (prop.startsWith("--")) style.setProperty(prop, data);
-            //允许使用$简化自定义css属性的"--"前缀
-            else if (prop.startsWith("$")) style.setProperty("--" + prop.slice(1), data);
-            else if (prop in style) style[prop] = data;
-        }
-        return style.cssText + nestData.join("");
-    };
-    /**
-     * @param {{
-     * a:CSSStyleDeclaration;
-     * abbr:CSSStyleDeclaration;
-     * address:CSSStyleDeclaration;
-     * area:CSSStyleDeclaration;
-     * article:CSSStyleDeclaration;
-     * aside:CSSStyleDeclaration;
-     * audio:CSSStyleDeclaration;
-     * b:CSSStyleDeclaration;
-     * base:CSSStyleDeclaration;
-     * bdi:CSSStyleDeclaration;
-     * bdo:CSSStyleDeclaration;
-     * blockquote:CSSStyleDeclaration;
-     * body:CSSStyleDeclaration;
-     * br:CSSStyleDeclaration;
-     * button:CSSStyleDeclaration;
-     * canvas:CSSStyleDeclaration;
-     * caption:CSSStyleDeclaration;
-     * cite:CSSStyleDeclaration;
-     * code:CSSStyleDeclaration;
-     * col:CSSStyleDeclaration;
-     * colgroup:CSSStyleDeclaration;
-     * data:CSSStyleDeclaration;
-     * datalist:CSSStyleDeclaration;
-     * dd:CSSStyleDeclaration;
-     * del:CSSStyleDeclaration;
-     * details:CSSStyleDeclaration;
-     * dfn:CSSStyleDeclaration;
-     * dialog:CSSStyleDeclaration;
-     * div:CSSStyleDeclaration;
-     * dl:CSSStyleDeclaration;
-     * dt:CSSStyleDeclaration;
-     * em:CSSStyleDeclaration;
-     * embed:CSSStyleDeclaration;
-     * fieldset:CSSStyleDeclaration;
-     * figcaption:CSSStyleDeclaration;
-     * figure:CSSStyleDeclaration;
-     * footer:CSSStyleDeclaration;
-     * form:CSSStyleDeclaration;
-     * h1:CSSStyleDeclaration;
-     * h2:CSSStyleDeclaration;
-     * h3:CSSStyleDeclaration;
-     * h4:CSSStyleDeclaration;
-     * h5:CSSStyleDeclaration;
-     * h6:CSSStyleDeclaration;
-     * head:CSSStyleDeclaration;
-     * header:CSSStyleDeclaration;
-     * hgroup:CSSStyleDeclaration;
-     * hr:CSSStyleDeclaration;
-     * html:CSSStyleDeclaration;
-     * i:CSSStyleDeclaration;
-     * iframe:CSSStyleDeclaration;
-     * img:CSSStyleDeclaration;
-     * input:CSSStyleDeclaration;
-     * ins:CSSStyleDeclaration;
-     * kbd:CSSStyleDeclaration;
-     * label:CSSStyleDeclaration;
-     * legend:CSSStyleDeclaration;
-     * li:CSSStyleDeclaration;
-     * link:CSSStyleDeclaration;
-     * main:CSSStyleDeclaration;
-     * map:CSSStyleDeclaration;
-     * mark:CSSStyleDeclaration;
-     * menu:CSSStyleDeclaration;
-     * meta:CSSStyleDeclaration;
-     * meter:CSSStyleDeclaration;
-     * nav:CSSStyleDeclaration;
-     * noscript:CSSStyleDeclaration;
-     * object:CSSStyleDeclaration;
-     * ol:CSSStyleDeclaration;
-     * optgroup:CSSStyleDeclaration;
-     * option:CSSStyleDeclaration;
-     * output:CSSStyleDeclaration;
-     * p:CSSStyleDeclaration;
-     * picture:CSSStyleDeclaration;
-     * pre:CSSStyleDeclaration;
-     * progress:CSSStyleDeclaration;
-     * q:CSSStyleDeclaration;
-     * rp:CSSStyleDeclaration;
-     * rt:CSSStyleDeclaration;
-     * ruby:CSSStyleDeclaration;
-     * s:CSSStyleDeclaration;
-     * samp:CSSStyleDeclaration;
-     * script:CSSStyleDeclaration;
-     * search:CSSStyleDeclaration;
-     * section:CSSStyleDeclaration;
-     * select:CSSStyleDeclaration;
-     * slot:CSSStyleDeclaration;
-     * small:CSSStyleDeclaration;
-     * source:CSSStyleDeclaration;
-     * span:CSSStyleDeclaration;
-     * strong:CSSStyleDeclaration;
-     * style:CSSStyleDeclaration;
-     * sub:CSSStyleDeclaration;
-     * summary:CSSStyleDeclaration;
-     * sup:CSSStyleDeclaration;
-     * table:CSSStyleDeclaration;
-     * tbody:CSSStyleDeclaration;
-     * td:CSSStyleDeclaration;
-     * template:CSSStyleDeclaration;
-     * textarea:CSSStyleDeclaration;
-     * tfoot:CSSStyleDeclaration;
-     * th:CSSStyleDeclaration;
-     * thead:CSSStyleDeclaration;
-     * time:CSSStyleDeclaration;
-     * title:CSSStyleDeclaration;
-     * tr:CSSStyleDeclaration;
-     * track:CSSStyleDeclaration;
-     * u:CSSStyleDeclaration;
-     * ul:CSSStyleDeclaration;
-     * var:CSSStyleDeclaration;
-     * video:CSSStyleDeclaration;
-     * wbr:CSSStyleDeclaration;
-     * ":host":CSSStyleDeclaration;
-     * "*":CSSStyleDeclaration;
-     * [key: string]:CSSStyleDeclaration;
-     * }} datas
-     * @param {CSSStyleSheetInit} init
-     */
-    const fn = (datas, init) => {
-        const styleSheet = new CSSStyleSheet(init);
-        const cache = [];
-        for (const key in datas) {
-            const data = datas[key];
-            if (key.startsWith("@keyframes")) {
-                const _cache = [];
-                for (const frame in data) {
-                    let frameName = frame;
-                    if (!isNaN(frame)) frameName += "%";
-                    _cache.push(`${frameName}{${cssText(data[frame])}}`);
-                }
-                cache.push(`${key}{${_cache.join("")}}`);
-            } else if (key.startsWith("@property")) {
-                const _cache = [];
-                if (data.syntax) _cache.push(`syntax:${data.syntax}`);
-                if (data.inherits) _cache.push(`inherits:${data.syntax}`);
-                if (data.initialValue) _cache.push(`initial-value:${data.initialValue}`);
-                cache.push(`${key}{${_cache.join(";")}}`);
-            } else cache.push(`${key}{${cssText(data)}}`);
-        }
-        styleSheet.replaceSync(cache.join(""));
-        return styleSheet;
-    };
-    return fn;
-})();
-
-window.h = h;
-window.css = css;
+    }
+};

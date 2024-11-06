@@ -4,7 +4,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Test</title>
+    <title>实体数据解析</title>
     <style desc="base-style">
         :root {
             background: #1F1F1F;
@@ -18,14 +18,7 @@
             image-rendering: pixelated;
         }
 
-        body {
-            display: grid;
-            place-items: center;
-            place-content: center;
-            height: 100vh;
-            width: 100vw;
-            gap: 2px;
-        }
+        body {}
 
         #animations {
             place-content: center;
@@ -82,6 +75,22 @@
             100% {
                 translate: -100% 0;
             }
+        }
+
+        .box {
+            display: flex;
+            padding: 3px;
+            gap: 3px;
+            flex-direction: column;
+            border: 1px solid #ccc8;
+            border-radius: 6px;
+            margin-top: 6px;
+            width: fit-content;
+        }
+        .box canvas {
+            border: 1px solid #6668;
+            margin: 3px;
+            zoom: 3;
         }
     </style>
     <script src="/public/damageData.js"></script>

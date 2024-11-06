@@ -74,7 +74,7 @@ type SpellIdNameMap = {
     TENTACLE: "召唤触手";
     TENTACLE_TIMER: "定时触手";
     HEAL_BULLET: "治疗魔弹";
-    ANTIHEAL: "Deadly heal";
+    ANTIHEAL: "致命治愈";
     SPIRAL_SHOT: "螺旋魔弹";
     MAGIC_SHIELD: "魔法护卫";
     BIG_MAGIC_SHIELD: "大型魔法护卫";
@@ -160,7 +160,7 @@ type SpellIdNameMap = {
     TOUCH_BLOOD: "鲜血之触";
     TOUCH_SMOKE: "烟雾之触";
     DESTRUCTION: "毁灭";
-    MASS_POLYMORPH: "Muodonmuutos";
+    MASS_POLYMORPH: "变形";
     BURST_2: "二重施法";
     BURST_3: "三重施法";
     BURST_4: "四重施法";
@@ -176,12 +176,12 @@ type SpellIdNameMap = {
     CIRCLE_SHAPE: "阵型 - 六边形";
     PENTAGRAM_SHAPE: "阵型 - 五边形";
     I_SHOT: "复制法术-前后";
-    Y_SHOT: "复制法术-分叉";
-    T_SHOT: "复制法术-T";
-    W_SHOT: "复制法术-三叉";
-    QUAD_SHOT: "复制法术-十字";
-    PENTA_SHOT: "复制法术-五边形";
-    HEXA_SHOT: "复制法术-六边形";
+    Y_SHOT: "复制法术 - 分叉";
+    T_SHOT: "复制法术 - T";
+    W_SHOT: "复制法术 - 三叉";
+    QUAD_SHOT: "复制法术 - 十字";
+    PENTA_SHOT: "复制法术 - 五边形";
+    HEXA_SHOT: "复制法术 - 六边形";
     SPREAD_REDUCE: "降低散射";
     HEAVY_SPREAD: "全向散射";
     RECHARGE: "缩减充能时间";
@@ -245,7 +245,7 @@ type SpellIdNameMap = {
     ACCELERATING_SHOT: "逐渐加速";
     DECELERATING_SHOT: "逐渐减速";
     EXPLOSIVE_PROJECTILE: "易爆";
-    CLUSTERMOD: "Clusterbolt";
+    CLUSTERMOD: "集束弹";
     WATER_TO_POISON: "化水为毒";
     BLOOD_TO_ACID: "溶血为酸";
     LAVA_TO_BLOOD: "熔岩化血";
@@ -430,7 +430,7 @@ type SpellId = keyof SpellIdNameMap;
 type SpellName = SpellIdNameMap[SpellId];
 
 /** `🔤 法术别名` */
-type SpellAlias = "触发弹" | "双触发" | "触手传送门" | "花粉" | "闪耀长枪" | "闪耀之枪" | "圣枪" | "神圣长枪" | "神圣之枪" | "鱼" | "鹿" | "鸭子" | "十字电浆" | "绿电浆" | "钻头" | "光明穿凿" | "定光" | "治疗弹" | "致命治疗" | "undefined" | "岩石精灵" | "TNT" | "矿车" | "扩张之球" | "地震" | "石头" | "蛋" | "空心蛋" | "内射" | "火环" | "酸环" | "酸液环" | "油环" | "水环" | "大tp" | "小tp" | "交换者" | "交换魔弹" | "抓取" | "烟花" | "魔杖灵" | "金触" | "水触" | "油触" | "酒触" | "尿触" | "血触" | "烟触" | "二重" | "2重" | "三重" | "3重" | "四重" | "4重" | "八重" | "8重" | "二重散射" | "2重散射" | "三重散射" | "3重散射" | "四重散射" | "四重散射" | "前后阵型" | "三叉阵型" | "六重" | "6重" | "五重" | "5重" | "白圈" | "Q" | "蓝表" | "红表" | "零时" | "灰表" | "聚爆" | "回蓝" | "蓝球" | "血液魔法" | "金变力" | "金拳" | "血变力" | "血拳" | "2X" | "乒乓" | "线性弧" | "自绕" | "大追踪" | "大追" | "避让" | "小追" | "小追踪" | "传送环" | "穿墙" | "红拳" | "法变力" | "暴击" | "法转力" | "无伤" | "伤害移除" | "蓝拳" | "阻尼器" | "狂暴环" | "变羊环" | "电环" | "冰环" | "回血环" | "tp环" | "传送环" | "浮力环" | "盾环" | "岩浆海" | "酒海" | "酒精海" | "油海" | "水海" | "沼泽海" | "酸液海" | "酸海" | "可燃气之海" | "可燃气海" | "冰修正" | "火暴击" | "水暴击" | "油暴击" | "血暴击" | "投射物虚弱" | "投射物诅咒" | "爆炸虚弱" | "爆炸诅咒" | "近战虚弱" | "近战诅咒" | "雷电虚弱" | "雷电诅咒" | "半盾" | "陶笛A" | "陶笛B" | "陶笛C" | "陶笛D" | "陶笛E" | "陶笛F" | "陶笛G#" | "陶笛A2" | "康特勒琴A" | "康特勒琴D" | "康特勒琴D#" | "康特勒琴E" | "康特勒琴G" | "AOT" | "α" | "A" | "γ" | "Γ" | "T" | "Ω" | "μ" | "M" | "D2" | "d2" | "D3" | "d3" | "D4" | "d4" | "D10" | "d10" | "否则" | "else" | "红色" | "橙色" | "绿色" | "黄色" | "紫色" | "蓝色" | "彩色" | "无色";
+type SpellAlias = "触发弹" | "双触发" | "失效黑洞" | "终结黑洞" | "终结白洞" | "触手传送门" | "粉弹" | "小锯片" | "终结锯片" | "绿豆" | "花粉" | "闪耀长枪,闪耀之枪" | "圣枪,神圣长枪,神圣之枪" | "鱼" | "鹿" | "鸭子" | "球闪" | "电浆" | "十字电浆" | "绿电浆" | "钻头" | "光明穿凿" | "定光" | "治疗弹" | "红治疗弹" | "子弹,机枪子弹" | "岩石精灵" | "TNT" | "矿车" | "诅咒之球" | "扩张之球" | "地震" | "石头" | "蛋" | "空心蛋" | "内射" | "火环" | "酸环,酸液环" | "油环" | "水环" | "大tp" | "小tp" | "交换者,交换魔弹" | "抓取" | "烟花" | "魔杖灵" | "金触" | "水触" | "油触" | "酒触" | "尿触" | "草触" | "血触" | "烟触" | "二重,2重" | "三重,3重" | "四重,4重" | "八重,8重" | "二重散射,2重散射" | "三重散射,3重散射" | "四重散射,4重散射" | "前后阵型" | "二叉阵型" | "T阵型" | "三叉阵型" | "六重,6重" | "五重,5重" | "沉重散射" | "白圈,Q" | "蓝表" | "红表" | "零时" | "灰表" | "聚爆" | "回蓝,蓝球" | "血液魔法" | "金变力,金拳" | "血变力,血拳" | "2X" | "乒乓" | "线性弧" | "自绕" | "大追踪,大追" | "避让" | "小追,小追踪" | "追踪环" | "红拳" | "暴击" | "法转力" | "无伤,伤害移除" | "蓝拳" | "阻尼器" | "化沙" | "狂暴环" | "变羊环" | "电环" | "冰环" | "回血环,治疗环" | "tp环,传送环" | "浮力环" | "盾环" | "岩浆海" | "酒海,酒精海" | "油海" | "水海" | "沼泽海" | "酸液海,酸海" | "可燃气之海,可燃气海" | "拟态海" | "冰修正" | "火暴击" | "水暴击" | "油暴击" | "血暴击" | "投射物虚弱,投射物诅咒" | "爆炸虚弱,爆炸诅咒" | "近战虚弱,近战诅咒" | "雷电虚弱,雷电诅咒" | "半盾" | "陶笛A" | "陶笛B" | "陶笛C" | "陶笛D" | "陶笛E" | "陶笛F" | "陶笛G#" | "陶笛A2" | "康特勒琴A" | "康特勒琴D" | "康特勒琴D#" | "康特勒琴E" | "康特勒琴G" | "AOT" | "α,A" | "γ,Γ" | "T" | "Ω" | "μ,M" | "D2,d2" | "D3,d3" | "D4,d4" | "D10,d10" | "否则,else" | "红色" | "橙色" | "绿色" | "黄色" | "紫色" | "蓝色" | "彩色" | "无色" | "不复存在";
 
 /** `🔤 法术类型` */
 type SpellType = "projectile" | "staticProjectile" | "modifier" | "drawMany" | "material" | "other" | "utility" | "passive";
@@ -439,12 +439,12 @@ type SpellType = "projectile" | "staticProjectile" | "modifier" | "drawMany" | "
 type SpellLevel = 0 | 1 | 2 | 3 | 4 | 5 | 6 | 7 | 10;
 
 /** `🔤 法术标签` */
-type SpellTag = "#all" | `#type_${SpellType}` | `#lv${SpellLevel}` | "#draw" | "#draw_common" | "#draw_hit" | "#draw_timer" | "#draw_death" | "#lifetime_mod" | "#lifetime_up" | "#lifetime_down" | "#mana_0" | "#mana_drainlowly" | "#mana_increase" | "#speed_mod" | "#damage_mod" | `#damage_mod_${import("./public").DamageType}`;
+type SpellTag = "#map" | "#all" | "#type_projectile" | "#type_staticProjectile" | "#type_modifier" | "#type_drawMany" | "#type_material" | "#type_other" | "#type_utility" | "#type_passive" | "#lv0" | "#lv1" | "#lv2" | "#lv3" | "#lv4" | "#lv5" | "#lv6" | "#lv7" | "#lv10" | "#lifetime_mod" | "#lifetime_up" | "#lifetime_down" | "#mana_0" | "#mana_drainlowly" | "#mana_increase" | "#extra_modifier" | "#speed_mod" | "#draw" | "#draw_common" | "#draw_hit" | "#draw_timer" | "#draw_death" | "#damage_mod" | "#damage_add" | "#damage_sub" | "#damage_reset" | "#damage_mod_projectile" | "#damage_add_projectile" | "#damage_sub_projectile" | "#damage_reset_projectile" | "#damage_mod_melee" | "#damage_add_melee" | "#damage_sub_melee" | "#damage_reset_melee" | "#damage_mod_electricity" | "#damage_add_electricity" | "#damage_sub_electricity" | "#damage_reset_electricity" | "#damage_mod_fire" | "#damage_add_fire" | "#damage_sub_fire" | "#damage_reset_fire" | "#damage_mod_explosion" | "#damage_add_explosion" | "#damage_sub_explosion" | "#damage_reset_explosion" | "#damage_mod_ice" | "#damage_add_ice" | "#damage_sub_ice" | "#damage_reset_ice" | "#damage_mod_slice" | "#damage_add_slice" | "#damage_sub_slice" | "#damage_reset_slice" | "#damage_reset_healing" | "#damage_add_healing" | "#damage_sub_healing" | "#damage_mod_curse" | "#damage_add_curse" | "#damage_sub_curse" | "#damage_reset_curse" | "#damage_mod_drill" | "#damage_add_drill" | "#damage_sub_drill" | "#damage_reset_drill" | "#damage_mod_holy" | "#damage_add_holy" | "#damage_sub_holy" | "#damage_reset_holy" | "#spawnRequiresFlag" | "#LIGHT_BULLET" | "#BULLET" | "#HEAVY_BULLET" | "#SLOW_BULLET" | "#BLACK_HOLE" | "#SPITTER" | "#DISC_BULLET" | "#LANCE" | "#GRENADE" | "#MINE" | "#LASER_EMITTER" | "#LUMINOUS_DRILL" | "#TENTACLE" | "#HEAL_BULLET" | "#MAGIC_SHIELD" | "#FIREBALL" | "#BOMB_HOLY" | "#SUMMON_EGG" | "#TNTBOX" | "#DEATH_CROSS" | "#MIST" | "#TELEPORT_PROJECTILE" | "#NUKE" | "#BLACK_HOLE_BIG" | "#BLACK_HOLE_GIGA" | "#SUMMON" | "#WALL" | "#EXPLOSION" | "#FIELD" | "#VACUUM" | "#CLOUD" | "#BOUNCE" | "#HOMING" | "#CRITICAL_HIT" | "#HITFX" | "#RAY" | "#RAY_ENEMY" | "#CURSE" | "#ORBIT" | "#ARC" | "#TRAIL" | "#LARPA" | "#COLOR" | "#BURST" | "#SCATTER" | "#SHAPE" | "#CIRCLE" | "#MATERIAL" | "#TOUCH" | "#SEA" | "#OCARINA" | "#KANTELE" | "#RANDOM" | "#ADD_TRIGGER" | "#SYMBOL" | "#DIVIDE" | "#IF" | "#SHOT" | "#ALL";
 
 /** 法术数据 */
-export type SpellData<T extends SpellId> = {
-    /** ID */ id: T;
-    /** 名称 */ name: SpellIdNameMap[T];
+export type SpellData = {
+    /** ID */ id: SpellId;
+    /** 名称 */ name: SpellName;
     /** 别名 */ alias: Array<SpellAlias>;
     /** 描述 */ desc: String;
     /** 类型 */ type: "null" | SpellType;
@@ -468,15 +468,33 @@ export declare namespace SpellData {
     /** 法术生成数据 -1表示非该等级法术 */
     type SpawningData = {
         /** 0级生成权重 */ prob_lv0: Number;
+        /** 0级生成权重 */ 0: Number;
         /** 1级生成权重 */ prob_lv1: Number;
+        /** 1级生成权重 */ 1: Number;
         /** 2级生成权重 */ prob_lv2: Number;
+        /** 2级生成权重 */ 2: Number;
         /** 3级生成权重 */ prob_lv3: Number;
+        /** 3级生成权重 */ 3: Number;
         /** 4级生成权重 */ prob_lv4: Number;
+        /** 4级生成权重 */ 4: Number;
         /** 5级生成权重 */ prob_lv5: Number;
+        /** 5级生成权重 */ 5: Number;
         /** 6级生成权重 */ prob_lv6: Number;
+        /** 6级生成权重 */ 6: Number;
         /** 7级生成权重 */ prob_lv7: Number;
+        /** 7级生成权重 */ 7: Number;
         /** 10级生成权重 */ prob_lv10: Number;
+        /** 10级生成权重 */ 10: Number;
         /** 生成前置条件(解锁) */ requiresFlag: "None" | String;
+        /** 法术等级 */ lvs: Array<"lv0" | "lv1" | "lv2" | "lv3" | "lv4" | "lv5" | "lv6" | "lv7" | "lv10">;
+        /** 法术等级(非0权重) */ lvs_nonzero: Array<"lv0" | "lv1" | "lv2" | "lv3" | "lv4" | "lv5" | "lv6" | "lv7" | "lv10">;
+        /** 原始数据 */ raw: {
+            lv: String;
+            prob: String;
+        };
+        /** 获取百分比形式概率 */
+        percentage: (lv: "lv0" | "lv1" | "lv2" | "lv3" | "lv4" | "lv5" | "lv6" | "lv7" | "lv10") => Number;
+        forEach: (callback: (lv: "lv0" | "lv1" | "lv2" | "lv3" | "lv4" | "lv5" | "lv6" | "lv7" | "lv10", prob: Number) => void) => void;
     };
 
     /** 投射物信息 */
@@ -681,20 +699,27 @@ export declare namespace SpellData {
         };
     };
 }
-
+/** 构造配置 */
 type ConstructorOption = {
+    /** 法术ID/法术名/法术别名 */
     id?: SpellId | SpellName | SpellAlias;
+    /** 法术查询表达式 */
     exp?: SpellId | SpellTag;
+    /** 法术数据 */
     datas?: Array<SpellData<SpellId>>;
+    /** 显示模式 */
     display?: "icon" | "panel";
+    /** 实例数据 */
     instance?: {
+        /** 剩余使用次数 */
         remain: Number;
     };
 };
 
 type HTMLNoitaSpellElement = HTMLElement & {
     spellDatas: Array<SpellData<SpellId>>;
-    contentUpdate(): never;
+    contentUpdate: () => never;
+    panelContentSwitchTo: (index: Number) => never;
     instance: {
         remain: Number;
     };
@@ -706,10 +731,10 @@ type HTMLNoitaSpellElement = HTMLElement & {
 
 /** ## [`✨ 法术`](https://noita.wiki.gg/zh/wiki/法术) */
 export type Class = {
-    new (option: ConstructorOption): HTMLNoitaSpellElement;
-    new (datas: Array<SpellData<SpellId>>, option: ConstructorOption | undefined): HTMLNoitaSpellElement;
+    new (option?: ConstructorOption): HTMLNoitaSpellElement;
+    new (datas: Array<SpellData>, option?: ConstructorOption | undefined): HTMLNoitaSpellElement;
 
-    readonly datas: Array<SpellData<SpellId>>;
+    readonly datas: Array<SpellData>;
     /**
      * 获取法术数据
      * @param key 查询键
@@ -718,6 +743,6 @@ export type Class = {
      * * {@linkcode SpellAlias|`别名`}
      * @returns 法术数据
      */
-    query: <T extends SpellId>(key: T) => SpellData<T>;
-    queryByExp: (exp: SpellId | SpellTag) => Array<SpellData<SpellId>>;
+    query: (key: SpellId) => SpellData;
+    queryByExp: (exp: SpellId | SpellTag) => Array<SpellData>;
 };

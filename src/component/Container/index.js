@@ -1,30 +1,37 @@
-/** @typedef {import("@contanier").ContainerType} ContainerType */
 /** @typedef {import("@material").MaterialData} MaterialData */
 const Container = (() => {
     embed(`#db.js`);
     ContainerData.init();
     const styleSheet = {
-        base: gss(embed(`#base.css`)),
-        icon: gss(embed(`#icon.css`)),
-        panel: gss(embed(`#panel.css`))
+        base: css(embed(`#base.css`)),
+        icon: css(embed(`#icon.css`)),
+        panel: css(embed(`#panel.css`))
     };
 
     return class HTMLNoitaContainerElement extends $class(Base, {
-        /** @type {$ValueOption<"icon"|"panel">} */
+        /** @type {$ValueOption<"panel"|"icon">} */
         displayMode: { name: "display", $default: "icon" },
-        /** @type {$ValueOption<ContainerType>} */
+        /** @type {$ValueOption<"common"|"conical"|"jar"|"bag">} 容器类型 */
         containerType: { name: "container.type", $default: "common" },
         /** @type {$ValueOption<String>} */
         containerContent: { name: "container.content" }
     }) {
-        /** @type {ShadowRoot} */ #shadowRoot = this.attachShadow({ mode: "closed" });
         /** @type {Array<{type:"COLOR"|"MATERIAL",amount:Number,color?:String,material?:MaterialData}>} 容器内容 */
         #content = [];
         #amount_all = 0;
         /** @type {ContainerData} */
         containerData;
-        constructor() {
+        /**
+         * @param {Object} [option] 构造配置
+         * @param {"icon"|"panel"} [option.display] 显示模式
+         * @param {"common"|"conical"|"jar"|"bag"} [option.type] 容器类型
+         * @param {String} [option.content] 容器内容
+         */
+        constructor({ display, content, type } = {}) {
             super();
+            if (display) this.displayMode = display;
+            if (type) this.containerType = type;
+            if (content) this.containerContent = content;
         }
 
         #parseContentExpression() {
@@ -108,7 +115,7 @@ const Container = (() => {
         };
 
         async #loadIconContent() {
-            this.#shadowRoot.append(this.#getCascadingSVGs());
+            this.shadowRoot.append(this.#getCascadingSVGs());
         }
 
         async #loadPanelContent() {
@@ -139,28 +146,28 @@ const Container = (() => {
         [$symbols.initStyle](extraStyleSheets = []) {
             extraStyleSheets.push(styleSheet.base);
             //prettier-ignore
-            switch(this.displayMode) {
+            switch (this.displayMode) {
                 case "icon": extraStyleSheets.push(styleSheet.icon); break;
-                case "panel": extraStyleSheets.push(styleSheet.panel)
+                case "panel": extraStyleSheets.push(styleSheet.panel);
             }
             super[$symbols.initStyle](extraStyleSheets);
         }
-        /** @override */
+        
+        /**
+         * @override
+         * @see Base#contentUpdate
+         */
         contentUpdate() {
             this.#parseContentExpression();
-            this.#shadowRoot.innerHTML = "";
+            this.shadowRoot.innerHTML = "";
             this[$symbols.initStyle]();
             this.containerData = ContainerData.query(this.containerType);
             //prettier-ignore
-            switch(this.displayMode) {
+            switch (this.displayMode) {
                 case "panel": this.#loadPanelContent(); break;
                 case "icon": this.#loadIconContent(); break;
                 default: throw new TypeError("不支持的显示模式");
             }
-        }
-
-        connectedCallback() {
-            this.contentUpdate();
         }
 
         get [Symbol.toStringTag]() {

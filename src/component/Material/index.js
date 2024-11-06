@@ -2,9 +2,9 @@ const Material = (() => {
     embed(`#db.js`);
     MaterialData.init();
     const styleSheet = {
-        icon: gss(embed(`#icon.css`)),
-        panel: gss(embed(`#panel.css`)),
-        mathml: gss(embed(`#MathML.css`))
+        icon: css(embed(`#icon.css`)),
+        panel: css(embed(`#panel.css`)),
+        mathml: css(embed(`#MathML.css`))
     };
     const typeInfoMap = {
         null: ["NULL", "⚫"],
@@ -13,8 +13,9 @@ const Material = (() => {
         solid: ["固体", "🧊"],
         gas: ["气体", "💨"]
     };
+
     return class HTMLNoitaMaterialElement extends $class(Base, {
-        /** @type {$ValueOption<"icon"|"panel">} */
+        /** @type {$ValueOption<"icon"|"panel"|"reaction">} */
         displayMode: { name: "display", $default: "icon" },
         /** @type {$ValueOption<MaterialId>} */
         materialId: { name: "material.id" },
@@ -23,14 +24,25 @@ const Material = (() => {
         /** @type {$ValueOption<MaterialId>} */
         materialInherit: { name: "material.inherit" }
     }) {
-        static queryById = id => MaterialData.queryById(id);
-        static queryByTag = tag => MaterialData.queryByTag(tag);
-        static queryReaction = keyword => MaterialData.ReactionData.query(keyword);
+        static queryById = MaterialData.queryById.bind(MaterialData);
+        static queryByTag = MaterialData.queryByTag.bind(MaterialData);
+        static queryReaction = MaterialData.ReactionData.query.bind(MaterialData.ReactionData);
 
-        /** @type {ShadowRoot} */ #shadowRoot = this.attachShadow({ mode: "closed" });
-        /** @type {Array<MaterialData>} */ materialDatas;
-        constructor() {
+        /** @type {Array<MaterialData>} */
+        materialDatas;
+        /**
+         * @param {Object} [option] 构造配置
+         * @param {"icon"|"panel"|"reaction"} [option.display] 显示模式
+         * @param {String} [option.id] 材料id
+         * @param {`[${string}]`} [option.tag] 材料标签
+         * @param {String} [option.inherit] 父材料
+         */
+        constructor({ display, tag, id, inherit } = {}) {
             super();
+            if (display) this.displayMode = display;
+            if (id) this.materialId;
+            if (tag) this.materialTag;
+            if (inherit) this.materialInherit = inherit;
         }
 
         //prettier-ignore
@@ -40,8 +52,8 @@ const Material = (() => {
         static get reactionDatas() { return [...MaterialData.ReactionData.data]; }
 
         #loadIconContent() {
-            this.#shadowRoot.innerHTML = "";
-            const length = this.materialDatas.length;
+            this.shadowRoot.innerHTML = "";
+            const { length } = this.materialDatas;
             if (!length) return;
             const titles = [];
             const lis = [];
@@ -52,55 +64,71 @@ const Material = (() => {
                 titles.push(`${typeInfo[1]}${data.name}\n${data.id}`);
             }
             this.title = titles.join("\n\n");
-            this.#shadowRoot.append(h.ol({ part: "tape", style: { "--amount": length } }, lis));
+            this.shadowRoot.append(h.ol({ part: "tape", style: { "--amount": length } }, lis));
         }
 
-        #loadReactionContent() {
-            const data = this.materialDatas[0];
-            const { asCatalyzer, asInput, asOutput } = MaterialData.ReactionData.query(data.id);
+        /**
+         * 切换面板展示内容
+         * @param {Number|String} d
+         */
+        panelContentSwitchTo(d) {
+            if (this.displayMode.startsWith("icon")) return console.warn("仅允许面板和材料反应模式使用");
+            if (this.displayMode.startsWith("panel")) {
+                if (typeof d === "string") this.panelContentSwitchTo(this.materialDatas.indexOf(Material.queryById(d)));
+                else if (d in this.materialDatas) this.shadowRoot.querySelector("menu").children[d].click();
+                else throw new ReferenceError("不存在的材料");
+            } else if (this.displayMode.startsWith("reaction")) {
+                const { children } = this.shadowRoot.querySelector("menu");
+                if (d in children) children[d].click();
+                else throw new ReferenceError("不存在的材料反应种类");
+            }
+        }
+
+        /** 加载材料反应面板 */
+        #loadReactionContent(index = 0) {
+            const { id } = this.materialDatas[0];
+            const { asCatalyzer, asInput, asOutput } = MaterialData.ReactionData.query(id);
+
+            /**
+             * 转换为`<MathML>` 字符串
+             * @param {MaterialData.ReactionData} reaction
+             */
+            const toMathML = reaction => reaction.toString(id, "MathML");
+            /* prettier-ignore */
             /** @type {Array<HTMLTemplateElement>} */
-            const templates = [];
-            if (asCatalyzer.length) {
-                const templateAsCatalyzer = h.template({ title: "作为催化剂" });
-                templates.push(templateAsCatalyzer);
-                const cache = [];
-                for (let i = 0; i < asCatalyzer.length; i++) cache.push(asCatalyzer[i].toString(data.id, "MathML"));
-                templateAsCatalyzer.innerHTML = cache.join("");
-            }
-            if (asInput.length) {
-                const templateAsInput = h.template({ title: "作为原料" });
-                templates.push(templateAsInput);
-                const cache = [];
-                for (let i = 0; i < asInput.length; i++) cache.push(asInput[i].toString(data.id, "MathML"));
-                templateAsInput.innerHTML = cache.join("");
-            }
-            if (asOutput.length) {
-                const template = h.template({ title: "作为产物" });
-                templates.push(template);
-                const cache = [];
-                for (let i = 0; i < asOutput.length; i++) cache.push(asOutput[i].toString(data.id, "MathML"));
-                template.innerHTML = cache.join("");
-            }
+            const templates = [
+                h.template({ title: "作为催化剂", HTML: asCatalyzer.map(toMathML).join("") }),
+                h.template({ title: "作为原料", HTML: asInput.map(toMathML).join("") }),
+                h.template({ title: "作为产物", HTML: asOutput.map(toMathML).join("") })
+            ];
+            templates[index].toggleAttribute("default");
             this.loadPanelContent(templates);
         }
 
         /** @param {Array<CSSStyleSheet>} [extraStyleSheets] 额外样式表 */
         [$symbols.initStyle](extraStyleSheets = []) {
             // extraStyleSheets.push(styleSheet.base);
+            /** @type {String} */
             let mode = this.displayMode;
-            //prettier-ignore
-            switch(mode) {
-                case "panel": extraStyleSheets.push(styleSheet.panel); break;
-                case "icon": extraStyleSheets.push(styleSheet.icon); break;
-                case "reaction":
-                    extraStyleSheets.push(styleSheet.mathml);
-                    mode = "panel"
+            if (mode.startsWith("panel")) {
+                mode = "panel";
+                extraStyleSheets.push(styleSheet.panel);
+            } else if (mode.startsWith("icon")) {
+                mode = "icon";
+                extraStyleSheets.push(styleSheet.icon);
+            } else if (mode.startsWith("reaction")) {
+                mode = "panel";
+                extraStyleSheets.push(styleSheet.mathml);
             }
             super[$symbols.initStyle](extraStyleSheets, mode);
         }
 
+        /**
+         * @override
+         * @see Base#contentUpdate
+         */
         contentUpdate() {
-            this.#shadowRoot.innerHTML = "";
+            this.shadowRoot.innerHTML = "";
             const materialId = this.materialId;
             if (materialId) this.materialDatas = [MaterialData.queryById(materialId)];
             else {
@@ -112,23 +140,17 @@ const Material = (() => {
                 }
             }
             this[$symbols.initStyle]();
-            //prettier-ignore
-            switch(this.displayMode) {
-                case "panel":
-                    //TODO: 等待面板内容加载函数
-                    break;
-                case "icon": this.#loadIconContent(); break;
-                case "reaction": this.#loadReactionContent(); break;
-                default: throw new TypeError("不支持的显示模式");
-            }
-        }
-
-        connectedCallback() {
-            this.contentUpdate();
+            /** @type {String} */
+            const mode = this.displayMode;
+            if (mode.startsWith("panel")) {
+            } else if (mode.startsWith("icon")) this.#loadIconContent();
+            else if (mode.startsWith("reaction")) {
+                this.#loadReactionContent(Number(mode.split(":")[1] ?? 0));
+            } else throw new TypeError("不支持的显示模式");
         }
 
         //prettier-ignore
-        get [Symbol.toStringTag]() { return `HTMLNoitaMaterialElement < ${this.materialDatas.map(e => e.id)} >` }
+        get [Symbol.toStringTag]() { return `HTMLNoitaMaterialElement < ${this.materialDatas.map(e => e.id)} >`; }
     };
 })();
 customElements.define("noita-material", freeze(Material));

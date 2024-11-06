@@ -9,7 +9,7 @@ embed(`#public/polyfill.js`);
  */
 const noitaLib = (() => {
     /** @type {Console} 代理console实现在非dev模式下不在控制台显示调试信息 */
-    let console = window.console;
+    let { console } = window;
     embed(`#embedList.js`);
     console = ((blank = _ => 0) => new Proxy({}, { get: () => blank }))();
     /**
@@ -33,5 +33,5 @@ const noitaLib = (() => {
             `${font_style}font-size:12px;`);
         return ver;
     };
-    return Object.freeze(Object.assign(noitaLib, { translation, Material, Entity, Spell, Wand, Perk, Container, Message, State: {}, Orb, cursor, save }));
+    return Object.freeze(Object.assign(noitaLib, { translation, Material, Entity, Spell, Wand, Perk, Container, Message, Status, Orb, cursor }));
 })();

@@ -1,6 +1,6 @@
 {
     "compilerOptions": {
-        "lib": ["DOM", "ES2017"],
+        "lib": ["DOM", "ESNext", "WebWorker"],
         "allowSyntheticDefaultImports": true,
         "declaration": true,
         "allowJs": true,

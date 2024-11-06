@@ -1,109 +1,458 @@
 //prettier-ignore
 [
-    ["spellType", new this(1, "法术类型")],
-    ["materialType", new this(1, "材料类型")], //材料属性
-    ["shuffle", new this(2, "乱序", "shuffle")],
-    ["draw", new this(3, "抽取数", "draw")],
-    ["capacity", new this(4, "容量", "capacity")],
-    ["staticSpells", new this(5, "始终施放")],
-    ["manaMax", new this(6, "法力上限", "mana-max")],
-    ["manaChargeSpeed", new this(7, "法力恢复速度", "mana-charge-speed")],
-    ["manaDrain", new this(8, "法力消耗")],
-    ["maxUse", new this(9, "最大使用次数")],
-    ["remainingUse", new this(9, "剩余使用次数")],
-    ["fireRateWait", new this(10, "施放延迟", "fire-rate-wait")],
-    ["reloadTime", new this(11, "充能时间", "reload-time")],
-    ["spreadDegrees", new this(12, "散射", "spread-degrees")],
-    ["projectileDamage", new this(13, "投射物伤害")],
-    ["projectileDamageMultiplier", new this(13, "投射物承伤")],
-    ["fireDamage", new this(14, "火焰伤害")],
-    ["fireDamageMultiplier", new this(14, "火焰承伤")],
-    ["iceDamage", new this(15, "冰冻伤害")],
-    ["iceDamageMultiplier", new this(15, "冰冻承伤")],
-    ["explosionDamage", new this(16, "爆炸伤害")],
-    ["explosionDamageMultiplier", new this(16, "爆炸承伤")],
-    ["sliceDamage", new this(17, "切割伤害")],
-    ["sliceDamageMultiplier", new this(17, "切割承伤")],
-    ["drillDamage", new this(18, "穿凿伤害")],
-    ["drillDamageMultiplier", new this(18, "穿凿承伤")],
-    ["durability", new this(18, "硬度")], //材料属性
-    ["electricityDamage", new this(19, "雷电伤害")],
-    ["electricityDamageMultiplier", new this(19, "雷电承伤")],
-    ["conductivity", new this(19, "导电性")], //材料属性
-    ["healingDamage", new this(20, "治疗伤害")],
-    ["healingDamageMultiplier", new this(20, "治疗承伤")],
-    ["meleeDamage", new this(21, "近战伤害")],
-    ["meleeDamageMultiplier", new this(21, "近战承伤")],
-    ["curseDamage", new this(22, "诅咒伤害")],
-    ["curseDamageMultiplier", new this(22, "诅咒承伤")],
-    ["holyDamage", new this(23, "神圣伤害")],
-    ["holyDamageMultiplier", new this(23, "神圣承伤")],
-    ["overeatingDamage", new this(24, "吃撑伤害")],
-    ["overeatingDamageMultiplier", new this(24, "吃撑承伤")],
-    ["ingestionStatusEffects", new this(24, "摄入效果")], //材料属性
-    ["physicsHitDamage", new this(25, "物理伤害")],
-    ["physicsHitDamageMultiplier", new this(25, "物理承伤")],
-    ["poisonDamage", new this(26, "剧毒伤害")],
-    ["poisonDamageMultiplier", new this(26, "剧毒承伤")],
-    ["stainsStatusEffects", new this(26, "沾染效果")], //材料属性
-    ["radioactiveDamage", new this(27, "辐射伤害")],
-    ["radioactiveDamageMultiplier", new this(27, "辐射承伤")],
-    ["damageCriticalChance", new this(28, "暴击率")],
-    ["speed", new this(29, "投射速度")],
-    ["speedMultiplier", new this(29, "投射速度倍数")],
-    ["explosionRadius", new this(30, "爆炸半径")],
-    ["bounces", new this(31, "弹起次数")],
-    ["knockbackForce", new this(32, "击退")],
-    ["lifetime", new this(33, "存在时间")],
-    ["projectilesProvided", new this(34, "提供投射物")],
-    ["projectilesRelated", new this(34, "关联投射物")],
-    ["projectilesUsed", new this(34, "使用投射物")],
-    ["passiveEffect", new this(35, "被动效果")],
-    ["bloodMaterial", new this(36, "血液材料")],
-    ["friendlyFire", new this(36, "友方命中")],
-    ["maxHp", new this(37, "生命值")],
-    ["immunity", new this(38, "免疫能力")],
-    ["#1", new this(39, "#1")], /// 未启用图标
-    ["recoil", new this(40, "后座力")],
-    ["draw_common", new this(41, "抽取|普通")],
-    ["draw_hit", new this(42, "碰撞触发")],
-    ["draw_timer", new this(43, "定时触发")],
-    ["draw_death", new this(44, "失效触发")],
-    ["#2", new this(45, "#2")], /// 未启用图标
-    ["camp", new this(46, "阵营")],
-    ["maxStack", new this(47, "堆叠极限")],
-    ["maxInPool", new this(48, "池最大含量")],
-    ["airInLungsMax", new this(49, "肺容量")],
-    ["patternDegrees", new this(50, "阵型分布")],
-    ["trailMaterial", new this(51, "提供轨迹")],
-    ["trailMaterialAmount", new this(52, "轨迹浓度")],
-    ["material", new this(53, "提供材料")],
-    ["materialAmount", new this(54, "材料浓度")],
-    ["temperature", new this(55, "自燃温度")],
-    ["lock", new this(56, "生成锁")],
-    ["unlock", new this(57, "解锁条件")],
-    ["#3", new this(58, "#3")], /// 未启用图标
-    ["#4", new this(59, "#镐子")], /// 未启用图标
-    ["#5", new this(60, "#铲子")], /// 未启用图标
-    ["#6", new this(61, "#锤子")], /// 未启用图标
-    ["#9", new this(62, "#扳手")], /// 未启用图标
-    ["#10", new this(63, "#双刃斧")], /// 未启用图标
-    ["#11", new this(64, "#图钉")], /// 未启用图标
-    ["wand", new this(65, "魔杖")], /// 未启用图标
-    ["orbitProjectile", new this(66, "环绕投射物")],//未启用图标
-    ["probs", new this(67, "生成概率")],
-    ["action", new this(68, "法术行为")],
-    ["action_", new this(69, "法术行为_")],
-    ["menu", new this(70, "菜单")],
-    ["box", new this(71, "盒子")],
-    ["#12", new this(72, "??")],
-    ["filter", new this(73, "过滤器")],
-    ["gnaw", new this(74, "啃咬")],
-    ["chip1", new this(75, "芯片1")],
-    ["chip2", new this(76, "芯片2")],
-    ["stack", new this(77, "栈")],
-    ["#13", new this(78, "??")],
-    ["#14", new this(79, "??")],
-    ["#15", new this(80, "??")],
-    ["#16", new this(81, "??")]
+    // 1
+    {
+        spellType: "法术类型",
+        materialType: "材料类型"
+    },
+    // 2
+    {
+        shuffle: "乱序"
+    },
+    // 3
+    {
+        draw: "抽取数"
+    },
+    // 4
+    {
+        capacity: "容量"
+    },
+    // 5
+    {
+        staticSpells: "始终施放"
+    },
+    // 6
+    {
+        manaMax:"法力上限"
+    },
+    // 7
+    {
+        manaChargeSpeed: "法力恢复速度"
+    },
+    // 8
+    {
+        manaDrain: "法力消耗"
+    },
+    // 9
+    {
+        maxUse: "最大使用次数",
+        remainingUse: "剩余使用次数"
+    },
+    // 10
+    {
+        fireRateWait: "施放延迟"
+    },
+    // 11
+    {
+        reloadTime: "充能时间",
+        damageInterval: "伤害间隔",
+        effectInterval: "作用间隔"
+    },
+    // 12
+    {
+        spreadDegrees: "散射"
+    },
+    // 13
+    {
+        projectileDamage: "投射物伤害",
+        projectileDamageMultiplier: "投射物承伤"
+    },
+    // 14
+    {
+        fireDamage: "火焰伤害",
+        fireDamageMultiplier: "火焰承伤"
+    },
+    // 15
+    {
+        iceDamage: "冰冻伤害",
+        iceDamageMultiplier: "冰冻承伤",
+    },
+    // 16
+    {
+        explosionDamage: "爆炸伤害",
+        explosionDamageMultiplier: "爆炸承伤",
+    },
+    // 17
+    {
+        sliceDamage: "切割伤害",
+        sliceDamageMultiplier: "切割承伤",
+    },
+    // 18
+    {
+        drillDamage: "穿凿伤害",
+        drillDamageMultiplier: "穿凿承伤",
+        durability: "硬度"
+    },
+    // 19
+    {
+        electricityDamage: "雷电伤害",
+        electricityDamageMultiplier: "雷电承伤",
+        conductivity: "导电性"
+    },
+    // 20
+    {
+        healingDamage: "治疗伤害",
+        healingDamageMultiplier: "治疗承伤",
+    },
+    // 21
+    {
+        meleeDamage: "近战伤害",
+        meleeDamageMultiplier: "近战承伤"
+    },
+    // 22
+    {
+        curseDamage: "诅咒伤害",
+        curseDamageMultiplier: "诅咒承伤"
+    },
+    // 23
+    {
+        holyDamage: "神圣伤害",
+        holyDamageMultiplier: "神圣承伤"
+    },
+    // 24
+    {
+        overeatingDamage: "吃撑伤害",
+        overeatingDamageMultiplier: "吃撑承伤",
+        ingestionStatusEffects: "摄入效果",
+    },
+    // 25
+    {
+        physicsHitDamage: "物理伤害",
+        physicsHitDamageMultiplier: "物理承伤"
+    },
+    // 26
+    {
+        poisonDamage: "剧毒伤害",
+        poisonDamageMultiplier: "剧毒承伤",
+        stainsStatusEffects: "沾染效果",
+    },
+    // 27
+    {
+        radioactiveDamage: "辐射伤害",
+        radioactiveDamageMultiplier: "辐射承伤"
+    },
+    // 28
+    {
+        damageCriticalChance: "暴击率"
+    },
+    // 29
+    {
+        speed: "投射速度",
+        speedMultiplier: "投射速度倍数"
+    },
+    // 30
+    {
+        explosionRadius: "爆炸半径",
+        effectRadius: "作用半径",
+        homingRadius: "探测半径",
+        damageRadius: "伤害半径"
+    },
+    // 31
+    {
+        bounces: "弹起次数"
+    },
+    // 32
+    {
+        knockbackForce: "击退"
+    },
+    // 33
+    {
+        lifetime: "存在时间"
+    },
+    // 34
+    {
+        projectilesProvided: "提供投射物",
+        projectilesRelated: "关联投射物",
+        projectilesUsed: "使用投射物"
+    },
+    // 35
+    {
+        passiveEffect: "被动效果"
+    },
+    // 36
+    {
+        bloodMaterial: "血液材料",
+        friendlyFire: "友方命中",
+        explosionDamageTarget: "爆炸伤害目标"
+    },
+    // 37
+    {
+        maxHp: "生命值"
+    },
+    // 38
+    {
+        immunity: "免疫能力",
+        damageMultiplier: "承伤系数"
+    },
+    "_1", //39
+    // 40
+    {
+        recoil: "后座力"
+    },
+    // 41
+    {
+        draw_common: "普通抽取"
+
+    },
+    // 42
+    {
+        draw_hit: "碰撞触发",
+        on_hit: "碰撞"
+
+    },
+    // 43
+    {
+        draw_timer: "定时触发",
+        on_timer: "定时"
+
+    },
+    // 44
+    {
+        draw_death: "失效触发",
+        on_death: "失效"
+
+    },
+    "_2", // 45
+    // 46
+    {
+        camp: "阵营"
+    },
+    // 47
+    {
+        maxStack: "堆叠极限"
+    },
+    // 48
+    {
+        maxInPool: "池最大含量"
+    },
+    // 49
+    {
+        airInLungsMax: "肺容量"
+    },
+    // 50
+    {
+        patternDegrees: "阵型分布"
+    },
+    // 51
+    {
+        trailMaterial: "提供轨迹"
+    },
+    // 52
+    {
+        trailMaterialAmount: "轨迹材料数量"
+    },
+    // 53
+    {
+        material: "提供材料"
+    },
+    // 54
+    {
+        materialAmount: "材料数量"
+    },
+    // 55
+    {
+        temperature: "自燃温度"
+    },
+    // 56
+    {
+        lock: "生成锁"
+    },
+    // 57
+    {
+        unlock: "解锁条件"
+    },
+    // 58
+    {
+        _3: "_3"
+    },
+    // 59
+    {
+        _4: "镐子"
+    },
+    // 60
+    {
+        _5: "铲子"
+    },
+    // 61
+    {
+        _6: "锤子"
+    },
+    // 62
+    {
+        _9: "扳手"
+    },
+    // 63
+    {
+        _10: "双刃斧"
+    },
+    // 64
+    {
+        _11: "图钉"
+    },
+    // 65
+    {
+        wand: "魔杖"
+    },
+    // 66
+    {
+        orbitProjectile: "环绕投射物"
+    },
+    // 67
+    {
+        probs: "生成概率"
+    },
+    // 68
+    {
+        action: "法术行为"
+    },
+    // 69
+    {
+        action_: "法术行为"
+    },
+    // 70
+    {
+        list: "法术序列"
+    },
+    // 71
+    {
+        box: "盒子"
+    },
+    "_12", // 72
+    // 73
+    {
+        filter: "过滤器"
+    },
+    // 74
+    {
+        gnaw: "啃咬"
+    },
+    // 75
+    {
+        chip1: "芯片1"
+    },
+    // 76
+    {
+        chip2: "芯片2"
+    },
+    // 77
+    {
+        stack: "栈"
+    },
+    "_13", // 78
+    // 79
+    {
+        damageArea: "伤害范围",
+        hitArea: "碰撞范围"
+    },
+    "_15", // 80,
+    // 81
+    {
+        gameEffectEntities: "游戏效果实体"
+    },
+    "holy", // 82
+    // 83
+    {
+        loadEntities: "加载实体"
+    },
+    "_18", // 84
+    "_19", // 85
+    // 86
+    {
+        extraEntities: "额外实体"
+    },
+    "_21",// 87
+    "_22",// 88
+    //#region  字符区
+    "A",// 89
+    "B",// 90
+    "C",// 91
+    "D",// 92
+    "E",// 93
+    "F",// 94
+    "G",// 95
+    "H",// 96
+    "I",// 97
+    "J",// 98
+    "K",// 99
+    "L",// 100
+    "M",// 101
+    "N",// 102
+    "O",// 103
+    "P",// 104
+    "Q",// 105
+    "R",// 106
+    "S",// 107
+    "T",// 108
+    "U",// 109
+    "V",// 110
+    "W",// 111
+    "X",// 112
+    "Y",// 113
+    "Z",// 114
+    0,// 115
+    1,// 116
+    2,// 117
+    3,// 118
+    4,// 119
+    5,// 120
+    6,// 121
+    7,// 122
+    8,// 123
+    9,// 124
+    //#endregion
+    // 125
+    {
+        questionMark: "questionMark",
+        eatProb: "吞噬概率"
+    },
+    // 126
+    {
+        tag: "标签"
+    },
+    "_23", // 127
+    // 128
+    {
+        damageScaledBySpeed: "差速增伤"
+    },
+    // 129
+    {
+        penetrateWorld: "穿透地形"
+    },
+    // 130
+    {
+        penetrateEntities: "穿透实体"
+    },
+    // 131
+    {
+        trigger: "触发条件",
+        explosionTrigger: "爆炸条件"
+    },
+    // 132
+    {
+        materialDamages: "材料伤害"
+    },
+    "execute", // 133
+    "_24", // 134
+    "_25", // 135
+    "_26", // 136
+    "_27", // 137
+    "_28", // 138
+    "_29", // 139
+    "_30", // 140
+    "_31", // 141
+    "_32", // 142
+    // 143
+    {
+        homingTarget: "追踪目标"
+    },
+    "_33", // 144
+    "_35", // 145
+    // 146
+    {
+        collideWithWorld: "碰撞地形"
+    },
+    // 147
+    {
+        collideWithEntities: "碰撞实体"
+    }
 ]

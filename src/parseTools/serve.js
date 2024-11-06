@@ -11,29 +11,11 @@ const require = createRequire(import.meta.url);
 
 /**
  * @type {{
- * doFile:(filepath:String,input: { [key: String]: any },[openlibs]) => {state: LuaEvalState, return: any, error?:String},
- * doString(luaCode:String,input: { [key: String]: any },[openlibs]) => {state: LuaEvalState, return: any, error?:String}
+ * doFile:(filepath:String,input: { [key: String]: any },openlibs:Boolean) => {state: LuaEvalState, return: any, error?:String},
+ * doString(luaCode:String,input: { [key: String]: any },openlibs:Boolean) => {state: LuaEvalState, return: any, error?:String}
  * }}
  */
 const lua = require(`../luaForNodejs/build/Release/lua`);
-
-// 新函数补丁
-Promise.withResolvers ??= () => {
-    let resolve, reject;
-    const promise = new Promise((res, rej) => {
-        resolve = res;
-        reject = rej;
-    });
-    return { promise, resolve, reject };
-};
-
-const dataPath = `D:/Project/Noita_data_wak/2024.7.10/data`;
-
-class LuaError extends Error {
-    constructor(msg) {
-        super(msg);
-    }
-}
 
 /**
  * 导入js文件里的内容
@@ -66,6 +48,7 @@ const config = (() => {
 
     const $return = {
         file: new Map(),
+        /** @type {Map<String,String>} */
         fileType: new Map(),
         /** @param {String} url */
         getPath(url) {
@@ -92,6 +75,8 @@ const config = (() => {
     return $return;
 })();
 
+const dataPath = config.getPath("/data/").slice(0, -1);
+
 const server = http.createServer(async (req, res) => {
     if (req.url) {
         const $path = config.getPath(req.url);
@@ -110,7 +95,7 @@ const server = http.createServer(async (req, res) => {
             }
             if (fs.existsSync(luaPath)) {
                 // 这里向lua环境提供了dataPath 即Noita解包数据的路径
-                const result = lua.doFile(path.resolve(luaPath), { dataPath }).return;
+                const result = lua.doFile(path.resolve(luaPath), { dataPath }, true).return;
                 res.statusCode = 200;
                 res.end(result);
             } else {
@@ -120,10 +105,10 @@ const server = http.createServer(async (req, res) => {
             }
         } else if (fs.existsSync($path)) {
             const mimeType = config.fileType.get(path.extname($path));
-            res.setHeader("Content-Type", mimeType);
+            res.setHeader("Content-Type", mimeType ?? "text");
             res.statusCode = 200;
-            let data = fs.readFileSync($path);
             if (mimeType === "text/html") {
+                let data = fs.readFileSync($path);
                 const doc = parseXML(data.toString());
                 const headElement = doc.childNodes.query("head")[0];
                 const bodyElement = doc.childNodes.query("body")[0];
@@ -142,9 +127,15 @@ const server = http.createServer(async (req, res) => {
                 <body>${bodyElement.toString("RAW")}</body>
                 </html>
                 `;
+                res.end(data);
+            } else {
+                if (mimeType === "image/png") {
+                    res.setHeader("Cache-Control", "max-age=90");
+                    res.setHeader("Expires", new Date(Date.now() + 90000).toGMTString());
+                }
+                const stream = fs.createReadStream($path);
+                stream.pipe(res);
             }
-            res.end(data);
-            // res.end(fs.readFileSync($path));
         } else {
             res.setHeader("Content-Type", "text/html");
             res.statusCode = 404;
@@ -156,6 +147,7 @@ const server = http.createServer(async (req, res) => {
         res.end(config.file.get("index.html"));
     }
 });
+
 const port = 9191;
 server.listen(port, () => {
     const url = `http://localhost:${port}/index.html`;

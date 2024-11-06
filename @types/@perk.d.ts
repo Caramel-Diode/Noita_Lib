@@ -30,13 +30,26 @@ export type PerkData = {
     descKey: String;
 };
 
+type HTMLNoitaPerkElement = HTMLElement & {
+    perkData: {};
+    contentUpdate: () => never;
+    displayMode: String;
+    perkId: PerkId;
+    perkCount: `${number}`;
+};
+
 export type Class = {
     /** 所有天赋数据 */
     readonly datas: Array<PerkData>;
-    new (): HTMLElement & {
-        perkData: {};
-        contentUpdate: () => never;
-    };
+    new (option?: {
+        /** 显示模式 */
+        dispaly?: "panel" | "icon";
+        id: PerkId | PerkName;
+        /** 实例数据 */
+        instanceData?: {
+            amount: Number;
+        };
+    }): HTMLNoitaPerkElement;
     /**
      * 获取天赋数据
      * @param key 查询键

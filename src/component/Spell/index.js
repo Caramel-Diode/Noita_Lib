@@ -2,11 +2,10 @@ const Spell = (() => {
     embed(`#db.js`);
     SpellData.init();
     const styleSheet = {
-        icon: gss(embed(`#icon.css`)),
-        panel: gss(embed(`#panel.css`))
+        icon: css(embed(`#icon.css`)),
+        panel: css(embed(`#panel.css`))
     };
 
-    /** @enum {[String,String,String]} */
     const typeInfoMap = {
         null: ["NULL", "⚫", "null"],
         projectile: ["投射物", "🔴", "projectile"],
@@ -18,6 +17,18 @@ const Spell = (() => {
         utility: ["实用", "🟣", "utility"],
         passive: ["被动", "🟤", "passive"]
     };
+
+    const relatedTypeElementOptionMap = ((_ = "享受施法块属性加成\n\t", __ = "不" + _) => ({
+        common: { class: "relation=common", title: _ + "预载投射物\n\t关联投射物" },
+        relate: { class: "relation=relate", title: _ + "关联投射物" },
+        cast: { class: "relation=cast", title: _ + "预载投射物" },
+        orbit: { class: "relation=orbit", title: __ + "环绕投射物" },
+        bounce: { class: "relation=bounce", title: __ + "弹跳投射物" },
+        "low-speed": { class: "relation=low-speed", title: __ + "低速施放投射物" },
+        death: { class: "relation=death", title: __ + "失效施放投射物" },
+        hit: { class: "relation=hit", title: __ + "碰撞施放投射物" },
+        timer: { class: "relation=timer", title: __ + "定时施放投射物" }
+    }))();
 
     const switchWeightAndProp = (() => {
         /** @param {MouseEvent|KeyboardEvent} event */
@@ -58,21 +69,25 @@ const Spell = (() => {
     return class HTMLNoitaSpellElement extends $class(Base, {
         /** @type {$ValueOption<"icon"|"panel">} */
         displayMode: { name: "display", $default: "icon" },
+        /** @type {$ValueOption<"s"|"f">} */
+        displayTimeUnit: { name: "display.time-unit", $default: "s" },
         /** @type {$ValueOption<SpellId|SpellName|SpellAlias>} */
         spellId: { name: "spell.id" },
-        /** @type {$ValueOption<SpellId|import("TYPE").SpellTag>} */
+        /** @type {$ValueOption<String>} */
         spellExp: { name: "spell.exp" },
         /** @type {$ValueOption<String>} */
         spellRemain: { name: "spell.remain" }
     }) {
-        static query = SpellData.query;
-        static queryByExp = SpellData.queryByExp;
-        static registerTag = SpellData.registerTag;
-        /// prettier-ignore
+        static query = SpellData.query.bind(SpellData);
+        static queryByExp = SpellData.queryByExp.bind(SpellData);
+        static registerTag = SpellData.registerTag.bind(SpellData);
+        static get spellTags() {
+            return SpellData.spellTags;
+        }
 
         static get datas() {
             const result = [];
-            SpellData.data.all.forEach(e => {
+            SpellData.tagSets.all.forEach(e => {
                 result[e.id] = e;
                 result[e.name] = e;
                 for (const i of e.alias) result[i] = e;
@@ -81,7 +96,7 @@ const Spell = (() => {
             return result;
         }
 
-        /** @type {ShadowRoot} */ #shadowRoot = this.attachShadow({ mode: "closed" });
+        /** @type {ShadowRoot} */ #shadowRoot = this.attachShadow({ mode: "open" });
         #needDefaultFn = true;
 
         /** @type {Array<SpellData>} */ spellDatas = [];
@@ -89,13 +104,12 @@ const Spell = (() => {
         instanceData = { remain: Infinity };
 
         /**
-         * @typedef {{
-         *     id?: SpellId|SpellName|SpellAlias,
-         *     exp?: import("TYPE").SpellTag,
-         *     datas?: Array<SpellData>,
-         *     display?:"icon"|"panel",
-         *     instanceData:{remain:Number}
-         * }} ConstructorOption
+         * @typedef ConstructorOption 构造配置
+         * @prop {"icon"|"panel"} [display] 显示模式
+         * @prop {String} [id] 法术id/法术名/法术别名
+         * @prop {String} [exp] 法术查询表达式
+         * @prop {Object} [instanceData] 实例数据
+         * @prop {Number} [instanceData.remain] 剩余使用次数
          */
 
         /**
@@ -107,27 +121,21 @@ const Spell = (() => {
          * @overload
          * @param {ConstructorOption} option
          */
-        constructor(...params) {
+        constructor(p1 = {}, p2 = {}) {
             super();
-            let option = null;
-            if (typeof params[0] === "object") {
-                if (Array.isArray(params[0])) this.spellDatas = params[0];
-                else option = params[0];
-            }
-            if (typeof params[1] === "object") {
-                option = params[1];
-            }
-            if (option) {
-                if (option.id) this.setAttribute("spell.id", option.id);
-                else if (option.exp) this.setAttribute("spell.exp", option.exp);
-                else if (option.datas) this.spellDatas = option.datas;
-                this.#needDefaultFn = option.needDefaultFn !== false;
-                if (option.display) this.setAttribute("display", option.display);
+            /** @type {ConstructorOption} */
+            let option = p2;
 
-                if (option.instanceData) {
-                    this.setAttribute("spell.remain", option.instanceData.remain.toString());
-                    this.instanceData = option.instanceData;
-                }
+            if (Array.isArray(p1)) option.datas = p1;
+            else option = p1;
+
+            if (option) {
+                const { display, id, exp, instanceData, datas } = option;
+                if (display) this.displayMode = display;
+                if (id) this.spellId = id;
+                if (exp) this.spellExp = exp;
+                if (datas) this.spellDatas = datas;
+                if (instanceData) this.spellRemain = instanceData.remain;
             }
         }
 
@@ -206,6 +214,7 @@ const Spell = (() => {
          * @param {Number|String} d id,name,alias 或 索引
          */
         panelContentSwitchTo(d) {
+            if (this.displayMode.startsWith("icon")) return console.warn("仅允许面板模式使用");
             if (typeof d === "string") this.panelContentSwitchTo(this.spellDatas.indexOf(Spell.query(d)));
             else if (d in this.spellDatas) this.#shadowRoot.querySelector("menu").children[d].click();
             else throw new ReferenceError("不存在的法术");
@@ -231,59 +240,87 @@ const Spell = (() => {
 
                 //#region 投射物信息
 
-                const relatedSectionElements = [];
                 const lis = [];
-                for (let i = 0; i < sd.offeredProjectile.length; i++) {
+                for (let i = 0, relatedSectionElements = []; i < sd.offeredProjectile.length; i++) {
                     const data = sd.offeredProjectile[i];
                     const { amountMax, amountMin, type, projectile } = data;
-                    let amount = "";
-                    let title = "";
-                    if (amountMax > 1) {
-                        if (amountMax !== amountMin) amount = `(${amountMin}~${amountMax})`;
-                        else amount = `(${amountMax})`;
-                    }
-
-                    //prettier-ignore
-                    switch(type) {
-                        case "common":    title = "享受施法块属性加成\n\t预载投射物\n\t关联投射物"; break;
-                        case "relate":    title = "享受施法块属性加成\n\t关联投射物";             break;
-                        case "cast":      title = "享受施法块属性加成\n\t预载投射物";             break;
-                        case "orbit":     title = "不享受施法块属性加成\n\t环绕投射物";            break;
-                        case "bounce":    title = "不享受施法块属性加成\n\t弹跳投射物";            break;
-                        case "low-speed": title = "不享受施法块属性加成\n\t低速施放投射物";        break;
-                        case "death":     title = "不享受施法块属性加成\n\t失效施放投射物";        break;
-                        case "hit":       title = "不享受施法块属性加成\n\t碰撞施放投射物";        break;
-                        case "timer":     title = "不享受施法块属性加成\n\t定时施放投射物";        break;
-                    }
-
                     // 获取实体的数据
-                    const section_offeredProjectile = Entity.getDataSection(projectile, data, ignore);
-                    section_offeredProjectile.setAttribute("related-id", i);
-                    const li = h.li({ class: "unselected", "related-id": i, "entity.relation": type, title }, projectile.name, amount);
-                    relatedSectionElements.push(section_offeredProjectile);
-                    section.append(section_offeredProjectile); // 在修正信息和基本信息之间添加投射物信息
+                    /* prettier-ignore */
+                    /** @type {HTMLElement} */
+                    const sectionOfferedProjectile = relatedSectionElements[i] = Entity.getDataSection(projectile, data, ignore, this.displayTimeUnit);
+                    /* prettier-ignore */
+                    /** @type {HTMLLIElement} */
+                    const li = lis[i] = h.li(
+                        relatedTypeElementOptionMap[type],
+                        projectile.name +
+                        (amountMax > 1 ?
+                            (amountMax !== amountMin ?
+                                `(${amountMin}~${amountMax})` : `(${amountMax})`
+                            ) : ""
+                        )
+                    );
                     li.relatedSectionElements = relatedSectionElements;
-
-                    lis.push(li);
+                    li.dataset.relatedId = sectionOfferedProjectile.dataset.relatedId = i;
+                    section.append(sectionOfferedProjectile); // 在修正信息和基本信息之间添加投射物信息
                 }
                 //#endregion
 
                 //#region 修正信息
-                const modLoader = new Base.PanelAttrLoader(ignore).load(sd.modifierAction);
+                {
+                    const config = { ...sd.modifierAction };
+                    const modLoader = new Base.PanelAttrLoader(ignore, this.displayTimeUnit);
+                    section.append(modLoader.container);
+                    if (sd.modifierAction.extraEntities) {
+                        /** @type {Array<EntityData>} */
+                        const entitise = sd.modifierAction.extraEntities.value;
+                        const lis = [];
+                        for (let i = 0, relatedSectionElements = []; i < entitise.length; i++) {
+                            const data = entitise[i];
+                            /* prettier-ignore */
+                            /** @type {HTMLElement} */
+                            const sectionEntity = relatedSectionElements[i] = Entity.getDataSection(data, void 0, ignore, this.displayTimeUnit);
+                            /* prettier-ignore */
+                            const li = lis[i] = h.li(data.name);
+                            li.relatedSectionElements = relatedSectionElements;
+                            li.dataset.relatedId = sectionEntity.dataset.relatedId = i;
+                            section.append(sectionEntity);
+                        }
+                        delete config.extraEntities;
+                        config.extraEntities = { value: lis, hidden: !lis[0] };
+                    }
+                    if (sd.modifierAction.gameEffectEntities) {
+                        /** @type {Array<EntityData>} */
+                        const entitise = sd.modifierAction.gameEffectEntities.value;
+                        const lis = [];
+                        for (let i = 0, relatedSectionElements = []; i < entitise.length; i++) {
+                            const data = entitise[i];
+                            /* prettier-ignore */
+                            /** @type {HTMLElement} */
+                            const sectionEntity = relatedSectionElements[i] = Entity.getDataSection(data, void 0, ignore, this.displayTimeUnit);
+                            /* prettier-ignore */
+                            const li = lis[i] = h.li(data.name);
+                            li.relatedSectionElements = relatedSectionElements;
+                            li.dataset.relatedId = sectionEntity.dataset.relatedId = i;
+                            section.append(sectionEntity);
+                        }
+                        delete config.gameEffectEntities;
+                        config.gameEffectEntities = { value: lis, hidden: !lis[0] };
+                    }
+                    modLoader.load(config);
+                }
 
-                section.append(modLoader.container); //添加到最后
                 //#endregion
 
                 //#region 基本信息
                 //prettier-ignore
                 const baseLoader = new Base.PanelAttrLoader(ignore).load({
-                    spellType:           { value: typeInfoMap[sd.type][0]                                                                     },
-                    manaDrain:           { value: sd.mana                                                                                     },
-                    maxUse:              { value: { max: sd.maxUse, unlimited: sd.unlimited },               hidden: !Number.isFinite(sd.maxUse)},
-                    draw:                { value: sd.draw,                                                   hidden: !sd.draw                 },
-                    passiveEffect:       { value: sd.passiveEffect,                                          hidden: !sd.passiveEffect        },
-                    unlock:              { value: sd.spawn.requiresFlag,                                     hidden: !sd.spawn.requiresFlag   },
-                    projectilesProvided: { value: lis,                                                       hidden: !lis[0]                  }
+                    spellType: { value: typeInfoMap[sd.type][0] },
+                    manaDrain: { value: sd.mana },
+                    maxUse: { value: { max: sd.maxUse, unlimited: sd.unlimited }, hidden: !Number.isFinite(sd.maxUse) },
+                    draw: { value: sd.draw, hidden: !sd.draw },
+                    passiveEffect: { value: sd.passive, hidden: !sd.passive },
+                    unlock: { value: sd.spawn.requiresFlag, hidden: !sd.spawn.requiresFlag },
+                    projectilesProvided: { value: lis, hidden: !lis[0] }
                 });
                 section.prepend(baseLoader.container); //添加到最前
                 //#endregion
@@ -331,6 +368,10 @@ const Spell = (() => {
             super[$symbols.initStyle](extraStyleSheets, mode);
         }
 
+        /**
+         * @override
+         * @see Base#contentUpdate
+         */
         contentUpdate() {
             const spellId = this.spellId;
             if (spellId) this.spellDatas = [SpellData.query(spellId)];
@@ -346,23 +387,19 @@ const Spell = (() => {
             }
             this[$symbols.initStyle]();
             //prettier-ignore
-            switch(this.displayMode) {
+            switch (this.displayMode) {
                 case "panel": this.#loadPanelContent(); break;
                 case "icon": this.#loadIconContent(); break;
-                default: 
-                    if(this.displayMode.startsWith("panel")) {
+                default:
+                    if (this.displayMode.startsWith("panel")) {
                         this.#loadPanelContent(Number(this.displayMode.split(":")[1]));
                         break;
                     }
-                    if(this.displayMode.startsWith("icon")) {
+                    if (this.displayMode.startsWith("icon")) {
                         this.#loadIconContent(this.displayMode.split(":")[1]);
                         break;
                     }
             }
-        }
-
-        connectedCallback() {
-            this.contentUpdate();
         }
 
         get [Symbol.toStringTag]() {
