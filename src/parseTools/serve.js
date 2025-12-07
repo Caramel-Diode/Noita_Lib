@@ -5,6 +5,8 @@ import { exec } from "child_process";
 import { platform } from "os";
 import { URL } from "url";
 import { createRequire } from "module";
+import { generateAnimalsEntitiesPaths } from "./generateAnimalsEntitiesPaths.js";
+
 const require = createRequire(import.meta.url);
 
 /** @typedef {"LUA_OK"|"LUA_YIELD"|"LUA_ERRRUN"|"LUA_ERRSYNTAX"|"LUA_ERRMEM"|"LUA_ERRERR"} LuaEvalState */
@@ -35,15 +37,16 @@ const include = (path, $return, context) => {
     return new Function(...context_varNames, fs.readFileSync(path).toString() + `return ${$return}`)(...context_varValues);
 };
 
-/** @type {typeof XML.parse} */
-const parseXML = include("./src/public/XML.js", "XML.parse");
+const XML = include("./src/public/XML.js", "XML");
 
 const config = (() => {
     /** @type {DocumentNode} */
-    const doc = parseXML(fs.readFileSync(`./src/parseTools/config.xml`).toString());
+    const doc = XML.parse(fs.readFileSync(`./src/parseTools/config.xml`).toString());
+
     const fileTypeEs = doc.childNodes.query("FileType");
     const pathEs = doc.childNodes.query("Path");
     const fileEs = doc.childNodes.query("File");
+
     const pathMap = new Map();
 
     const $return = {
@@ -76,6 +79,8 @@ const config = (() => {
 })();
 
 const dataPath = config.getPath("/data/").slice(0, -1);
+generateAnimalsEntitiesPaths(dataPath);
+// console.log(dataPath);
 
 const server = http.createServer(async (req, res) => {
     if (req.url) {
@@ -105,11 +110,18 @@ const server = http.createServer(async (req, res) => {
             }
         } else if (fs.existsSync($path)) {
             const mimeType = config.fileType.get(path.extname($path));
+
             res.setHeader("Content-Type", mimeType ?? "text");
             res.statusCode = 200;
             if (mimeType === "text/html") {
                 let data = fs.readFileSync($path);
-                const doc = parseXML(data.toString());
+                const doc = XML.parse(data.toString());
+                const singleTag = new Set(["br", "hr", "img", "input", "link", "meta", "area", "base", "col", "embed", "source", "track", "wbr"]);
+                doc.childNodes.query(node => {
+                    if (!(node instanceof XML.ElementNode)) return false;
+                    if (!singleTag.has(node.tagName)) node.childNodes.push(new XML.TextNode(""));
+                    return true;
+                });
                 const headElement = doc.childNodes.query("head")[0];
                 const bodyElement = doc.childNodes.query("body")[0];
                 data = `
@@ -121,12 +133,16 @@ const server = http.createServer(async (req, res) => {
                     <!-- 自动追加脚本 -->
                     <script src="/public/XML.js"></script>
                     <script src="/public/CSV.js"></script>
+                    <script src="/public/htmlTools.js"></script>
+                    <script src="/public/cssTools.js"></script>
                     <script src="/util.js"></script>
-                    ${headElement.toString("RAW")}
+                    ${headElement.toString().slice(6, -7)}
                 </head>
-                <body>${bodyElement.toString("RAW")}</body>
+                ${bodyElement.toString("RAW")}
                 </html>
                 `;
+                // console.log(data);
+
                 res.end(data);
             } else {
                 if (mimeType === "image/png") {
