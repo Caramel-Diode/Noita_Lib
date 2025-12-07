@@ -11,13 +11,16 @@ const getCommentText = data => `/*
 
 const zh_cn = langData.getZH_CN;
 const blank = Symbol("");
+
+const abbrList = new AbbrList();
+
 /**
  * 最小化xml路径
  * @param {String} path
  */
 const minPath = path => {
     let paths = path.split(",").map(p => p.replace("data/entities/", "").replace(".xml", ""));
-    paths = paths.filter(p => !p.startsWith("particles/"));
+    // paths = paths.filter(p => !p.startsWith("particles/"));
     if (paths.length) return paths.join(",");
     return blank;
 };
@@ -26,8 +29,6 @@ const extraEntities = new Set();
 const gameEffectEntities = new Set();
 
 class Spell {
-    /** @type {Map<String,Symbol>} */
-    static spawnRequiresFlagMap = new Map();
     //prettier-ignore
     static modifierPropAbbrMap = {
 //      修正属性                    简写
@@ -113,15 +114,12 @@ class Spell {
         if (data.spawnRequiresFlag) {
             const unlockDesc = Spell._unlockDescCSV.get(data.id, 2);
             if (unlockDesc) {
-                if (Spell.spawnRequiresFlagMap.has(unlockDesc)) this.spawnRequiresFlag = Spell.spawnRequiresFlagMap.get(unlockDesc);
-                else {
-                    Spell.spawnRequiresFlagMap.set(unlockDesc, Symbol("$" + (Spell.spawnRequiresFlagMap.size + 1)));
-                    this.spawnRequiresFlag = Spell.spawnRequiresFlagMap.get(unlockDesc);
-                }
+                this.spawnRequiresFlag = unlockDesc;
             } else {
                 this.spawnRequiresFlag = data.spawnRequiresFlag;
                 console.warn(`解锁条件描述缺失 ${data.id}:${data.name}`);
             }
+            abbrList.add(this.spawnRequiresFlag);
         }
         if (data.passive) {
             const passiveDesc = Spell._passiveDescCSV.get(data.id, 2);
@@ -185,7 +183,7 @@ class Spell {
                 projectilesCache.push(projectiles);
             }
         }
-        
+
         this.projectiles = projectilesCache.join(" ").trimEnd();
 
         this.damageMod = Object.assign(new DamageData(""), data.damageMod).toString();
@@ -199,6 +197,7 @@ class Spell {
         const spwanLevels = data.spwanLevel.split(",").map(Number);
         const spawnProbs = data.spawnProb.split(",").map(Number);
         for (let i = 0; i < spawnProbs.length; i++) this.spawnProbs[spwanLevels[i]] = spawnProbs[i];
+        abbrList.add(this.spawnProbs);
         this.draw = data.draw;
         // this.modifierAction = data.modifierAction;
         const modifierAction = data.modifierAction;
@@ -216,33 +215,49 @@ class Spell {
             } else if (e.pos === "before") flag_separator = -1;
 
             const prop = Spell.modifierPropAbbrMap[e.prop];
-            if (["gee", "exe"].includes(prop)) {
-                console.log(prop);
+            if (prop === "mel" || prop === "tme") {
+                console.log(e);
 
+                e.value = e.value.trim();
+                if (e.value.endsWith(",")) e.value = e.value.slice(0, -1);
+            }
+
+            if (["gee", "exe"].includes(prop)) {
                 if (prop === "gee") gameEffectEntities.add(e.value);
                 if (prop === "exe") extraEntities.add(e.value);
                 e.value = minPath(e.value);
                 if (e.value.endsWith(",")) e.value = e.value.slice(0, -1);
+                // if (this.id === "FREEZE") {
+                //     console.log(data);
+
+                //     console.trace("???", prop, e);
+                // }
                 if (!e.value) continue;
             }
             if (typeof e.value === "boolean") e.value = Number(e.value);
             if (prop) cache.push(prop, e.type, e.value, ";");
+            // if (this.id === "FREEZE") {
+            //     console.log("###", [...cache]);
+            // }
         }
         if (cache.at(-1)) cache.pop(); //取消不必要的';'
         if (flag_separator < 0) cache.push("#");
         this.modifierAction = cache.join("");
+        this.neverUnlimited = data.neverUnlimited;
+        this.recursive = data.recursive;
+        this.aiNeverUses = data.aiNeverUses;
+        this.spawnManualUnlock = data.spawnManualUnlock;
     }
 
     toString(spread = false) {
-        // console.error(this.name, this);
-
         const alias = this.alias ? this.alias : blank;
         const maxUse = this.maxUse === 0 ? blank : this.maxUse;
         const passive = this.passive ? this.passive : blank;
-        const spawnRequiresFlag = this.spawnRequiresFlag ? this.spawnRequiresFlag : blank;
+        const spawnRequiresFlag = this.spawnRequiresFlag ? abbrList.abbr(this.spawnRequiresFlag) : blank;
         const draw = this.draw === 0 ? blank : this.draw;
         const projectiles = this.projectiles ? this.projectiles : blank;
         const modifierAction = this.modifierAction ? this.modifierAction : blank;
+        const bitsNum = new Bits([this.neverUnlimited, this.recursive, this.aiNeverUses, this.spawnManualUnlock]).toBigInt();
         const str = JSON5.stringify([
             //===============================[构造器数据索引]
             this.id, //======================[0] id
@@ -254,14 +269,13 @@ class Spell {
             this.mana, //====================[6] 蓝耗
             this.price, //===================[7] 售价
             passive, //======================[8] 被动效果
-            this.spawnProbs, //==============[9] 生成概率
+            abbrList.abbr(this.spawnProbs), //==============[9] 生成概率
             spawnRequiresFlag, //============[10] 生成条件
             draw, //=========================[11] 抽取数
             projectiles, //==================[12] 提供投射物
             modifierAction, //===============[13] 修正行为
             this.action, //==================[14] 法术行为
-            this.nameKey, //=================[15] 名称键 用于csv翻译映射
-            this.descKey //==================[16] 描述键 用于csv翻译映射
+            bitsNum === 0n ? blank : bitsNum
         ]);
         if (spread) return str.slice(1, -1);
         return str;
@@ -284,30 +298,13 @@ class Spell {
         h.button(
             {
                 async onclick() {
-                    const data = spellBaseDatas.map(e => new Spell(e).toString(true));
-                    // console.log(data);
-
-                    const params_str = [...Spell.spawnRequiresFlagMap].map(([data, $var]) => `${$var.description}=${JSON.stringify(data)}`).join(",\n    ");
+                    const data = spellBaseDatas.map(e => new Spell(e)).map(e => e.toString(true));
                     const spells_str = data.join(",\n    ");
                     const comment = getCommentText(`共${data.length}条法术数据`);
-                    const fileContent = `${comment}\n((\n    ${params_str}\n)=>[\n    ${spells_str}\n])()`;
+                    const fileContent = `${comment}\n((\n    ${abbrList.toString()}\n)=>[\n    ${spells_str}\n])()`;
+                    console.log(abbrList);
                     console.log(fileContent);
-
                     download(fileContent, "spell.data.js");
-                    // const cache = [];
-                    // for (let i = 0; i < data.length; i++) {
-                    //     const d = data[i];
-                    //     const base64 = await urlToBase64(imgs[i], 2);
-                    //     let alias = "";
-
-                    //     if (d.alias)
-                    //         alias = `${d.alias
-                    //             .split(" ")
-                    //             .map(e => `\`${e}\``)
-                    //             .join(",")}`;
-                    //     cache.push(`{"name":"${d.id}","description":"**\`${Spell.typeEmojis[d.type]}${d.name}\`**  \\n![](${base64})  \\n${alias}"}`);
-                    // }
-                    // console.log(cache.join(",\n"));
                 }
             },
             "生成法术数据"
