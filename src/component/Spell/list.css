@@ -1,0 +1,10 @@
+:host {
+    margin: 5px;
+}
+
+ul {
+    display: inline-flex;
+    flex-wrap: wrap;
+    gap: var(--gap, 5px);
+    place-content: center start;
+}
