@@ -27,8 +27,8 @@ class Perk {
         this.gameEffect = data.game_effect;
         this.usableByEnemies = data.usable_by_enemies;
     }
-    toString() {
-        return JSON5.stringify([
+    toString(spread = false) {
+        const str = JSON5.stringify([
             this.id, //==================[0] id
             this.name, //================[1] 名称
             this.desc, //================[2] 描述
@@ -40,6 +40,8 @@ class Perk {
             this.nameKey, //=============[8] 名称翻译键
             this.descKey //==============[9] 描述翻译键
         ]);
+        if (spread) return str.slice(1, -1);
+        return str;
     }
 }
 addEventListener("DOMContentLoaded", async () => {
@@ -99,10 +101,18 @@ addEventListener("DOMContentLoaded", async () => {
     document.querySelector("#canvas-viewport").append(canvas);
     button.addEventListener("click", () => {
         /** @type {Array<Perk>} */
-        const data = perkDatas.map(e => new Perk(e));
+        const data = perkDatas.map(e => new Perk(e).toString(true));
         // console.log(data);
         const fileContent = `${getCommentText(`共${perkDatas.length}条天赋数据`)}\n[\n    ${data.join(",\n    ")}\n]`;
         download(fileContent, "perk.data.js");
     });
     button.innerText = buttonText;
+
+    // {
+    //     const strs = [];
+    //     for (const { id, ui_name, ui_description, game_effect = "", stackable = false, stackable_is_rare = false, usable_by_enemie = false } of perkData2) {
+    //         strs.push(`--${zh_cn(ui_name)}\n{ id = "${id}",\n ui_name = "${ui_name}",\n ui_description = "${ui_description}", game_effect = ${game_effect ? `"${game_effect}"` : "nil"}, stackable = ${stackable}, stackable_is_rare = ${stackable_is_rare}, usable_by_enemie = ${usable_by_enemie} }`);
+    //     }
+    //     console.log(`local all_perks = {${strs.join(",\n")}}`);
+    // }
 });
