@@ -20,7 +20,7 @@ class PanelAttrInfo {
         }
 
         static {
-            this.$defineElement("panel-attr");
+            this.define("panel-attr");
         }
     };
 
