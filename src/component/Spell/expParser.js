@@ -1,35 +1,20 @@
-/** @type {util.parse.Token} */
-let currentToken;
-/** @type {SpellGroup|undefined} 当前表达式 */
-let currentExp;
+const err = (...args) => new SyntaxError(String.raw(...args));
+const { isBlank, isWordPart } = Lexer;
+/* prettier-ignore */
+const lexer = new Lexer([
+    Lexer.preset.BLANK,
+    Lexer.preset.SPELL_ID,
+    Lexer.preset.SPELL_TAG,
+    { id: "PARENTHESE_LEFT", data: "(" },
+    { id: "PARENTHESE_RIGHT", data: ")" },
+    { id: "NOT", data: "!" },
+    { id: "OR", data: "|" },
+    { id: "AND", data: "&" },
+    { id: "DIFF", data: "-" },
+    { id: "XOR", data: "^" }
+]);
 
-const err = ([info]) => {
-    console.error(currentToken.index, new SyntaxError(`${info} index:${currentToken.index}`), currentExp ?? "");
-    return util.parse.errRestult;
-};
-const { Token, isBlank, isWordPart } = util.parse;
-
-const tokenEnum = {
-    /** 法术ID */
-    SI: new Token.Enum("SPELL_ID", "#8080FF", "8080FF40", 700, "string", true),
-    /** 法术标签 */
-    ST: new Token.Enum("SPELL_TAG", "#FFFF80", "FFFF8040", 700, "string", true),
-    BRACKET_SL: new Token.Enum("BRACKET_SMALL_LEFT", "#CE9178", void 0, 700, "string", true, "("),
-    BRACKET_SR: new Token.Enum("BRACKET_SMALL_RIGHT", "#CE9178", void 0, 700, "string", true, ")"),
-    /** 逻辑非 */
-    NOT: new Token.Enum("NOT", "#CE9178", void 0, 700, "string", true, "!"),
-    /** 逻辑与 */
-    OR: new Token.Enum("OR", "#CE9178", void 0, 700, "string", true, "|"),
-    /** 逻辑与 */
-    AND: new Token.Enum("AND", "#CE9178", void 0, 700, "string", true, "&"),
-    /** 未定义 */
-    UND: new Token.Enum("UND")
-};
-
-class SpellGroup {
-    static {
-        this.prototype.type = "SPELL_GROUP";
-    }
+class LogicExp {
     /**
      * @type {0|1|2|-1}
      * ### 匹配状态
@@ -38,20 +23,25 @@ class SpellGroup {
      * * 2:等待匹配法术标签/ID/组
      * * -1:完成
      */
-    dataState = 0;
+    state = 0;
     /**
      * @type {0|1|-1}
-     * ### 匹配状态
+     * ### 括号匹配状态
      * * 0: 无需括号
      * * 1: 等待右括号
      * * -1: 括号已成对
      */
-    bracketState = 0;
+    parenthese = 0;
     #data1;
     #data2;
     #operator;
+    /** @returns {"LOGIC_EXP"} */
+    get type() {
+        return "LOGIC_EXP";
+    }
+
     set data1(value) {
-        if (!this.#data1) this.dataState = 1;
+        if (!this.#data1) this.state = 1;
         this.#data1 = value;
     }
 
@@ -60,7 +50,7 @@ class SpellGroup {
     }
 
     set data2(value) {
-        if (!this.#data2) this.dataState = -1;
+        if (!this.#data2) this.state = -1;
         this.#data2 = value;
     }
 
@@ -68,13 +58,13 @@ class SpellGroup {
         return this.#data2;
     }
 
-    /** @param {"OR"|"AND"|"NOT"} value */
+    /** @param {"OR"|"AND"|"NOT"|"DIFF"|"XOR"} value */
     set operator(value) {
-        if (!this.#operator) this.dataState = 2;
+        if (!this.#operator) this.state = 2;
         this.#operator = value;
     }
 
-    /** @returns {"OR"|"AND"|"NOT"} */
+    /** @returns {"OR"|"AND"|"NOT"|"DIFF"|"XOR"} */
     get operator() {
         return this.#operator;
     }
@@ -87,225 +77,188 @@ class SpellGroup {
 }
 /**
  * 根据AST获取法术数据数组
- * @param {{type: String, data: String, data1: String?, data2: String?}} exp
+ * @param {{type: "SPELL_ID" | "SPELL_TAG", data: string} | LogicExp} exp
  * @returns {Set<SpellData>}
  */
 const getSpellDatas = exp => {
+    let result = null;
     switch (exp.type) {
         case "SPELL_ID":
+            console.log(`%c${exp.data}`, "background: #19A85A; color: #fff; padding: 0 2px; font-weight: bolder; border-radius: 2px;");
             return new Set([SpellData.query(exp.data)]);
         case "SPELL_TAG":
-            const result = SpellData.tagSets[exp.data];
+            console.log(`%c${exp.data}`, "background: #E1761C; color: #fff; padding: 0 2px; font-weight: bolder; border-radius: 2px;");
+            result = SpellData.tagSets[exp.data];
             if (result) return result;
             else {
                 console.warn("暂不支持的法术法术标签", exp);
                 return new Set();
             }
-
-        case "SPELL_GROUP":
-            switch (exp.operator) {
-                case "AND":
-                    return getSpellDatas(exp.data1).intersection(getSpellDatas(exp.data2)); //取交集 采用polyfill函数
-                case "OR":
-                    return getSpellDatas(exp.data1).union(getSpellDatas(exp.data2)); //取并集 采用polyfill函数
-                case "NOT":
-                    return SpellData.tagSets.all.difference(getSpellDatas(exp.data2)); //取补集 采用polyfill函数
+        case "LOGIC_EXP":
+            const { data1, data2, operator } = exp;
+            // 空括号视为空集
+            if (!operator) {
+                console.log("%cNULL", "color: #A8524D");
+                return new Set();
             }
+            console.group(`%c${operator}`, "color: #AD71F2");
+            switch (operator) {
+                case "XOR":
+                    result = getSpellDatas(data1).symmetricDifference(getSpellDatas(data2));
+                    break;
+                case "AND":
+                    result = getSpellDatas(data1).intersection(getSpellDatas(data2));
+                    break;
+                case "OR":
+                    result = getSpellDatas(data1).union(getSpellDatas(data2));
+                    break;
+                case "DIFF":
+                    if (data1) {
+                        result = getSpellDatas(data1).difference(getSpellDatas(data2));
+                        break;
+                    }
+                case "NOT":
+                    result = SpellData.tagSets.all.difference(getSpellDatas(data2));
+                    break;
+                default:
+                    console.error(exp);
+                    throw new Error("内部错误,运算符丢失");
+            }
+            console.groupEnd();
+            return result;
     }
 };
 
-/** @type {Map<String,Set<SpellData>>} */
+/** @type {Map<string,Set<SpellData>>} */
 const resultCache = new Map();
 
 /**
  * 通过 `表达式` 获取法术数据
- * @param {String} exp 查询表达式
+ * @param {string} source 查询表达式
  * @returns {Array<SpellData>} 法术数据
+ * @throws {SyntaxError}
  */
-const parse = exp => {
+const parse = source => {
+    if (!source) return [];
     // 优先从缓存中获取
-    let result = resultCache.get(exp);
+    let result = resultCache.get(source);
     if (result) {
-        console.groupCollapsed("法术查询表达式缓存命中: %c`%s`", "color:#44cf8e", exp);
+        console.groupCollapsed("法术查询表达式缓存命中: %c`%s`", "color:#44cf8e", source);
         console.log(result);
         console.groupEnd();
-        return Object.assign([...result], { exp });
+        return Object.assign([...result], { exp: source });
     }
-
-    console.groupCollapsed("法术查询表达式解析: %c`%s`", "color:#25AFF3", exp);
-    exp += " "; //增加终结符
-    currentToken = null;
-    console.groupCollapsed("🏷️ Tokenization");
-    //#region 令牌化 Tokenization
-    const tokens = [];
-    for (let i = 0, { length } = exp; i < length; i++) {
-        const char = exp[i];
-        if (isWordPart(char)) {
-            //属于单词成分
-            //作为token开头字符
-            currentToken ??= new Token(tokenEnum.SI, i);
-            currentToken.push(char);
-        } /*遇到其他字符需要结束当前token*/ else {
-            if (currentToken) {
-                currentToken.finish();
-                tokens.push(currentToken);
-                currentToken = null;
-            }
-            // 跳过空白符
-            if (isBlank(char)) continue;
-            switch (char) {
-                case "#":
-                    currentToken = new Token(tokenEnum.ST, i);
-                    currentToken.push(char);
-                    continue;
-                case "(":
-                    tokens.push(new Token(tokenEnum.BRACKET_SL, i));
-                    continue;
-                case ")":
-                    tokens.push(new Token(tokenEnum.BRACKET_SR, i));
-                    continue;
-                case "!":
-                    tokens.push(new Token(tokenEnum.NOT, i));
-                    continue;
-                case "|":
-                    tokens.push(new Token(tokenEnum.OR, i));
-                    continue;
-                case "&":
-                    tokens.push(new Token(tokenEnum.AND, i));
-                    continue;
-                default:
-                    currentToken = new Token(tokenEnum.UND, i);
-                    currentToken.data = char;
-                    return err([`不合法的字符: "${char}"`]);
-            }
-        }
-    }
-    //#endregion
-    Token.log(tokens);
-    console.groupEnd();
-
-    console.groupCollapsed("🍁 AST");
     //#region 生成AST
-    /** @type {Array<Object>} 表达式栈 */
-    const exps = [];
-
-    currentExp = null;
-    /** @type {SpellGroup|null} 根表达式 */
-    let rootExp = null;
-    for (let j = 0, { length } = tokens; j < length; j++) {
-        currentToken = tokens[j];
-        currentExp = exps.at(-1);
-        switch (currentToken.type) {
-            case "SPELL_ID": {
-                const id = { type: "SPELL_ID", data: currentToken.data };
-                if (currentExp) {
-                    if (currentExp.dataState === 0) currentExp.data1 = id;
-                    else if (currentExp.dataState === 2) exps.push((currentExp.data2 = new SpellGroup(id)));
-                    else return err`缺少运算符连接`;
-                } else exps.push((rootExp = new SpellGroup(id)));
+    /** @type {Array<LogicExp>} 表达式栈 */
+    const exps = [new LogicExp()];
+    let rootExp = exps[0];
+    /** 括号计数 左括号+1 右括号-1 用于快速判断括号是否成对 */
+    let parenthese = 0;
+    for (const { type, data, range } of lexer.tokenise(source)) {
+        /** @type {LogicExp|undefined} 当前表达式 */
+        let currentExp = exps.at(-1);
+        switch (type) {
+            case "SPELL_ID":
+            case "SPELL_TAG":
+                if (currentExp.state === 0) currentExp.data1 = { type, data };
+                else if (currentExp.state === 2) exps.push((currentExp.data2 = new LogicExp({ type, data })));
+                else throw err`缺少运算符连接 at:${range.start}`;
+                break;
+            case "PARENTHESE_LEFT": {
+                parenthese++;
+                const subExp = new LogicExp();
+                subExp.parenthese = 1;
+                if (currentExp.state === 0) exps.push((currentExp.data1 = subExp));
+                else if (currentExp.state === 2) exps.push((currentExp.data2 = subExp));
+                else throw err`缺少运算符连接 at:${range.start}`;
                 break;
             }
-            case "SPELL_TAG": {
-                const tag = { type: "SPELL_TAG", data: currentToken.data.slice(1) };
-                if (currentExp) {
-                    if (currentExp.dataState === 0) currentExp.data1 = tag;
-                    else if (currentExp.dataState === 2) exps.push((currentExp.data2 = new SpellGroup(tag)));
-                    else return err`缺少运算符连接`;
-                } else exps.push((rootExp = new SpellGroup(tag)));
-                break;
-            }
-            case "BRACKET_SMALL_LEFT": {
-                const subExp = new SpellGroup();
-                subExp.bracketState = 1;
-                if (currentExp) {
-                    if (currentExp.dataState === 0) exps.push((currentExp.data1 = subExp));
-                    else if (currentExp.dataState === 2) exps.push((currentExp.data2 = subExp));
-                    else return err`缺少运算符连接`;
+            case "PARENTHESE_RIGHT":
+                if (!parenthese) throw err`不成对的括号 at:${range.start}`;
+                if (currentExp.state === 2) throw err`${data} 缺少法术标签或法术ID连接 at:${range.start}`;
+                let pairedBracket = false;
+                if (currentExp.state === 0) {
+                    currentExp.state = -1; // 空括号表示空集
+                    // 只有左括号会新建一个空表达式 所以上个token一定是左括号 直接完成配对
+                    currentExp.parenthese = -1;
+                    exps.pop(); // 弹出当前表达式 更新当前表达式指向
+                    currentExp = exps.at(-1);
                 }
-                // 根表达式不存在时 左括号开头 这里应该默认多一层表达式 否则右括号完成该表达式匹配后仍然有后续逻辑运算符会导致匹配出错
-                else exps.push((rootExp = new SpellGroup(subExp)), subExp);
-                break;
-            }
-            case "BRACKET_SMALL_RIGHT":
-                if (currentExp) {
-                    if (currentExp.dataState === 2) return err([`${currentToken.data} 缺少法术标签或法术ID连接`]);
-                    else {
-                        let pairedBracket = false; //取消无意义法术组时可能会丢失需要匹配的左括号 这里需要记录是否在取消无意义法术组中已经完成了括号配对
-                        if (currentExp.dataState === 1) {
-                            pairedBracket = currentExp.bracketState === 1;
-                            const parentExp = exps.at(-2);
-                            if (parentExp.dataState === 1) parentExp.data1 = currentExp.data1;
-                            else if (parentExp.dataState === -1) parentExp.data2 = currentExp.data1;
+                // 当前表达式不再有运算符连接 弹出
+                else if (currentExp.state === 1) {
+                    // 取消无意义法术组时可能会丢失需要匹配的左括号 这里需要记录是否在取消无意义法术组中已经完成了括号配对
+                    // 当前表达式有左括号时消耗此右括号匹配
+                    let pairedBracket = currentExp.parenthese === 1;
+                    if (pairedBracket) currentExp.parenthese = -1;
+                    const parentExp = exps.at(-2);
+                    if (parentExp.state === 1) parentExp.data1 = currentExp.data1;
+                    else if (parentExp.state === -1) parentExp.data2 = currentExp.data1;
+                    // else ... 这里不会有其它状态了
+                    exps.pop(); // 弹出当前表达式 更新当前表达式指向
+                    currentExp = exps.at(-1);
+                    // 如果括号没有被消耗则向上查找未匹配右括号的父级表达式
+                    if (!pairedBracket) {
+                        while (currentExp.parenthese !== 1) {
                             exps.pop();
                             currentExp = exps.at(-1);
                         }
-                        if (!pairedBracket) {
-                            while (currentExp.bracketState !== 1) {
-                                if (exps.length > 1) {
-                                    exps.pop();
-                                    currentExp = exps.at(-1);
-                                } else return err`不成对的括号`;
-                            }
-                            currentExp.bracketState = -1;
-                        }
-                        // 你永远也等不到运算符了 所以你应该是一个法术标签/ID 而不是法术标签组
-                        if (currentExp.dataState === 1) {
-                            const parentExp = exps.at(-2);
-                            if (parentExp.dataState === 1) parentExp.data1 = currentExp.data1;
-                            else if (parentExp.dataState === -1) parentExp.data2 = currentExp.data1;
-                            exps.pop();
-                            currentExp = exps.at(-1);
-                        }
-                        //防止根表达式弹出
-                        if (exps.length > 1) exps.pop();
+                        currentExp.parenthese = -1;
+                        exps.pop(); // 弹出当前表达式 更新当前表达式指向
+                        currentExp = exps.at(-1);
                     }
-                } else return err`不成对的括号`;
+                }
+                parenthese--;
                 break;
             case "NOT": {
-                const subExp = new SpellGroup(null, null, "NOT");
-                if (currentExp) {
-                    if (currentExp.dataState === 0) exps.push((currentExp.data1 = subExp));
-                    else if (currentExp.dataState === 2) exps.push((currentExp.data2 = subExp));
-                    else if (currentExp.dataState === 1) return err`不可以用于连接两个法术标签或法术ID !`;
-                } else exps.push((rootExp = subExp));
+                const subExp = new LogicExp(null, null, "NOT");
+                if (currentExp.state === 0) exps.push((currentExp.data1 = subExp));
+                else if (currentExp.state === 2) exps.push((currentExp.data2 = subExp));
+                else if (currentExp.state === 1) throw err`不可以用于连接两个法术标签或法术ID ! at:${range.start}`;
                 break;
             }
-            case "OR":
-                if (currentExp) {
-                    if (currentExp.dataState === 1) currentExp.operator = "OR";
-                    else if (currentExp.dataState === 2) return err`已存在逻辑运算符`;
-                } else return err`缺少被连接的法术标签或ID`;
+            case "DIFF": // -
+                // 等同 NOT
+                if (currentExp.state === 0) currentExp.data1 = null;
+            case "AND": // &
+            case "XOR": // ^
+            case "OR": // |
+                if (currentExp.state === 1) currentExp.operator = type;
+                else if (currentExp.state === 0) throw err`缺少被连接的法术标签或ID at:${range.start}`;
+                else if (currentExp.state === 2) throw err`已存在逻辑运算符 at:${range.start}`;
                 break;
-            case "AND":
-                if (currentExp) {
-                    if (currentExp.dataState === 1) currentExp.operator = "AND";
-                    else if (currentExp.dataState === 2) return err`已存在逻辑运算符`;
-                } else return err`缺少被连接的法术标签或ID`;
-                break;
+            case "EOF":
+                while (1) {
+                    /** @type {LogicExp} */
+                    const parentExp = exps.at(-2);
+                    if (currentExp.state === 1) {
+                        if (!parentExp) {
+                            rootExp = currentExp = currentExp.data1;
+                            break;
+                        }
+                        if (parentExp.state === 1) parentExp.data1 = currentExp.data1;
+                        else if (parentExp.state === -1) parentExp.data2 = currentExp.data1;
+                        exps.pop();
+                        currentExp = exps.at(-1);
+                        continue;
+                    } else if (currentExp.state === -1) {
+                        if (!parentExp) {
+                            rootExp = currentExp = exps.at(-1);
+                            break;
+                        }
+                        exps.pop();
+                        currentExp = exps.at(-1);
+                        continue;
+                    } else if (currentExp.state === 2) throw err`缺少连接的法术标签或ID at:${range.start}`;
+                }
+                //简化判断↓ if(rootExp.type === "LOGICAL_EXPRESSION" &&  rootExp.data2 === null)
+                if (rootExp.data2 === null) throw err`缺少连接的法术标签或ID at:${range.start}`;
         }
     }
-    currentExp = exps[exps.length - 1];
-    // 你永远也等不到运算符了 所以你应该是一个法术标签/ID 而不是法术标签组
-    if (currentExp.dataState === 1) {
-        const parentExp = exps.at(-2);
-        if (parentExp) {
-            if (parentExp.dataState === 1) parentExp.data1 = currentExp.data1;
-            else if (parentExp.dataState === -1) parentExp.data2 = currentExp.data1;
-            exps.pop();
-            currentExp = exps.at(-1);
-        } else rootExp = currentExp.data1;
-    }
-    if (rootExp.data2 === null) return err`缺少连接的法术标签或ID`;
+    //#endregion
 
-    //#endregion
-    console.log(rootExp);
-    //#region 解析AST
-    result = getSpellDatas(rootExp);
-    console.log(result);
-    //#endregion
-    console.groupEnd();
-    console.groupEnd();
     // 缓存结果
-    resultCache.set(exp.slice(0, -1), result);
-    return Object.assign([...result], { exp });
+    console.groupCollapsed("AST: " + JSON.stringify(source));
+    resultCache.set(source, (result = getSpellDatas(rootExp)));
+    console.groupEnd();
+    return Object.assign([...result], { exp: source });
 };
