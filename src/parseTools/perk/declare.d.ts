@@ -3,13 +3,13 @@
  * [lua file](gen_js_datas.lua)
  */
 declare const perkDatas: Array<{
-    id: String;
-    name: String;
-    desc: String;
-    type: Number;
-    stackable_maximum: Number;
-    max_in_perk_pool: Number;
-    game_effect: String;
+    id: string;
+    name: string;
+    desc: string;
+    type: number;
+    stackable_maximum: number;
+    max_in_perk_pool: number;
+    game_effect: string;
     usable_by_enemies: 0 | 1;
-    icon: String;
+    icon: string;
 }>;

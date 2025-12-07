@@ -3,15 +3,15 @@
  * [lua file](generate_js_code.lua)
  */
 type StatusData = {
-    id: String;
-    name: String;
-    desc: String;
-    icon: String;
-    fireProtection: Boolean;
-    removeCells: Boolean;
-    harmful: Boolean;
-    entity: String;
-    threshold: Number;
+    id: string;
+    name: string;
+    desc: string;
+    icon: string;
+    fireProtection: boolean;
+    removeCells: boolean;
+    harmful: boolean;
+    entity: string;
+    threshold: number;
 };
 
 declare const statusDatas: Array<StatusData>;

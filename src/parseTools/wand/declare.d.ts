@@ -1,24 +1,24 @@
 /** 魔杖模板数据 */
 type WandTemplate = {
-    name: String;
+    name: string;
     /** 图标文件路径 */
-    file: String;
-    grip_x: Number;
-    grip_y: Number;
-    tip_x: Number;
-    tip_y: Number;
+    file: string;
+    grip_x: number;
+    grip_y: number;
+    tip_x: number;
+    tip_y: number;
     /** 施放延迟 */
-    fire_rate_wait: Number;
+    fire_rate_wait: number;
     /** 抽取数 */
-    actions_per_round: Number;
+    actions_per_round: number;
     /** 乱序 */
-    shuffle_deck_when_empty: Number;
+    shuffle_deck_when_empty: number;
     /** 容量 */
-    deck_capacity: Number;
+    deck_capacity: number;
     /** 散射 */
-    spread_degrees: Number;
+    spread_degrees: number;
     /** 充能时间 */
-    reload_time: Number;
+    reload_time: number;
 }
 
 /**
