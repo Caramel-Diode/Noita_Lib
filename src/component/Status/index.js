@@ -2,12 +2,7 @@ const Status = (() => {
     embed(`#db.js`);
     StatusData.init();
 
-    const styleSheet = {
-        icon: css(embed(`#icon.css`)),
-        panel: css(embed(`#panel.css`))
-    };
-
-    return class HTMLNoitaStatusElement extends $class(Base, {
+    return class HTMLNoitaStatusElement extends $extends(Base, {
         /** @type {$ValueOption<"icon"|"panel">} */
         displayMode: { name: "display", $default: "icon" },
         /** @type {$ValueOption<String>} */
@@ -31,34 +26,20 @@ const Status = (() => {
             if (threshold) this.statusThreshold = threshold;
         }
 
-        /** @param {Array<CSSStyleSheet>} [extraStyleSheets] 额外样式表 */
-        [$symbols.initStyle](extraStyleSheets = []) {
-            let { displayMode } = this;
-            if (displayMode.startsWith("panel")) {
-                extraStyleSheets.push(styleSheet.panel);
-                displayMode = "panel";
-            } else if (displayMode.startsWith("icon")) {
-                extraStyleSheets.push(styleSheet.icon);
-                displayMode = "icon";
-            }
-            super[$symbols.initStyle](extraStyleSheets, displayMode);
-        }
-
         #loadPanelContent() {}
 
         #loadIconContent() {
             this.shadowRoot.append(this.statusData.icon);
-            promptMsg.attach(this, [h.pre(this.statusData.desc.replaceAll("\\n", "\n"))]);
+            hoverMsg.attachWithPanel(this, [h.pre(this.statusData.desc.replaceAll("\\n", "\n"))]);
         }
 
-        /**
-         * @override
-         * @see Base#contentUpdate
-         */
-        contentUpdate() {
-            this.statusData = StatusData.query(this.statusId, +this.statusThreshold);
-            this[$symbols.initStyle]();
+        static [$css] = {
+            icon: [css(embed(`#icon.css`), { name: "status-icon" })],
+            panel: [css(embed(`#panel.css`), { name: "status-panel" })]
+        };
 
+        [$content]() {
+            this.statusData = StatusData.query(this.statusId, +this.statusThreshold);
             switch (this.displayMode) {
                 case "panel":
                     this.#loadPanelContent();
@@ -74,4 +55,4 @@ const Status = (() => {
         }
     };
 })();
-customElements.define("noita-status", freeze(Status));
+h["noita-status"] = freeze(Status);
