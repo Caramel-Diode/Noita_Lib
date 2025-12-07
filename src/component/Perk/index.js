@@ -1,12 +1,8 @@
 const Perk = (() => {
     embed(`#db.js`);
     PerkData.init();
-    const styleSheet = {
-        icon: css(embed(`#icon.css`)),
-        panel: css(embed(`#panel.css`))
-    };
 
-    return class HTMLNoitaPerkElement extends $class(Base, {
+    return class HTMLNoitaPerkElement extends $extends(Base, {
         /** @type {$ValueOption<"icon"|"panel">} */
         displayMode: { name: "display", $default: "icon" },
         /** @type {$ValueOption<PerkId|PerkName>} */
@@ -36,11 +32,15 @@ const Perk = (() => {
 
         #loadIconContent() {
             const { icon, type, name, id, desc } = this.perkData;
-            const fragment = h(h.div({ class: ["background", type] }, icon));
+            icon.classList.add("background", type);
+            const blankIcon = h.div({ class: ["background", type, "blank-icon"] });
+            const fragment = h(icon, blankIcon);
             if (this.instanceData.amount > 1) fragment.append(h.data(this.instanceData.amount));
             this.shadowRoot.append(fragment);
+            this.setAttribute("role", "button");
+            this.setAttribute("tabindex", "0");
             this.title = `${name}\n${id}`;
-            promptMsg.attach(this, [h.pre(this.perkData.desc)]);
+            hoverMsg.attachWithPanel(this, [h.pre(this.perkData.desc)]);
         }
 
         #loadPanelContent() {
@@ -50,30 +50,18 @@ const Perk = (() => {
                 maxStack: { value: pd.maxStack }, //堆叠极限
                 maxInPool: { value: pd.maxInPool, hidden: pd.maxInPool === 0 } //天赋池最大数量
             });
-            this.loadPanelContent([h.template(pd.icon, this.createPanelH1(pd.id, pd.name), h.p(pd.desc), loader.container)]);
+            this.loadPanelContent([h.template(pd.icon, createPanelH1(pd.id, pd.name), h.p(pd.desc), loader.container)]);
         }
 
-        /** @param {Array<CSSStyleSheet>} [extraStyleSheets] 额外样式表 */
-        [$symbols.initStyle](extraStyleSheets = []) {
-            // extraStyleSheets.push(styleSheet.base);
-            //prettier-ignore
-            switch (this.displayMode) {
-                case "panel": extraStyleSheets.push(styleSheet.panel); break;
-                case "icon": extraStyleSheets.push(styleSheet.icon);
-            }
-            super[$symbols.initStyle](extraStyleSheets);
-        }
+        static [$css] = {
+            icon: [css(embed(`#icon.css`), { name: "perk-icon" })],
+            panel: [css(embed(`#panel.css`), { name: "perk-panel" })]
+        };
 
-        /**
-         * @override
-         * @see Base#contentUpdate
-         */
-        contentUpdate() {
-            this.shadowRoot.innerHTML = "";
+        [$content]() {
             this.perkData = PerkData.query(this.perkId);
             const perkCount = this.perkCount;
             if (perkCount) this.instanceData.count = +perkCount;
-            this[$symbols.initStyle]();
             //prettier-ignore
             switch (this.displayMode) {
                 case "panel": this.#loadPanelContent(); break;
@@ -86,4 +74,4 @@ const Perk = (() => {
         get [Symbol.toStringTag]() { return `HTMLNoitaPerkElement #${this.perkData.id}`; }
     };
 })();
-customElements.define("noita-perk", freeze(Perk));
+h["noita-perk"] = freeze(Perk);
