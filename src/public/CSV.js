@@ -155,7 +155,7 @@ class CSV {
     }
     /**
      * 转为字符串
-     * @param {"CSV"|"HTML"|"MarkDown"|"MediaWiki"|"LateX"} [format] 格式
+     * @param {"CSV"|"HTML"|"MarkDown"|"MediaWiki"} [format] 格式
      * @param {String} [separator] 分隔符(仅对csv有效)
      * @returns {Sting}
      */
@@ -165,16 +165,18 @@ class CSV {
         const rowLen = this.rowHeads.length;
         switch (format) {
             case "CSV":
-                for (let row = 0; row < columnLen; row++)
-                    for (let column = 0; column < rowLen; column++) {
-                        let data = this.get(row, column) ?? "";
-                        if (data.includes('"')) data = `"${data.replaceAll('"', '""')}"`;
-                        else if (data.includes(",")) data = `"${data}"`;
-                        resultCache.push(data);
-                        if (column === rowLen - 1) resultCache.push("\n");
-                        else resultCache.push(separator);
+                const lines = [];
+                for (let r = 0; r < rowLen; r++) {
+                    const cells = [];
+                    for (let c = 0; c < columnLen; c++) {
+                        let val = this.get(r, c) ?? "";
+                        const needQuote = val.includes(separator) || val.includes('"') || val.includes("\r") || val.includes("\n");
+                        if (val.includes('"')) val = val.replaceAll('"', '""');
+                        cells.push(needQuote ? `"${val}"` : val);
                     }
-                break;
+                    lines.push(cells.join(separator));
+                }
+                return lines.join("\n");
             case "HTML":
                 resultCache.push(`<table><thead><tr>`);
                 for (let column = 0; column < rowLen; column++) resultCache.push(`<th>${this.get(0, column) ?? ""}</th>`);
@@ -213,8 +215,6 @@ class CSV {
                 }
                 resultCache.push(`|}`);
                 break;
-            case "LaTeX":
-                return "不想写这个";
         }
         return resultCache.join("");
     }
