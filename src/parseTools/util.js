@@ -1,3 +1,10 @@
+const DOMContentLoaded = new Promise(resolve => window.addEventListener("DOMContentLoaded", resolve, { once: true }));
+/** @type {typeof Document.prototype.createElement} */
+const createElement = Document.prototype.createElement.bind(document);
+/** @type {typeof Document.prototype.createElementNS} */
+const createElementNS = Document.prototype.createElementNS.bind(document);
+const { freeze } = Object;
+
 /**
  * 将字符串、画布元素、图像元素、`Blob`或`File`、`ArrayBuffer`或类型化数组、对象(转为JSON字符串)等下载为文件
  * @param {HTMLCanvasElement|HTMLMediaElement|HTMLImageElement|HTMLSourceElement|HTMLTrackElement|HTMLEmbedElement|HTMLObjectElement|File|Blob|ArrayBuffer|URL|String} content 下载内容/下载链接
@@ -193,10 +200,10 @@ const JSON5 = {
     /**
      * @param {*} value
      * @param {Object} [option] symbol作为键可以将 value中的symbol类型值替换为 option的symbol对应的值 否则将使用symbol.description
-     * @param {Boolean} [option.booleanToNumber] 布尔值转为数字表示
-     * @param {Boolean} [option.useExp] 使用表达式缩短字面量表示
+     * @param {boolean} [option.booleanToNumber] 布尔值转为数字表示
+     * @param {boolean} [option.useExp] 使用表达式缩短字面量表示
      * @param {any} [option.default] null/undefined 默认值
-     * @returns {String}
+     * @returns {string}
      */
     stringify(value, option) {
         let $true = "true";
@@ -225,7 +232,7 @@ const JSON5 = {
                 if (!Number.isInteger(before)) {
                     // 移除小数点
                     const str = before.toString();
-                    after = after + str.length - 1 - str.indexOf(".");
+                    after -= str.split(".").at(-1).length;
                     before = str.replace(".", "");
                 }
                 const exponential = before + "e" + sign + after; // 科学计数法
@@ -235,6 +242,15 @@ const JSON5 = {
                 if (shortest.length > decimal.length) shortest = decimal;
                 if (shortest.length > exponential.length) shortest = exponential;
                 return shortest;
+            case "bigint": {
+                if (value > BigInt(Number.MAX_SAFE_INTEGER)) {
+                    const decimal = value.toString() + "n";
+                    const hex = `0x${value.toString(16)}n`; // 十六进制;
+                    if (decimal.length > hex.length) return hex;
+                    return decimal;
+                }
+                return this.stringify(Number(value));
+            }
             case "boolean":
                 return value ? $true : $false;
             case "symbol":
@@ -493,602 +509,60 @@ class StringBuffer {
 }
 
 /**
- * 将 bit 数组转为数字
+ * ### 将 bit 数组转为数字
+ * *注意 bit 数组最高支持 53 位*
  * @param {Array<0|1>} bits
  * @returns {Number}
  */
 const bitsToNum = bits => {
     let num = 0;
-    let length = bits.length;
-    if (length > 8) {
-        if (length > 16) length = 32;
-        else length = 16;
-    } else length = 8;
-    for (let i = 0; i < length; i++) num += Boolean(bits[i]) * 2 ** i;
+    for (let i = 0; i < bits.length; i++) num += Boolean(bits[i]) * 2 ** i;
     return num;
 };
 
-/** @type {typeof document.createElement} */
-const createElement = document.createElement.bind(document);
-const freeze = Object.freeze;
-
-/**
- * @typedef {Object} ElementInitOption
- * @prop {String|Array<String>} class 类名
- * @prop {String|CSSStyleDeclaration} style 样式
- * @prop {Boolean} hidden 隐藏
- * @prop {0} tabindex
- * @prop {Object} Event 事件监听器
- * @prop {Array} shadowRoot 开启shadowRoot并添加元素
- * @prop {String|Array<String>} HTML innerHTML
- * @prop {Object} $ 挂载到元素对象上的属性
- */
-
-/**
- * ## 创建`HTML`节点
- * @type {{
- *   (option:ElementInitOption): DocumentFragment;
- *   "[]"(option:ElementInitOption): Array<Node>;
- *   $attach(element:HTMLElement): HTMLElement;
- *   $comment(option:ElementInitOption): Comment;
- *   a(option:ElementInitOption): HTMLAnchorElement;
- *   abbr(option:ElementInitOption): HTMLElement;
- *   address(option:ElementInitOption): HTMLElement;
- *   area(option:ElementInitOption): HTMLAreaElement;
- *   article(option:ElementInitOption): HTMLElement;
- *   aside(option:ElementInitOption): HTMLElement;
- *   audio(option:ElementInitOption): HTMLAudioElement;
- *   b(option:ElementInitOption): HTMLElement;
- *   base(option:ElementInitOption): HTMLBaseElement;
- *   bdi(option:ElementInitOption): HTMLElement;
- *   bdo(option:ElementInitOption): HTMLElement;
- *   blockquote(option:ElementInitOption): HTMLQuoteElement;
- *   body(option:ElementInitOption): HTMLBodyElement;
- *   br(option:ElementInitOption): HTMLBRElement;
- *   button(option:ElementInitOption): HTMLButtonElement;
- *   canvas(option:ElementInitOption): HTMLCanvasElement;
- *   caption(option:ElementInitOption): HTMLTableCaptionElement;
- *   cite(option:ElementInitOption): HTMLElement;
- *   code(option:ElementInitOption): HTMLElement;
- *   col(option:ElementInitOption): HTMLTableColElement;
- *   colgroup(option:ElementInitOption): HTMLTableColElement;
- *   data(option:ElementInitOption): HTMLDataElement;
- *   datalist(option:ElementInitOption): HTMLDataListElement;
- *   dd(option:ElementInitOption): HTMLElement;
- *   del(option:ElementInitOption): HTMLModElement;
- *   details(option:ElementInitOption): HTMLDetailsElement;
- *   dfn(option:ElementInitOption): HTMLElement;
- *   dialog(option:ElementInitOption): HTMLDialogElement;
- *   div(option:ElementInitOption): HTMLDivElement;
- *   dl(option:ElementInitOption): HTMLDListElement;
- *   dt(option:ElementInitOption): HTMLElement;
- *   em(option:ElementInitOption): HTMLElement;
- *   embed(option:ElementInitOption): HTMLEmbedElement;
- *   fieldset(option:ElementInitOption): HTMLFieldSetElement;
- *   figcaption(option:ElementInitOption): HTMLElement;
- *   figure(option:ElementInitOption): HTMLElement;
- *   footer(option:ElementInitOption): HTMLElement;
- *   form(option:ElementInitOption): HTMLFormElement;
- *   h1(option:ElementInitOption): HTMLHeadingElement;
- *   h2(option:ElementInitOption): HTMLHeadingElement;
- *   h3(option:ElementInitOption): HTMLHeadingElement;
- *   h4(option:ElementInitOption): HTMLHeadingElement;
- *   h5(option:ElementInitOption): HTMLHeadingElement;
- *   h6(option:ElementInitOption): HTMLHeadingElement;
- *   head(option:ElementInitOption): HTMLHeadElement;
- *   header(option:ElementInitOption): HTMLElement;
- *   hgroup(option:ElementInitOption): HTMLElement;
- *   hr(option:ElementInitOption): HTMLHRElement;
- *   html(option:ElementInitOption): HTMLHtmlElement;
- *   i(option:ElementInitOption): HTMLElement;
- *   iframe(option:ElementInitOption): HTMLIFrameElement;
- *   img(option:ElementInitOption): HTMLImageElement;
- *   input(option:ElementInitOption): HTMLInputElement;
- *   inputButton(option:ElementInitOption): HTMLInputElement;
- *   inputCheckbox(option:ElementInitOption): HTMLInputElement;
- *   inputColor(option:ElementInitOption): HTMLInputElement;
- *   inputDate(option:ElementInitOption): HTMLInputElement;
- *   inputEmail(option:ElementInitOption): HTMLInputElement;
- *   inputFile(option:ElementInitOption): HTMLInputElement;
- *   inputHidden(option:ElementInitOption): HTMLInputElement;
- *   inputImage(option:ElementInitOption): HTMLInputElement;
- *   inputMonth(option:ElementInitOption): HTMLInputElement;
- *   inputNumber(option:ElementInitOption): HTMLInputElement;
- *   inputPassword(option:ElementInitOption): HTMLInputElement;
- *   inputRadio(option:ElementInitOption): HTMLInputElement;
- *   inputRange(option:ElementInitOption): HTMLInputElement;
- *   inputReset(option:ElementInitOption): HTMLInputElement;
- *   inputSearch(option:ElementInitOption): HTMLInputElement;
- *   inputSubmit(option:ElementInitOption): HTMLInputElement;
- *   inputTel(option:ElementInitOption): HTMLInputElement;
- *   inputText(option:ElementInitOption): HTMLInputElement;
- *   inputTime(option:ElementInitOption): HTMLInputElement;
- *   inputUrl(option:ElementInitOption): HTMLInputElement;
- *   inputWeek(option:ElementInitOption): HTMLInputElement;
- *   ins(option:ElementInitOption): HTMLModElement;
- *   kbd(option:ElementInitOption): HTMLElement;
- *   label(option:ElementInitOption): HTMLLabelElement;
- *   legend(option:ElementInitOption): HTMLLegendElement;
- *   li(option:ElementInitOption): HTMLLIElement;
- *   link(option:ElementInitOption): HTMLLinkElement;
- *   main(option:ElementInitOption): HTMLElement;
- *   map(option:ElementInitOption): HTMLMapElement;
- *   mark(option:ElementInitOption): HTMLElement;
- *   menu(option:ElementInitOption): HTMLMenuElement;
- *   meta(option:ElementInitOption): HTMLMetaElement;
- *   meter(option:ElementInitOption): HTMLMeterElement;
- *   nav(option:ElementInitOption): HTMLElement;
- *   noscript(option:ElementInitOption): HTMLElement;
- *   object(option:ElementInitOption): HTMLObjectElement;
- *   ol(option:ElementInitOption): HTMLOListElement;
- *   optgroup(option:ElementInitOption): HTMLOptGroupElement;
- *   option(option:ElementInitOption): HTMLOptionElement;
- *   output(option:ElementInitOption): HTMLOutputElement;
- *   p(option:ElementInitOption): HTMLParagraphElement;
- *   picture(option:ElementInitOption): HTMLPictureElement;
- *   pre(option:ElementInitOption): HTMLPreElement;
- *   progress(option:ElementInitOption): HTMLProgressElement;
- *   q(option:ElementInitOption): HTMLQuoteElement;
- *   rp(option:ElementInitOption): HTMLElement;
- *   rt(option:ElementInitOption): HTMLElement;
- *   ruby(option:ElementInitOption): HTMLElement;
- *   s(option:ElementInitOption): HTMLElement;
- *   samp(option:ElementInitOption): HTMLElement;
- *   script(option:ElementInitOption): HTMLScriptElement;
- *   search(option:ElementInitOption): HTMLElement;
- *   section(option:ElementInitOption): HTMLElement;
- *   select(option:ElementInitOption): HTMLSelectElement;
- *   slot(option:ElementInitOption): HTMLSlotElement;
- *   small(option:ElementInitOption): HTMLElement;
- *   source(option:ElementInitOption): HTMLSourceElement;
- *   span(option:ElementInitOption): HTMLSpanElement;
- *   strong(option:ElementInitOption): HTMLElement;
- *   style(option:ElementInitOption): HTMLStyleElement;
- *   sub(option:ElementInitOption): HTMLElement;
- *   summary(option:ElementInitOption): HTMLElement;
- *   sup(option:ElementInitOption): HTMLElement;
- *   table(option:ElementInitOption): HTMLTableElement;
- *   tbody(option:ElementInitOption): HTMLTableSectionElement;
- *   td(option:ElementInitOption): HTMLTableCellElement;
- *   template(option:ElementInitOption): HTMLTemplateElement;
- *   textarea(option:ElementInitOption): HTMLTextAreaElement;
- *   tfoot(option:ElementInitOption): HTMLTableSectionElement;
- *   th(option:ElementInitOption): HTMLTableCellElement;
- *   thead(option:ElementInitOption): HTMLTableSectionElement;
- *   time(option:ElementInitOption): HTMLTimeElement;
- *   title(option:ElementInitOption): HTMLTitleElement;
- *   tr(option:ElementInitOption): HTMLTableRowElement;
- *   track(option:ElementInitOption): HTMLTrackElement;
- *   u(option:ElementInitOption): HTMLElement;
- *   ul(option:ElementInitOption): HTMLUListElement;
- *   var(option:ElementInitOption): HTMLElement;
- *   video(option:ElementInitOption): HTMLVideoElement;
- *   wbr(option:ElementInitOption): HTMLElement;
- * }}
- */
-const h = (() => {
-    /** @type {typeof Document.prototype.createElement} */
-    const createElement = window.document.createElement.bind(window.document);
-    /**
-     * @param {String} selectorText
-     */
-    const parseSelector = selectorText => {
-        const result = { id: "", class: [] };
-        let cache = [];
-        /** @type {"id"|"class"} */
-        let type;
-        for (let i = 0; i < selectorText.length; i++) {
-            const char = selectorText[i];
-            const charPre = selectorText[i - 1];
-            if (charPre !== "\\") {
-                if (char === ".") {
-                    if (cache.length) {
-                        if (type === "class") result.class.push(cache.join(""));
-                        else if (type === "id") result.id = cache.join("");
-                    }
-                    type = "class";
-                    cache = [];
-                    continue;
-                } else if (char === "#") {
-                    if (cache.length) {
-                        if (type === "class") result.class.push(cache.join(""));
-                        else if (type === "id") result.id = cache.join("");
-                    }
-                    type = "id";
-                    cache = [];
-                    continue;
-                }
-            }
-            cache.push(char);
-        }
-        if (cache.length) {
-            if (type === "class") result.class.push(cache.join(""));
-            else if (type === "id") result.id = cache.join("");
-        }
-        return result;
-    };
-    /** @param {HTMLElement} $ */
-    const attach = ($, attr) => {
-        for (const key in attr) {
-            const value = attr[key];
-            /** 尝试事件绑定 */
-            if (key.startsWith("on")) {
-                if (key in $) {
-                    let fn, option, useCapture;
-                    if (typeof value === "function") fn = value;
-                    else [fn, option = {}, useCapture = false] = value;
-                    $.addEventListener(key.slice(2), fn, option, useCapture);
-                }
-            } else
-                switch (key) {
-                    case "class": //类名
-                        if (Array.isArray(value)) $.className = value.join(" ");
-                        else $.className = value;
-                        continue;
-                    case "style": //样式
-                        if (typeof value === "string") $.style = value;
-                        else
-                            for (const prop in value)
-                                if (prop.includes("-")) $.style.setProperty(prop, value[prop]);
-                                else $.style[prop] = value[prop];
-                        continue;
-                    case "dataset": //自定义属性
-                        for (const key in value) $.dataset[key] = value[key];
-                        continue;
-                    case "hidden": //隐藏
-                        $.hidden = value;
-                        continue;
-                    case "Event": //绑定事件
-                        for (const eventType in value) {
-                            $.addEventListener(eventType, value[eventType]);
-                            if (eventType === "keydown") $.setAttribute("tabindex", "0"); // 无障碍 允许tab聚焦
-                        }
-                        continue;
-                    case "shadowRoot": //想shadowRoot中添加元素
-                        const shadowRoot = $.attachShadow({ mode: value.mode ?? "open" });
-                        const styleSheets = [];
-                        const fragment = h();
-                        for (let i = 0; i < value.length; i++) {
-                            const e = value[i];
-                            if (e instanceof CSSStyleSheet) styleSheets.push(e);
-                            else fragment.append(e);
-                        }
-                        shadowRoot.adoptedStyleSheets = styleSheets;
-                        shadowRoot.append(fragment);
-                        continue;
-                    case "HTML":
-                        if (Array.isArray(value)) $.innerHTML = value.join("");
-                        else $.innerHTML = value;
-                        continue;
-                    case "$":
-                        Object.assign($, value);
-                        continue;
-                    default:
-                        if (typeof value === "boolean") {
-                            if (value !== $.hasAttribute(key)) $.toggleAttribute(key);
-                        } else $.setAttribute(key, value);
-                }
-        }
-    };
-    const fnMap = {
-        $attach(element, ...args) {
-            const attr = args[0];
-            if (typeof attr === "object" && !(attr instanceof Node)) {
-                args.shift();
-                attach(element, attr);
-            }
-            element.append(...args.flat(Infinity));
-            return element;
-        },
-        $comment: (...args) => new Comment(String.raw(...args)),
-        "[]": (...args) => [...h(...args).childNodes],
-        template(...args) {
-            const $ = createElement("template");
-            const attr = args[0];
-            if (typeof attr === "object" && !(attr instanceof Node)) {
-                args.shift();
-                attach($, attr);
-            }
-            $.content.append(...args.flat(Infinity));
-            return $;
-        }
-    };
-
-    ["a", "abbr", "address", "area", "article", "aside", "audio", "b", "bdi", "bdo", "bgckquote", "body", "button", "canvas", "caption", "cite", "code", "colgroup", "data", "datalist", "dd", "del", "details", "dfn", "dialog", "div", "dl", "dt", "em", "fieldset", "figcaption", "figure", "footer", "form", "h1", "h2", "h3", "h4", "h5", "h6", "head", "header", "hgroup", "html", "i", "iframe", "input", "ins", "kbd", "label", "legend", "li", "main", "map", "mark", "menu", "meta", "meter", "nav", "noscript", "object", "ol", "optgroup", "option", "output", "p", "picture", "pre", "progress", "q", "rp", "rt", "ruby", "s", "samp", "search", "section", "select", "slot", "small", "span", "strong", "sub", "summary", "sup", "table", "tbody", "td", "textarea", "tfoot", "th", "thead", "time", "tr", "u", "ul", "var", "video"].forEach(
-        e =>
-            (fnMap[e] = (() => {
-                const f = (...args) => {
-                    const $ = createElement(e);
-                    const attr = args[0];
-                    if (typeof attr === "object" && !(attr instanceof Node)) {
-                        args.shift();
-                        attach($, attr);
-                    }
-                    $.append(...args.flat(Infinity));
-                    return $;
-                };
-                const _ = new Proxy(f, {
-                    get(target, p, receiver) {
-                        if (typeof p === "string") {
-                            const r = parseSelector(p);
-                            return (...args) => {
-                                const $ = createElement(e);
-                                const attr = args[0];
-                                if (typeof attr === "object" && !(attr instanceof Node)) {
-                                    args.shift();
-                                    attach($, { ...r, ...attr });
-                                } else attach($, r);
-                                $.append(...args.flat(Infinity));
-                                return $;
-                            };
-                        }
-                    }
-                });
-                return _;
-            })())
-    );
-
-    // 空元素
-    ["area", "base", "br", "col", "embed", "hr", "img", "input", "link", "meta", "source", "track", "wbr"].forEach(
-        e =>
-            (fnMap[e] = (() => {
-                const f = attr => {
-                    const $ = createElement(e);
-                    if (attr) attach($, attr);
-                    return $;
-                };
-                const _ = new Proxy(f, {
-                    get(target, p, receiver) {
-                        if (typeof p === "string") {
-                            const r = parseSelector(p);
-                            return attr => {
-                                const $ = createElement(e);
-                                if (typeof attr === "object" && !(attr instanceof Node)) attach($, { ...r, ...attr });
-                                else attach($, r);
-                                return $;
-                            };
-                        }
-                    }
-                });
-                return _;
-            })())
-    );
-
-    // 字符串直接嵌入
-    ["script", "style", "title"].forEach(
-        e =>
-            (fnMap[e] = (() => {
-                const f = (...args) => {
-                    const $ = createElement(e);
-                    const attr = args[0];
-                    if (typeof attr === "object" && !(attr instanceof Node)) {
-                        args.shift();
-                        attach($, attr);
-                    }
-                    $.innerHTML = args.flat(Infinity).join("");
-                    return $;
-                };
-                const _ = new Proxy(f, {
-                    get(target, p, receiver) {
-                        if (typeof p === "string") {
-                            const r = parseSelector(p);
-                            return (...args) => {
-                                const $ = createElement(e);
-                                const attr = args[0];
-                                if (typeof attr === "object" && !(attr instanceof Node)) {
-                                    args.shift();
-                                    attach($, { ...r, ...attr });
-                                } else attach($, r);
-                                $.innerHTML = args.flat(Infinity).join("");
-                                return $;
-                            };
-                        }
-                    }
-                });
-                return _;
-            })())
-    );
-
-    // input类
-    ["inputButton", "inputCheckbox", "inputColor", "inputDate", "inputEmail", "inputFile", "inputHidden", "inputImage", "inputMonth", "inputNumber", "inputPassword", "inputRadio", "inputRange", "inputReset", "inputSearch", "inputSubmit", "inputTel", "inputText", "inputTime", "inputUrl", "inputWeek"].forEach(e => {
-        const type = e.slice(5).toLowerCase();
-        fnMap[e] = attr => {
-            /** @type {HTMLInputElement} */
-            const $ = createElement("input");
-            $.type = type;
-            if (attr) attach($, attr);
-            return $;
-        };
-    });
-
-    return Object.assign((...args) => {
-        const $ = new DocumentFragment();
-        $.append(...args.flat(Infinity));
-        return $;
-    }, fnMap);
-})();
-
-/**
- * 生成构造样式表
- */
-const css = (() => {
-    /**
-     * @param {CSSStyleDeclaration} declaration
-     */
-    const cssText = declaration => {
-        const { style } = document.createElement("html");
-        const nestData = [];
-        const cssTexts_important = [];
-        for (const prop in declaration) {
-            const data = declaration[prop];
-            if (typeof data === "object") nestData.push(`${prop}{${cssText(data)}}`);
-            else if (prop.startsWith("--")) style.setProperty(prop, data);
-            //允许使用$简化自定义css属性的"--"前缀
-            else if (prop.startsWith("$")) style.setProperty("--" + prop.slice(1), data);
-            else if (prop in style) {
-                // 修复带有 `!important` 的属性值无法正常设置的问题
-                if (String(data).includes("!important")) {
-                    /** @type {String} */
-                    const text = cssText({ [prop]: data.replace("!important", "").trim() });
-                    cssTexts_important.push(text.replace(";", " !important;"));
-                } else style[prop] = data;
-            }
-        }
-        return style.cssText + cssTexts_important.join("") + nestData.join("");
-    };
-    /**
-     * @typedef {{
-     * a:CSSStyleDeclaration;
-     * abbr:CSSStyleDeclaration;
-     * address:CSSStyleDeclaration;
-     * area:CSSStyleDeclaration;
-     * article:CSSStyleDeclaration;
-     * aside:CSSStyleDeclaration;
-     * audio:CSSStyleDeclaration;
-     * b:CSSStyleDeclaration;
-     * base:CSSStyleDeclaration;
-     * bdi:CSSStyleDeclaration;
-     * bdo:CSSStyleDeclaration;
-     * blockquote:CSSStyleDeclaration;
-     * body:CSSStyleDeclaration;
-     * br:CSSStyleDeclaration;
-     * button:CSSStyleDeclaration;
-     * canvas:CSSStyleDeclaration;
-     * caption:CSSStyleDeclaration;
-     * cite:CSSStyleDeclaration;
-     * code:CSSStyleDeclaration;
-     * col:CSSStyleDeclaration;
-     * colgroup:CSSStyleDeclaration;
-     * data:CSSStyleDeclaration;
-     * datalist:CSSStyleDeclaration;
-     * dd:CSSStyleDeclaration;
-     * del:CSSStyleDeclaration;
-     * details:CSSStyleDeclaration;
-     * dfn:CSSStyleDeclaration;
-     * dialog:CSSStyleDeclaration;
-     * div:CSSStyleDeclaration;
-     * dl:CSSStyleDeclaration;
-     * dt:CSSStyleDeclaration;
-     * em:CSSStyleDeclaration;
-     * embed:CSSStyleDeclaration;
-     * fieldset:CSSStyleDeclaration;
-     * figcaption:CSSStyleDeclaration;
-     * figure:CSSStyleDeclaration;
-     * footer:CSSStyleDeclaration;
-     * form:CSSStyleDeclaration;
-     * h1:CSSStyleDeclaration;
-     * h2:CSSStyleDeclaration;
-     * h3:CSSStyleDeclaration;
-     * h4:CSSStyleDeclaration;
-     * h5:CSSStyleDeclaration;
-     * h6:CSSStyleDeclaration;
-     * head:CSSStyleDeclaration;
-     * header:CSSStyleDeclaration;
-     * hgroup:CSSStyleDeclaration;
-     * hr:CSSStyleDeclaration;
-     * html:CSSStyleDeclaration;
-     * i:CSSStyleDeclaration;
-     * iframe:CSSStyleDeclaration;
-     * img:CSSStyleDeclaration;
-     * input:CSSStyleDeclaration;
-     * ins:CSSStyleDeclaration;
-     * kbd:CSSStyleDeclaration;
-     * label:CSSStyleDeclaration;
-     * legend:CSSStyleDeclaration;
-     * li:CSSStyleDeclaration;
-     * link:CSSStyleDeclaration;
-     * main:CSSStyleDeclaration;
-     * map:CSSStyleDeclaration;
-     * mark:CSSStyleDeclaration;
-     * menu:CSSStyleDeclaration;
-     * meta:CSSStyleDeclaration;
-     * meter:CSSStyleDeclaration;
-     * nav:CSSStyleDeclaration;
-     * noscript:CSSStyleDeclaration;
-     * object:CSSStyleDeclaration;
-     * ol:CSSStyleDeclaration;
-     * optgroup:CSSStyleDeclaration;
-     * option:CSSStyleDeclaration;
-     * output:CSSStyleDeclaration;
-     * p:CSSStyleDeclaration;
-     * picture:CSSStyleDeclaration;
-     * pre:CSSStyleDeclaration;
-     * progress:CSSStyleDeclaration;
-     * q:CSSStyleDeclaration;
-     * rp:CSSStyleDeclaration;
-     * rt:CSSStyleDeclaration;
-     * ruby:CSSStyleDeclaration;
-     * s:CSSStyleDeclaration;
-     * samp:CSSStyleDeclaration;
-     * script:CSSStyleDeclaration;
-     * search:CSSStyleDeclaration;
-     * section:CSSStyleDeclaration;
-     * select:CSSStyleDeclaration;
-     * slot:CSSStyleDeclaration;
-     * small:CSSStyleDeclaration;
-     * source:CSSStyleDeclaration;
-     * span:CSSStyleDeclaration;
-     * strong:CSSStyleDeclaration;
-     * style:CSSStyleDeclaration;
-     * sub:CSSStyleDeclaration;
-     * summary:CSSStyleDeclaration;
-     * sup:CSSStyleDeclaration;
-     * table:CSSStyleDeclaration;
-     * tbody:CSSStyleDeclaration;
-     * td:CSSStyleDeclaration;
-     * template:CSSStyleDeclaration;
-     * textarea:CSSStyleDeclaration;
-     * tfoot:CSSStyleDeclaration;
-     * th:CSSStyleDeclaration;
-     * thead:CSSStyleDeclaration;
-     * time:CSSStyleDeclaration;
-     * title:CSSStyleDeclaration;
-     * tr:CSSStyleDeclaration;
-     * track:CSSStyleDeclaration;
-     * u:CSSStyleDeclaration;
-     * ul:CSSStyleDeclaration;
-     * var:CSSStyleDeclaration;
-     * video:CSSStyleDeclaration;
-     * wbr:CSSStyleDeclaration;
-     * ":host":CSSStyleDeclaration;
-     * "*":CSSStyleDeclaration;
-     * }} CSSStyleMap
-     */
+class Bits {
+    /** @type {Array<boolean>} */
+    #bits = [];
 
     /**
-     * @param {String | CSSStyleMap & { [key: string]:CSSStyleDeclaration }|NodeListOf<HTMLStyleElement>|HTMLStyleElement} datas
-     * @param {CSSStyleSheetInit} init
-     * @returns {CSSStyleSheet}
+     * @param {Array<0|1|true|false>|number|bigint} data (不支持负值)
+     * @param {boolean?} toBoolean
      */
-    const fn = (datas, init) => {
-        const styleSheet = new CSSStyleSheet(init);
-        const cache = [];
-        const _type = typeof datas;
-        if (_type === "object") {
-            for (const key in datas) {
-                const data = datas[key];
-                if (key.startsWith("@keyframes")) {
-                    const _cache = [];
-                    for (const frame in data) {
-                        let frameName = frame;
-                        if (!isNaN(frame)) frameName += "%";
-                        _cache.push(`${frameName}{${cssText(data[frame])}}`);
-                    }
-                    cache.push(`${key}{${_cache.join("")}}`);
-                } else if (key.startsWith("@property")) {
-                    const _cache = [];
-                    if (data.syntax) _cache.push(`syntax:${data.syntax}`);
-                    if (data.inherits) _cache.push(`inherits:${data.syntax}`);
-                    if (data.initialValue) _cache.push(`initial-value:${data.initialValue}`);
-                    cache.push(`${key}{${_cache.join(";")}}`);
-                } else cache.push(`${key}{${cssText(data)}}`);
-            }
-            styleSheet.replaceSync(cache.join(""));
-        } else if (_type === "string") styleSheet.replaceSync(datas);
-        return styleSheet;
-    };
-    return fn;
-})();
+    constructor(data) {
+        if (Array.isArray(data)) {
+            for (const v of data) this.#bits.push(!!v);
+        } else {
+            if (data < 0) throw new Error("Negative values are not supported");
+            for (const char of data.toString(2).split("")) this.#bits.push(!!+char);
+        }
+    }
+
+    get length() {
+        return this.#bits.length;
+    }
+
+    /**
+     * @template {boolean?} T
+     * @param {number} [length]
+     * @param {T} [toBoolean = true]
+     * @returns {Array<T extends true ? boolean : 0|1> }
+     */
+    toArray(length = this.#bits.length, toBoolean = true) {
+        if (length < this.#bits.length) throw new Error("The length must not be less than " + this.#bits.length);
+        return new Array(length - this.#bits.length).fill(toBoolean ? false : 0).concat(toBoolean ? this.#bits : this.#bits.map(Number));
+    }
+
+    toBigInt() {
+        return this.#bits.reduce((acc, bit) => (acc << 1n) | (bit ? 1n : 0n), 0n);
+    }
+    /**
+     * 转为2~36进制字符串
+     * @param {number} radix 进制 (2~36)
+     */
+    toString(radix = 10) {
+        return this.toBigInt().toString(radix);
+    }
+}
 
 /**
  * #### 将蛇形命名法字符串转换为驼峰命名字符串
@@ -1103,3 +577,518 @@ const toHumpNaming = (() => {
     const fn = (_, $1) => $1.toLocaleUpperCase();
     return rawString => rawString.replace(/_([a-z])/g, fn);
 })();
+
+const Color = (() => {
+    const clamp = (n, min = 0, max = 255) => Math.max(min, Math.min(max, n));
+    const clamp1 = (n, min = 0, max = 1) => Math.max(min, Math.min(max, n));
+    const round = n => Math.round(n * 100) / 100;
+
+    const CSS_COLOR_NAMES = {
+        aliceblue: "#f0f8ff",
+        antiquewhite: "#faebd7",
+        aqua: "#00ffff",
+        aquamarine: "#7fffd4",
+        azure: "#f0ffff",
+        beige: "#f5f5dc",
+        bisque: "#ffe4c4",
+        black: "#000000",
+        blanchedalmond: "#ffebcd",
+        blue: "#0000ff",
+        blueviolet: "#8a2be2",
+        brown: "#a52a2a",
+        burlywood: "#deb887",
+        cadetblue: "#5f9ea0",
+        chartreuse: "#7fff00",
+        chocolate: "#d2691e",
+        coral: "#ff7f50",
+        cornflowerblue: "#6495ed",
+        cornsilk: "#fff8dc",
+        crimson: "#dc143c",
+        cyan: "#00ffff",
+        darkblue: "#00008b",
+        darkcyan: "#008b8b",
+        darkgoldenrod: "#b8860b",
+        darkgray: "#a9a9a9",
+        darkgreen: "#006400",
+        darkgrey: "#a9a9a9",
+        darkkhaki: "#bdb76b",
+        darkmagenta: "#8b008b",
+        darkolivegreen: "#556b2f",
+        darkorange: "#ff8c00",
+        darkorchid: "#9932cc",
+        darkred: "#8b0000",
+        darksalmon: "#e9967a",
+        darkseagreen: "#8fbc8f",
+        darkslateblue: "#483d8b",
+        darkslategray: "#2f4f4f",
+        darkslategrey: "#2f4f4f",
+        darkturquoise: "#00ced1",
+        darkviolet: "#9400d3",
+        deeppink: "#ff1493",
+        deepskyblue: "#00bfff",
+        dimgray: "#696969",
+        dimgrey: "#696969",
+        dodgerblue: "#1e90ff",
+        firebrick: "#b22222",
+        floralwhite: "#fffaf0",
+        forestgreen: "#228b22",
+        fuchsia: "#ff00ff",
+        gainsboro: "#dcdcdc",
+        ghostwhite: "#f8f8ff",
+        gold: "#ffd700",
+        goldenrod: "#daa520",
+        gray: "#808080",
+        green: "#008000",
+        greenyellow: "#adff2f",
+        grey: "#808080",
+        honeydew: "#f0fff0",
+        hotpink: "#ff69b4",
+        indianred: "#cd5c5c",
+        indigo: "#4b0082",
+        ivory: "#fffff0",
+        khaki: "#f0e68c",
+        lavender: "#e6e6fa",
+        lavenderblush: "#fff0f5",
+        lawngreen: "#7cfc00",
+        lemonchiffon: "#fffacd",
+        lightblue: "#add8e6",
+        lightcoral: "#f08080",
+        lightcyan: "#e0ffff",
+        lightgoldenrodyellow: "#fafad2",
+        lightgray: "#d3d3d3",
+        lightgreen: "#90ee90",
+        lightgrey: "#d3d3d3",
+        lightpink: "#ffb6c1",
+        lightsalmon: "#ffa07a",
+        lightseagreen: "#20b2aa",
+        lightskyblue: "#87cefa",
+        lightslategray: "#778899",
+        lightslategrey: "#778899",
+        lightsteelblue: "#b0c4de",
+        lightyellow: "#ffffe0",
+        lime: "#00ff00",
+        limegreen: "#32cd32",
+        linen: "#faf0e6",
+        magenta: "#ff00ff",
+        maroon: "#800000",
+        mediumaquamarine: "#66cdaa",
+        mediumblue: "#0000cd",
+        mediumorchid: "#ba55d3",
+        mediumpurple: "#9370db",
+        mediumseagreen: "#3cb371",
+        mediumslateblue: "#7b68ee",
+        mediumspringgreen: "#00fa9a",
+        mediumturquoise: "#48d1cc",
+        mediumvioletred: "#c71585",
+        midnightblue: "#191970",
+        mintcream: "#f5fffa",
+        mistyrose: "#ffe4e1",
+        moccasin: "#ffe4b5",
+        navajowhite: "#ffdead",
+        navy: "#000080",
+        oldlace: "#fdf5e6",
+        olive: "#808000",
+        olivedrab: "#6b8e23",
+        orange: "#ffa500",
+        orangered: "#ff4500",
+        orchid: "#da70d6",
+        palegoldenrod: "#eee8aa",
+        palegreen: "#98fb98",
+        paleturquoise: "#afeeee",
+        palevioletred: "#db7093",
+        papayawhip: "#ffefd5",
+        peachpuff: "#ffdab9",
+        peru: "#cd853f",
+        pink: "#ffc0cb",
+        plum: "#dda0dd",
+        powderblue: "#b0e0e6",
+        purple: "#800080",
+        rebeccapurple: "#663399",
+        red: "#ff0000",
+        rosybrown: "#bc8f8f",
+        royalblue: "#4169e1",
+        saddlebrown: "#8b4513",
+        salmon: "#fa8072",
+        sandybrown: "#f4a460",
+        seagreen: "#2e8b57",
+        seashell: "#fff5ee",
+        sienna: "#a0522d",
+        silver: "#c0c0c0",
+        skyblue: "#87ceeb",
+        slateblue: "#6a5acd",
+        slategray: "#708090",
+        slategrey: "#708090",
+        snow: "#fffafa",
+        springgreen: "#00ff7f",
+        steelblue: "#4682b4",
+        tan: "#d2b48c",
+        teal: "#008080",
+        thistle: "#d8bfd8",
+        tomato: "#ff6347",
+        turquoise: "#40e0d0",
+        violet: "#ee82ee",
+        wheat: "#f5deb3",
+        white: "#ffffff",
+        whitesmoke: "#f5f5f5",
+        yellow: "#ffff00",
+        yellowgreen: "#9acd32"
+    };
+
+    class HEX {
+        constructor(r, g, b, a = 1) {
+            this.r = clamp(Math.round(r));
+            this.g = clamp(Math.round(g));
+            this.b = clamp(Math.round(b));
+            this.a = clamp1(a);
+            Object.freeze(this);
+        }
+        static fromRGBA(r, g, b, a) {
+            return new HEX(r, g, b, a);
+        }
+        [Symbol.toPrimitive]() {
+            const toHex = v => clamp(v).toString(16).padStart(2, "0");
+            let out = toHex(this.r) + toHex(this.g) + toHex(this.b);
+            if (this.a !== 1) out += toHex(Math.round(this.a * 255));
+            return "#" + out;
+        }
+    }
+
+    class RGB {
+        constructor(r, g, b, a = 1) {
+            this.r = clamp(Math.round(r));
+            this.g = clamp(Math.round(g));
+            this.b = clamp(Math.round(b));
+            this.a = clamp1(a);
+            Object.freeze(this);
+        }
+        static fromRGBA(r, g, b, a) {
+            return new RGB(r, g, b, a);
+        }
+        [Symbol.toPrimitive]() {
+            const { r, g, b, a } = this;
+            return a === 1 ? `rgb(${r}, ${g}, ${b})` : `rgba(${r}, ${g}, ${b}, ${a})`;
+        }
+    }
+
+    class HSL {
+        constructor(h, s, l, a = 1) {
+            this.h = round(h);
+            this.s = round(s);
+            this.l = round(l);
+            this.a = clamp1(a);
+            Object.freeze(this);
+        }
+        static fromRGBA(r, g, b, a) {
+            r /= 255;
+            g /= 255;
+            b /= 255;
+            const max = Math.max(r, g, b),
+                min = Math.min(r, g, b),
+                d = max - min;
+            const l = (max + min) / 2;
+            const s = d === 0 ? 0 : l > 0.5 ? d / (2 - max - min) : d / (max + min);
+            const h = d === 0 ? 0 : (max === r ? (g - b) / d + (g < b ? 6 : 0) : max === g ? (b - r) / d + 2 : (r - g) / d + 4) / 6;
+            return new HSL(round(h * 360), round(s * 100), round(l * 100), a);
+        }
+        static toRGB(h, s, l) {
+            h = (h % 360) / 360;
+            s = clamp1(s / 100);
+            l = clamp1(l / 100);
+
+            let r, g, b;
+
+            if (s === 0) {
+                r = g = b = l;
+            } else {
+                const hue2rgb = (p, q, t) => {
+                    if (t < 0) t += 1;
+                    if (t > 1) t -= 1;
+                    if (t < 1 / 6) return p + (q - p) * 6 * t;
+                    if (t < 1 / 2) return q;
+                    if (t < 2 / 3) return p + (q - p) * (2 / 3 - t) * 6;
+                    return p;
+                };
+
+                const q = l < 0.5 ? l * (1 + s) : l + s - l * s;
+                const p = 2 * l - q;
+
+                r = hue2rgb(p, q, h + 1 / 3);
+                g = hue2rgb(p, q, h);
+                b = hue2rgb(p, q, h - 1 / 3);
+            }
+
+            return [Math.round(r * 255), Math.round(g * 255), Math.round(b * 255)];
+        }
+        [Symbol.toPrimitive]() {
+            const { h, s, l, a } = this;
+            return a === 1 ? `hsl(${h}, ${s}%, ${l}%)` : `hsla(${h}, ${s}%, ${l}%, ${a})`;
+        }
+    }
+
+    class HSV {
+        constructor(h, s, v, a = 1) {
+            this.h = round(h);
+            this.s = round(s);
+            this.v = round(v);
+            this.a = clamp1(a);
+            Object.freeze(this);
+        }
+        static fromRGBA(r, g, b, a) {
+            r /= 255;
+            g /= 255;
+            b /= 255;
+            const max = Math.max(r, g, b),
+                min = Math.min(r, g, b),
+                d = max - min;
+            const s = max === 0 ? 0 : d / max;
+            const h = d === 0 ? 0 : (max === r ? (g - b) / d + (g < b ? 6 : 0) : max === g ? (b - r) / d + 2 : (r - g) / d + 4) / 6;
+            return new HSV(round(h * 360), round(s * 100), round(max * 100), a);
+        }
+        static toRGB(h, s, v) {
+            h = (h % 360) / 360;
+            s = clamp1(s / 100);
+            v = clamp1(v / 100);
+
+            let r, g, b;
+            const i = Math.floor(h * 6);
+            const f = h * 6 - i;
+            const p = v * (1 - s);
+            const q = v * (1 - f * s);
+            const t = v * (1 - (1 - f) * s);
+
+            switch (i % 6) {
+                case 0:
+                    r = v;
+                    g = t;
+                    b = p;
+                    break;
+                case 1:
+                    r = q;
+                    g = v;
+                    b = p;
+                    break;
+                case 2:
+                    r = p;
+                    g = v;
+                    b = t;
+                    break;
+                case 3:
+                    r = p;
+                    g = q;
+                    b = v;
+                    break;
+                case 4:
+                    r = t;
+                    g = p;
+                    b = v;
+                    break;
+                case 5:
+                    r = v;
+                    g = p;
+                    b = q;
+                    break;
+            }
+
+            return [Math.round(r * 255), Math.round(g * 255), Math.round(b * 255)];
+        }
+        [Symbol.toPrimitive]() {
+            const { h, s, v, a } = this;
+            return a === 1 ? `hsv(${h}, ${s}%, ${v}%)` : `hsva(${h}, ${s}%, ${v}%, ${a})`;
+        }
+    }
+    /** @typedef { {[key in keyof (typeof CSS_COLOR_NAMES)]:Color}} ColorList */
+
+    class Color {
+        hex;
+        rgb;
+        hsl;
+        hsv;
+        constructor(value, name) {
+            if (value in CSS_COLOR_NAMES) value = CSS_COLOR_NAMES[value];
+            if (typeof value === "number") value = "#" + value.toString(16).padStart(6, "0");
+            if (name) this.name = name;
+            value = value.trim();
+            let r, g, b, a;
+            const hexMatch = value.match(/^#?([0-9a-fA-F]{3,8})$/);
+            if (hexMatch) {
+                let hex = hexMatch[1];
+
+                if (hex.length === 3 || hex.length === 4) {
+                    // Expand short hex format
+                    hex = hex
+                        .split("")
+                        .map(c => c + c)
+                        .join("");
+                }
+
+                if (hex.length === 6 || hex.length === 8) {
+                    r = parseInt(hex.slice(0, 2), 16);
+                    g = parseInt(hex.slice(2, 4), 16);
+                    b = parseInt(hex.slice(4, 6), 16);
+                    if (hex.length === 8) {
+                        a = parseInt(hex.slice(6, 8), 16) / 255;
+                    }
+                }
+            } else if (value.startsWith("rgb")) {
+                const rgbaMatch = value.match(/rgba?\(([^)]+)\)/);
+                if (rgbaMatch) {
+                    const parts = rgbaMatch[1].split(",").map(p => p.trim());
+                    if (parts.length >= 3) {
+                        r = parseInt(parts[0]);
+                        g = parseInt(parts[1]);
+                        b = parseInt(parts[2]);
+                        if (parts.length >= 4) {
+                            a = parseFloat(parts[3]);
+                        }
+                    }
+                }
+            } else if (value.startsWith("hsl")) {
+                const hslaMatch = value.match(/hsla?\(([^)]+)\)/);
+                if (hslaMatch) {
+                    const parts = hslaMatch[1].split(",").map(p => p.trim());
+                    if (parts.length >= 3) {
+                        const h = parseFloat(parts[0]);
+                        const s = parseFloat(parts[1].replace("%", ""));
+                        const l = parseFloat(parts[2].replace("%", ""));
+                        if (parts.length >= 4) {
+                            a = parseFloat(parts[3]);
+                        }
+                        [r, g, b] = HSL.toRGB(h, s, l);
+                        this.hsl = new HSL(h, s, l, a);
+                    }
+                }
+            } else if (value.startsWith("hsv")) {
+                const hsvaMatch = value.match(/hsva?\(([^)]+)\)/);
+                if (hsvaMatch) {
+                    const parts = hsvaMatch[1].split(",").map(p => p.trim());
+                    if (parts.length >= 3) {
+                        const h = parseFloat(parts[0]);
+                        const s = parseFloat(parts[1].replace("%", ""));
+                        const v = parseFloat(parts[2].replace("%", ""));
+                        if (parts.length >= 4) {
+                            a = parseFloat(parts[3]);
+                        }
+                        [r, g, b] = HSV.toRGB(h, s, v);
+                        this.hsv = new HSV(h, s, v, a);
+                    }
+                }
+            }
+
+            if (r === undefined || g === undefined || b === undefined) {
+                throw new Error("Invalid color format");
+            }
+            this.hex ??= new HEX(r, g, b, a);
+            this.rgb ??= new RGB(r, g, b, a);
+            this.hsl ??= HSL.fromRGBA(r, g, b, a);
+            this.hsv ??= HSV.fromRGBA(r, g, b, a);
+            Object.freeze(this);
+        }
+    }
+    const cacheMap = new Map();
+    const keywordMap = Object.create(null);
+    for (const name in CSS_COLOR_NAMES) {
+        const color = new Color(CSS_COLOR_NAMES[name], name);
+        cacheMap.set("" + color.hex, color);
+        Reflect.defineProperty(keywordMap, name, { value: color, enumerable: true });
+    }
+    Object.freeze(Color);
+
+    /** @type {{new(value: keyof ColorList | number ):Color} & ColorList} */
+    const result = new Proxy(Color, {
+        construct(target, args, newTarget) {
+            // 拦截构造器 保证单例模式
+            const color = new Color(...args);
+            const key = "" + color.hex;
+            let cache = cacheMap.get(key);
+            if (cache) return cache;
+            cacheMap.set(key, color);
+            return color;
+        },
+        get(target, p, rec) {
+            if (p in keywordMap) return keywordMap[p];
+        }
+    });
+    return result;
+})();
+
+/**
+ * ### 生成枚举对象
+ * @type {{
+ * <T extends Array<string>>(desc:symbol,...enums:T): {[K in T[number]]:symbol}
+ * <T extends Array<string>>(...enums:T): {[K in T[number]]:symbol}
+ * }}
+ */
+const $enum = (() => {
+    const prototype = Object.create(null);
+    prototype[Symbol.iterator] = function* () {
+        for (key in this) yield [key, this[key]];
+    };
+    freeze(prototype);
+    const f = (desc, enums) => {
+        const enumsSet = new Set(enums);
+        const thisProto = Object.create(prototype);
+        let toStringTag = desc;
+        // 在控制台显示描述 toStringTag {...} 便于调试
+        thisProto[Symbol.toStringTag] = toStringTag = desc;
+        // 使用匿名类添加私有属性#kinds (仅在控制台可见以用于调试目的 而无法被js代码使用)
+        const result = new (class {
+            #kinds = enumsSet.size;
+        })();
+        for (const e of enumsSet) {
+            const symbol = Symbol(`${toStringTag} <${e}>`);
+            result[e] = symbol;
+            // 将symbol键写入原型中 防止对象展开过于复杂 无论使用值还是键均可以使用 in 判断枚举是否存在于此枚举对象中
+            thisProto[symbol] = e;
+        }
+        Reflect.setPrototypeOf(result, freeze(thisProto));
+        return freeze(result);
+    };
+    /** @param {Array<string|symbol>} args */
+    return (...args) => {
+        const [args0, ...args_] = args;
+        if (typeof args0 === "symbol") return f("Enum:" + args0.description, args_);
+        return f("Enum", args);
+    };
+})();
+
+/**
+ * 用于创建重复字面量缩写的映射表
+ * key表示全写 value表示重复次数
+ */
+class AbbrList {
+    /** @type {Map<string,number>} key 为全写 value 为重复次数 */
+    #map = new Map();
+    /** @type {Array<string>} 降序排列的key数组 仅在需要使用时初始化 */
+    #sortedKeys = null;
+    /** 初始化#sortedKeys 移除仅重复一次的key */
+    #initSortedKeys() {
+        this.#sortedKeys = [...this.#map]
+            .filter(([, count]) => count > 1)
+            .sort(([, a], [, b]) => b - a)
+            .map(([key]) => key);
+
+        for (let i = 0; i < this.#sortedKeys.length; i++) {
+            this[Symbol(`${i} -> ${this.#map.get(this.#sortedKeys[i])}`)] = this.#sortedKeys[i];
+        }
+    }
+    constructor() {}
+    /** @returns {symbol} */
+    abbr(key) {
+        if (!this.#sortedKeys) this.#initSortedKeys();
+        const str = JSON5.stringify(key);
+        const index = this.#sortedKeys.indexOf(str);
+        if (index === -1) return key; // 仅重复一次则不需要缩写
+        return Symbol("$" + index.toString(36));
+    }
+    add(key) {
+        if (this.#sortedKeys) throw new Error("已完成的缩写表,不允许变动。");
+        const str = JSON5.stringify(key);
+        const count = this.#map.get(str) ?? 0;
+        this.#map.set(str, count + 1);
+    }
+    // 缩写映射
+    toString() {
+        if (!this.#sortedKeys) this.#initSortedKeys();
+        return this.#sortedKeys.map((key, index) => `$${index.toString(36)}=${key}`).join(",");
+    }
+}
