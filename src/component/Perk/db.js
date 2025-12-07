@@ -19,7 +19,7 @@ class Icon extends $icon(12, "天赋") {
     }
 }
 
-Icon.$defineElement("-perk");
+Icon.define("-perk");
 
 /** @typedef {import("TYPE").PerkId} PerkId */
 /** @typedef {import("TYPE").PerkName} PerkName */
@@ -76,14 +76,12 @@ class PerkData {
     /** 初始化数据库 */
     static init() {
         this.$NULL = new this(["_NULL", "空白", "NULL", 0, 0, 0, "", 0]);
-        this.$NULL.$common = freeze(new this(["$common", "普通天赋", "占位符", 1, 0, 0, "", 0]));
-        this.$NULL.$disposable = freeze(new this(["$disposable", "一次性天赋", "占位符", 2, 0, 0, "", 0]));
-        this.$NULL.$essence = freeze(new this(["$essence", "精粹", "占位符", 3, 0, 0, "", 0]));
+        this.$NULL.$common = freeze(new this(["$common", "普通天赋", "普通天赋", 1, 0, 0, "", 0]));
+        this.$NULL.$disposable = freeze(new this(["$disposable", "一次性天赋", "一次性天赋", 2, 0, 0, "", 0]));
+        this.$NULL.$essence = freeze(new this(["$essence", "精粹", "精粹", 3, 0, 0, "", 0]));
         freeze(this.$NULL);
 
-        /** #data: [天赋数据](data.js) @type {Array} */
-
-        embed(`#data.js`).forEach((v, i) => {
+        [...embed(`#data.js`).values().chunks(10)].forEach((v, i) => {
             const data = freeze(new this(v, i));
             const storage = this.data;
             storage.all.push(data);
