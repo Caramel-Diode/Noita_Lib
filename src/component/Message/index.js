@@ -1,19 +1,22 @@
 const Message = (() => {
     embed(`#db.js`);
     MessageData.init();
-    const styleSheet = css(embed(`#base.css`));
-    // 默认使用 important 样式
-    MessageData.backgrounds.important.then(url => styleSheet.insertRule(`:host{--url:url("${url}")}`));
+    const styleSheet = css(embed(`#base.css`), { name: "message-base" });
 
-    //prettier-ignore
-    for (const id in MessageData.backgrounds) // 根据背景ID设定9点图样式
-        MessageData.backgrounds[id].then(url => styleSheet.insertRule(String.raw`:host([message\.style="${id}"]){--url:url("${url}")}`));
+    (async () => {
+        /** @type {CSSLayerBlockRule} */
+        const layer = styleSheet.cssRules[0];
+        // 默认使用 important 样式
+        layer.insertRule(`:host{--url:url("${await MessageData.backgrounds.important}")}`);
 
-    //prettier-ignore
-    for (const [id, { background }] of MessageData.data) // 根据预设ID设定9点图样式
-        background.then(url => styleSheet.insertRule(String.raw`:host([message\.preset="${id}"]){--url:url("${url}")}`));
+        for (const id in MessageData.backgrounds) // 根据背景ID设定9点图样式
+            layer.insertRule(String.raw`:host([message\.style="${id}"]){--url:url("${await MessageData.backgrounds[id]}")}`);
 
-    return class HTMLNoitaMessageElement extends $class(Base, {
+        for (const [id, { background }] of MessageData.data) // 根据预设ID设定9点图样式
+            layer.insertRule(String.raw`:host([message\.preset="${id}"]){--url:url("${await background}")}`);
+    })();
+
+    return class HTMLNoitaMessageElement extends $extends(Base, {
         /** @type {$ValueOption<String>} 禁用显示模式 */
         displayMode: { name: "display", $default: "#" },
         /** @type {$ValueOption<String>} */
@@ -44,23 +47,14 @@ const Message = (() => {
             } else if (p1) this.messagePreset = p1;
         }
 
-        /** @param {Array<CSSStyleSheet>} [extraStyleSheets] 额外样式表 */
-        [$symbols.initStyle](extraStyleSheets = []) {
-            extraStyleSheets.push(styleSheet);
-            super[$symbols.initStyle](extraStyleSheets);
-        }
+        static [$css] = { base: [styleSheet] };
 
-        /**
-         * @override
-         * @see Base#contentUpdate
-         */
-        contentUpdate() {
+        [$content]() {
             this.shadowRoot.append(h.h1(h.slot(MessageData.data.get(this.messagePreset)?.text ?? this.messageContent ?? "内部未填充内容")));
-            this[$symbols.initStyle]();
         }
 
         //prettier-ignore
         get [Symbol.toStringTag]() { return `HTMLNoitaMessageElement #${this.background.id}` }
     };
 })();
-customElements.define("noita-message", freeze(Message));
+h["noita-message"] = freeze(Message);
