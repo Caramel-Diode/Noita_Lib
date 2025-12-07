@@ -1,5 +1,4 @@
 :host > section {
-    position: relative;
     /* prettier-ignore */
     grid-template:
         "name icon" 30px
@@ -9,7 +8,7 @@
         "solts solts" auto
         "named-solts named-solts" auto
         / auto minmax(90px, 1fr);
-    max-width: 600px;
+    max-width: 550px;
 }
 
 /* 简易面板布局 */
@@ -45,17 +44,18 @@
     place-self: center start;
 }
 
-:host > .simple img.attr-icon, /* 简易面板不显示属性图标 */
-:host > .simple > .attrs th:nth-child(1) {
+:host>.simple table .attr-icon,
+/* 简易面板不显示属性图标 */
+:host>.simple>.attrs th:nth-child(1) {
     display: none;
 }
 
-:host > .simple .dynamic-spells {
+:host > .simple .mixed-spells {
     margin-top: 6px;
     max-width: 1500px;
 }
 
-:host > section > .prompts {
+.prompts {
     top: -12px;
     left: -22px;
     position: absolute;
@@ -63,31 +63,45 @@
     height: 110px;
     display: flex;
     flex-direction: column-reverse;
-    place-content: space-between;
 }
+
+.prompts:empty {
+    display: none;
+}
+
 .prompts > i {
     zoom: 3;
 }
-.static-spells,
-.dynamic-spells {
+.mixed-spells,
+ol.static-spells {
+    display: flex;
+    flex-wrap: wrap;
     place-content: start;
     gap: 5px;
 }
+/* .static-spells,
+.dynamic-spells,
+.mixed-spells {
+    
+} */
 
 noita-inventory {
-    max-width: 550px;
     flex-wrap: wrap;
+}
+
+h2 {
+    display: flex;
+    gap: 10px;
 }
 
 h2,
 h2 > ::slotted(data) {
-    display: flex;
-    gap: 10px;
     color: #cfcfcf;
     line-height: 26px;
     --font-size: 24px;
     --font-weight: 300;
     margin-bottom: 3px;
+    text-wrap: nowrap;
 }
 
 .solts {
@@ -131,24 +145,31 @@ noita-inventory::part(inventory-slot):empty {
 .shuffle > td {
     color: var(--attr-color-shuffle, var(--attr-color-default));
 }
+
 .draw > td {
     color: var(--attr-color-draw, var(--attr-color-default));
 }
+
 .fire-rate-wait > td {
     color: var(--attr-color-fire-rate-wait, var(--attr-color-default));
 }
+
 .reload-time > td {
     color: var(--attr-color-reload-time, var(--attr-color-default));
 }
+
 .mana-max > td {
     color: var(--attr-color-mana-max, var(--attr-color-default));
 }
+
 .mana-charge-speed > td {
     color: var(--attr-color-mana-charge-speed, var(--attr-color-default));
 }
+
 .capacity > td {
     color: var(--attr-color-capacity, var(--attr-color-default));
 }
+
 .spread-degrees > td {
     color: var(--attr-color-spread-degrees, var(--attr-color-default));
 }
