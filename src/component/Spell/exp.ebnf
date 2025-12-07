@@ -1,0 +1,51 @@
+DIGIT
+    = "0"
+    | "1"
+    | "2"
+    | "3"
+    | "4"
+    | "5"
+    | "6"
+    | "7"
+    | "8"
+    | "9";
+
+INTEGER
+    = [ "+"
+    | "-" ], DIGIT, { DIGIT };
+
+SPELL_SET (* 法术集合 *)
+    = ? 法术ID ? (* 单个法术 *)
+    | ? 法术标签 ? (* 某类法术 *);
+
+BLANK (* 零个或多个空白符 *)
+    = { ? 空白符 ? };
+
+SPELL_EXP (* 法术查询表达式 *)
+    = SPELL_SET
+    | SPELL_EXP, "|", SPELL_EXP
+    | SPELL_EXP, "&", SPELL_EXP
+    | SPELL_EXP, "^", SPELL_EXP
+    | SPELL_EXP, "-", SPELL_EXP
+    | "!", SPELL_EXP
+    | "-", SPELL_EXP
+    | "(", SPELL_EXP, ")"
+    | BLANK, SPELL_EXP, BLANK;
+
+SPELL_LIST_ITEM
+    = SPELL_SET
+    | "[", SPELL_EXP, "]";
+
+SPELL_LIST_ITEM_REPEAT
+    = ":", BLANK, INTEGER
+    | ":", BLANK, INTEGER, "~", INTEGER
+    | ":", BLANK, "~", INTEGER (* 表示重复0~n次 *);
+
+SPELL_LIST_ITEM_REMAIN
+    = "^", BLANK, INTEGER;
+
+SPELL_LIST_EXP (* 法术序列表达式 *)
+    = SPELL_LIST_ITEM, BLANK, [ SPELL_LIST_ITEM_REMAIN ], BLANK, [ SPELL_LIST_ITEM_REPEAT ]
+    | SPELL_LIST_ITEM, BLANK, [ SPELL_LIST_ITEM_REPEAT ], BLANK, [ SPELL_LIST_ITEM_REMAIN ]
+    | SPELL_LIST_EXP, BLANK, { SPELL_LIST_EXP }
+    | BLANK, SPELL_LIST_EXP, BLANK;
