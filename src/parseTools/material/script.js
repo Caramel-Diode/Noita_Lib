@@ -9,6 +9,25 @@ const getCommentText = data => `/*
  */
 //prettier-ignore`;
 
+const blank = Symbol("");
+/**
+ * #### 用于将属性转化类型 若属性为默认值则返回 *空白 `Symbol("")`*
+ * *空白 `Symbol("")` 在编译为JS时将会在源码变为空字符串以减少体积*
+ * @template {string|number|boolean} T
+ * @param {string} value
+ * @param {T} defaultValue
+ * @returns {(T extends number ? number : T extends boolean ? boolean : T extends string ? string : unknown)|symbol}
+ */
+const $value = (value, defaultValue) => {
+    const targetType = typeof defaultValue;
+    if (targetType === "number") value = +value;
+    else if (targetType === "string") value = "" + value;
+    else if (targetType === "boolean") value = !!value;
+    else throw TypeError("不支持转化的类型");
+    if (Object.is(value, defaultValue)) return blank;
+    return value;
+};
+
 const zh_cn = langData.getZH_CN;
 
 /**
@@ -18,7 +37,7 @@ const zh_cn = langData.getZH_CN;
  * ```
  */
 class Material {
-    /** @type {Map<String,ElementNode<"CellData"|"CellDataChild">>} */
+    /** @type {Map<string,ElementNode<"CellData"|"CellDataChild">>} */
     static map = new Map();
     static #typeMap = {
         null: 0,
@@ -29,6 +48,21 @@ class Material {
     };
     /** @type {Map<String,Symbol>} */
     static tagMap = new Map();
+    /**
+     * 记录材料标签出现的次数
+     * @type {{[key: string]: number}}
+     */
+    static tags = {};
+    // 建立排序缓存
+    static #sortedTags = null;
+    /** @returns {Array<string>} */
+    static get sortedTags() {
+        if (this.#sortedTags) return this.#sortedTags;
+        return (this.#sortedTags = Object.keys(this.tags)
+            .map(tag => ({ tag, count: this.tags[tag] }))
+            .sort((a, b) => a.count - b.count) // 升序 (转为bits时以获得更小的数值)
+            .map(e => e.tag));
+    }
     /** `name` */
     id = "";
     /** `ui_name` */
@@ -48,7 +82,7 @@ class Material {
     /** `durability` */
     durability = "";
     /** `hp` */
-    hp = 0;
+    hp = 100;
     /** `fire_hp` */
     fireHp = 0;
     /** `electrical_conductivity` */
@@ -106,29 +140,35 @@ class Material {
         const tagsStr = attr.get("tags");
         if (tagsStr) {
             this.tags = tagsStr.split(",").map(tag => {
-                if (Material.tagMap.has(tag)) return Material.tagMap.get(tag);
-                else {
-                    const symbol = Symbol(`$${Material.tagMap.size + 1}`);
-                    Material.tagMap.set(tag, symbol);
-                    return symbol;
+                if (tag in Material.tags) {
+                    Material.tags[tag]++;
+                } else {
+                    Material.tags[tag] = 1;
                 }
+                return tag;
+                // if (Material.tagMap.has(tag)) return Material.tagMap.get(tag);
+                // else {
+                //     const symbol = Symbol(`$${Material.tagMap.size + 1}`);
+                //     Material.tagMap.set(tag, symbol);
+                //     return symbol;
+                // }
             });
         } else this.tags = parentData?.tags ?? [];
 
         this.parent = attr.get("_parent") ?? "";
-        this.inheritReactions = Number(attr.get("_inherit_reactions") ?? 0); // 材料反应是默认不会继承的
-        this.burnable = Number(attr.get("burnable") ?? parentData?.burnable ?? 0);
-        this.density = Number(attr.get("density") ?? parentData?.density ?? 0);
-        this.type = attr.get("cell_type") ?? parentData?.type ?? "null";
-        this.durability = Number(attr.get("durability") ?? parentData?.durability ?? 0);
-        this.hp = Number(attr.get("hp") ?? parentData?.hp ?? 0);
-        this.fireHp = Number(attr.get("fire_hp") ?? parentData?.fireHp ?? 0);
+        this.inheritReactions = Number(attr.get("_inherit_reactions") ?? 0); // 材料反应是默认不会继承的 --by 山雏
+        this.burnable = Number(attr.get("burnable") ?? parentData?.burnable ?? 0); // 默认不可燃 --by 山雏
+        this.density = Number(attr.get("density") ?? parentData?.density ?? 0); // 默认密度为1  --by 山雏
+        this.type = attr.get("cell_type") ?? parentData?.type ?? "liquid"; // 默认是液体材料 --by 山雏
+        this.durability = Number(attr.get("durability") ?? parentData?.durability ?? 1); // 默认硬度为1 --by 山雏
+        this.hp = Number(attr.get("hp") ?? parentData?.hp ?? 100); // 默认hp为100 --by 山雏
+        this.fireHp = Number(attr.get("fire_hp") ?? parentData?.fireHp ?? 0); // 默认火焰hp为0 --by 山雏
         // 默认导电性 当它是液体的时候默认导电
         const defult_electricalConductivity = tagsStr?.includes("[liquid]") ?? false ? 1 : 0;
         this.electricalConductivity = Number(attr.get("electrical_conductivity") ?? parentData?.electricalConductivity ?? defult_electricalConductivity);
         this.generatesSmoke = Number(attr.get("generates_smoke") ?? parentData?.generatesSmoke ?? 0);
         this.liquidGravity = Number(attr.get("liquid_gravity") ?? parentData?.liquidGravity ?? 0);
-        this.liquidSand = Number(attr.get("liquid_sand") ?? parentData?.liquidSand ?? 0);
+        this.liquidSand = Number(attr.get("liquid_sand") ?? parentData?.liquidSand ?? 0); // 默认非流沙类型
         this.solidFriction = Number(attr.get("solid_friction") ?? parentData?.solidFriction ?? 0);
         this.temperatureOfFire = Number(attr.get("temperature_of_fire") ?? parentData?.temperatureOfFire ?? 0);
         this.autoignitionTemperature = Number(attr.get("autoignition_temperature") ?? parentData?.autoignitionTemperature ?? 0);
@@ -157,6 +197,7 @@ class Material {
              * 具有沾染能力时才具有沾染效果
              */
             if (attr.get("liquid_stains") === "1") {
+                // 默认无沾染效果
                 if (stainsElement) {
                     const statusEffectElement = stainsElement.childNodes.query("StatusEffect")[0];
                     this.statusEffects_stains = statusEffectElement.attr.get("type") ?? "";
@@ -168,7 +209,7 @@ class Material {
         this.coldFreezesToMaterial = attr.get("cold_freezes_to_material") ?? parentData?.coldFreezesToMaterial ?? "";
         this.warmthMeltsToMaterial = attr.get("warmth_melts_to_material") ?? parentData?.warmthMeltsToMaterial ?? "";
         this.solidBreakToType = attr.get("solid_break_to_type") ?? parentData?.solidBreakToType ?? "";
-        this.lifetime = Number(attr.get("lifetime") ?? parentData?.lifetime ?? -1);
+        this.lifetime = Number(attr.get("lifetime") ?? parentData?.lifetime ?? 0); // 默认存在时间为0 (永久) --by 山雏
         this.platformType = Number(attr.get("platform_type") ?? parentData?.platformType ?? 0);
     }
     /**
@@ -186,10 +227,10 @@ class Material {
         const coldFreezesToMaterial = this.coldFreezesToMaterial ? this.coldFreezesToMaterial : blank;
         const warmthMeltsToMaterial = this.warmthMeltsToMaterial ? this.warmthMeltsToMaterial : blank;
         const solidBreakToType = this.solidBreakToType ? this.solidBreakToType : blank;
-        const tags = this.tags.length ? this.tags : blank;
+        // const tags = this.tags.length ? this.tags : blank;
         const parent = this.parent ? id_index_map.get(this.parent) : blank;
         //prettier-ignore
-        const bitsNumber = bitsToNum([ //======== Bits Array
+        const bitsNumber = Number(new Bits([ //======== Bits Array
             this.inheritReactions, //=======[0] 继承反应
             this.burnable, //===============[1] 可燃性
             this.electricalConductivity, //=[2] 导电性
@@ -198,65 +239,35 @@ class Material {
             this.onFire, //=================[5] 始终燃烧
             this.requiresOxygen, //=========[6] 燃烧需氧
             this.platformType //============[7] 平台类型
-        ]);
+        ]).toBigInt());
+
+        const tags = new Bits(Material.sortedTags.map(tag => this.tags.includes(tag))).toBigInt().toString(36);
 
         const str = JSON5.stringify([
-            this.id, //========================[0] id
-            name, //===========================[1] 材料名
-            tags, //===========================[2] 标签
-            parent, //=========================[3] 父材料
-            bitsNumber, //=====================[4] Bits Number
-            this.density, //===================[5] 密度
-            Material.#typeMap[this.type], //===[6] 类型
-            this.durability, //================[7] 耐久?
-            this.hp, //========================[8] 血量
-            this.fireHp, //====================[9] 燃烧血量
-            this.liquidGravity, //=============[10] 液体重力
-            this.solidFriction, //=============[11] 固体摩擦力
-            this.temperatureOfFire, //=========[12] 火焰温度
-            this.autoignitionTemperature, //===[13] 自燃温度
-            this.color.toUpperCase(), //=======[14] 容器中的颜色
-            this.statusEffects_ingestion, //===[15] 摄入效果
-            this.statusEffects_stains, //======[16] 沾染效果
-            coldFreezesToMaterial, //==========[17] 冻结转化
-            warmthMeltsToMaterial, //==========[18] 加热转化
-            solidBreakToType, //===============[19] 碎裂转化
-            this.lifetime, //==================[20] 存在时间
-            this.name.slice(1) //=======[21] 名称翻译键
+            this.id, //============================================[0] id
+            name, //===============================================[1] 材料名
+            tags, //===============================================[2] 标签(使用36进制字符串按位记录)
+            parent, //=============================================[3] 父材料
+            bitsNumber, //=========================================[4] Bits Number
+            $value(this.density, 1), //======[5] 密度
+            Material.#typeMap[this.type], //=======================[6] 类型
+            $value(this.durability, 1), //===[7] 硬度
+            $value(this.hp, 100), //=========[8] 血量
+            $value(this.fireHp, 0), //=======[9] 燃烧血量
+            this.liquidGravity, //=================================[10] 液体重力
+            this.solidFriction, //=================================[11] 固体摩擦力
+            this.temperatureOfFire, //=============================[12] 火焰温度
+            this.autoignitionTemperature, //=======================[13] 自燃温度
+            this.color.toUpperCase(), //===========================[14] 容器中的颜色
+            this.statusEffects_ingestion, //=======================[15] 摄入效果
+            this.statusEffects_stains, //==========================[16] 沾染效果
+            coldFreezesToMaterial, //==============================[17] 冻结转化
+            warmthMeltsToMaterial, //==============================[18] 加热转化
+            solidBreakToType, //===================================[19] 碎裂转化
+            this.lifetime, //======================================[20] 存在时间
+            this.name.slice(1) //===========================[21] 名称翻译键
         ]);
 
-        // console.log(bits, bitsToNum(bits));
-        // const str = JSON5.stringify([
-        //     this.id, //========================[0] id
-        //     name, //===========================[1] 材料名
-        //     this.tags, //======================[2] 标签
-        //     this.parent, //====================[3] 父材料
-        //     this.inheritReactions, //==========[4] 继承反应
-        //     this.burnable, //==================[5] 可燃
-        //     this.density, //===================[6] 密度
-        //     Material.#typeMap[this.type], //===[7] 类型
-        //     this.durability, //================[8] 耐久?
-        //     this.hp, //========================[9] 血量
-        //     this.fireHp, //====================[10] 燃烧血量
-        //     electricalConductivity, //=========[11] 导电性
-        //     generatesSmoke, //=================[12] 生成烟雾
-        //     this.liquidGravity, //=============[13] 液体重力
-        //     liquidSand, //=====================[14] 液体沙?
-        //     this.solidFriction, //=============[15] 固体摩擦力
-        //     this.temperatureOfFire, //=========[16] 火焰温度
-        //     this.autoignitionTemperature, //===[17] 自燃温度
-        //     onFire, //=========================[18] 燃烧中
-        //     requiresOxygen, //=================[19] 燃烧需氧
-        //     this.color.toUpperCase(), //=======[20] 容器中的颜色
-        //     this.statusEffects_ingestion, //===[21] 摄入效果
-        //     this.statusEffects_stains, //======[22] 沾染效果
-        //     coldFreezesToMaterial, //==========[23] 冻结转化
-        //     warmthMeltsToMaterial, //==========[24] 加热转化
-        //     solidBreakToType, //===============[25] 碎裂转化
-        //     this.lifetime, //==================[26] 存在时间
-        //     this.platformType, //==============[27] 平台类型
-        //     this.name.slice(1) //=======[28] 名称翻译键
-        // ]);
         if (spread) return str.slice(1, -1);
         return str;
     }
@@ -274,25 +285,27 @@ class Reaction {
      */
     constructor(element) {
         const attr = element.attr;
-        /** @type {String} 原料表(空格分隔) */
+        /** @type {string} 原料表(空格分隔) */
         this.inputs = [attr.get("input_cell1"), attr.get("input_cell2") ?? "", attr.get("input_cell3") ?? ""].join(" ").trim();
-        /** @type {String} 产物表(空格分隔) */
+        /** @type {string} 产物表(空格分隔) */
         this.outputs = [attr.get("output_cell1"), attr.get("output_cell2") ?? "", attr.get("output_cell3") ?? ""].join(" ").trim();
         /** @type {0|1} 快速反应 */
-        this.fastReaction = Number(attr.get("fast_reaction") ?? 0);
-        /** @type {Number} 每帧反应概率(1~100) */
-        this.probability = Number(attr.get("probability"));
-        /** @type {String} 生成实体 */
+        this.fastReaction = +(attr.get("fast_reaction") ?? 0);
+        /** @type {number} 每帧反应概率(1~100) */
+        this.probability = +attr.get("probability");
+        /** @type {string} 生成实体 */
         this.entity = attr.get("entity") ?? "";
+        /** @type {1|0} 是否爆炸 */
+        this.explode = element.childNodes.length;
     }
 
     toString(spread = false) {
-        const blank = Symbol("");
-        const entity = this.entity ? "$" + this.entity : "";
-        const probability = this.fastReaction ? -this.probability : this.probability; // 负数表示快速反应
-        const str = JSON5.stringify([probability, this.inputs + "=" + this.outputs + entity]);
-        if (spread) return str.slice(1, -1);
-        return str;
+        // 不能在这里处理!
+        // const entity = this.entity ? "$" + this.entity : "";
+        // const probability = this.fastReaction ? -this.probability : this.probability; // 负数表示快速反应
+        // const str = JSON5.stringify([probability, this.inputs + "=" + this.outputs + entity]);
+        // if (spread) return str.slice(1, -1);
+        // return str;
     }
 }
 
@@ -328,7 +341,8 @@ addEventListener("DOMContentLoaded", async () => {
         const params_str = [...Material.tagMap].map(([data, $var]) => `${$var.description}=${JSON.stringify(data)}`).join(",\n    ");
         const materials_str = materialDatas.map(e => e.toString(true, id_index_map)).join(",\n    ");
         const comment = getCommentText(`共${materialDatas.length}条材料数据`);
-        const fileContent = `${comment}\n((\n    ${params_str}\n)=>[\n    ${materials_str}\n])()`;
+        // const fileContent = `${comment}\n((\n    ${params_str}\n)=>[\n    ${materials_str}\n])()`;
+        const fileContent = `${comment}\n[\n[\n    ${materials_str}\n],\n\n"${Material.sortedTags.map(e => e.slice(1, -1)).join(" ")}"\n]`;
         download(fileContent, "material.data.js");
     });
 
@@ -336,14 +350,16 @@ addEventListener("DOMContentLoaded", async () => {
         // const reactionDatas = reactionDataElements.map(e => new Reaction(e).toString(true));
         /** @type {Array<Reaction>} */
         const reactionDatas = reactionDataElements.map(e => new Reaction(e));
+        const { sortedTags } = Material;
         const reaction_str = reactionDatas
             .map(e => {
-                const inputs = e.inputs.split(" ").map(e => id_index_map.get(e) ?? e);
-                const outputs = e.outputs.split(" ").map(e => id_index_map.get(e) ?? e);
+                const inputs = e.inputs.split(" ").map(e => id_index_map.get(e)?.toString(36) ?? e.replace(/\[\S+\]/, raw => `[${sortedTags.indexOf(raw).toString(36)}]`));
+                const outputs = e.outputs.split(" ").map(e => id_index_map.get(e)?.toString(36) ?? e.replace(/\[\S+\]/, raw => `[${sortedTags.indexOf(raw).toString(36)}]`));
 
-                const entity = e.entity ? "$" + e.entity : "";
+                const entity = e.entity ? e.entity.slice("data/entities/".length, -".xml".length) : "";
+                const explode = e.explode ? "*" : "";
                 const probability = e.fastReaction ? -e.probability : e.probability; // 负数表示快速反应
-                const str = JSON5.stringify([probability, inputs.join(" ") + "=" + outputs.join(" ") + entity]);
+                const str = JSON5.stringify([probability, inputs.join(" ") + "=" + outputs.join(" ") + (entity + explode ? "$" : "") + entity + explode]);
                 return str.slice(1, -1);
             })
             .join(",\n    ");
