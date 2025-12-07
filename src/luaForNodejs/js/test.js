@@ -1,6 +1,21 @@
 const lua = require("../build/Release/lua");
-// console.log(lua.doString(`
-//     dofile("D:/Project/Web/nodejsLua/js/lua2.lua")
-//     return x + y + z
-//     `, { x: 1, y: 3 }));
-console.log(lua.doFile(`./lua/test.lua`, { x: 1, y: 3 }));
+
+const result = lua.doString(
+  //lua代码字符串
+  `
+  --print("x的类型: " .. type(x)) -- 检测x类型
+  print(123)
+  print(123)
+  print(123)
+  print(123)
+  
+  
+  return {1,2,a=ipair} -- 向js返回结果
+`,
+  //注入全局变量
+  { x: "1", y: 3 },
+  //启用标准库
+  false
+);
+
+console.log(result,lua.version);
