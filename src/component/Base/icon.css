@@ -4,10 +4,11 @@
     height: var(--size);
     width: var(--size);
 }
+
 /* 为focus目标项目提供背景变量 */
 :host(:focus-visible) {
-    --focus\#bg1: linear-gradient(#eda949, #eda949);
-    --focus\#bg2: linear-gradient(#c98930, #c98930);
+    --focus\#bg1: linear-gradient(#eda949 0 0);
+    --focus\#bg2: linear-gradient(#c98930 0 0);
 }
 
 /*==================*\
@@ -59,5 +60,3 @@ code {
     scale: 0.5;
     --font-size: large;
 }
-
-
