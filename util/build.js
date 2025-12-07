@@ -6,8 +6,7 @@ import md5 from "./md5.js";
 
 const path = {
     src: "./src",
-    dist: "./dist",
-    dist2: "D:/Project/Web/NoitaTest/js"
+    dist: "./dist"
 };
 
 class File {
@@ -29,7 +28,8 @@ class File {
         ["js", "js"],
         ["css", "css"],
         ["png", "bin"],
-        ["webp", "bin"]
+        ["webp", "bin"],
+        ["flac", "bin"]
     ]);
     /** 嵌入点 @type {Array<EmbeddingPoint>} */ embeddingPoints = [];
     /** 连接数据 @type {Array<String>} */ #connectData = [];
@@ -65,6 +65,9 @@ class File {
                     case "webp":
                         this.data = `\`data:image/webp;base64,${fs.readFileSync(path, _.readFileopt_bin)}\``;
                         // console.log(this.data);
+                        break;
+                    case "flac":
+                        this.data = `\`data:audio/flac;base64,${fs.readFileSync(path, _.readFileopt_bin)}\``;
                         break;
                 }
                 break;
@@ -249,11 +252,15 @@ fs.writeFileSync(`${path.dist}/noitaLib.sf.js`, index_sf.embedingData ?? index_s
 // 其它目标
 {
     // 测试目录
-    fs.writeFileSync(`D:/Project/Web/NoitaTest/js/noitaLib.js`, index_sf.embedingData ?? index_sf.embedingData_base64);
+    // fs.writeFileSync(`D:/Project/Web/NoitaTest/js/noitaLib.js`, index_sf.embedingData ?? index_sf.embedingData_base64);
     // 施法教学文档目录
     fs.writeFileSync(`D:/Project/Web/Noita 施法教学文档/noitaLib.js`, index_sf.embedingData ?? index_sf.embedingData_base64);
     // 直播插件目录
     fs.writeFileSync(`D:/Project/Web/直播插件/noitaLib.js`, index_sf.embedingData ?? index_sf.embedingData_base64);
+    // Noita for-obs mod目录
+    fs.writeFileSync(`D:/Program/Steam/steamapps/common/Noita/mods/for-obs/noitaLib.js`, index_sf.embedingData ?? index_sf.embedingData_base64);
+    // QQ-Bot目录
+    fs.writeFileSync(`D:/Project/Electron/bot/noitaLib.js`, index_sf.embedingData ?? index_sf.embedingData_base64);
 }
 
 const index_esm_sf = new File(`${path.src}/index.esm.js`);
