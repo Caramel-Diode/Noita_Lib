@@ -1,23 +1,23 @@
 {
     "compilerOptions": {
-        "lib": ["DOM", "ESNext", "WebWorker"],
+        "lib": [ "DOM", "ESNext", "WebWorker" ],
         "allowSyntheticDefaultImports": true,
         "declaration": true,
         "allowJs": true,
-        "module": "None",
+        "module": "esnext",
         "target": "esnext",
         "checkJs": true,
         "paths": {
-            "TYPE": ["../../../@types/@Wand"],
-            "@contanier": ["../../../@types/@container"],
-            "@cursor": ["../../../@types/@cursor"],
-            "@entity": ["../../../@types/@entity"],
-            "@material": ["../../../@types/@material"],
-            "@message": ["../../../@types/@message"],
-            "@perk": ["../../../@types/@perk"],
-            "@spell": ["../../../@types/@spell"],
-            "@wand": ["../../../@types/@wand"]
+            "TYPE": [ "../../../@types/@Wand" ],
+            "@contanier": [ "../../../@types/@container" ],
+            "@cursor": [ "../../../@types/@cursor" ],
+            "@entity": [ "../../../@types/@entity" ],
+            "@material": [ "../../../@types/@material" ],
+            "@message": [ "../../../@types/@message" ],
+            "@perk": [ "../../../@types/@perk" ],
+            "@spell": [ "../../../@types/@spell" ],
+            "@wand": [ "../../../@types/@wand" ]
         }
     },
-    "include": ["db.js", "index.js", "expParser.js", "../Base/index.js", "../../public/util.js", "../../public/htmlTools.js", "../../public/cssTools.js", "../../public/damageData.js"]
+    "include": [ "db.js", "index.js", "expParser.js", "../Base/index.js", "../Spell/index.js", "../../public/util.js", "../../public/htmlTools.js", "../../public/cssTools.js", "../../public/damageData.js" ]
 }

@@ -1,6 +1,5 @@
 {
     "compilerOptions": {
-        // "lib": ["DOM", "ES2017"],
         "allowSyntheticDefaultImports": true,
         "declaration": true,
         "allowJs": true,

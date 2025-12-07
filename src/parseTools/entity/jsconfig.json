@@ -1,13 +1,13 @@
 {
     "compilerOptions": {
-        // "lib": ["DOM", "ES2017"],
+        "lib": [ "DOM", "ESNext" ],
         "allowSyntheticDefaultImports": true,
         "declaration": true,
         "allowJs": true,
-        "module": "None",
+        "module": "esnext",
         "target": "esnext",
         "checkJs": true,
-        "paths": {}
+        "paths": { }
     },
-    "include": ["script.js", "xml.list.js", "animation.js", "../../public/XML.js", "../../public/CSV.js", "../../public/damageData.js", "../util.js"]
+    "include": [ "script.js", "../../public/XML.js", "../../public/CSV.js", "../../public/damageData.js", "../../public/htmlTools.js", "../util.js" ]
 }
