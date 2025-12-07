@@ -3,7 +3,7 @@
     "displayName": "noitaLib",
     "description": "基于Web Component技术构建的 Noita 游戏UI元素工具库",
     "type": "module",
-    "version": "1.0.4",
+    "version": "1.1.4",
     "license": "GPL",
     "repository": "github:Caramel-Diode/Noita_Lib",
     "keywords": [
@@ -16,7 +16,7 @@
         "url": "https://github.com/Caramel-Diode",
         "email": "2746671038@qq.com"
     },
-    "contributors": [],
+    "contributors": [ ],
     "main": "dist/noitaLib.mjs",
     "types": "@type/index.d.ts",
     "files": [
@@ -34,6 +34,7 @@
             "worker": true
         },
         "rules": {
+            "new-parens": [ "error", "never" ],
             "brace-style": [
                 "error",
                 "1tbs",
@@ -81,7 +82,7 @@
         ]
     },
     "stylelint": {
-        "overrides": [],
+        "overrides": [ ],
         "rules": {
             "declaration-block-no-duplicate-properties": true,
             "no-duplicate-selectors": true,
