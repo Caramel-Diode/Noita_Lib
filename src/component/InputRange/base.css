@@ -1,0 +1,74 @@
+:host {
+    display: inline-block;
+    position: relative;
+    min-width: 190px;
+    height: 25px;
+    background: #0f0f0e;
+}
+
+.thumb {
+    pointer-events: none;
+    position: absolute;
+    left: 0;
+    top: 0;
+    border: none;
+    height: 100%;
+    /* border: none; */
+    aspect-ratio: 1;
+    --c4: #6c6c6c;
+    --c5: #7e7e7e;
+    --c6: #606060;
+    --c7: #464646;
+    --bg3: linear-gradient(#0f0f0e 0 0);
+    --bg4: linear-gradient(var(--c4) 0 0);
+    --bg5: linear-gradient(var(--c5) 0 0);
+
+    /* prettier-ignore */
+    background:
+        /* 中心图案 */
+        /* 高亮点(右上) */ var(--bg4) calc(50% + 5px) calc(50% - 5px)/3px 3px no-repeat,
+        /* 高亮点(右下) */ var(--bg4) calc(50% + 5px) calc(50% + 5px)/3px 3px no-repeat,
+        /* 高亮点(左下) */ var(--bg4) calc(50% - 5px) calc(50% + 5px)/3px 3px no-repeat,
+        /* 挖空区域 */ var(--bg3) center/7px 7px no-repeat,
+        linear-gradient(var(--c7) 0 0) center/13px 13px no-repeat,
+        /* 边框 */
+        /* 高亮点(右上) */ var(--bg5) right top/3px 3px no-repeat,
+        /* 高亮点(右下) */ var(--bg5) right bottom/3px 3px no-repeat,
+        /* 高亮点(左下) */ var(--bg5) left bottom/3px 3px no-repeat,
+        /* 挖空区域 */ var(--bg3) center/calc(100% - 6px) calc(100% - 6px) no-repeat,
+        var(--c6);
+}
+
+/* 滑块轨道是要高于滑块的 */
+.thumb:has(~input:focus-visible),
+.thumb.hover {
+    --c4: #b5b5b5;
+    --c5: #b5b5b5;
+    --c6: #9b9b9d;
+    --c7: #9b9b9b;
+}
+
+.track {
+    pointer-events: none;
+    --bg: linear-gradient(#b5b5b5 0 0);
+    background:
+        var(--bg) right top/3px 3px no-repeat,
+        /* 高亮点(右下) */
+        var(--bg) right bottom/3px 3px no-repeat,
+        /* 高亮点(左下) */
+        var(--bg) left bottom/3px 3px no-repeat,
+        #9b9b9a;
+    ;
+    clip-path: polygon(0 0, 100% 0, 100% 100%, 0 100%, 0 3px, 3px 3px, 3px calc(100% - 3px), calc(100% - 3px) calc(100% - 3px), calc(100% - 3px) 3px, 0 3px);
+}
+
+.track,
+input {
+    position: absolute;
+    inset: 0;
+    cursor: inherit;
+}
+
+input {
+    opacity: 0;
+}
