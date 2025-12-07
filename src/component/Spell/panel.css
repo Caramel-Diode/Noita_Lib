@@ -3,17 +3,19 @@
         "name icon" 30px
         "desc icon" auto
         ".  icon" 14px
-        "attr icon" 1fr
+        "attr icon" auto
         "prob prob" auto
-        / auto minmax(80px, 1fr);
+        / auto 1fr;
     gap: 0 20px;
 }
+
 .probs {
     margin-top: 10px;
     height: 46px;
     grid-area: prob;
     place-self: start;
 }
+
 .probs:is(:focus-visible, :hover) td:is(.mark-left, .mark-right) {
     width: 16px;
     --focus-scale: 2;
@@ -70,6 +72,11 @@
 .probs th.lv {
     --font-weight: bolder;
     --font-size: 18px;
+}
+
+.probs th.lv > canvas {
+    zoom: 2;
+    vertical-align: bottom;
 }
 
 .probs th.value {
