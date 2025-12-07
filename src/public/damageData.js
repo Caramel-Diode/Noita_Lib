@@ -179,7 +179,7 @@ class DamageData {
             if (this.slice) cache.push("S", this.slice);
             if (this.healing) cache.push("H", this.healing);
             if (this.curse) cache.push("C", this.curse);
-            if (this.dirll) cache.push("D", this.dirll);
+            if (this.drill) cache.push("D", this.drill);
             if (this.overeating) cache.push("V", this.overeating);
             if (this.physicsHit) cache.push("Y", this.physicsHit);
             if (this.poison) cache.push("N", this.poison);
