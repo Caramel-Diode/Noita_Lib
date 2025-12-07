@@ -18,15 +18,22 @@
     place-self: start end;
 }
 
+slot[name="info"] {
+    display: none;
+}
+
 ::slotted(:is(.\[left-top\], .\[lt\], .\[1\])) {
     place-self: start;
 }
+
 ::slotted(:is(.\[right-top\], .\[rt\], .\[2\])) {
     place-self: start end;
 }
+
 ::slotted(:is(.\[left-bottom\], .\[lb\], .\[3\])) {
     place-self: end start;
 }
+
 ::slotted(:is(.\[right-bottom\], .\[rb\], .\[4\])) {
     place-self: end;
 }
@@ -39,6 +46,13 @@ data {
     display: grid;
     place-content: start;
     user-select: none;
+    pointer-events: none;
+    filter: drop-shadow(1px 1px 0 #000a) drop-shadow(-1px -1px 0 #000a);
+}
+
+data > canvas {
+    position: relative;
+    zoom: 2;
 }
 
 /* 轮播胶卷 */
@@ -48,11 +62,8 @@ ol {
 
 /* 轮播项 */
 li {
-    height: var(--size);
-    width: var(--size);
-    display: grid;
-    place-content: center;
-    place-items: center;
+    --base: no-repeat border-box;
+    display: contents;
     /* 边框线色1 将会被法术类型选择器提供的色盘覆盖 */
     --c1: #0000;
     /* 边框线色2 将会被法术类型选择器提供的色盘覆盖 */
@@ -61,16 +72,16 @@ li {
     --c3: color-mix(in srgb, var(--c1), #0000);
     /* 半透明点色2 (半透明边框线色2) */
     --c4: color-mix(in srgb, var(--c2), #0000);
-    --bg1: linear-gradient(var(--c1), var(--c1));
-    --bg2: linear-gradient(var(--c2), var(--c2));
-    --bg3: linear-gradient(var(--c3), var(--c3));
-    --bg4: linear-gradient(var(--c4), var(--c4));
+    --bg1: linear-gradient(var(--c1) 0 0);
+    --bg2: linear-gradient(var(--c2) 0 0);
+    --bg3: linear-gradient(var(--c3) 0 0);
+    --bg4: linear-gradient(var(--c4) 0 0);
     /* 边框线(垂直方向) 宽高参数 */
-    --h1: 2px calc(100% - 6px) no-repeat;
+    --h1: 2px calc(100% - 6px) var(--base);
     /* 边框线(水平方向) 宽高参数 */
-    --v1: calc(100% - 6px) 2px no-repeat;
+    --v1: calc(100% - 6px) 2px var(--base);
     /* 2*2 像素点 宽高参数 */
-    --p: 2px 2px no-repeat;
+    --p: 2px 2px var(--base);
     /* 底色1 */
     --c5: #0000;
     /* 底色2 */
@@ -78,7 +89,8 @@ li {
     /* 中心光晕底色 */
     --b: radial-gradient(var(--c5), var(--c6)) center/calc(100% - 8px) calc(100% - 8px) no-repeat;
     /* prettier-ignore */
-    --common\#border: /* 正常情况下的法术边框 */
+    --common\#border:
+        /* 正常情况下的法术边框 */
         /* 实边 */
         var(--bg1) left top 4px / var(--h1),
         var(--bg1) right 4px bottom/var(--v1),
@@ -97,12 +109,26 @@ li {
         var(--bg4) right 2px top 2px / var(--p),
         var(--bg4) right 2px bottom/ var(--p),
         var(--bg4) left bottom/ var(--p);
-    /* 聚焦时使用聚焦边框 否则回退使用正常边框 */
-    background: var(--focus\#border, var(--common\#border)), /* 底色 */ var(--b);
 }
 
+li:has([hidden])::after {
+    content: "?";
+    display: flex;
+    place-content: center;
+    place-items: center;
+    --font-size: 24px;
+    --font-weight: bolder;
+    color: var(--c4);
+    -webkit-text-stroke: var(--c2) 1px;
+}
+
+li:has([hidden])::after,
 li > img {
-    zoom: 2;
+    height: var(--size);
+    width: var(--size);
+    border: 4px solid #0000;
+    /* 聚焦时使用聚焦边框 否则回退使用正常边框 */
+    background: var(--focus\#border, var(--common\#border)), /* 底色 */ var(--b);
 }
 
 li > img::selection {
@@ -117,17 +143,18 @@ li > img::selection {
 
 :host(:focus-visible) li {
     /* 虚边框线渐变基本参数 */
-    --focus\#bg3: linear-gradient(#493414c5, #493414c5);
+    --focus\#bg3: linear-gradient(#493414c5 0 0);
     /* 虚边框线(垂直方向) 宽高参数 */
-    --focus\#h1: 2px calc(100% - 6px) no-repeat;
+    --focus\#h1: 2px calc(100% - 6px) var(--base);
     /* 虚边框线(水平方向) 宽高参数 */
-    --focus\#v1: calc(100% - 6px) 2px no-repeat;
+    --focus\#v1: calc(100% - 6px) 2px var(--base);
     /* 实边框线(垂直方向) 宽高参数 */
-    --focus\#h2: calc(100% - 8px) 2px no-repeat;
+    --focus\#h2: calc(100% - 8px) 2px var(--base);
     /* 实边框线(水平方向) 宽高参数 */
-    --focus\#v2: 2px calc(100% - 8px) no-repeat;
+    --focus\#v2: 2px calc(100% - 8px) var(--base);
     /* prettier-ignore */
-    --focus\#border: /* 聚焦情况下的法术边框 */
+    --focus\#border:
+        /* 聚焦情况下的法术边框 */
         /* 高亮点 */
         var(--focus\#bg1) left 2px top/var(--p),
         var(--focus\#bg1) right 2px top/var(--p),
@@ -146,111 +173,64 @@ li > img::selection {
         var(--focus\#bg3) left 2px top 2px / var(--focus\#v1),
         var(--focus\#bg3) left 2px top 4px / var(--focus\#h1),
         var(--focus\#bg3) left 4px bottom 2px / var(--focus\#v1),
-        var(--focus\#bg3) right 2px top 2px / var(--focus\#h1)
-        !important;
+        var(--focus\#bg3) right 2px top 2px / var(--focus\#h1) !important;
 }
 
 /*================================================*\
     法术边框色盘
     根据法术类型为边框提供不同色盘
-    允许外部使用特殊css变量覆盖该色盘
 \*================================================*/
 
 /* [投射物] */
 .projectile {
-    --c1: var(--border-color\#projectile1, var(--border-color, #5a2323));
-    --c2: var(--border-color\#projectile2, var(--border-color, #411919));
+    --c1: #5a2323;
+    --c2: #411919;
 }
 
 /* [静态投射物] */
 .static-projectile {
-    --c1: var(--border-color\#static-projectile1, var(--border-color, #8d3f18));
-    --c2: var(--border-color\#static-projectile2, var(--border-color, #553422));
+    --c1: #8d3f18;
+    --c2: #553422;
 }
 
 /* [修正] */
 .modifier {
-    --c1: var(--border-color\#modifier1, var(--border-color, #2d3a72));
-    --c2: var(--border-color\#modifier2, var(--border-color, #202952));
+    --c1: #2d3a72;
+    --c2: #202952;
 }
 
 /* [材料] */
 .material {
-    --c1: var(--border-color\#material1, var(--border-color, #356f44));
-    --c2: var(--border-color\#material2, var(--border-color, #2f4836));
+    --c1: #356f44;
+    --c2: #2f4836;
 }
 
 /* [多重] */
 .draw-many {
-    --c1: var(--border-color\#draw-many1, var(--border-color, #1c6d73));
-    --c2: var(--border-color\#draw-many2, var(--border-color, #214346));
+    --c1: #1c6d73;
+    --c2: #214346;
 }
 
 /* [其他] */
 .other {
-    --c1: var(--border-color\#other1, var(--border-color, #714b33));
-    --c2: var(--border-color\#other2, var(--border-color, #49392e));
+    --c1: #714b33;
+    --c2: #49392e;
 }
 
 /* [实用] */
 .utility {
-    --c1: var(--border-color\#utility1, var(--border-color, #7b2a74));
-    --c2: var(--border-color\#utility2, var(--border-color, #4d2a4a));
+    --c1: #7b2a74;
+    --c2: #4d2a4a;
 }
 
 /* [被动] */
 .passive {
-    --c1: var(--border-color\#passive1, var(--border-color, #212f26));
-    --c2: var(--border-color\#passive2, var(--border-color, #18211b));
+    --c1: #212f26;
+    --c2: #18211b;
 }
 
-/* 提供低版本回退 */
-@supports not (color-mix(in srgb, #000, #fff)) {
-    /* [投射物] */
-    .projectile {
-        --c3: var(--border-color\#projectile1, var(--border-color, #5a232380));
-        --c4: var(--border-color\#projectile2, var(--border-color, #41191980));
-    }
-
-    /* [静态投射物] */
-    .static-projectile {
-        --c3: var(--border-color\#static-projectile1, var(--border-color, #8d3f1880));
-        --c4: var(--border-color\#static-projectile2, var(--border-color, #55342280));
-    }
-
-    /* [修正] */
-    .modifier {
-        --c3: var(--border-color\#modifier1, var(--border-color, #2d3a7280));
-        --c4: var(--border-color\#modifier2, var(--border-color, #20295280));
-    }
-
-    /* [材料] */
-    .material {
-        --c3: var(--border-color\#material1, var(--border-color, #356f4480));
-        --c4: var(--border-color\#material2, var(--border-color, #2f483680));
-    }
-
-    /* [多重] */
-    .draw-many {
-        --c3: var(--border-color\#draw-many1, var(--border-color, #1c6d7380));
-        --c4: var(--border-color\#draw-many2, var(--border-color, #21434680));
-    }
-
-    /* [其他] */
-    .other {
-        --c3: var(--border-color\#other1, var(--border-color, #714b3380));
-        --c4: var(--border-color\#other2, var(--border-color, #49392e80));
-    }
-
-    /* [实用] */
-    .utility {
-        --c3: var(--border-color\#utility1, var(--border-color, #7b2a7480));
-        --c4: var(--border-color\#utility2, var(--border-color, #4d2a4a80));
-    }
-
-    /* [被动] */
-    .passive {
-        --c3: var(--border-color\#passive1, var(--border-color, #212f2680));
-        --c4: var(--border-color\#passive2, var(--border-color, #18211b80));
-    }
+/* [内置特殊类型] */
+.special {
+    --c1: #111;
+    --c2: #151515;
 }
