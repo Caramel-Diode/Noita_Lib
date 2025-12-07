@@ -10,8 +10,7 @@
           "lua_lib/include"
         ],
         "libraries": [
-          # 记得改路径
-          "D:/Project/Web/NoitaLib/src/luaForNodejs/lua_lib\lua54.lib"
+          "D:/Project/Web/nodejsLua/lua_lib/lua54.lib"
         ],
         # 添加一个预编译宏，避免编译的时候并行抛错
         'defines': [ 'NAPI_DISABLE_CPP_EXCEPTIONS' ],

@@ -4,7 +4,9 @@
   },
   "scripts": {
     "configure": "node-gyp configure",
+    "nw-configure": "nw-gyp configure --target=0.89.0",
     "build": "node-gyp build",
+    "nw-build": "nw-gyp build",
     "test": "node js/test.js"
   }
 }
