@@ -200,6 +200,12 @@ local init_current_reload_time = function()
             else
                 pos = "before";
             end
+            -- 负值额外处理
+            if type_ == "-" then
+                if v < 0 then
+                    v = -v;
+                end
+            end
             if type(v) ~= "table" then
                 table.insert(modifierAction, { type = type_, value = v, prop = k, pos = pos });
             end
@@ -337,22 +343,26 @@ for i, spell in ipairs(env.actions) do
     init_shot_effects();
     init_current_reload_time();
 
-    local data             = actionEnv["#data"];
+    local data              = actionEnv["#data"];
 
-    data.id                = spell.id;
-    data.name              = spell.name;
-    data.desc              = spell.description;
-    data.icon              = spell.sprite;
-    data.type              = spell.type + 1;
-    data.spwanLevel        = spell.spawn_level;
-    data.spawnProb         = spell.spawn_probability;
-    data.spawnRequiresFlag = util.nonNil(spell.spawn_requires_flag, "");
-    data.price             = spell.price;
-    data.mana              = util.nonNil(spell.mana, 10);
-    data.maxUse            = util.nonNil(spell.max_uses, 0);
-    if util.nonNil(spell.never_unlimited, false) then
-        data.maxUse = -data.maxUse; -- 使用负数表示不可无限化 0表示没有次数限制
-    end
+    data.id                 = spell.id;
+    data.name               = spell.name;
+    data.desc               = spell.description;
+    data.icon               = spell.sprite;
+    data.type               = spell.type + 1;
+    data.spwanLevel         = spell.spawn_level;
+    data.spawnProb          = spell.spawn_probability;
+    data.spawnRequiresFlag  = util.nonNil(spell.spawn_requires_flag, "");
+    data.spawnManualUnlock  = util.nonNil(spell.spawn_manual_unlock, false);
+    data.aiNeverUses        = util.nonNil(spell.ai_never_uses, false);
+    data.recursive          = util.nonNil(spell.recursive, false);
+    data.price              = spell.price;
+    data.mana               = util.nonNil(spell.mana, 10);
+    data.maxUse             = util.nonNil(spell.max_uses, 0);
+    data.neverUnlimited     = util.nonNil(spell.never_unlimited, false);
+    -- if util.nonNil(spell.never_unlimited, false) then
+    --     data.maxUse = -data.maxUse; -- 使用负数表示不可无限化 0表示没有次数限制
+    -- end
     data.recursive          = util.nonNil(spell.recursive, false);
     data.passive            = util.nonNil(spell.custom_xml_file, "");
     data.relatedProjectiles = util.nonNil(spell.related_projectiles, {});
