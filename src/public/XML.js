@@ -1,5 +1,3 @@
-/** @typedef {ElementNode|TextNode|CommentNode|CDataSectionNode|ProcessingInstructionNode|DocumentTypeNode} AnyNode 任意类型节点 */
-
 /**
  * @typedef {Object} Condition 查询选项对象
  * @prop {String} tagName 标签名
@@ -7,50 +5,88 @@
  */
 
 /**
- * @typedef {((type:"text"|"comment"|"document") => Array<String>|Array<XMLObject>) & { [key: String]: String|Array<XMLObject> }} XMLObject
+ * 一级令牌类型(终结符)
+ * @typedef {`<`|`>`|`</`|`/>`|`<?`|`?>`|`<!--`|`-->`|`<!DOCTYPE`|`<![CDATA[`|`]]>`|`=`|'"'|"'"|"TEXT"|"BLANK"|"EOF"} TokenTier1Type
+ */
+
+/**
+ * 二级令牌类型(包含不可嵌套类型节点)
+ * @typedef {"<E>"|"<E/>"|"</E>"|"<!---->"|"<![CDATA[]]>"|"<?T?>"|"<!DOCTYPE>"} TokenTier2Type
+ */
+
+/**
+ * 令牌类型
+ * @typedef {TokenTier1Type|TokenTier2Type} TokenType
+ */
+
+/**
+ * @typedef { {
+ *  <T extends keyof XMLObjectParamMap>(type:T) : XMLObjectParamMap[T],
+ *  [key: String]: Array<XMLObject> }
+ * } XMLObject
+ */
+
+/**
+ * @typedef { Object } XMLObjectParamMap
+ * @prop {Array<string>} text 文本节点
+ * @prop {Array<string>} comment 注释节点
+ * @prop {Array<string>} document 文档节点
+ * @prop {{[key: string]: string}} attr 属性
  */
 
 const XML = (() => {
     /**
+     * 获得一个以简洁语法访问xml的对象
      * @param {ElementNode|DocumentNode} node
      * @returns {XMLObject}
      */
-    const toXMLObject = node => {
-        /** @type {Array<String>} */
-        const texts = [];
-        /** @type {Array<String>} */
-        const comments = [];
-        /** @type {Array<XMLObject>} */
-        const documents = [];
-        const obj = (type = "text") => {
-            if (type === "text") return texts;
-            if (type === "comment") return comments;
-            if (type === "document") return documents;
+    const toXMLObject = ({ childNodes, attr = [] }, identifier) => {
+        const $ = {
+            attr: Object.create(null),
+            /** @type {Array<string>} */
+            text: [],
+            /** @type {Array<string>} */
+            comment: [],
+            /** @type {Array<XMLObject>} */
+            document: []
         };
-        Reflect.setPrototypeOf(obj, null);
 
-        const { childNodes, attr } = node;
-        if (attr) {
-            for (const [key, value] of attr) Reflect.defineProperty(obj, key, { value, enumerable: true });
+        const obj = (type = "text") => $[type];
+        delete obj.name;
+        delete obj.length;
+        const proto = Object.create(null);
+        Reflect.defineProperty(proto, "name", { value: identifier });
+        Reflect.setPrototypeOf(obj, proto);
+        proto[Symbol.iterator] = function* () {
+            for (const e of attr) yield e;
+        };
+        for (const [key, value] of attr) {
+            Reflect.defineProperty($.attr, key, { value, enumerable: true });
+            Reflect.defineProperty(obj, Symbol(key), { value });
         }
+        if ($.text.length) Reflect.defineProperty(obj, Symbol("<text>"), { value: $.text });
+        if ($.comment.length) Reflect.defineProperty(obj, Symbol("<comment>"), { value: $.comment });
+        if ($.document.length) Reflect.defineProperty(obj, Symbol("<document>"), { value: $.comment });
 
-        for (let i = 0; i < childNodes.length; i++) {
-            const child = childNodes[i];
-            switch (child.type) {
+        for (const child of childNodes) {
+            const { tagName, type, content } = child;
+            switch (type) {
                 case "#document":
-                    documents.push(toXMLObject(child));
-                    break;
+                    $.document.push(child.xmlObject);
+                    continue;
                 case "#element":
-                    const { tagName } = child;
-                    if (!obj[tagName]) obj[tagName] = [];
-                    obj[tagName].push(toXMLObject(child));
-                    break;
+                    const elements = (obj[tagName] ??= []);
+                    Reflect.defineProperty(elements, elements.length, {
+                        get: () => child.xmlObject, //使用getter 避免非必要的递归生成
+                        enumerable: true
+                    });
+                    continue;
                 case "#text":
-                    texts.push(child.content);
-                    break;
+                    $.text.push(content);
+                    continue;
                 case "#comment":
-                    comments.push(child.content);
-                    break;
+                    $.comment.push(content);
+                    continue;
             }
         }
         return obj;
@@ -140,10 +176,10 @@ const XML = (() => {
         static Cover = false;
         #converter = Converter.default_;
         /** @param {Array<{key:String,value:String}>} data */
-        constructor(data, converter) {
+        constructor(data, converter, cover = false) {
             super();
             if (converter) this.#converter = converter;
-            if (_Attr.Cover) for (let i = 0; i < data.length; i++) this.set(data[i].key, data[i].value);
+            if (cover) for (let i = 0; i < data.length; i++) this.set(data[i].key, data[i].value);
             else
                 for (let i = 0; i < data.length; i++) {
                     if (super.has(data[i].key)) continue;
@@ -279,7 +315,7 @@ const XML = (() => {
         childNodes = new _NodeList(this);
 
         get xmlObject() {
-            return toXMLObject(this);
+            return toXMLObject(this, "#document");
         }
 
         constructor() {
@@ -294,8 +330,7 @@ const XML = (() => {
     /**
      * 元素节点
      * ```xml
-     * <element attr="">
-     * </element>
+     * <element attr=""></element>
      * ```
      * @template T
      */
@@ -307,22 +342,22 @@ const XML = (() => {
             const content = this.childNodes.toString(format);
             if (format === "XML") {
                 let attrString = "";
-                if (this.attr.size) attrString = ` ${this.attr}`;
+                if (this.attr.size) attrString = ` ${this.attr.toString("")}`;
                 if (this.childNodes.length) return `<${this.tagName}${attrString}>${content}</${this.tagName}>`;
-                else return `<${this.tagName}${attrString}/>`;
-            } else if (format === "RAW") return this.#rawData.value;
-            else return content;
+                return `<${this.tagName}${attrString}/>`;
+            } else if (format === "RAW") return this.#rawData;
+            return content;
         }
-        #rawData = { value: null };
+        #rawData = null;
 
         get xmlObject() {
-            return toXMLObject(this);
+            return toXMLObject(this, this.tagName);
         }
 
         /** @param {T} tagName */
-        constructor(tagName = "", attrData, converter, rawData) {
+        constructor(tagName = "", attrData, converter, rawData, cover) {
             super("#element");
-            /** @type {_Attr} */ this.attr = new _Attr(attrData, converter);
+            /** @type {_Attr} */ this.attr = new _Attr(attrData, converter, cover);
             /** @type {T} 标签名 */ this.tagName = tagName;
             this.#rawData = rawData;
         }
@@ -338,15 +373,14 @@ const XML = (() => {
         #content;
         #converter = Converter.default_;
         get content() {
-            return this.#converter.toChars(this.#content);
+            return this.#converter.toEntitise(this.#content);
         }
         set content(value) {
-            this.#content = this.#converter.toEntitise(value);
+            this.#content = this.#converter.toChars(value);
         }
         /** @param {"XML"|"PlainText"} format */
         toString(format = "XML") {
-            if (format === "XML") return this.#content; //不要转换实体字符
-            else return this.content;
+            return this.content;
         }
         constructor(content = "", converter) {
             super("#text");
@@ -366,7 +400,7 @@ const XML = (() => {
         /** @param {"XML"|"PlainText"} format */
         toString(format = "XML") {
             if (format === "XML") return `<!--${this.content}-->`;
-            else return this.content;
+            return this.content;
         }
         constructor(content = "") {
             super("#comment");
@@ -384,7 +418,7 @@ const XML = (() => {
         /** @param {"XML"|"PlainText"} format */
         toString(format = "XML") {
             if (format === "XML") return `<![CDATA[${this.content}]]>`;
-            else return this.content;
+            return this.content;
         }
         constructor(content = "") {
             super("#cDataSection");
@@ -403,12 +437,13 @@ const XML = (() => {
         toString(format = "XML") {
             if (format === "XML") {
                 if (this.attr.size) return `<?${this.target} ${this.attr}?>`;
-                else return `<?${this.target}?>`;
-            } else return "";
+                return `<?${this.target}?>`;
+            }
+            return "";
         }
-        constructor(target = "", attrData, converter) {
+        constructor(target = "", attrData, converter, cover) {
             super("#processingInstruction");
-            /** @type {_Attr} */ this.attr = new _Attr(attrData, converter);
+            /** @type {_Attr} */ this.attr = new _Attr(attrData, converter, cover);
             /** @type {String} 目标名 */ this.target = target;
         }
     }
@@ -434,580 +469,1093 @@ const XML = (() => {
         }
     }
 
-    /** 令牌位置数据 */
-    class TokenPos {
-        /** @param {String} char */
-        update(char) {
-            if (char === "\n") {
-                this.line++;
-                this.index = 0;
-            } else this.index++;
-            this.$i++;
-        }
-        toString() {
-            return `at :${this.line}:${this.index}`;
-        }
-        constructor(line = 1, index = 0, $i = 0) {
-            /** 第`?`行 */
-            this.line = line;
-            /** 第`?`个字符 */
-            this.index = index;
-            /** 总索引 */
-            this.$i = $i;
-        }
-    }
+    /** 判断是否为空白字符 */
+    const isBlank = (() => {
+        const table = new Uint8Array(64).fill(0);
+        for (const c of `\t\n\v\f\r `) table[c.charCodeAt(0)] = 1;
+        return char => {
+            const code = char.charCodeAt(0);
+            return code < 64 ? table[code] : 0;
+        };
+    })();
 
-    /** @typedef {"<"|">"|"?"|"!"|"/"|"="|"-"|`"`|`'`|"["|"]"|"WORD"|"BLANK"} Token$1 */
-    /** @typedef {Token$1|"</E>"|"<!--"|"-->"|"<![CDATA["|"]]>"|"/>"|"<!"|"<?"|"?>"} Token$2 */
-    /** @typedef {Token$2|"ATTR"|"<!---->"|"<![CDATA[]]>"} Token$3 */
-    /** @typedef {Token$3|"<E>"|"<? ?>"|"<!DOCTYPE>"} Token$4 */
-
-    /**
-     * @template {Token$1|Token$2|Token$3} T
-     * @template D
-     */
+    /** 判断特殊字符 "'-<=>? */
+    const isSpecial = (() => {
+        const table = new Uint8Array(64).fill(0);
+        for (const c of `"'-<=>?`) table[c.charCodeAt(0)] = 1;
+        return char => {
+            const code = char.charCodeAt(0);
+            return code < 64 ? table[code] : 0;
+        };
+    })();
     class Token {
-        static _NULL = { type: "#null", data: "" };
-        /** * `1` `WORD`/`BLANK` 匹配中 */
-        state = 0;
-        /** @type {Array<String>} */
-        #cache = [];
+        /** @type {TokenType} */
+        type = "EOF";
+        data = "";
+        /** @type {Array<string>} */
+        #cache = null;
+        #index = -1;
         /**
-         *  @param {T} type
-         *  @param {TokenPos|[TokenPos,TokenPos]} [pos]
-         *  @param {D} [data]
+         * @param {TokenType} type
+         * @param {number} index
+         * @param {string|undefined} data
          */
-        constructor(type, pos, data) {
-            /** @type {T} */
+        constructor(type = "EOF", index, data) {
             this.type = type;
-            /** @type {D} */
-            this.data = data ?? type; //数据默认使用类型作为填充
-            if (pos) {
-                if (Array.isArray(pos)) {
-                    const [start, end] = pos;
-                    /** @type {TokenPos?} pos  */
-                    this.posStart = new TokenPos(start.line, start.index, start.$i);
-                    this.posEnd = new TokenPos(end.line, end.index, end.$i);
-                } else {
-                    /** @type {TokenPos?} pos  */
-                    this.pos = new TokenPos(pos.line, pos.index, pos.$i);
-                }
-            }
+            if (type !== "TEXT" && type !== "BLANK") this.data = type;
+            else this.#cache = [];
+            this.#index = index;
+            if (data) this.data = data;
         }
-        cache(char) {
-            this.state = 1;
+        /**
+         * @param {string} char
+         */
+        push(char) {
             this.#cache.push(char);
         }
         finish() {
             this.data = this.#cache.join("");
             this.#cache = null;
-            this.state = 0;
+        }
+        /**
+         * @param {"raw"|undefined} type
+         * @returns
+         */
+        toString() {
+            return this.data ?? this.type;
+        }
+        /**
+         * 输出调试信息
+         * @param {*} msg
+         */
+        debug(msg) {
+            console.log(msg);
+        }
+        get index() {
+            return this.#index;
         }
         get length() {
-            return this.data.length;
+            return (this.#cache ?? this.data).length;
         }
     }
 
     /**
-     * 令牌化 第一阶段
-     * @param {Array<String>} data
-     * @returns {Array<Token<Token$1>>}
+     * 分词 阶段一
+     * @param {string} str
      */
-    const tokenise1 = data => {
-        /** @type {Array<Token<Token$1>>} 一级令牌 */
-        const tokens = [];
-        const pos = new TokenPos();
-        for (let i = 0, char = data[i]; i < data.length; char = data[++i]) {
-            pos.update(char);
-            const lastToken = tokens.at(-1);
-            if (/\s/.test(char)) {
-                if (lastToken) {
-                    if (lastToken.type === "BLANK") lastToken.cache(char);
-                    else {
-                        if (lastToken.type === "WORD") lastToken.finish();
-                        tokens.push(new Token("BLANK", pos));
-                        tokens.at(-1).cache(char);
-                    }
-                } else {
-                    tokens.push(new Token("BLANK", pos));
-                    tokens.at(-1).cache(char);
-                }
-            } else if (`<>?!/-=[]"'`.includes(char)) {
-                if (lastToken) {
-                    if (lastToken.type === "WORD") lastToken.finish();
-                    else if (lastToken.type === "BLANK") lastToken.finish();
-                }
-                tokens.push(new Token(char, pos));
-            }
-            // 其它字符
-            else if (lastToken) {
-                if (lastToken.type !== "WORD") {
-                    if (lastToken.type === "BLANK") lastToken.finish();
-                    tokens.push(new Token("WORD", pos));
-                }
-                tokens.at(-1).cache(char);
-            } else {
-                tokens.push(new Token("WORD", pos));
-                tokens.at(-1).cache(char);
-            }
-        }
-        //处理最后一个token
-        if (tokens.at(-1)?.state === 1) tokens.at(-1).finish();
-        return tokens;
-    };
+    const tokenise1 = str => {
+        const data = [...str, "EOF"];
 
-    /**
-     * 令牌化 第二阶段
-     * @param {Array<String>} data
-     * @param {Array<Token<Token$1>>} tokens1
-     *  * @returns {Array<Token<Token$2>>}
-     */
-    const tokenise2 = (data, tokens1) => {
-        /** @type {Array<Token<Token$2>>} 二级令牌 */
-        const tokens = [];
-        for (let i = 0; i < tokens1.length; i++) {
-            const $1 = tokens1[i];
-            const $2 = tokens1[i + 1] ?? Token._NULL;
-            const $3 = tokens1[i + 2] ?? Token._NULL;
-            const $4 = tokens1[i + 3] ?? Token._NULL;
-            const $5 = tokens1[i + 4] ?? Token._NULL;
-            if ($1.type === "<") {
-                if ($2.type === "!") {
-                    if ($3.type === "-" && $4.type === "-") {
-                        tokens.push(new Token("<!--", [$1.pos, $4.pos]));
-                        i += 3;
-                        continue;
-                    } else if ($3.type === "[" && $4.data.toLocaleUpperCase() === "CDATA" && $5.type === "[") {
-                        tokens.push(new Token("<![CDATA[", [$1.pos, $5.pos]));
-                        i += 4;
-                        continue;
-                    } else {
-                        tokens.push(new Token("<!", [$1.pos, $2.pos]));
-                        i += 1;
-                        continue;
-                    }
-                } else if ($2.type === "?") {
-                    tokens.push(new Token("<?", [$1.pos, $2.pos]));
-                    i += 1;
-                    continue;
-                }
-            } else if ($1.type === "-" && $2.type === "-" && $3.type === ">") {
-                tokens.push(new Token("-->", [$1.pos, $3.pos]));
-                i += 2;
-                continue;
-            } else if ($1.type === "]" && $2.type === "]" && $3.type === ">") {
-                tokens.push(new Token("]]>", [$1.pos, $3.pos]));
-                i += 2;
-                continue;
-            } else if ($1.type === "/" && $2.type === ">") {
-                tokens.push(new Token("/>", [$1.pos, $2.pos]));
-                i += 1;
-                continue;
-            } else if ($1.type === "?" && $2.type === ">") {
-                tokens.push(new Token("?>", [$1.pos, $2.pos]));
-                i += 1;
-                continue;
+        const pos = {
+            _index: 0,
+            get index() {
+                return this._index;
+            },
+            set index(value) {
+                this.lineIndex += value - this._index;
+                this._index = value;
+                return true;
+            },
+            line: 1,
+            lineIndex: 1
+        };
+        class _Token extends Token {
+            #posInfo = "";
+            /**
+             * @param {TokenType} type
+             * @param {string|undefined} data
+             */
+            constructor(type, data) {
+                super(type, pos.index, data);
+                this.#posInfo = `at ${pos.line}:${pos.lineIndex}`;
             }
-            if ($1.type === "-") $1.type = "WORD";
-            if ($1.type === "WORD") {
-                /** @type {Token<Token$2>} */
-                const lastToken = tokens.at(-1);
-                if (lastToken?.type === "WORD") lastToken.data += $1.data; //合并连续的文本节点
-                else tokens.push($1);
-            } else tokens.push($1);
-        }
-        const tokens_ = [];
-        // 结束标签
-        for (let i = 0; i < tokens.length; i++) {
-            const $1 = tokens[i];
-            const $2 = tokens[i + 1] ?? Token._NULL;
-            const $3 = tokens[i + 2] ?? Token._NULL;
-            const $4 = tokens[i + 3] ?? Token._NULL;
-            const $5 = tokens[i + 4] ?? Token._NULL;
-            if ($1.type === "<" && $2.type === "/" && $3.type === "WORD") {
-                if ($4.type === ">") {
-                    const endTagToken = new Token("</E>", [$1.pos, $4.pos]);
-                    endTagToken.data = $3.data;
-                    tokens_.push(endTagToken);
-                    i += 3;
-                    continue;
-                }
-                // > 闭合前允许出现空白
-                else if ($4.type === "BLANK" && $5.type === ">") {
-                    const endTagToken = new Token("</E>", [$1.pos, $5.pos]);
-                    endTagToken.data = $3.data;
-                    tokens_.push(endTagToken);
-                    i += 4;
-                    continue;
-                }
+            toString(type) {
+                if (type === "raw") return str.slice(this.index, this.index + this.length);
+                return super.toString();
             }
-            tokens_.push($1);
+            debug(msg) {
+                console.log(this.#posInfo, msg);
+            }
         }
-        return tokens_;
-    };
-
-    /**
-     * 令牌化 第三阶段
-     * @param {Array<String>} data
-     * @param {Array<Token<Token$2>>} tokens2
-     * @returns {Array<Token<Token$3>>}
-     */
-    const tokenise3 = (data, tokens2) => {
-        /** @type {Array<Token<Token$3>>} 三级令牌 */
-        const tokens = [];
-        /**
-         * ### 属性键值对状态机 @type {0|1|2|3|-3}
-         * * `0` 未开始
-         * * `1` 等待等号 `key`
-         * * `2` 等待引号/属性值 `key=`
-         * * `3` 等待属性值(双引号模式) `key="`
-         * * `-3` 等待属性值(单引号模式) `key="`
-         */
-        let attrState = 0;
-        let attrKey = "";
         /** @type {Array<Token>} */
-        let tokenCache = [];
-        out: for (let i = 0, token = tokens2[i]; i < tokens2.length; token = tokens2[++i]) {
-            tokenCache.push(token);
-            if (token.type === "<!--") {
-                tokenCache.pop();
-                tokens.push(...tokenCache);
-                tokenCache = [];
-                for (let j = i + 1, t = tokens2[j]; j < tokens2.length; t = tokens2[++j]) {
-                    if (t.type === "-->") {
-                        tokens.push(new Token("<!---->", [token.posStart, t.posEnd], data.slice(token.posEnd.$i, t.posStart.$i - 1).join("")));
-                        i = j;
-                        continue out;
-                    }
-                }
-                token.type = "OTHER";
-                tokens.push(token);
-                tokenCache = [];
-            } else if (token.type === "<![CDATA[") {
-                tokenCache.pop();
-                if (attrState !== 0) {
-                    attrKey = "";
-                    attrValueStart = -1;
-                    attrState = 0; // 格式非法
-                    tokens.push(...tokenCache);
-                    tokenCache = [];
-                }
-                for (let j = i + 1, t = tokens2[j]; j < tokens2.length; t = tokens2[++j]) {
-                    if (t.type === "]]>") {
-                        tokens.push(new Token("<![CDATA[]]>", [token.posStart, t.posEnd], data.slice(token.posEnd.$i, t.posStart.$i - 1).join("")));
-                        i = j;
-                        continue out;
-                    }
-                }
-                token.type = "OTHER";
-                tokens.push(token);
-                tokenCache = [];
-            } else if (token.type === "=") {
-                if (attrState === 1) attrState = 2;
-                else {
-                    attrState = 0; // 格式非法
-                    tokens.push(...tokenCache);
-                    tokenCache = [];
-                }
-            } else if (token.type === `"`) {
-                if (attrState === 2) {
-                    attrState = 0;
-                    for (let j = i + 1, t = tokens2[j]; j < tokens2.length; t = tokens2[++j]) {
-                        if (t.type === `"`) {
-                            tokens.push(new Token("ATTR", token.pos, { key: attrKey, value: data.slice(token.pos.$i, t.pos.$i - 1).join("") }));
-                            i = j;
-                            tokenCache = [];
-                            continue out;
-                        }
-                    }
-                }
-                attrState = 0;
-                tokens.push(...tokenCache);
-                tokenCache = [];
-            } else if (token.type === `'`) {
-                if (attrState === 2) {
-                    attrState = 0;
-                    for (let j = i + 1, t = tokens2[j]; j < tokens2.length; t = tokens2[++j]) {
-                        if (t.type === `'`) {
-                            tokens.push(new Token("ATTR", token.pos, { key: attrKey, value: data.slice(token.pos.$i, t.pos.$i - 1).join("") }));
-                            i = j;
-                            tokenCache = [];
-                            continue out;
-                        }
-                    }
-                }
-                attrState = 0;
-                tokens.push(...tokenCache);
-                tokenCache = [];
-            } else if (token.type === "WORD") {
-                if (attrState === 0) {
-                    attrState = 1;
-                    attrKey = token.data;
-                } else if (attrState === 2) {
-                    tokens.push(new Token("ATTR", token.pos, { key: attrKey, value: token.data })); // 无引号属性值
-                    attrKey = "";
-                    attrState = 0;
-                    tokenCache = [];
-                } else {
-                    attrState = 1; //此处应该更新为1 格式非法
-                    attrKey = token.data;
-                    tokens.push(tokenCache[0]);
-                    tokenCache = [token]; //☆
-                }
-            } else if (token.type !== "BLANK") {
-                attrKey = "";
-                attrState = 0; // 格式非法
-                tokens.push(...tokenCache);
-                tokenCache = [];
-            } else if (attrState === 0) {
-                tokens.push(...tokenCache);
-                tokenCache = [];
-            }
-        }
-        tokens.push(...tokenCache);
-        return tokens;
-    };
-
-    /**
-     * 令牌化 第四阶段
-     * @param {Array<String>} data
-     * @param {Array<Token<Token$3>>} tokens3
-     * @returns {Array<Token<Token$4>>}
-     */
-    const tokenise4 = (data, tokens3) => {
-        /** @type {Array<Token<Token$4>>} */
         const tokens = [];
-        let tokenCache = [];
-        /** @type {Array<{key:String,value?:String}>} */
-        let attrs = [];
-        const elementStartTag = {
-            /**
-             * ### 元素起始标签/单标签状态机 @type {0|1|2}
-             * * `0` 未开始
-             * * `1` 等待标签名 `<`
-             * * `2` 等待属性/结束 `<tagName`
-             */
-            state: 0,
-            tagName: "",
-            posStart: null,
-            posEnd: null,
-            finish(single = false) {
-                tokens.push(new Token("<E>", [this.posStart, this.posEnd], { tagName: this.tagName, attrs }));
-                if (single) tokens.push(new Token("</E>", [this.posEnd, this.posEnd], this.tagName));
-                this.state = 0;
-                this.tagName = "";
-                attrs = [];
-                tokenCache = [];
-            },
-            reset() {
-                this.state = 0;
-                this.tagName = "";
-                this.posStart = null;
-                this.posEnd = null;
-                attrs = [];
-                tokens.push(...tokenCache);
-                tokenCache = [];
+        /** @type {typeof tokens.push} */
+        const push = tokens.push.bind(tokens);
+        $: while (pos.index < data.length) {
+            const $0 = data[pos.index];
+            if ($0 === "<") {
+                const $1 = data[pos.index + 1];
+                if ($1 === "/") {
+                    push(new _Token("</"));
+                    pos.index += 2;
+                    continue;
+                }
+                if ($1 === "?") {
+                    push(new _Token("<?"));
+                    pos.index += 2;
+                    continue;
+                }
+                if ($1 === "!") {
+                    if (str.slice(pos.index, pos.index + 4) === "<!--") {
+                        push(new _Token("<!--"));
+                        pos.index += 4;
+                        continue;
+                    }
+                    const part = str.slice(pos.index, pos.index + 9).toLocaleUpperCase();
+                    if (part === "<!DOCTYPE") {
+                        push(new _Token("<!DOCTYPE"));
+                        pos.index += 9;
+                        continue;
+                    }
+                    if (part === "<![CDATA[") {
+                        push(new _Token("<![CDATA["));
+                        pos.index += 9;
+                        continue;
+                    }
+                    pos.index += 2;
+                    push(new _Token("TEXT", "<!"));
+                    continue;
+                }
+                push(new _Token("<"));
+                pos.index++;
+                continue;
             }
-        };
-
-        const processingInstruction = {
-            /**
-             * ### 文档处理指令状态机 @type {0|1|2}
-             * * `0` 未开始
-             * * `1` 等待目标名 `<?`
-             * * `2` 等待属性/结束 `<?target` (`?>`结束)
-             */
-            state: 0,
-            target: "",
-            posStart: null,
-            posEnd: null,
-            finish() {
-                tokens.push(new Token("<? ?>", [this.posStart, this.posEnd], { target: this.target, attrs }));
-                this.state = 0;
-                this.target = "";
-                attrs = [];
-                tokenCache = [];
-            },
-            reset() {
-                this.state = 0;
-                this.target = "";
-                this.posStart = null;
-                this.posEnd = null;
-                attrs = [];
-                tokens.push(...tokenCache);
-                tokenCache = [];
+            if ($0 === ">") {
+                push(new _Token(">"));
+                pos.index++;
+                continue;
             }
-        };
-
-        const documentType = {
-            /**
-             * ### 文档类型状态机 @type {0|1|3|4|-4}
-             * * `0` 未开始
-             * * `1` 准备阶段 `<!`
-             * * `2` 等待文档类型名 `<!DOCTYPE`
-             * * `3` 等待结束/数据 `<!DOCTYPE name`
-             * * `4` 等待数据 `<!DOCTYPE name "`
-             * * `-4` 等待数据 `<!DOCTYPE name '`
-             */
-            state: 0,
-            name: "",
-            datas: [],
-            start: -1,
-            posStart: null,
-            posEnd: null,
-            finish() {
-                tokens.push(new Token("<!DOCTYPE>", [this.posStart, this.posEnd], { name: this.name, datas: this.datas }));
-                this.state = 0;
-                this.name = "";
-                this.datas = [];
-                tokenCache = [];
-            },
-            reset() {
-                this.state = 0;
-                this.name = "";
-                this.datas = [];
-                this.posStart = null;
-                this.posEnd = null;
-                tokens.push(...tokenCache);
-                tokenCache = [];
+            if ($0 === "/") {
+                if (data[pos.index + 1] === ">") {
+                    push(new _Token("/>"));
+                    pos.index += 2;
+                    continue;
+                }
+                push(new _Token("TEXT", "/"));
+                pos.index++;
+                continue;
             }
-        };
+            if ($0 === "?") {
+                if (data[pos.index + 1] === ">") {
+                    push(new _Token("?>"));
+                    pos.index += 2;
+                    continue;
+                }
+                push(new _Token("TEXT", "?"));
+                pos.index++;
+                continue;
+            }
+            if ($0 === "-") {
+                if (str.slice(pos.index, pos.index + 3) === "-->") {
+                    push(new _Token("-->"));
+                    pos.index += 3;
+                    continue;
+                }
+                if (tokens.at(-1).type === "TEXT") tokens.at(-1).data += "-";
+                else push(new _Token("TEXT", "-"));
+                pos.index++;
+                continue;
+            }
+            if ($0 === "]") {
+                if (str.slice(pos.index, pos.index + 3) === "]]>") {
+                    push(new _Token("]]>"));
+                    pos.index += 3;
+                    continue;
+                }
+                push(new _Token("TEXT", "]"));
+                pos.index++;
+                continue;
+            }
+            if ($0 === "=") {
+                push(new _Token("="));
+                pos.index++;
+                continue;
+            }
+            if ($0 === '"') {
+                push(new _Token('"'));
+                pos.index++;
+                continue;
+            }
+            if ($0 === "'") {
+                push(new _Token("'"));
+                pos.index++;
+                continue;
+            }
+            if (isBlank($0)) {
+                const blankToken = new _Token("BLANK");
+                push(blankToken);
+                blankToken.push($0);
+                pos.index++;
+                if ($0 === "\n") {
+                    pos.line++;
+                    pos.lineIndex = 1;
+                }
+                while (pos.index < data.length) {
+                    const nextChar = data[pos.index];
 
-        out: for (let i = 0, token = tokens3[i]; i < tokens3.length; token = tokens3[++i]) {
-            tokenCache.push(token);
-            switch (token.type) {
-                case "<":
-                    if (elementStartTag.state !== 0) elementStartTag.reset();
-                    else if (processingInstruction.state) processingInstruction.reset();
-                    else if (documentType.state) documentType.reset();
-                    elementStartTag.state = 1;
-                    elementStartTag.posStart = token.pos;
-                    break;
-                case ">":
-                    if (elementStartTag.state === 2) {
-                        elementStartTag.posEnd = token.pos;
-                        elementStartTag.finish();
-                    } else if (documentType.state === 3) {
-                        documentType.posEnd = token.pos;
-                        documentType.finish();
-                    } else if (processingInstruction.state) processingInstruction.reset();
-                    else elementStartTag.reset();
-                    break;
-                case "<?":
-                    if (processingInstruction.state !== 0) processingInstruction.reset();
-                    else if (elementStartTag.state) elementStartTag.reset();
-                    else if (documentType.state) documentType.reset();
-                    processingInstruction.state = 1;
-                    processingInstruction.posStart = token.posStart;
-                    break;
-                case "?>":
-                    if (processingInstruction.state === 2) {
-                        processingInstruction.posEnd = token.posEnd;
-                        processingInstruction.finish();
-                    } else if (elementStartTag.state) elementStartTag.reset();
-                    else if (documentType.state) documentType.reset();
-                    else processingInstruction.reset();
-                    break;
-                case "/>":
-                    if (elementStartTag.state === 2) {
-                        elementStartTag.posEnd = token.posEnd;
-                        elementStartTag.finish(true);
-                    } else if (documentType.state === 3) {
-                        elementStartTag.posEnd = token.posEnd;
-                        documentType.finish();
-                    } else if (processingInstruction.state) processingInstruction.reset();
-                    else elementStartTag.reset();
-                    break;
-                case "<!":
-                    if (documentType.state !== 0) documentType.reset();
-                    else if (elementStartTag.state) elementStartTag.reset();
-                    else if (processingInstruction.state) processingInstruction.reset();
-                    documentType.state = 1;
-                    documentType.posStart = token.posStart;
-                    break;
-                case "ATTR":
-                    if (elementStartTag.state === 2) attrs.push(token.data);
-                    else if (processingInstruction.state === 2) attrs.push(token.data);
-                    else if (documentType.state) documentType.reset();
-                    else if (elementStartTag.state) elementStartTag.reset();
-                    else if (processingInstruction.state) processingInstruction.reset();
-                    break;
-                case "WORD":
-                    if (documentType.state === 1) {
-                        if (token.data.toLocaleUpperCase() === "DOCTYPE") documentType.state = 2;
-                        else documentType.reset();
-                    } else if (documentType.state === 2) {
-                        documentType.state = 3;
-                        documentType.name = token.data;
-                    } else if (elementStartTag.state === 1) {
-                        elementStartTag.state = 2;
-                        elementStartTag.tagName = token.data;
-                    } else if (elementStartTag.state === 2) attrs.push({ key: token.data });
-                    else if (processingInstruction.state === 1) {
-                        processingInstruction.state = 2;
-                        processingInstruction.target = token.data;
-                    } else if (processingInstruction.state === 2) attrs.push({ key: token.data });
-                    else tokens.push(tokenCache.pop());
-                    break;
-                case "BLANK":
-                    if (elementStartTag.state + processingInstruction.state + documentType.state === 0) tokens.push(tokenCache.pop());
-                    break;
-                case "<!---->":
-                    tokens.push(tokenCache.pop());
-                    break;
-                case `"`:
-                    if (documentType.state === 3) {
-                        for (let j = i + 1, t = tokens3[j]; j < tokens3.length; t = tokens3[++j]) {
-                            tokenCache.push(t);
-                            if (t.type === `"`) {
-                                documentType.datas.push(data.slice(token.pos.$i, t.pos.$i - 1).join(""));
-                                i = j;
-                                continue out;
-                            }
-                        }
-                        documentType.reset();
-                    } else if (elementStartTag.state) elementStartTag.reset();
-                    else if (processingInstruction.state) processingInstruction.reset();
-                    else documentType.reset();
-                    break;
-                case `'`:
-                    if (documentType.state === 3) {
-                        for (let j = i + 1, t = tokens3[j]; j < tokens3.length; t = tokens3[++j]) {
-                            tokenCache.push(t);
-                            if (t.type === `'`) {
-                                documentType.datas.push(data.slice(token.pos.$i, t.pos.$i - 1).join(""));
-                                i = j;
-                                continue out;
-                            }
-                        }
-                        documentType.reset();
-                    } else if (elementStartTag.state) elementStartTag.reset();
-                    else if (processingInstruction.state) processingInstruction.reset();
-                    else documentType.reset();
-                    break;
-                default:
-                    if (elementStartTag.state !== 0) elementStartTag.reset();
-                    else if (processingInstruction.state !== 0) processingInstruction.reset();
-                    else if (documentType.state !== 0) documentType.reset();
-                    else tokens.push(tokenCache.pop());
+                    if (!isBlank(nextChar)) {
+                        blankToken.finish();
+                        continue $;
+                    }
+                    blankToken.push(nextChar);
+                    pos.index++;
+                    if (nextChar === "\n") {
+                        pos.line++;
+                        pos.lineIndex = 1;
+                    }
+                }
+            }
+            if ($0 === "EOF") {
+                push(new _Token());
+                break;
+            }
+            const textToken = new _Token("TEXT");
+            if (tokens.at(-1).type === "TEXT") textToken.push(tokens.pop().data);
+            push(textToken);
+            textToken.push($0);
+            pos.index++;
+            while (pos.index < data.length) {
+                const nextChar = data[pos.index];
+                if (isSpecial(nextChar) || nextChar === "EOF" || isBlank(nextChar)) {
+                    textToken.finish();
+                    continue $;
+                }
+                textToken.push(nextChar);
+                pos.index++;
             }
         }
-        //#region 自动修正
-        if (documentType.state) documentType.reset();
-        if (processingInstruction.state) processingInstruction.reset();
-        if (elementStartTag.state) elementStartTag.reset();
-        //#endregion
         return tokens;
     };
 
     /**
-     * ```js
-     *  //实体映射格式
-     *  const default = { [`'`]: "&apos;", [`"`]: "&quot;", [`&`]: "&amp;", [`<`]: "&lt;", [`>`]: "&gt;" }
-     * ```
-     * @typedef {Object} EntityMap 实体映射表
-     * @prop {[`&_;`]} `char`
+     * 分词 阶段二
+     * @param {Array<Token>} tokens
      */
+    const tokenise2 = (() => {
+        class _Token extends Token {
+            static ["<E>"] = class TokenStartTag extends _Token {
+                constructor({ tagName, attrs, tokens }) {
+                    super("<E>", tokens);
+                    this.tagName = tagName;
+                    this.attrs = attrs;
+                }
+            };
+            static ["<E/>"] = class TokenEmptyTag extends _Token {
+                constructor({ tagName, attrs, tokens }) {
+                    super("<E/>", tokens);
+                    this.tagName = tagName;
+                    this.attrs = attrs;
+                }
+            };
+            static ["</E>"] = class TokenEndTag extends _Token {
+                constructor({ tagName, tokens }) {
+                    super("</E>", tokens);
+                    this.tagName = tagName;
+                }
+            };
+            static ["<?T?>"] = class TokenProcessing extends _Token {
+                constructor({ target, attrs, tokens }) {
+                    super("<?T?>", tokens);
+                    this.target = attrs;
+                    this.attrs = attrs;
+                }
+            };
+            static ["<!DOCTYPE>"] = class TokenProcessing extends _Token {
+                constructor({ name, tokens }) {
+                    super("<!DOCTYPE>", tokens);
+                    this.name = name;
+                }
+            };
+            static ["<!---->"] = class TokenComment extends _Token {
+                constructor({ content, tokens }) {
+                    super("<!---->", tokens);
+                    this.content = content;
+                }
+            };
+            static ["<![CDATA[]]>"] = class TokenCdata extends _Token {
+                constructor({ content, tokens }) {
+                    super("<![CDATA[]]>", tokens);
+                    this.content = content;
+                }
+            };
+            /** @type {Array<Token>} */
+            #tokens = null;
+            /**
+             * @param {TokenType} type
+             * @param {Array<Token>} tokens
+             */
+            constructor(type, tokens) {
+                super(type, tokens[0].index);
+                this.#tokens = tokens;
+                const datas = [];
+                for (let i = 0; i < this.#tokens.length; i++) {
+                    datas[i] = this.#tokens[i].data;
+                }
+                this.data = datas.join("");
+            }
+            get length() {
+                let length = 0;
+                for (let i = 0; i < this.#tokens.length; i++) {
+                    length += this.#tokens[i].length;
+                }
+                return length;
+            }
+        }
+        const isLegal = str => !(str.includes("<") || str.includes(">") || str.includes("=") || str.includes("'") || str.includes('"') || str.includes("?") || str.includes("!"));
+        const build = {
+            get tag() {
+                return {
+                    /**
+                     * 状态机
+                     * * `0` : `<`
+                     * * `1` : `<E`
+                     * * `2` : `<E `
+                     * * `3` : `<E key` 值缺省模式
+                     * * `3?` : `<E key `
+                     * * `4` : `<E key=` 无引号模式 终结符 非`TEXT` => 状态2
+                     * * `A5` : `<E key="` 双引号模式 终结符  `"`  => 状态2
+                     * * `B5` : `<E key='` 单引号模式 终结符  `'`  => 状态2
+                     * * `D6` : `<E attr>` 起始标签
+                     * * `E6` : `<E attr/>` 自闭合标签
+                     * @type {"_"|"0"|"1"|"2"|"3"|"3?"|"4"|"A5"|"B5"|"D6"|"E6"}
+                     */
+                    state: "_",
+                    /** @type {Array<Token>} */
+                    tokens: [],
+                    /** @type {Array<{key:string,value:string}>} */
+                    attrs: [],
+                    tagName: "",
+                    /** @param {Token} token */
+                    update(token) {
+                        const { type } = token;
+                        switch (this.state) {
+                            case "_":
+                                this.state = "0";
+                                this.tokens.push(token);
+                                return true;
+                            case "0":
+                                if (type === "TEXT" && isLegal(token.data)) {
+                                    this.state = "1";
+                                    this.tagName = token.data;
+                                    this.tokens.push(token);
+                                    return true;
+                                }
+                                return false;
+                            case "1":
+                                if (token.type === "BLANK") {
+                                    this.state = "2";
+                                    this.tokens.push(token);
+                                    return true;
+                                }
+                                if (token.type === ">") {
+                                    this.state = "D6";
+                                    this.tokens.push(token);
+                                    return true;
+                                }
+                                if (token.type === "/>") {
+                                    this.state = "E6";
+                                    this.tokens.push(token);
+                                    return true;
+                                }
+                                return false;
+                            case "2":
+                                if (type === "TEXT" && isLegal(token.data)) {
+                                    this.state = "3";
+                                    this.attrs.push({ key: token.data, value: token.data });
+                                    this.tokens.push(token);
+                                    return true;
+                                }
+                                if (token.type === "BLANK") {
+                                    this.tokens.push(token);
+                                    return true;
+                                }
+                                if (token.type === ">") {
+                                    this.state = "D6";
+                                    this.tokens.push(token);
+                                    return true;
+                                }
+                                if (token.type === "/>") {
+                                    this.state = "E6";
+                                    this.tokens.push(token);
+                                    return true;
+                                }
+                                return false;
+                            case "3":
+                                if (type === "BLANK") {
+                                    this.state = "3?";
+                                    this.tokens.push(token);
+                                    return true;
+                                }
+                                if (type === "=") {
+                                    this.state = "4";
+                                    this.tokens.push(token);
+                                    return true;
+                                }
+                                if (token.type === ">") {
+                                    this.state = "D6";
+                                    this.tokens.push(token);
+                                    return true;
+                                }
+                                if (token.type === "/>") {
+                                    this.state = "E6";
+                                    this.tokens.push(token);
+                                    return true;
+                                }
+                                return false;
+                            case "3?":
+                                if (token.type === "=") {
+                                    this.state = "4";
+                                    this.tokens.push(token);
+                                    return true;
+                                }
+                                if (token.type === "BLANK") {
+                                    this.tokens.push(token);
+                                    return true;
+                                }
+                                if (type === "TEXT" && isLegal(token.data)) {
+                                    this.state = "3";
+                                    this.attrs.push({ key: token.data, value: token.data });
+                                    this.tokens.push(token);
+                                    return true;
+                                }
+                                return false;
+                            case "4":
+                                if (token.type === "BLANK") {
+                                    this.tokens.push(token);
+                                    return true;
+                                }
+                                if (type === "TEXT" && isLegal(token.data)) {
+                                    this.state = "2";
+                                    this.tokens.push(token);
+                                    this.attrs.at(-1).value = token.data;
+                                    return true;
+                                }
+                                if (type === '"') {
+                                    this.state = "A5";
+                                    this.tokens.push(token);
+                                    return true;
+                                }
+                                if (type === "'") {
+                                    this.state = "B5";
+                                    this.tokens.push(token);
+                                    return true;
+                                }
+                                return false;
+                            case "A5":
+                                if (type === '"') {
+                                    this.state = "2";
+                                    let i = this.tokens.length - 1;
+                                    const attrValueCache = [];
+                                    while (true) {
+                                        if (this.tokens[i].type === '"') break;
+                                        attrValueCache.unshift(this.tokens[i].data);
+                                        i--;
+                                    }
+                                    this.tokens.push(token);
+                                    this.attrs.at(-1).value = attrValueCache.join("");
+                                    return true;
+                                }
+                                this.tokens.push(token);
+                                return true;
+                            case "B5":
+                                if (type === "'") {
+                                    this.state = "2";
+                                    let i = this.tokens.length - 1;
+                                    const attrValueCache = [];
+                                    while (true) {
+                                        if (this.tokens[i].type === "'") break;
+                                        attrValueCache.unshift(this.tokens[i].data);
+                                        i--;
+                                    }
+                                    this.tokens.push(token);
+                                    this.attrs.at(-1).value = attrValueCache.join("");
+                                    return true;
+                                }
+                                this.tokens.push(token);
+                                return true;
+                        }
+                    }
+                };
+            },
+            get tagEnd() {
+                return {
+                    /**
+                     * 状态机
+                     * * `0` : `</`
+                     * * `1` : `</E`
+                     * * `2` : `</E>`
+                     * @type {"_"|"0"|"1"|"2"}
+                     */
+                    state: "_",
+                    /** @type {Array<Token>} */
+                    tokens: [],
+                    tagName: "",
+                    /** @param {Token} token */
+                    update(token) {
+                        const { type } = token;
+                        switch (this.state) {
+                            case "_":
+                                this.tokens.push(token);
+                                this.state = "0";
+                                return true;
+                            case "0":
+                                if (type === "TEXT" && isLegal(token.data)) {
+                                    this.tokens.push(token);
+                                    this.state = "1";
+                                    this.tagName = token.data;
+                                    return true;
+                                }
+                                return false;
+                            case "1":
+                                if (type === ">") {
+                                    this.tokens.push(token);
+                                    this.state = "2";
+                                    return true;
+                                }
+                                if (type === "BLANK") {
+                                    this.tokens.push(token);
+                                    return true;
+                                }
+                                return false;
+                        }
+                    }
+                };
+            },
+            get comment() {
+                return {
+                    /**
+                     * 状态机
+                     * * `0`: `<!--`
+                     * * `1`: `<!-- -->`
+                     * @type {"_"|"0"|"1"}
+                     */
+                    state: "_",
+                    /** @type {Array<Token>} */
+                    tokens: [],
+                    content: "",
+                    /** @param {Token} token */
+                    update(token) {
+                        if (this.state === "_") {
+                            this.tokens.push(token);
+                            this.state = "0";
+                            return true;
+                        }
+                        if (this.state === "0") {
+                            this.tokens.push(token);
+                            if (token.type === "-->") {
+                                this.content = this.tokens.slice(1, -1).join("");
+                                this.state = "1";
+                            }
+                            return true;
+                        }
+                    }
+                };
+            },
+            get cdata() {
+                return {
+                    /**
+                     * 状态机
+                     * * `0` : `<![CDATA[`
+                     * * `1` : `<![CDATA[ ]]>`
+                     * @type {"_"|"0"|"1"}
+                     */
+                    state: "_",
+                    /** @type {Array<Token>} */
+                    tokens: [],
+                    content: "",
+                    /** @param {Token} token */
+                    update(token) {
+                        if (this.state === "_") {
+                            this.state = "0";
+                            this.tokens.push(token);
+                            return true;
+                        }
+                        if ((this.state = "0")) {
+                            this.tokens.push(token);
+                            if (token.type === "]]>") {
+                                this.state = "1";
+                                this.content = this.tokens.slice(1, -1).join("");
+                            }
+                            return true;
+                        }
+                    }
+                };
+            },
+            get processing() {
+                return {
+                    /**
+                     * 状态机
+                     * * `0` : `<?`
+                     * * `1` : `<?T`
+                     * * `2` : `<?T `
+                     * * `3` : `<?T key` 值缺省模式
+                     * * `3?` : `<?T key ` 值缺省模式
+                     * * `4` : `<?T key=` 无引号模式 终结符 非`TEXT` => 状态2
+                     * * `A5` : `<?T key="` 双引号模式 终结符  `"`  => 状态2
+                     * * `B5` : `<?T key='` 单引号模式 终结符  `'`  => 状态2
+                     * * `6` : `<?T attr ?>`
+                     * @type {"_"|"0"|"1"|"2"|"3"|"3?"|"4"|"A5"|"B5"|"6"}
+                     */
+                    state: "_",
+                    tokens: [],
+                    /** @type {Array<{key:string,value:string}>} */
+                    attrs: [],
+                    target: "",
+                    /** @param {Token} token */
+                    update(token) {
+                        const { type } = token;
+                        switch (this.state) {
+                            case "_":
+                                this.state = "0";
+                                this.tokens.push(token);
+                                return true;
+                            case "0":
+                                if (type === "TEXT" && isLegal(token.data)) {
+                                    this.state = "1";
+                                    this.target = token.data;
+                                    this.tokens.push(token);
+                                    return true;
+                                }
+                                return false;
+                            case "1":
+                                if (token.type === "BLANK") {
+                                    this.state = "2";
+                                    this.tokens.push(token);
+                                    return true;
+                                }
+                                if (token.type === "?>") {
+                                    this.state = "6";
+                                    this.tokens.push(token);
+                                    return true;
+                                }
+                                return false;
+                            case "2":
+                                if (type === "TEXT" && isLegal(token.data)) {
+                                    this.state = "3";
+                                    this.attrs.push({ key: token.data, value: token.data });
+                                    this.tokens.push(token);
+                                    return true;
+                                }
+                                if (token.type === "BLANK") {
+                                    this.tokens.push(token);
+                                    return true;
+                                }
+                                if (token.type === "?>") {
+                                    this.state = "6";
+                                    this.tokens.push(token);
+                                    return true;
+                                }
+                                return false;
+                            case "3":
+                                if (type === "BLANK") {
+                                    this.state = "3?";
+                                    this.tokens.push(token);
+                                    return true;
+                                }
+                                if (type === "=") {
+                                    this.state = "4";
+                                    this.tokens.push(token);
+                                    this.attrs.at(-1).value = token.data;
+                                    return true;
+                                }
+                                if (token.type === ">") {
+                                    this.state = "6";
+                                    this.tokens.push(token);
+                                    return true;
+                                }
+                                return false;
+                            case "3?":
+                                if (token.type === "=") {
+                                    this.state = "4";
+                                    this.tokens.push(token);
+                                    return true;
+                                }
+                                if (token.type === "BLANK") {
+                                    this.tokens.push(token);
+                                    return true;
+                                }
+                                if (type === "TEXT" && isLegal(token.data)) {
+                                    this.state = "3";
+                                    this.attrs.push({ key: token.data, value: token.data });
+                                    this.tokens.push(token);
+                                    return true;
+                                }
+                                return false;
+                            case "4":
+                                if (token.type === "BLANK") {
+                                    this.tokens.push(token);
+                                    return true;
+                                }
+                                if (type === "TEXT" && isLegal(token.data)) {
+                                    this.state = "2";
+                                    this.tokens.push(token);
+                                    return true;
+                                }
+                                if (type === '"') {
+                                    this.state = "A5";
+                                    this.tokens.push(token);
+                                    return true;
+                                }
+                                if (type === "'") {
+                                    this.state = "B5";
+                                    this.tokens.push(token);
+                                    return true;
+                                }
+                                return false;
+                            case "A5":
+                                if (type === '"') {
+                                    this.state = "2";
+                                    let i = this.tokens.length - 1;
+                                    const attrValueCache = [];
+                                    while (true) {
+                                        if (this.tokens[i].type === '"') break;
+                                        attrValueCache.unshift(this.tokens[i].data);
+                                        i--;
+                                    }
+                                    this.tokens.push(token);
+                                    this.attrs.at(-1).value = attrValueCache.join("");
+                                    return true;
+                                }
+                                this.tokens.push(token);
+                                return true;
+                            case "B5":
+                                if (type === "'") {
+                                    this.state = "2";
+                                    let i = this.tokens.length - 1;
+                                    const attrValueCache = [];
+                                    while (true) {
+                                        if (this.tokens[i].type === "'") break;
+                                        attrValueCache.unshift(this.tokens[i].data);
+                                        i--;
+                                    }
+                                    this.tokens.push(token);
+                                    this.attrs.at(-1).value = attrValueCache.join("");
+                                    return true;
+                                }
+                                this.tokens.push(token);
+                                return true;
+                        }
+                    }
+                };
+            },
+            get doctype() {
+                return {
+                    /**
+                     * 状态机(未完善)
+                     * * `0` `<!DOCTYPE`
+                     * * `1` `<!DOCTYPE `
+                     * * `2` `<!DOCTYPE name`
+                     * * `3` `<!DOCTYPE name>`
+                     * @type {"_"|"0"|"1"|"2"|"3"}
+                     */
+                    state: "_",
+                    name: "",
+                    /** @type {Array<Token>} */
+                    tokens: [],
+                    /** @param {Token} token */
+                    update(token) {
+                        switch (this.state) {
+                            case "_":
+                                this.tokens.push(token);
+                                this.state = "0";
+                                return true;
+                            case "0":
+                                if (token.type === "BLANK") {
+                                    this.tokens.push(token);
+                                    this.state = "1";
+                                    return true;
+                                }
+                                return false;
+                            case "1":
+                                if (token.type === "TEXT" && isLegal(token.data)) {
+                                    this.name = token.data;
+                                    this.tokens.push(token);
+                                    this.state = "2";
+                                    return true;
+                                }
+                                if (token.type === "BLANK") {
+                                    this.tokens.push(token);
+                                    return true;
+                                }
+                                return false;
+                            case "2":
+                                if (token.type === ">") {
+                                    this.state = "3";
+                                    this.tokens.push(token);
+                                    return true;
+                                }
+                                return false;
+                        }
+                    }
+                };
+            }
+        };
+
+        /**
+         * @param {Array<Token>} tokens
+         */
+        return tokens => {
+            /** @type {Array<Token>} */
+            const newTokens = [];
+            $out: for (let i = 0; i < tokens.length; i++) {
+                const t = tokens[i];
+                if (t.type === "<") {
+                    const cBuild = build.tag;
+                    const comments = [];
+                    $: for (let j = i; j < tokens.length; j++) {
+                        const token = tokens[j];
+                        if (token.type === "EOF") {
+                            tokens[i].type = "TEXT"; //结构不合法 token更正为`TEXT`
+                            newTokens.push(tokens[i]);
+                            continue $out;
+                        }
+                        if (token.type === "<!--" && cBuild.state !== "D6" && cBuild.state !== "E6" && cBuild.state !== "A5" && cBuild.state !== "B5") {
+                            const cBuildComment = build.comment;
+                            for (let k = j; k < tokens.length; k++) {
+                                const _token = tokens[k];
+                                if (_token.type === "EOF") {
+                                    tokens[i].type = "TEXT"; //结构不合法 token更正为`TEXT`
+                                    newTokens.push(tokens[i]);
+                                    continue $out;
+                                }
+                                const result = cBuildComment.update(_token);
+                                if (!result) {
+                                    tokens[i].type = "TEXT"; //结构不合法 token更正为`TEXT`
+                                    newTokens.push(tokens[i]);
+                                    continue $out;
+                                }
+                                if (cBuildComment.state === "1") {
+                                    // 完成匹配
+                                    comments.push(new _Token["<!---->"](cBuildComment));
+                                    j = k;
+                                    continue $;
+                                }
+                            }
+                        }
+                        const result = cBuild.update(token);
+                        if (!result) {
+                            console.error(cBuild, token);
+
+                            tokens[i].type = "TEXT"; //结构不合法 token更正为`TEXT`
+                            newTokens.push(tokens[i]);
+                            continue $out;
+                        }
+                        if (cBuild.state === "D6") {
+                            // 完成匹配
+                            const rToken = new _Token["<E>"](cBuild);
+                            rToken.$comments = comments;
+                            newTokens.push(rToken);
+                            i = j;
+                            continue $out;
+                        }
+                        if (cBuild.state === "E6") {
+                            // 完成匹配
+                            const rToken = new _Token["<E/>"](cBuild);
+                            rToken.$comments = comments;
+                            newTokens.push(rToken);
+                            i = j;
+                            continue $out;
+                        }
+                    }
+                }
+                if (t.type === "</") {
+                    const cBuild = build.tagEnd;
+                    const comments = [];
+                    $: for (let j = i; j < tokens.length; j++) {
+                        const token = tokens[j];
+                        if (token.type === "EOF") {
+                            tokens[i].type = "TEXT"; //结构不合法 token更正为`TEXT`
+                            newTokens.push(tokens[i]);
+                            continue $out;
+                        }
+                        if (token.type === "<!--" && cBuild.state !== "2") {
+                            const cBuildComment = build.comment;
+                            for (let k = j; k < tokens.length; k++) {
+                                const _token = tokens[k];
+                                if (_token.type === "EOF") {
+                                    tokens[i].type = "TEXT"; //结构不合法 token更正为`TEXT`
+                                    newTokens.push(tokens[i]);
+                                    continue $out;
+                                }
+                                const result = cBuildComment.update(_token);
+                                if (!result) {
+                                    tokens[i].type = "TEXT"; //结构不合法 token更正为`TEXT`
+                                    newTokens.push(tokens[i]);
+                                    continue $out;
+                                }
+                                if (cBuildComment.state === "1") {
+                                    // 完成匹配
+                                    comments.push(new _Token["<!---->"](cBuildComment));
+                                    j = k;
+                                    continue $;
+                                }
+                            }
+                        }
+                        const result = cBuild.update(token);
+                        if (!result) {
+                            tokens[i].type = "TEXT"; //结构不合法 token更正为`TEXT`
+                            newTokens.push(tokens[i]);
+                            continue $out;
+                        }
+                        if (cBuild.state === "2") {
+                            // 完成匹配
+                            const rToken = new _Token["</E>"](cBuild);
+                            rToken.$comments = comments;
+                            newTokens.push(rToken);
+                            i = j;
+                            continue $out;
+                        }
+                    }
+                }
+                if (t.type === "<?") {
+                    const cBuild = build.processing;
+                    const comments = [];
+                    $: for (let j = i; j < tokens.length; j++) {
+                        const token = tokens[j];
+                        if (token.type === "EOF") {
+                            tokens[i].type = "TEXT"; //结构不合法 token更正为`TEXT`
+                            newTokens.push(tokens[i]);
+                            continue $out;
+                        }
+                        if (token.type === "<!--" && cBuild.state !== "6" && cBuild.state !== "A5" && cBuild.state !== "B5") {
+                            const cBuildComment = build.comment;
+                            for (let k = j; k < tokens.length; k++) {
+                                const _token = tokens[k];
+                                if (_token.type === "EOF") {
+                                    tokens[i].type = "TEXT"; //结构不合法 token更正为`TEXT`
+                                    newTokens.push(tokens[i]);
+                                    continue $out;
+                                }
+                                const result = cBuildComment.update(_token);
+                                if (!result) {
+                                    tokens[i].type = "TEXT"; //结构不合法 token更正为`TEXT`
+                                    newTokens.push(tokens[i]);
+                                    continue $out;
+                                }
+                                if (cBuildComment.state === "1") {
+                                    // 完成匹配
+                                    comments.push(new _Token["<!---->"](cBuildComment));
+                                    j = k;
+                                    continue $;
+                                }
+                            }
+                        }
+                        const result = cBuild.update(token);
+                        if (!result) {
+                            tokens[i].type = "TEXT"; //结构不合法 token更正为`TEXT`
+                            newTokens.push(tokens[i]);
+                            continue $out;
+                        }
+                        if (cBuild.state === "6") {
+                            // 完成匹配
+                            const rToken = new _Token["<?T?>"](cBuild);
+                            rToken.$comment = comments;
+                            newTokens.push(rToken);
+                            i = j;
+                            continue $out;
+                        }
+                    }
+                }
+                if (t.type === "<!DOCTYPE") {
+                    const cBuild = build.doctype;
+                    const comments = [];
+                    $: for (let j = i; j < tokens.length; j++) {
+                        const token = tokens[j];
+                        if (token.type === "EOF") {
+                            tokens[i].type = "TEXT"; //结构不合法 token更正为`TEXT`
+                            newTokens.push(tokens[i]);
+                            continue $out;
+                        }
+                        if (token.type === "<!--" && cBuild.state !== "3") {
+                            const cBuildComment = build.comment;
+                            for (let k = j; k < tokens.length; k++) {
+                                const _token = tokens[k];
+                                if (_token.type === "EOF") {
+                                    tokens[i].type = "TEXT"; //结构不合法 token更正为`TEXT`
+                                    newTokens.push(tokens[i]);
+                                    continue $out;
+                                }
+                                const result = cBuildComment.update(_token);
+                                if (!result) {
+                                    tokens[i].type = "TEXT"; //结构不合法 token更正为`TEXT`
+                                    newTokens.push(tokens[i]);
+                                    continue $out;
+                                }
+                                if (cBuildComment.state === "1") {
+                                    // 完成匹配
+                                    comments.push(new _Token["<!---->"](cBuildComment));
+                                    j = k;
+                                    continue $;
+                                }
+                            }
+                        }
+                        const result = cBuild.update(token);
+                        if (!result) {
+                            tokens[i].type = "TEXT"; //结构不合法 token更正为`TEXT`
+                            newTokens.push(tokens[i]);
+                            continue $out;
+                        }
+                        if (cBuild.state === "3") {
+                            // 完成匹配
+                            const rToken = new _Token["<!DOCTYPE>"](cBuild);
+                            rToken.$comments = comments;
+                            newTokens.push(rToken);
+                            i = j;
+                            continue $out;
+                        }
+                    }
+                }
+                if (t.type === "<![CDATA[") {
+                    const cBuild = build.cdata;
+                    for (let j = i; j < tokens.length; j++) {
+                        const token = tokens[j];
+                        if (token.type === "EOF") {
+                            tokens[i].type = "TEXT"; //tag结构不合法 token更正为`TEXT`
+                            newTokens.push(tokens[i]);
+                            continue $out;
+                        }
+                        const result = cBuild.update(token);
+                        if (!result) {
+                            tokens[i].type = "TEXT"; //结构不合法 token更正为`TEXT`
+                            newTokens.push(tokens[i]);
+                            continue $out;
+                        }
+                        if (cBuild.state === "1") {
+                            // 完成匹配
+                            newTokens.push(new _Token["<![CDATA[]]>"](cBuild));
+                            i = j;
+                            continue $out;
+                        }
+                    }
+                }
+                if (t.type === "<!--") {
+                    const cBuild = build.comment;
+                    for (let j = i; j < tokens.length; j++) {
+                        const token = tokens[j];
+                        if (token.type === "EOF") {
+                            tokens[i].type = "TEXT"; //tag结构不合法 token更正为`TEXT`
+                            newTokens.push(tokens[i]);
+                            continue $out;
+                        }
+                        const result = cBuild.update(token);
+                        if (!result) {
+                            tokens[i].type = "TEXT"; //结构不合法 token更正为`TEXT`
+                            newTokens.push(tokens[i]);
+                            continue $out;
+                        }
+                        if (cBuild.state === "1") {
+                            // 完成匹配
+                            newTokens.push(new _Token["<!---->"](cBuild));
+                            i = j;
+                            continue $out;
+                        }
+                    }
+                }
+                newTokens.push(t);
+            }
+            return newTokens;
+        };
+    })();
 
     /**
      * 解析XML字符串
@@ -1018,80 +1566,87 @@ const XML = (() => {
      * @param {Array<"#element"|"#text"|"#comment"|"#cDataSection"|"#processingInstruction"|"#documentType">} [option.ignore] 忽略的节点类型
      * @returns {DocumentNode} 根节点
      */
-    const parseXML = (data, option) => {
+    const parse = (data, option = {}) => {
         let converter = Converter.default_;
         if (option) {
-            if (option.attrCover) Attr.Cover = option.attrCover;
+            option.attrCover ??= false;
             if (option.entityMap) converter = new Converter(option.entityMap);
         }
-        const root = new DocumentNode();
-        const chars = [...data]; // 兼容unicode字符, 用码点拆分为合法字符
-        const tokens = tokenise4(chars, tokenise3(chars, tokenise2(chars, tokenise1(chars))));
-        const stack = [];
 
-        for (let i = 0, token = tokens[i]; i < tokens.length; token = tokens[++i]) {
+        const root = new DocumentNode();
+        const tokens = tokenise2(tokenise1(data));
+        /** @type {Array<Token>} */
+        const stack = [];
+        $: for (let i = 0; i < tokens.length; i++) {
+            const token = tokens[i];
             stack.push(token);
+            if (token.$comments) {
+                for (let i = 0; i < token.$comments.length; i++) token.$comments[i].$node = new CommentNode(token.$comments[i].content);
+            }
             switch (token.type) {
                 case "<E>":
-                    token.rawData = { value: "" };
-                    token.$node = new ElementNode(token.data.tagName, token.data.attrs, converter, token.rawData);
+                    token.$node = new ElementNode(token.tagName, token.attrs, converter, data.slice(token.index, token.index + token.length), option.attrCover);
+                    token.$hasEnd = false;
+                    stack.unshift(...token.$comments);
+                    continue;
+                case "<E/>":
+                    token.$node = new ElementNode(token.tagName, token.attrs, converter, data.slice(token.index, token.index + token.length), option.attrCover);
+                    token.$hasEnd = true;
+                    stack.unshift(...token.$comments);
                     continue;
                 case "</E>":
+                    /** @type {Array<Token} */
                     const cache = [];
-                    //向前查找起始标签
-                    for (let j = stack.length - 2, e = stack[j]; j >= 0; e = stack[--j]) {
-                        // 成功找到起始标签
-                        if (e.data.tagName === token.data && e.hasEnd !== true) {
-                            e.rawData.value = chars.slice(e.posEnd.$i, token.posStart.$i - 1).join("");
+                    // 向前查找起始标签
+                    for (let j = stack.length - 2; j >= 0; j--) {
+                        const t = stack[j];
+                        // 成功匹配到起始标签
+                        if (t.type === "<E>" && t.tagName === token.tagName && !t.$hasEnd) {
+                            t.$hasEnd = true;
                             stack.pop();
-                            e.hasEnd = true;
-                            const cacheChildNodes = [];
-                            for (let k = 0, t_ = cache[k]; k < cache.length; t_ = cache[++k]) {
-                                if (t_.$node) cacheChildNodes.unshift(t_.$node);
-                                else if (t_.type === "</E>") cacheChildNodes.unshift(new TextNode(`</${t_.data}>`, converter));
-                                else cacheChildNodes.unshift(new TextNode(t_.data, converter));
+                            stack.unshift(...token.$comments);
+                            const childNodes = [];
+                            for (let k = 0; k < cache.length; k++) {
+                                const _t = cache[k];
+                                if (_t.$node) childNodes.unshift(_t.$node);
+                                else if (_t.type === "</E>") childNodes.unshift(new TextNode(_t.data, converter));
+                                else childNodes.unshift(new TextNode(_t.data, converter));
                                 stack.pop();
                             }
-                            e.$node.childNodes.init(cacheChildNodes);
-                            break;
-                        } else cache.push(e);
+                            t.$node = new ElementNode(t.tagName, t.attrs, converter, data.slice(t.index, token.index + token.length), option.attrCover);
+                            t.$node.childNodes.init(childNodes);
+                            continue $;
+                        } else cache.push(t);
                     }
                     continue;
                 case "<!---->":
-                    token.$node = new CommentNode(token.data);
+                    token.$node = new CommentNode(token.content);
                     continue;
                 case "<![CDATA[]]>":
-                    token.$node = new CDataSectionNode(token.data);
+                    token.$node = new CDataSectionNode(token.content);
                     continue;
-                case "<? ?>":
-                    token.$node = new ProcessingInstructionNode(token.data.target, token.data.attrs, converter);
+                case "<?T?>":
+                    token.$node = new ProcessingInstructionNode(token.target, token.attrs, converter, option.attrCover);
+                    stack.unshift(...token.$comments);
                     continue;
                 case "<!DOCTYPE>":
-                    token.$node = new DocumentTypeNode(token.data.name, token.data.datas);
+                    token.$node = new DocumentTypeNode(token.name);
+                    stack.unshift(...token.$comments);
+                    continue;
+                case "EOF": {
+                    const rootChildNodes = root.childNodes;
+                    for (let i = 0; i < stack.length - 1; i++) {
+                        const t = stack[i];
+                        if (t.$node) rootChildNodes.push(t.$node);
+                        // 忽略未成对的结束标签
+                        else if (t.type === "</E>") continue;
+                        else rootChildNodes.push(new TextNode(t.data, converter));
+                    }
+                }
             }
         }
-        const rootChildNodes = root.childNodes;
-        for (let i = 0, t = stack[i]; i < stack.length; t = stack[++i]) {
-            const tData = t.data;
-            if (t.$node) rootChildNodes.push(t.$node);
-            else if (t.type === "</E>") rootChildNodes.push(new TextNode(`</${tData}>`, converter));
-            else if (t.type === "ATTR") rootChildNodes.push(new TextNode(`${tData.key}=${tData.value}`));
-            else rootChildNodes.push(new TextNode(tData, converter));
-        }
         if (option?.ignore) root.childNodes.query(node => option.ignore.includes(node.type)).forEach(node => node.remove());
-        //恢复默认值
-        _Attr.Cover = false;
         return root;
     };
-    return {
-        parse: parseXML,
-        Attr: _Attr,
-        DocumentNode,
-        ElementNode,
-        TextNode,
-        CommentNode,
-        CDataSectionNode,
-        ProcessingInstructionNode,
-        DocumentNode
-    };
+    return { Attr: _Attr, parse, DocumentNode, ElementNode, TextNode, CommentNode, CDataSectionNode, ProcessingInstructionNode, DocumentNode };
 })();
