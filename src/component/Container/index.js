@@ -2,13 +2,10 @@
 const Container = (() => {
     embed(`#db.js`);
     ContainerData.init();
-    const styleSheet = {
-        base: css(embed(`#base.css`)),
-        icon: css(embed(`#icon.css`)),
-        panel: css(embed(`#panel.css`))
-    };
 
-    return class HTMLNoitaContainerElement extends $class(Base, {
+    const baseStyleSheet = css(embed(`#base.css`), { name: "container-base" });
+
+    return class HTMLNoitaContainerElement extends $extends(Base, {
         /** @type {$ValueOption<"panel"|"icon">} */
         displayMode: { name: "display", $default: "icon" },
         /** @type {$ValueOption<"common"|"conical"|"jar"|"bag">} 容器类型 */
@@ -35,9 +32,10 @@ const Container = (() => {
         }
 
         #parseContentExpression() {
-            const data = [...(this.containerContent ??= "")];
+            if (typeof this.containerContent === "boolean") return (this.#content = []);
+            const data = [...this.containerContent];
             const result = [];
-            if (data) {
+            if (data.length) {
                 this.#amount_all = 0;
                 let currentContent;
                 let state = 0; /// 1: 匹配颜色中 2:匹配材料中 3:匹配数量中
@@ -139,28 +137,14 @@ const Container = (() => {
             this.loadPanelContent([h.template(h.h1(h1Text), svgs, table, h.p(desc))]);
         }
 
-        /**
-         * @override
-         * @param {Array<CSSStyleSheet>} [extraStyleSheets] 额外样式表
-         */
-        [$symbols.initStyle](extraStyleSheets = []) {
-            extraStyleSheets.push(styleSheet.base);
-            //prettier-ignore
-            switch (this.displayMode) {
-                case "icon": extraStyleSheets.push(styleSheet.icon); break;
-                case "panel": extraStyleSheets.push(styleSheet.panel);
-            }
-            super[$symbols.initStyle](extraStyleSheets);
-        }
-        
-        /**
-         * @override
-         * @see Base#contentUpdate
-         */
-        contentUpdate() {
+        static [$css] = {
+            base: [baseStyleSheet],
+            icon: [baseStyleSheet, css(embed(`#icon.css`), { name: "container-icon" })],
+            panel: [baseStyleSheet, css(embed(`#panel.css`), { name: "container-panel" })]
+        };
+
+        [$content]() {
             this.#parseContentExpression();
-            this.shadowRoot.innerHTML = "";
-            this[$symbols.initStyle]();
             this.containerData = ContainerData.query(this.containerType);
             //prettier-ignore
             switch (this.displayMode) {
@@ -180,4 +164,4 @@ const Container = (() => {
         }
     };
 })();
-customElements.define("noita-container", Container);
+h["noita-container"] = freeze(Container);
