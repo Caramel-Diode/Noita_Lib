@@ -3,7 +3,8 @@
     // 1
     {
         spellType: "法术类型",
-        materialType: "材料类型"
+        materialType: "材料类型",
+        effectType: "效果类型"
     },
     // 2
     {
@@ -46,7 +47,8 @@
     {
         reloadTime: "充能时间",
         damageInterval: "伤害间隔",
-        effectInterval: "作用间隔"
+        effectInterval: "作用间隔",
+        attackInterval: "攻击间隔"
     },
     // 12
     {
@@ -60,7 +62,8 @@
     // 14
     {
         fireDamage: "火焰伤害",
-        fireDamageMultiplier: "火焰承伤"
+        fireDamageMultiplier: "火焰承伤",
+        igniteMaterials: "点燃材料"
     },
     // 15
     {
@@ -80,8 +83,7 @@
     // 18
     {
         drillDamage: "穿凿伤害",
-        drillDamageMultiplier: "穿凿承伤",
-        durability: "硬度"
+        drillDamageMultiplier: "穿凿承伤"
     },
     // 19
     {
@@ -97,7 +99,9 @@
     // 21
     {
         meleeDamage: "近战伤害",
-        meleeDamageMultiplier: "近战承伤"
+        meleeDamageMultiplier: "近战承伤",
+        dashMeleeDamage: "冲撞近战伤害",
+        commonMeleeDamage: "常规近战伤害"
     },
     // 22
     {
@@ -114,11 +118,14 @@
         overeatingDamage: "吃撑伤害",
         overeatingDamageMultiplier: "吃撑承伤",
         ingestionStatusEffects: "摄入效果",
+        predator:"肉食性",
+        defecatesAndPees: "排泄"
     },
     // 25
     {
         physicsHitDamage: "物理伤害",
-        physicsHitDamageMultiplier: "物理承伤"
+        physicsHitDamageMultiplier: "物理承伤",
+        physicsObjectsDamage:"受到物理冲击"
     },
     // 26
     {
@@ -137,15 +144,18 @@
     },
     // 29
     {
-        speed: "投射速度",
+        speed: "投射初速度",
         speedMultiplier: "投射速度倍数"
     },
     // 30
     {
         explosionRadius: "爆炸半径",
         effectRadius: "作用半径",
-        homingRadius: "探测半径",
-        damageRadius: "伤害半径"
+        homingRadius: "追踪半径",
+        damageRadius: "伤害半径",
+        eatRadius: "吞噬半径",
+        materialConvertRadius:"转换半径",
+        scanningRadius:"探测距离"
     },
     // 31
     {
@@ -157,7 +167,9 @@
     },
     // 33
     {
-        lifetime: "存在时间"
+        lifetime: "存在时间",
+        lifetimeMax: "最大存在时间",
+        duration: "持续时间"
     },
     // 34
     {
@@ -184,7 +196,9 @@
         immunity: "免疫能力",
         damageMultiplier: "承伤系数"
     },
-    "_1", //39
+    {
+        collideWithShooterFrames: "自命中延迟"
+    },
     // 40
     {
         recoil: "后座力"
@@ -215,7 +229,8 @@
     "_2", // 45
     // 46
     {
-        camp: "阵营"
+        herd: "阵营",
+        attackOnlyIfAttacked:"不主动攻击"
     },
     // 47
     {
@@ -235,7 +250,8 @@
     },
     // 51
     {
-        trailMaterial: "提供轨迹"
+        trailMaterial: "提供轨迹",
+        particleMaterial: "粒子材料"
     },
     // 52
     {
@@ -243,7 +259,8 @@
     },
     // 53
     {
-        material: "提供材料"
+        material: "提供材料",
+        explosionCreateMaterial: "爆炸生成材料"
     },
     // 54
     {
@@ -255,7 +272,8 @@
     },
     // 56
     {
-        lock: "生成锁"
+        lock: "生成锁",
+        isImmuneToKicks:"免疫踢击掉落物品"
     },
     // 57
     {
@@ -267,7 +285,9 @@
     },
     // 59
     {
-        _4: "镐子"
+        destroyDurability: "挖掘等级",
+        explosionDestroyDurability: "爆炸挖掘等级",
+        durability: "硬度"
     },
     // 60
     {
@@ -275,15 +295,18 @@
     },
     // 61
     {
-        _6: "锤子"
+        destroyEnergy: "挖掘能量",
+        explosionDestroyEnergy: "爆炸挖掘能量"
     },
     // 62
     {
-        _9: "扳手"
+        _9: "双刃斧"
+        
     },
     // 63
     {
-        _10: "双刃斧"
+        _10: "扳手",
+        triesToRangedAttackFriends:"远程辅助友方"
     },
     // 64
     {
@@ -311,7 +334,8 @@
     },
     // 70
     {
-        list: "法术序列"
+        list: "法术序列",
+        eatMaterials:"吞噬材料",
     },
     // 71
     {
@@ -328,7 +352,8 @@
     },
     // 75
     {
-        chip1: "芯片1"
+        chip1: "芯片1",
+        aiUses: "AI可用"
     },
     // 76
     {
@@ -336,7 +361,8 @@
     },
     // 77
     {
-        stack: "栈"
+        stack: "栈",
+        recursive: "递归"
     },
     "_13", // 78
     // 79
@@ -349,10 +375,14 @@
     {
         gameEffectEntities: "游戏效果实体"
     },
-    "holy", // 82
+    // 82
+    {
+        berserkDontAttackFriends:"狂暴不攻击友方",
+        dontCounterAttackOwnHerd:"友方误伤不还击"
+    },
     // 83
     {
-        loadEntities: "加载实体"
+        loadEntities_: "加载实体"
     },
     "_18", // 84
     "_19", // 85
@@ -403,13 +433,17 @@
     // 125
     {
         questionMark: "questionMark",
-        eatProb: "吞噬概率"
+        eatProbability: "吞噬概率",
+        attackProbability: "使用概率"
     },
     // 126
     {
         tag: "标签"
     },
-    "_23", // 127
+    // 127
+    {
+        dieOnLowVelocity: "低速失效"
+    },
     // 128
     {
         damageScaledBySpeed: "差速增伤"
@@ -429,13 +463,29 @@
     },
     // 132
     {
-        materialDamages: "材料伤害"
+        materialDamages: "材料伤害",
+        eatDynamicPhysicsBodies: "吞噬物理刚体实体",
+        materialConvertEntities: "转换实体"
     },
-    "execute", // 133
+    // 133
+    {
+        execute:"execute",
+        loadEntities: "加载实体"
+    },
     "_24", // 134
-    "_25", // 135
-    "_26", // 136
-    "_27", // 137
+    // 135
+    {
+        booleanFlag: "特性"
+    },
+    //136
+    {
+        materialConvertMap:"材料转换"
+    },
+    // 137 
+    {
+        onlyEatStain: "仅吞噬污渍",
+        senseCreaturesThroughWalls:"透视寻敌"
+    },
     "_28", // 138
     "_29", // 139
     "_30", // 140
@@ -443,10 +493,16 @@
     "_32", // 142
     // 143
     {
-        homingTarget: "追踪目标"
+        collideWithTag:"可命中目标",
+        homingTarget: "追踪目标",
+        target: "目标",
+        senseCreatures:"寻敌"
     },
     "_33", // 144
-    "_35", // 145
+    // 145
+    {
+        doMovetoUpdate: "不命中"
+    }, 
     // 146
     {
         collideWithWorld: "碰撞地形"
@@ -454,5 +510,82 @@
     // 147
     {
         collideWithEntities: "碰撞实体"
-    }
+    },
+    // 148
+    {
+        onCollisionDie: "碰撞失效"
+    },
+    // 149
+    {
+        price: "价格",
+        priceBase: "价格基准",
+        dropMoney: "死亡掉落金块"
+    },
+    // 150
+    {
+        dieOnLiquidCollision: "触液失效"
+    },
+    // 151
+    {
+        airFriction:"空气阻力",
+        destroyPenetrationCoeff: "挖掘穿透系数"
+    },
+    // 152
+    {
+        gravity:"重力",
+        fallingDamage: "摔落伤害"
+    },
+    // 153
+    {
+        mass:"质量"
+    },
+    // 154
+    {
+        speedMax:"速度上限"
+    },
+    "_35",// 155
+    "a",// 156
+    "b",// 157
+    "c",// 158
+    "d",// 159
+    "e",// 160
+    "f",// 161
+    "g",// 162
+    "h",// 163
+    "i",// 164
+    "j",// 165
+    "k",// 166
+    "l",// 167
+    "m",// 168
+    "n",// 169
+    "o",// 170
+    "p",// 171
+    "q",// 172
+    "r",// 173
+    "s",// 174
+    "t",// 175
+    "u",// 176
+    "v",// 177
+    "w",// 178
+    "x",// 179
+    "y",// 180
+    "z",// 181
+    // 182
+    {
+        holdable: "允许手持",
+        dropItems: "掉落持有物品"
+    },
+    // 183
+    {
+        unlimited: "可无限化次数"
+    },
+    // 184
+    {
+        unused: "不被使用的",
+        ignoredEatMaterials:"无法吞噬材料"
+    },
+    // 185
+    {
+        fallingDamageHeight: "摔伤高度"
+    },
 ]
