@@ -21,7 +21,7 @@ class OrbData {
     static init() {
         const _ = "真理魔球";
         //prettier-ignore
-        const datas = toChunks([
+        const datas = [...[
             "common","空",,
             "red",   "空",,
             "discovered","熟悉的真理魔球",,
@@ -37,7 +37,7 @@ class OrbData {
             "8",_,8,
             "9",_,9,
             "10",_,10
-        ],3);
+        ].values().chunks(3)];
         for (let i = 0; i < datas.length; i++) {
             const data = freeze(new this(datas[i]));
             this.data.set(data.id, data);
