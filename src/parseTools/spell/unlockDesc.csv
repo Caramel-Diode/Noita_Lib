@@ -32,7 +32,7 @@ ORBIT_FIREBALLS,火球环绕,击杀蠕龙
 ORBIT_NUKES,核弹环绕,击杀蠕龙
 ORBIT_LASERS,电浆束环绕,击杀蠕龙
 ORBIT_LARPA,环绕拉帕,击杀蠕龙
-CRUMBLING_EARTH_PROJECTILE,地震,拾取1号魔球(召唤地震)
+CRUMBLING_EARTH,地震,拾取1号魔球(召唤地震)
 OCARINA_A,陶笛 - A,发现长笛
 OCARINA_B,陶笛 - B,发现长笛
 OCARINA_C,陶笛 - C,发现长笛
@@ -93,6 +93,9 @@ COLOUR_PURPLE,紫色闪光,将翡翠石板丢入炼金术士小屋
 COLOUR_BLUE,蓝色闪光,将翡翠石板丢入炼金术士小屋
 COLOUR_RAINBOW,彩虹闪光,将翡翠石板丢入炼金术士小屋
 COLOUR_INVIS,隐形法术,将翡翠石板丢入炼金术士小屋
-RAINBOW_TRAIL,彩虹轨迹,在湖心岛上方浮云上拾取该法术
-MASS_POLYMORPH,Muodonmuutos,击杀鹿灵
+RAINBOW_TRAIL,彩虹轨迹,到达湖心岛上方浮云
+MASS_POLYMORPH,变羊,击杀鹿灵
 TOUCH_PISS,黄金之触？,破坏厕所
+TOUCH_GRASS,草之触,开启在不详神庙中使用不祥液体填充中心液池获得的宝箱
+SEA_MIMIC,拟态之海,在拟态神庙灌装其中十个个拟态瓶
+CESSATION,遁入虚空,在贫瘠神庙草形背景处施放草之触
