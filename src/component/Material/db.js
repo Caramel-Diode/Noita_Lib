@@ -15,7 +15,7 @@ class Icon extends $icon(16, "材料") {
     }
 }
 
-Icon.$defineElement("-material");
+Icon.define("-material");
 
 /** @typedef {import("TYPE").MaterialData} MaterialData */
 /** @typedef {import("TYPE").MaterialId} MaterialId */
@@ -32,6 +32,12 @@ Icon.$defineElement("-material");
  */
 
 class MaterialData {
+    /** @type Array<string> */
+    static #tagMap;
+
+    static get tags() {
+        return [...this.#tagMap];
+    }
     //prettier-ignore
     static { delete this.prototype.constructor; } // 禁止从实例访问构造器
 
@@ -43,7 +49,7 @@ class MaterialData {
         /** @type {Array<MaterialData.ReactionData>} */ static data = [];
 
         /**
-         * @param {String} data
+         * @param {string} data
          * @returns {Array<MaterialDataGroup>}
          */
         #getMaterialDatas(data) {
@@ -51,13 +57,14 @@ class MaterialData {
             for (let i = 0; i < items.length; i++) {
                 const keyword = items[i];
                 if (keyword.startsWith("[")) {
-                    if (keyword.endsWith("]")) items[i] = MaterialData.queryByTag(keyword);
+                    // [] 内是标签索引 需要进行一次转换
+                    if (keyword.endsWith("]")) items[i] = MaterialData.queryByTag(MaterialData.tags[parseInt(keyword.slice(1, -1), 36)]);
                     // 针对形如`[标签]_abc`组合表示格式做特殊处理
                     else {
                         const p = keyword.lastIndexOf("]") + 1;
                         //prettier-ignore
                         const data = items[i] = freeze({
-                            tag: keyword.slice(0, p),
+                            tag: MaterialData.tags[parseInt(keyword.slice(1, p-1),36)],
                             idPart: keyword.slice(p),
                             list: []
                         });
@@ -66,8 +73,9 @@ class MaterialData {
                         freeze(data.list);
                     }
                 } else {
+                    // 此时keyword表示材料自增索引
                     //prettier-ignore
-                    const { parent, list: [self, ...children] } = MaterialData.queryByInherit(MaterialData.data.all[keyword].id);
+                    const { parent, list: [self, ...children] } = MaterialData.queryByInherit(MaterialData.data.all[parseInt(keyword,36)].id);
                     //prettier-ignore
                     const valid = items[i] = freeze({ parent, list: [self] });
                     // 仅使用继承反应的子材料
@@ -83,17 +91,15 @@ class MaterialData {
 
         /** @param {[number,string]} data */
         constructor(data) {
-            if (data[0] < 0) {
-                this.rapidly = true;
-                this.speed = -data[0];
-            } else {
-                this.rapidly = false;
-                this.speed = data[0];
-            }
-            const [inputs, part] = data[1].split("=");
-            const [outputs, entity] = part.split("$");
+            this.rapidly = data[0] < 0;
+            this.speed = Math.abs(data[0]);
+            const [inputs, outputs, extra] = data[1].split(/[=$]/);
             this.inputs = this.#getMaterialDatas(inputs);
             this.outputs = this.#getMaterialDatas(outputs);
+            if (extra?.endsWith("*")) {
+                this.entity = extra.slice(0, -1);
+                this.explode = true;
+            } else this.entity = extra;
         }
 
         /**
@@ -136,6 +142,8 @@ class MaterialData {
                     type += 2;
                     break;
                 }
+                // 单独作为产物时不可以从父材料反应中继承
+                if (type !== 1) continue;
                 const { list, tag, idPart = "" } = outputs[i];
                 for (let j = 0; j < list.length; j++) {
                     if (list[j].id === id) {
@@ -345,14 +353,16 @@ class MaterialData {
                         mathML = `<munderover title="${key}"><ms>${agent.name}</ms><mi>${agent.id}</mi><mspace/></munderover>`;
                     } else {
                         if (tag) {
-                            // 针对没有被任何材料使用的标签
-                            if (list.length) {
-                                plainText = `${list[0].name}:${list[0].id}`;
-                                mathML = `<munderover title="${key}"><ms>${list[0].name}</ms><mi>${list[0].id}</mi><mspace/></munderover>`;
-                            } else {
-                                plainText = key;
-                                mathML = `<mi>${key}</mi>`;
-                            }
+                            // // 针对没有被任何材料使用的标签
+                            // if (list.length) {
+                            //     plainText = `${list[0].name}:${list[0].id}`;
+                            //     mathML = `<munderover title="${key}"><ms>${list[0].name}</ms><mi>${list[0].id}</mi><mspace/></munderover>`;
+                            // } else {
+                            //     plainText = key;
+                            //     mathML = `<mi>${key}</mi>`;
+                            // }
+                            plainText = key;
+                            mathML = `<mi>${key}</mi>`;
                         } else {
                             //代理继承材料组 产物继承材料组不使用代理材料 仅使用 parent材料作为唯一项 ☆
                             plainText = `${list[0].name}:${list[0].id}`;
@@ -374,7 +384,7 @@ class MaterialData {
                     else outputStrCache.push(value.mathML);
                 const equalSign = `<mspace width="10px"/><munderover><mo stretchy="true">=</mo><ms>${this.rapidly ? "快速" : ""}</ms><mrow><mspace width="15px"/><mn>${this.speed}</mn><mo>%/f</mo><mspace width="15px"/></mrow></munderover><mspace width="10px"/>`;
                 const addSign = `<mspace width="10px"/><mo>+</mo><mspace width="10px"/>`;
-                return `<math>${inputStrCache.join(addSign)}${equalSign}${outputStrCache.join(addSign)}</math>`;
+                return `<math>${inputStrCache.join(addSign)}${equalSign}${outputStrCache.join(addSign)}${this.entity ? `<mspace width="10px"/><mo>+</mo><mspace width="10px"/><ms class="entity">${this.entity}</ms>` : ""}${this.explode ? `<mspace width="10px"/><mo>+</mo><mspace width="10px"/><ms class="explode">爆炸</ms>` : ""}</math>`;
             } else {
                 for (const [key, value] of mapInput)
                     if (value.amount > 1) inputStrCache.push(`${value.amount}×${value.plainText}`);
@@ -382,7 +392,7 @@ class MaterialData {
                 for (const [key, value] of mapOutput)
                     if (value.amount > 1) outputStrCache.push(`${value.amount}×${value.plainText}`);
                     else outputStrCache.push(value.plainText);
-                return `${inputStrCache.join(" + ")} ${this.rapidly ? "==" : "="} ${outputStrCache.join(" + ")}`;
+                return `${inputStrCache.join(" + ")} ${this.rapidly ? "==" : "="} ${outputStrCache.join(" + ")}${this.entity ? `+ <${this.entity}>` : ""}${this.explode ? `+ <爆炸>` : ""}`;
             }
         }
 
@@ -408,19 +418,6 @@ class MaterialData {
                         asCatalyzer.add(reaction);
                         break;
                 }
-                // for (let j = 0; j < tags.length; j++) {
-                //     switch (reaction.getRelationshipByTag(tags[j])) {
-                //         case "asInput":
-                //             if (reaction.getRelationshipById(id) === "asInput") asInput.add(reaction);
-                //             break;
-                //         // 标签不应该单独出现在产物中 至少应该是原料和产物同时出现或以id+标签的形式出现
-                //         // case "asOutput":
-                //         //     asInput.add(reaction);
-                //         //     break;
-                //         case "asCatalyzer":
-                //             asCatalyzer.add(reaction);
-                //     }
-                // }
             }
             return { asCatalyzer, asInput, asOutput };
         }
@@ -465,7 +462,7 @@ class MaterialData {
 
         /** 初始化数据库 */
         static init() {
-            this.data = toChunks(embed(`#reaction.data.js`), 2).map(e => freeze(new this(e)));
+            this.data = [...embed(`#reaction.data.js`).values().chunks(2)].map(e => freeze(new this(e)));
         }
     };
 
@@ -493,19 +490,19 @@ class MaterialData {
             this.onFire, //===================[5] 始终燃烧
             this.requiresOxygen, //===========[6] 燃烧需氧
             this.platformType //==============[7] 平台类型
-        ] = toBits(data[4], true); //解析二进制位为Boolean值
+        ] = new Bits(data[4]).toArray(8); //解析二进制位为Boolean值
         //prettier-ignore
         [
             this.id, //=======================[0] id
             this.name, //=====================[1] 材料名
-            this.tags = [], //================[2] 标签
+            , //==============================[2] 标签 BitsString
             , //==============================[3] 父材料 (等待后续创建引用)
             , //==============================[4] BitsNumber
-            this.density, //==================[5] 密度
+            this.density = 1, //==============[5] 密度
             , //==============================[6] 类型
-            this.durability, //===============[7] 耐久?
-            this.hp, //=======================[8] 血量
-            this.fireHp, //===================[9] 燃烧血量
+            this.durability = 1, //===========[7] 硬度
+            this.hp = 100, //=================[8] 血量
+            this.fireHp = 0, //===============[9] 燃烧血量
             this.liquidGravity, //============[10] 液体重力
             this.solidFriction, //============[11] 固体摩擦力
             this.temperatureOfFire, //========[12] 火焰温度
@@ -516,9 +513,12 @@ class MaterialData {
             , //==============================[17] 冻结转化 (等待后续创建引用)
             , //==============================[18] 加热转化 (等待后续创建引用)
             , //==============================[19] 碎裂转化 (等待后续创建引用)
-            this.lifetime, //=================[20] 存在时间
+            this.lifetime = 0, //=============[20] 存在时间
             this.nameKey //===================[21] 名称翻译键
         ] = data;
+        this.tags = [];
+        new Bits(parseBigint(data[2], 36)).toArray(MaterialData.#tagMap.length).forEach((v, i) => !v || this.tags.push(MaterialData.#tagMap[i]));
+        /** @type {Array<string>} */
         this.type = MaterialData.#typeList[data[6]];
     }
 
@@ -553,7 +553,9 @@ class MaterialData {
 
     /** 初始化数据库 */
     static init() {
-        const datas = toChunks(embed(`#material.data.js`), 22);
+        const [rawDatas, tags] = [...embed(`#material.data.js`)];
+        const datas = [...rawDatas.values().chunks(22)];
+        this.#tagMap = tags.split(" ").map(e => `[${e}]`);
         this.$NULL = Object.freeze(new this(["_NULL", "空白", , , 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, "000000FF", "", "", , , , -1, "mat_air"], 0));
 
         this.data.all = datas.map((v, i) => {
