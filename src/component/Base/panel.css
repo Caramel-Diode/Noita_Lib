@@ -24,7 +24,7 @@
         /* 颜色 */
         --focus-color: #fff;
         /* 基本渐变参数 */
-        --foucs-base: linear-gradient(var(--focus-color), var(--focus-color)) center;
+        --foucs-base: linear-gradient(var(--focus-color) 0 0) center;
         /* 竖线宽度 */
         --foucs-lw: calc(var(--focus-scale) * 1px);
         /* 竖线 6px */
@@ -35,19 +35,20 @@
         --foucs-l3: calc(var(--foucs-lw) * 2 + 1px) / var(--foucs-lw) calc(2px * var(--focus-scale)) no-repeat;
         /* prettier-ignore */
         ---foucs-bg-left:
-        /* ▷ */
-        var(--foucs-base) left var(--foucs-l1),
-        var(--foucs-base) left var(--foucs-l2),
-        var(--foucs-base) left var(--foucs-l3);
+            /* ▷ */
+            var(--foucs-base) left var(--foucs-l1),
+            var(--foucs-base) left var(--foucs-l2),
+            var(--foucs-base) left var(--foucs-l3);
         /* prettier-ignore */
         ---foucs-bg-right:
-        /* ◁ */
-        var(--foucs-base) right var(--foucs-l1),
-        var(--foucs-base) right var(--foucs-l2),
-        var(--foucs-base) right var(--foucs-l3);
+            /* ◁ */
+            var(--foucs-base) right var(--foucs-l1),
+            var(--foucs-base) right var(--foucs-l2),
+            var(--foucs-base) right var(--foucs-l3);
         /* prettier-ignore */
-        ---foucs-bg: /* ▷ 聚焦三角形背景 ◁ */
-        var(---foucs-bg-left), var(---foucs-bg-right);
+        ---foucs-bg:
+            /* ▷ 聚焦三角形背景 ◁ */
+            var(---foucs-bg-left), var(---foucs-bg-right);
     }
 
     [tabindex] {
@@ -70,17 +71,21 @@
         --c3: #0e0d0cf2;
         /* 边框线宽度 */
         --border-width: 3px;
+        ---1bw: var(--border-width);
+        ---2bw: calc(2 * var(--border-width));
     }
 
     :host > menu > li {
         --c1: #0009;
         --c2: #696357;
     }
-    :host > menu > li.selected {
+
+    :host > menu > li[aria-selected="true"] {
         --c1: #0e0d0cf2;
         --c2: #948064;
         --c3: #b49f81;
     }
+
     :host > menu > li > span {
         --focus-color: #ffffb200;
     }
@@ -89,10 +94,12 @@
         --focus-scale: 0;
         --focus-color: #0000;
     }
+
     :host .entities-tablist > li:is(:hover, :focus-visible) {
         --focus-scale: 2;
         --focus-color: #ffffb2;
     }
+
     /*=====================*\
         面板属性值的颜色变量
     \*======================*/
@@ -101,6 +108,7 @@
         --attr-color-green: #7fff7f;
         --attr-color-default: #fff;
     }
+
     /* 为聚焦模式下的背景框提供色盘 */
     :host(:hover),
     :host(:focus-within) {
@@ -112,7 +120,7 @@
         --c3: #000000dc;
     }
 
-    :is(:host(:hover), :host(:focus-within)) > menu > li.selected {
+    :is(:host(:hover), :host(:focus-within)) > menu > li[aria-selected="true"] {
         --c1: #000000dc;
         --c2: #eda949;
         --c3: #c98930;
@@ -130,8 +138,10 @@
 
 :host {
     grid-template:
-        "tabs" min-content /* 选项卡 */
-        "main" auto /* 内容区 */
+        "tabs" min-content
+        /* 选项卡 */
+        "main" auto
+        /* 内容区 */
         / 1fr;
 }
 
@@ -155,6 +165,7 @@
 /*===================*\
          选项卡
 \*===================*/
+
 :host > menu > li {
     display: flex;
     height: 60px;
@@ -164,31 +175,60 @@
     margin: 0 0 0 -3px;
     place-content: center;
     place-items: center;
-    --bg1: linear-gradient(var(--c1), var(--c1));
-    --bg2: linear-gradient(var(--c2), var(--c2));
-    /* prettier-ignore */
-    background:
-            var(--bg2) top 9px left 3px/3px 3px no-repeat,
-            var(--bg2) top 9px right 3px/3px 3px no-repeat,
-            var(--bg2) top 6px center/calc(100% - 12px) 3px no-repeat,
-            var(--bg2) top 12px right/3px calc(100% - 12px) no-repeat,
-            var(--bg2) top 12px left/3px calc(100% - 12px) no-repeat,
-            var(--bg1) top 9px center/calc(100% - 6px) calc(100% - 9px) no-repeat;
+    --bg1: linear-gradient(var(--c1) 0 0);
+    --bg2: linear-gradient(var(--c2) 0 0);
     transition: none;
+    user-select: none;
 }
 
-:host > menu > li.selected {
-    z-index: 1;
-    --bg3: linear-gradient(var(--c3), var(--c3));
+@keyframes menu-item-fade-in-bg {
+    0% {
+        opacity: 0.2;
+    }
+
+    100% {
+        opacity: 1;
+    }
+}
+
+/* 选项卡按钮背景层 */
+:host > menu > li::before {
+    pointer-events: none;
+    display: block;
+    content: "";
+    position: absolute;
+    width: 100%;
+    height: 100%;
+    top: 0;
+    left: 0;
+    --bg1: linear-gradient(var(--c1) 0 0);
+    --bg2: linear-gradient(var(--c2) 0 0);
     /* prettier-ignore */
     background:
-            var(--bg3) top 6px left 3px/3px 3px no-repeat,
-            var(--bg3) top 6px right 3px/3px 3px no-repeat,
-            var(--bg2) top 3px center/calc(100% - 12px) 3px no-repeat,
-            var(--bg2) top 9px right/3px calc(100% - 9px) no-repeat,
-            var(--bg2) top 9px left/3px calc(100% - 9px) no-repeat,
-            var(--bg1) top 6px center/calc(100% - 6px) calc(100% - 9px) no-repeat,
-            linear-gradient(#18191A, #18191A) bottom center/ 100% 3px no-repeat;
+        var(--bg2) top 9px left 3px/3px 3px no-repeat,
+        var(--bg2) top 9px right 3px/3px 3px no-repeat,
+        var(--bg2) top 6px center/calc(100% - 12px) 3px no-repeat,
+        var(--bg2) top 12px right/3px calc(100% - 12px) no-repeat,
+        var(--bg2) top 12px left/3px calc(100% - 12px) no-repeat,
+        var(--bg1) top 9px center/calc(100% - 6px) calc(100% - 9px) no-repeat;
+    animation: menu-item-fade-in-bg 300ms forwards;
+}
+
+:host > menu > li[aria-selected="true"] {
+    z-index: 1;
+}
+
+:host > menu > li[aria-selected="true"]::before {
+    --bg3: linear-gradient(var(--c3) 0 0);
+    /* prettier-ignore */
+    background:
+        var(--bg3) top 6px left 3px/3px 3px no-repeat,
+        var(--bg3) top 6px right 3px/3px 3px no-repeat,
+        var(--bg2) top 3px center/calc(100% - 12px) 3px no-repeat,
+        var(--bg2) top 9px right/3px calc(100% - 9px) no-repeat,
+        var(--bg2) top 9px left/3px calc(100% - 9px) no-repeat,
+        var(--bg1) top 6px center/calc(100% - 6px) calc(100% - 9px) no-repeat,
+        linear-gradient(#18191A 0 0) bottom center/ 100% 3px no-repeat;
 }
 
 :host > menu > li > span {
@@ -199,18 +239,40 @@
 /*===================*\
          内容区
 \*===================*/
+
 :host > section {
     display: grid;
-    place-content: start center;
+    place-content: start;
     grid-area: main;
     padding: 20px;
+    border: solid var(---1bw) #0000;
+    transition: all 250ms linear;
+    /* 清除继承 避免滚动条样式无效 */
+    scrollbar-color: initial;
+    animation: fade-in 500ms forwards;
+    --bg3: linear-gradient(var(--c3) 0 0);
+}
 
-    --bg1: linear-gradient(var(--c1), var(--c1));
-    --bg2: linear-gradient(var(--c2), var(--c2));
-    --bg3: linear-gradient(var(--c3), var(--c3));
+@keyframes background-scale {
+    0% {
+        transform: scale(0.5);
+        opacity: 0;
+    }
 
-    ---1bw: var(--border-width);
-    ---2bw: calc(2 * var(--border-width));
+    100% {
+        transform: scale(1);
+        opacity: 1;
+    }
+}
+
+:host > .background {
+    grid-area: main;
+    pointer-events: none;
+    animation: background-scale 150ms forwards;
+    padding: 20px;
+    border: solid var(---1bw) #0000;
+    --bg3: linear-gradient(var(--c3) 0 0);
+
     ---nrbb: no-repeat border-box;
     ---nrpb: no-repeat padding-box;
     ---1: calc(100% - var(---1bw));
@@ -219,26 +281,32 @@
     ---: var(--c2), var(--c2) var(---1bw), var(--c1) var(---1bw), var(--c1) var(---2), var(--c2) var(---2), var(--c2) var(---1), #0000 var(---1);
     /* prettier-ignore */
     background:
-        /* 上框线 */ linear-gradient( 90deg, var(---) ) top / 100% var(---1bw)  var(---nrbb),
-        /* 左框线 */ linear-gradient( 180deg, var(---) ) left / var(---1bw) 100%  var(---nrbb),
-        /* 下框线 */ linear-gradient( 270deg, var(---) ) bottom / 100% var(---1bw) var(---nrbb),
-        /* 右框线 */ linear-gradient( 0, var(---) ) right / var(---1bw) 100%  var(---nrbb),
-        /* 中心底色 */ var(--bg3) center/100% 100% var(---nrpb);
-    border: solid var(---1bw) #0000;
-    transition: all 250ms linear;
-    overflow: auto;
-    /* 清除继承 避免滚动条样式无效 */
-    scrollbar-color: initial;
+        /* 上框线 */
+        linear-gradient(90deg, var(---)) top / 100% var(---1bw) var(---nrbb),
+        /* 左框线 */
+        linear-gradient(180deg, var(---)) left / var(---1bw) 100% var(---nrbb),
+        /* 下框线 */
+        linear-gradient(270deg, var(---)) bottom / 100% var(---1bw) var(---nrbb),
+        /* 右框线 */
+        linear-gradient(0, var(---)) right / var(---1bw) 100% var(---nrbb),
+        /* 中心底色 */
+        var(--bg3) center/100% 100% var(---nrpb);
 }
-:host(noita-panel[border-style="white"]) > section {
-    --bg1: linear-gradient(#bbbbbbcf, #bbbbbbcf);
+
+:host(noita-panel[border-style="white"]) > .background {
+    --bg1: linear-gradient(#bbbbbbcf 0 0);
     /* prettier-ignore */
     background:
-        /* 上框线 */ var(--bg1) top/100% var(---1bw)  var(---nrbb),
-        /* 下框线 */ var(--bg1) bottom/100% var(---1bw)  var(---nrbb),
-        /* 左框线 */ var(--bg1) left top var(---1bw)/var(---1bw) 100% var(---nrbb),
-        /* 右框线 */ var(--bg1) right /var(---1bw) 100% var(---nrbb),
-        /* 中心底色 */ var(--bg3) center/100% 100% var(---nrpb);
+        /* 上框线 */
+        var(--bg1) top/100% var(---1bw) var(---nrbb),
+        /* 下框线 */
+        var(--bg1) bottom/100% var(---1bw) var(---nrbb),
+        /* 左框线 */
+        var(--bg1) left top var(---1bw)/var(---1bw) 100% var(---nrbb),
+        /* 右框线 */
+        var(--bg1) right /var(---1bw) 100% var(---nrbb),
+        /* 中心底色 */
+        var(--bg3) center/100% 100% var(---nrpb);
 }
 
 :host > section::-webkit-scrollbar,
@@ -256,16 +324,20 @@
     /* 控制垂直滚动条宽度 */
     width: 29px;
     --c4: #6c6c6b;
-    --bg4: linear-gradient(var(--c4), var(--c4));
+    --bg4: linear-gradient(var(--c4) 0 0);
     /* prettier-ignore */
     background:
         /* 边框 */
-        /* 高亮点(右上) */ var(--bg4) right top/var(---1bw) var(---1bw) no-repeat,
-        /* 高亮点(右下) */ var(--bg4) right bottom/var(---1bw) var(---1bw) no-repeat,
-        /* 高亮点(左下) */ var(--bg4) left bottom/var(---1bw) var(---1bw) no-repeat,
-        /* 挖空区域 */ var(--bg3) center/calc(100% - var(---2bw)) calc(100% - var(---2bw)) no-repeat,
+        /* 高亮点(右上) */
+        var(--bg4) right top/var(---1bw) var(---1bw) no-repeat,
+        /* 高亮点(右下) */
+        var(--bg4) right bottom/var(---1bw) var(---1bw) no-repeat,
+        /* 高亮点(左下) */
+        var(--bg4) left bottom/var(---1bw) var(---1bw) no-repeat,
+        /* 挖空区域 */
+        var(--bg3) center/calc(100% - var(---2bw)) calc(100% - var(---2bw)) no-repeat,
         /* 边框线 上下左右各留出5px 边距 中心被--bg3覆盖以实现挖空效果 */
-        linear-gradient(#464646,#464646) 100% no-repeat;
+        linear-gradient(#464646 0 0) 100% no-repeat;
 }
 
 /* 滚动条滑块 */
@@ -274,24 +346,33 @@
     --c5: #7e7e7e;
     --c6: #606060;
     --c7: #464646;
-    --bg4: linear-gradient(var(--c4), var(--c4));
-    --bg5: linear-gradient(var(--c5), var(--c5));
-    --bg6: linear-gradient(var(--c6), var(--c6));
+    --bg4: linear-gradient(var(--c4) 0 0);
+    --bg5: linear-gradient(var(--c5) 0 0);
+    --bg6: linear-gradient(var(--c6) 0 0);
     /* prettier-ignore */
     background:
-    /* 中心图案 */
-    /* 高亮点(右上) */ var(--bg4) calc(50% + 5px) calc(50% - 5px)/3px 3px no-repeat,
-    /* 高亮点(右下) */ var(--bg4) calc(50% + 5px) calc(50% + 5px)/3px 3px no-repeat,
-    /* 高亮点(左下) */ var(--bg4) calc(50% - 5px) calc(50% + 5px)/3px 3px no-repeat,
-    /* 挖空区域 */ var(--bg3) center/7px 7px no-repeat,
-    linear-gradient(var(--c7), var(--c7)) center/13px 13px no-repeat,
-    /* 边框 */
-    /* 高亮点(右上) */ var(--bg5) right top/var(---1bw) var(---1bw) no-repeat,
-    /* 高亮点(右下) */ var(--bg5) right bottom/var(---1bw) var(---1bw) no-repeat,
-    /* 高亮点(左下) */ var(--bg5) left bottom/var(---1bw) var(---1bw) no-repeat,
-    /* 挖空区域 */ var(--bg3) center/calc(100% - var(---2bw)) calc(100% - var(---2bw)) no-repeat,
-    var(--bg6) center/100% 100% no-repeat;
+        /* 中心图案 */
+        /* 高亮点(右上) */
+        var(--bg4) calc(50% + 5px) calc(50% - 5px)/3px 3px no-repeat,
+        /* 高亮点(右下) */
+        var(--bg4) calc(50% + 5px) calc(50% + 5px)/3px 3px no-repeat,
+        /* 高亮点(左下) */
+        var(--bg4) calc(50% - 5px) calc(50% + 5px)/3px 3px no-repeat,
+        /* 挖空区域 */
+        var(--bg3) center/7px 7px no-repeat,
+        linear-gradient(var(--c7) 0 0) center/13px 13px no-repeat,
+        /* 边框 */
+        /* 高亮点(右上) */
+        var(--bg5) right top/var(---1bw) var(---1bw) no-repeat,
+        /* 高亮点(右下) */
+        var(--bg5) right bottom/var(---1bw) var(---1bw) no-repeat,
+        /* 高亮点(左下) */
+        var(--bg5) left bottom/var(---1bw) var(---1bw) no-repeat,
+        /* 挖空区域 */
+        var(--bg3) center/calc(100% - var(---2bw)) calc(100% - var(---2bw)) no-repeat,
+        var(--bg6) center/100% 100% no-repeat;
 }
+
 :host > section {
     /* 很奇怪 这样写才有效 */
     /* 滚动条滑块悬浮高亮色盘 */
@@ -302,32 +383,29 @@
         --c7: #9b9b9b;
     }
 }
+
 /* 滚动条转角 */
 :host > section::-webkit-scrollbar-corner {
     background: transparent;
     cursor: help;
 }
 
-:host > section[hidden] {
-    display: none !important;
-}
-
 tr:hover {
-    --attr-icon-color: #eda949;
+    --attr-icon-color: #ad71f2;
 }
 
 th.before {
     /* prettier-ignore */
-    background: 
-        linear-gradient(#00f, #00f) right 11px center/ 4px 4px no-repeat,
-        linear-gradient(#fff8, #fff8) right 10px center/ 6px 6px no-repeat;
+    background:
+        linear-gradient(#00f 0 0) right 11px center/ 4px 4px no-repeat,
+        linear-gradient(#fff8 0 0) right 10px center/ 6px 6px no-repeat;
 }
 
 th.after {
     /* prettier-ignore */
-    background: 
-        linear-gradient(#ff0, #ff0) right 11px center/ 4px 4px no-repeat,
-        linear-gradient(#fff8, #fff8) right 10px center/ 6px 6px no-repeat;
+    background:
+        linear-gradient(#ff0 0 0) right 11px center/ 4px 4px no-repeat,
+        linear-gradient(#fff8 0 0) right 10px center/ 6px 6px no-repeat;
 }
 
 /* 属性图标 */
@@ -351,9 +429,11 @@ tr[tabindex] > td,
 
 [tabindex],
 [tabindex] > td {
-    transition: all 0.3s linear;
+    transition: all 0.1s linear;
     will-change: contents;
     cursor: pointer;
+    padding-left: 0px;
+    padding-right: 24px;
 }
 
 tr:is(:focus-visible, :hover)[tabindex] > td,
@@ -377,14 +457,17 @@ tr:is(:focus-visible, :hover)[tabindex] > td,
     grid-area: attr;
     place-self: stretch;
 }
-
+.attrs {
+    border-radius: 2px;
+}
 /* 首个th  */
-.attrs th:nth-child(1) {
-    max-width: 21px;
-    width: 21px;
+.attrs > tr > th:nth-child(1) {
+    padding-left: 10px;
+    max-width: 31px;
+    width: 31px;
 }
 
-.attrs th:nth-child(2) {
+.attrs > tr > th:nth-child(2) {
     padding-left: 10px;
     min-width: 180px;
     width: 180px;
@@ -394,6 +477,7 @@ tr:is(:focus-visible, :hover)[tabindex] > td,
 
 .attrs td {
     min-width: 80px;
+    font-family: var(--mono-font);
 }
 
 .attrs th,
@@ -409,18 +493,36 @@ tr:is(:focus-visible, :hover)[tabindex] > td,
 
 [data-time] {
     pointer-events: none;
+    font-family: var(--mono-font);
 }
+
 .entity-tag-list {
+    gap: 4px;
+    max-width: 450px;
+    place-content: start;
+    flex-wrap: wrap;
+}
+.material-tag,
+.entity-tag {
+    display: inline-flex;
+    place-items: center;
+    font-family: var(--mono-font);
+    --font-size: 12px;
+    border: 1px solid #ccc4;
+    background: linear-gradient(140deg, #bbb1, #ccc2);
+    padding: 1px 2px;
+    border-radius: 3px;
+    transition: all linear 200ms;
     gap: 5px;
 }
 
-.entity-tag {
+.entity-tag:has(> img.attr-icon) {
     --font-size: 14px;
-    border: 1px solid #ccc4;
-    background: linear-gradient(140deg, #bbb1, #ccc2);
-    padding: 3px;
-    border-radius: 3px;
-    transition: all linear 200ms;
+    padding: 1px 4px;
+}
+.entity-tag > img.attr-icon {
+    height: 14px;
+    width: 14px;
 }
 
 .entity-tag:hover {
@@ -442,6 +544,7 @@ p {
 h1 {
     grid-area: name;
     place-self: stretch;
+    font-family: var(--mono-font);
 }
 
 /*########## 描述区 ##########*/
@@ -463,19 +566,14 @@ p {
 }
 
 section.attrs {
-    display: grid;
+    /* display: grid;
     grid-template-columns: 1fr;
-    place-items: center stretch;
-    place-content: center;
+    place-items: center stretch; */
+    /* place-content: center; */
+    display: flex;
+    flex-direction: column;
+    place-items: stretch start;
     gap: 14px;
-}
-
-.unlimited {
-    color: var(--attr-color-green);
-}
-
-.never-unlimited {
-    color: var(--attr-color-red);
 }
 
 .entities-tablist {
@@ -486,24 +584,21 @@ section.attrs {
     display: flex;
     place-items: center;
     cursor: pointer;
-    transition: all 300ms linear 0ms;
     color: color-mix(in srgb, var(--mark-color, #fff), #0000);
-    padding: 0 10px 0 0;
     --font-size: 18px;
     /* prettier-ignore */
     background:
         var(---foucs-bg-left),
-        linear-gradient(var(--relation-color,#0000), var(--relation-color,#0000)) center right/4px 4px no-repeat;
+        linear-gradient(var(--relation-color, #0000) 0 0) center right/4px 4px no-repeat;
 }
 
 /* 选中时 */
-.entities-tablist > .selected {
+.entities-tablist > [aria-selected="true"] {
     color: var(--mark-color, #fff);
 }
 
 .entities-tablist > :is(:hover, :focus-visible) {
-    padding: 0 10px;
-    --font-weight: 600;
+    padding: 0 12px;
 }
 
 /*==============*\
@@ -512,11 +607,22 @@ section.attrs {
 .relation\=common {
     --relation-color: #0000;
 }
+
 .relation\=relate {
     --relation-color: #1395d3;
 }
+
 .relation\=cast {
     --relation-color: #fd3151;
+}
+
+.relation\=orbit,
+.relation\=bounce,
+.relation\=low-speed,
+.relation\=death,
+.relation\=hit,
+.relation\=timer {
+    --relation-color: #ffcd43;
 }
 
 .relation\=null {
@@ -525,32 +631,44 @@ section.attrs {
 
 /* 实体组件 <details> */
 .entity-component {
-    margin-top: 5px;
+    display: inline-block;
+    /* margin-top: 5px; */
+}
+
+.entity-component[open] {
+    display: block;
 }
 
 .entity-component:hover {
     /*标题色 <summary>*/
-    --tc: #fff;
-    --bc: #fff8;
+    --tc: #ff0c;
+    --bc: #ad71f2;
 }
 
 /* 实体组件标题 <details> / <summary> */
 .entity-component > summary {
+    font-family: var(--mono-font);
     width: min-content;
     color: var(--tc, #ccc);
     --font-size: 12px;
     border-radius: 4px;
-    --b: 1px solid var(--bc, #ccc3);
+    --b: 1px solid var(--bc, #ff0c);
     border-top: var(--b);
     border-left: var(--b);
     border-right: var(--b);
     border-bottom: var(--b);
     padding: 3px;
     cursor: pointer;
+    margin-right: 3px;
 }
+
 /* 实体组件标题[展开] <details> / <summary> */
 .entity-component[open] > summary {
-    margin-left: 5px;
+    width: calc(100% - 30px);
+    --b: 1px solid var(--bc, #ccc3);
+    margin-left: 15px;
+    padding: 4px 4px 4px 15px;
+
     border-radius: 4px 4px 0 0;
     border-bottom: 1px solid #0000;
 }
@@ -558,14 +676,93 @@ section.attrs {
 /* 实体组件数据表 <details> / <div> */
 .entity-component[open] > div {
     border-top: 1px var(--bc, #ccc4) solid;
-    padding: 10px 0;
+    border-bottom: 1px var(--bc, #0000) solid;
+    padding: 5px 17px 5px 0;
 }
-
 .entity-component:hover > div {
-    background: #fff1;
+    border-left: 1px var(--bc, #0000) solid;
+    border-right: 1px var(--bc, #0000) solid;
+    padding: 5px 5px 5px 10px;
+    border-radius: 5px;
+    background: #3333;
 }
 
 /** 实体组件中引用其它实体信息 缩进10px */
 .entity-component > .entity-component {
     margin-left: 10px;
+}
+
+/* 无爆炸条件时爆炸半径与爆炸伤害应用此样式 */
+.disable {
+    opacity: 0.5;
+}
+
+.boolean-flag-group {
+    max-width: 380px;
+    overflow-wrap: break-word;
+    white-space: normal !important;
+}
+
+.boolean-flag-item {
+    display: inline-flex;
+    place-items: center;
+    place-content: center;
+    gap: 2px;
+    padding-right: 5px;
+    --font-size: 18px;
+}
+
+.invalid {
+    display: inline-grid;
+    position: relative;
+}
+
+.invalid::before,
+.invalid::after {
+    z-index: 1;
+    display: inline-block;
+    position: absolute;
+    inset: 0;
+    content: "";
+    --p: linear-gradient(red, red);
+    --s: /1px 1px no-repeat;
+    background: var(--p) left 0px top 0px var(--s), var(--p) left 1px top 1px var(--s), var(--p) left 2px top 2px var(--s), var(--p) left 3px top 3px var(--s), var(--p) left 4px top 4px var(--s), var(--p) left 5px top 5px var(--s), var(--p) left 6px top 6px var(--s), var(--p) left 7px top 7px var(--s), var(--p) left 8px top 8px var(--s), var(--p) left 9px top 9px var(--s), var(--p) left 10px top 10px var(--s), var(--p) left 11px top 11px var(--s);
+}
+
+.invalid::after {
+    transform: rotate(90deg);
+}
+
+.material-icon {
+    margin: 0 6px 0 0;
+    border-radius: 3px;
+}
+.material-convert-map > tr > td:nth-child(2) {
+    text-align: center;
+}
+.material-damage-data-table > tr > td {
+    padding-left: 15px;
+}
+
+.material-list {
+    flex-direction: column;
+    gap: 5px;
+}
+
+[data-related-id].attrs {
+    padding: 10px 20px 10px 0;
+    background: #5551;
+}
+[data-related-id].attrs.active,
+[data-related-id].attrs:hover {
+    border: 2px solid #ad71f2a0;
+    border-radius: 6px;
+    padding: 8px;
+}
+
+.attrs tr.price > td {
+    --font-size: 14px;
+}
+.attrs.empty {
+    display: none;
 }
