@@ -1,231 +1,265 @@
-const DOMContentLoaded = new Promise(resolve => window.addEventListener("DOMContentLoaded", resolve, { once: true }));
-/** @type {typeof document.createElement} */
-const createElement = document.createElement.bind(document);
-/** @type {typeof document.createElementNS} */
-const createElementNS = document.createElementNS.bind(document);
+const DOMContentLoaded = new Promise(resolve => {
+    if (document.readyState !== "complete") addEventListener("DOMContentLoaded", resolve, { once: true });
+    else resolve();
+});
+/** @type {typeof Document.prototype.createElement} */
+const createElement = Document.prototype.createElement.bind(document);
+/** @type {typeof Document.prototype.createElementNS} */
+const createElementNS = Document.prototype.createElementNS.bind(document);
 const { freeze } = Object;
 
 /**
- * ### 范围数组生成函数
- * ```js
- * for (const i of rang(from, to, step)) statement;
- * ```
- * @overload
- * @param {Number} from
- * @param {Number} to
- * @param {Number} [step]
- * @returns {Array<Number>}
+ * 解析字符串为bigint
+ * @param {string} str 数值字符串表示
+ * @param {number?} radix 进制 (`0` 或 `undefined` 表示自动检测)
+ * @returns {bigint}
  */
-/**
- * ### 范围数组生成函数
- * ```js
- * for (const i of rang(length)) statement;
- * ```
- * @overload
- * @param {Number} length
- * @returns {Array<Number>}
- */
-/**
- * ### 范围数组生成函数
- */
-const range = (a, b, step) => {
-    if (b === void 0) {
-        b = a;
-        a = 0;
-    }
-    if (a > b) {
-        step ??= -1;
-        if (step >= 0) throw "step should be negative.";
-    } else if (b > a) {
-        step ??= 1;
-        if (step <= 0) throw "step should be positive.";
-    } else return [];
-    const array = new Array(Math.floor((b - a) / step));
-    for (let i = 0; i < array.length; i++, a += step) array[i] = a;
-    return array;
-};
+const parseBigint = (str, radix = 0) => {
+    str = ("" + str).trimStart().toLowerCase();
 
-/**
- * ### 数组分块
- * @template T
- * @param {Array<T>} array 待分块数组
- * @param {Number} size 块大小
- * @returns {Array<Array<T>>}
- */
-const toChunks = (array, size) => {
-    const len = array.length;
-    const chunkAmount = Math.ceil(len / size);
-    const chunks = new Array(chunkAmount);
+    // 处理符号（清晰版）
+    let isNegative = false;
+    if (str.startsWith("-")) {
+        isNegative = true;
+        str = str.slice(1);
+    } else if (str.startsWith("+")) str = str.slice(1);
 
-    for (let i = 0, currentIndex = 0; i < chunkAmount; i++) {
-        const nextIndex = currentIndex + size;
-        chunks[i] = array.slice(currentIndex, nextIndex);
-        currentIndex = nextIndex;
+    // 仅在自动检测或指定为16进制时 检查开头是否为`0x` 并移除
+    if ((radix === 0 || radix === 16) && str.startsWith("0x")) {
+        str = str.slice(2);
+        radix = 16;
     }
 
-    return chunks;
+    if (radix === 0) radix = 10;
+
+    // 验证 radix 是否在有效范围内
+    if (radix < 2 || radix > 36) throw new RangeError("Radix must be an integer between 2 and 36");
+
+    const map = new Map([..."0123456789abcdefghijklmnopqrstuvwxyz".slice(0, radix)].map((char, index) => [char, index]));
+
+    // 解析数字部分
+    let result = 0n; // 使用 BigInt 初始化结果
+    let hasDigits = false; // 标记是否有有效数字
+    for (const char of str) {
+        const value = map.get(char);
+
+        // 如果字符不在当前进制范围内，停止解析
+        if (value === void 0) break;
+
+        // 将当前字符的值累加到结果中
+        result = result * BigInt(radix) + BigInt(value);
+        hasDigits = true;
+    }
+    if (hasDigits) return isNegative ? -result : result; // 如果是负数，添加负号
+    throw new SyntaxError("No valid digits found");
 };
 
+window.parseBigint = parseBigint;
+
+class Bits {
+    /** @type {Array<boolean>} */
+    #bits = [];
+
+    /**
+     * @param {Array<0|1|true|false>|number|bigint} data (不支持负值)
+     * @param {boolean?} toBoolean
+     */
+    constructor(data) {
+        if (Array.isArray(data)) for (const v of data) this.#bits.push(!!v);
+        else {
+            if (data < 0) throw new Error("Negative values are not supported");
+            for (const char of data.toString(2).split("")) this.#bits.push(!!+char);
+        }
+    }
+
+    get length() {
+        return this.#bits.length;
+    }
+
+    /**
+     * @template {boolean?} T
+     * @param {number} [length]
+     * @param {T} [toBoolean = true]
+     * @returns {Array<T extends true ? boolean : 0|1> }
+     */
+    toArray(length = this.#bits.length, toBoolean = true) {
+        if (length < this.#bits.length) throw new Error("The length must not be less than " + this.#bits.length);
+        return new Array(length - this.#bits.length).fill(toBoolean ? false : 0).concat(toBoolean ? this.#bits : this.#bits.map(Number));
+    }
+
+    toBigInt() {
+        return this.#bits.reduce((acc, bit) => (acc << 1n) | (bit ? 1n : 0n), 0n);
+    }
+    /**
+     * 转为2~36进制字符串
+     * @param {number} radix 进制 (2~36)
+     */
+    toString(radix = 10) {
+        return this.toBigInt().toString(radix);
+    }
+}
 /**
- * 将数字转为8位 bit 数组
- * @callback to8Bits
- * @param {Number} num
- * @param {Boolean} toBoolean
- * @returns {[0|1, 0|1, 0|1, 0|1, 0|1, 0|1, 0|1, 0|1]}
+ * @template {string} P
  */
+class Token {
+    /**
+     * @param {number} i
+     * @returns {Token<"EOF">}
+     */
+    static eof(i) {
+        return new this("EOF", null, i, i);
+    }
+    /**
+     * @param {P} type
+     * @param {any} data
+     * @param {number} start
+     * @param {number} end
+     */
+    constructor(type, data, start, end) {
+        /** @type {P|"EOF"} */
+        this.type = type;
+        this.data = data;
+        /** 起止位置 */
+        this.range = {
+            /** 开始位置 */
+            start,
+            /** 结束位置 */
+            end
+        };
+    }
+}
+
 /**
- * 将数字转为16位 bit 数组
- * @callback to16Bits
- * @param {Number} num
- * @param {Boolean} toBoolean
- * @returns {[0|1, 0|1, 0|1, 0|1, 0|1, 0|1, 0|1, 0|1, 0|1, 0|1, 0|1, 0|1, 0|1, 0|1, 0|1, 0|1]}
+ * @template {string} T
+ * @typedef LexerOption 分词器配置
+ * @prop {T} id
+ * @prop {boolean} [ignore]
+ * @prop {string} [data]
+ * @prop {(raw:string) => any} [value]
+ * @prop {(source:string)=>string|undefined} [match]
  */
-/**
- * 将数字转为32位 bit 数组
- * @callback to32Bits
- * @param {Number} num
- * @param {Boolean} toBoolean
- * @returns {[0|1, 0|1, 0|1, 0|1, 0|1, 0|1, 0|1, 0|1, 0|1, 0|1, 0|1, 0|1, 0|1, 0|1, 0|1, 0|1, 0|1, 0|1, 0|1, 0|1, 0|1, 0|1, 0|1, 0|1, 0|1, 0|1, 0|1, 0|1, 0|1, 0|1, 0|1, 0|1]}
- */
-
-/**
- * @type {to8Bits & {16: to16Bits, 32: to32Bits}}
- */
-const toBits = (num, toBoolean = false) => {
-    const bits = new Array(8);
-    if (toBoolean) for (let i = 7; i >= 0; i--) bits[i] = ((num >> i) & 1) === 1;
-    else for (let i = 7; i >= 0; i--) bits[i] = (num >> i) & 1;
-    return bits;
-};
-
-toBits[16] = (num, toBoolean = false) => {
-    const bits = new Array(16);
-    if (toBoolean) for (let i = 15; i >= 0; i--) bits[i] = ((num >> i) & 1) === 1;
-    else for (let i = 15; i >= 0; i--) bits[i] = (num >> i) & 1;
-    return bits;
-};
-
-toBits[32] = (num, toBoolean = false) => {
-    const bits = new Array(32);
-    if (toBoolean) for (let i = 31; i >= 0; i--) bits[i] = ((num >> i) & 1) === 1;
-    else for (let i = 31; i >= 0; i--) bits[i] = (num >> i) & 1;
-    return bits;
-};
-
-/** `🔧 工具包` */
-const util = {
-    /** 解析相关工具 */
-    parse: {
-        errRestult: Object.freeze([]),
-        /** 🏷️ 令牌类 */
-        Token: class Token {
-            /** 令牌类型类 */
-            static Enum = class Enum {
-                /**
-                 * @param {String} id
-                 * @param {String} [color] 前景色
-                 * @param {String} [bgColor] 背景色
-                 * @param {Number} [fontWeight] 字重
-                 * @param {"number"|"string"} [type] 类型
-                 * @param {String|Number|undefined} [data] 默认值
-                 * @param {Boolean} [needBlank]
-                 */
-                constructor(id, color = "#fff", bgColor = "#0000", fontWeight = 400, type = "string", needBlank = false, data) {
-                    this.id = id;
-                    this.type = type;
-                    this.style = `color:${color};background:${bgColor};font-weight:${fontWeight};`;
-                    this.needBlank = needBlank;
-                    this.data = data;
-                }
-            };
-            /**
-             * @param {Array<Token>} tokens
-             */
-            static log(tokens) {
-                const baseStyle = "border-radius:2px;padding:1px 1px;line-height:20px;";
-                const texts = [],
-                    styles = [];
-                for (let i = 0; i < tokens.length; i++) {
-                    const { text, style, needBlank } = tokens[i].logData;
-                    if (needBlank) {
-                        texts.push("%c ");
-                        styles.push(baseStyle);
-                    }
-                    texts.push("%c", text);
-                    styles.push(baseStyle + style);
-                }
-                console.log(texts.join(""), ...styles);
-                console.table(tokens, ["type", "index", "data"]);
-            }
-
-            /** @type {String|Number} */
-            data = "";
-            /** @type {Array<String>} */
-            #cache;
-            /** @type {typeof Token.Enum.prototype} */
-            #enum;
-
-            get logData() {
-                return {
-                    text: this.data,
-                    style: this.#enum.style,
-                    needBlank: this.#enum.needBlank
-                };
-            }
-
-            /** @returns {String} */
-            get type() {
-                return this.#enum.id;
-            }
-
-            finish() {
-                const temp = this.#cache.join("");
-                if (this.#enum.type === "number") this.data = +temp;
-                else this.data = temp;
-                this.#cache = null;
-                return this;
-            }
-
-            /**
-             * @param {String} char
-             */
-            push(char) {
-                this.#cache.push(char);
-                return this;
-            }
-
-            constructor(tokenEnum, index = -1) {
-                if (tokenEnum) {
-                    this.#enum = tokenEnum;
-                    if (tokenEnum.data) this.data = tokenEnum.data;
-                    else this.#cache = [];
-                }
-                this.index = index;
+/** @template {string} T */
+class Lexer {
+    static preset = {
+        BLANK: {
+            id: "BLANK",
+            ignore: true,
+            match(source) {
+                let i = 0;
+                while (i < source.length && Lexer.isBlank(source[i])) i++;
+                if (i > 0) return source.slice(0, i);
             }
         },
-        /** 检查字符是否为空白符
-         * ```javascript
-         * /[\s]/
-         * ```
-         * @type {(char:String) => Boolean}
-         */
-        isBlank: Set.prototype.has.bind(new Set("\r\n\r\t\v 　")),
-        /** 检查字符是数字构成成分
-         * ```javascript
-         * /[0-9+-]/
-         * ```
-         * @type {(char:String) => Boolean}
-         */
-        isNumberPart: Set.prototype.has.bind(new Set("0123456789+-")),
-        /** 检查字符是否为常规字符
-         * ```javascript
-         * /[a-zA-Z0-9_]/
-         * ```
-         * @type {(char:String) => Boolean}
-         */
-        isWordPart: Set.prototype.has.bind(new Set("abcdefghijklmnopqrstuvwxyzABCDEFGHIJKLMNOPQRSTUVWXYZ0123456789_"))
+        SPELL_ID: {
+            id: "SPELL_ID",
+            match(source) {
+                let i = 0;
+                while (i < source.length && Lexer.isWordPart(source[i])) i++;
+                if (i > 0) return source.slice(0, i);
+            }
+        },
+        SPELL_TAG: {
+            id: "SPELL_TAG",
+            match(source) {
+                if (!source.startsWith("#")) return;
+                let i = 1;
+                while (i < source.length && Lexer.isWordPart(source[i])) i++;
+                return source.slice(0, i);
+            },
+            /** 移除#开头 */
+            value: raw => raw.slice(1)
+        }
+    };
+    /** 检查字符是否为空白符 (仅支持ASCII范围)
+     * @type {(char:string) => 1|0}
+     */
+    static isBlank = (() => {
+        const table = new Uint8Array(64).fill(0);
+        for (const c of `\t\n\v\f\r `) table[c.charCodeAt(0)] = 1;
+        return char => {
+            const code = char.charCodeAt(0);
+            return code < 64 ? table[code] : 0;
+        };
+    })();
+    /** 检查字符是数字构成成分
+     * ```javascript
+     * /[0-9+-]/
+     * ```
+     * @type {(char:string) => 1|0}
+     */
+    static isNumberPart = (() => {
+        const table = new Uint8Array(64).fill(0);
+        table[43] = table[45] = 1; // + -
+        for (let i = 48; i <= 57; i++) table[i] = 1; // [0-9] 48-57
+        return char => {
+            const code = char.charCodeAt(0);
+            return code < 64 ? table[code] : 0;
+        };
+    })();
+    /** 检查字符是否为常规字符
+     * ```javascript
+     * /[a-zA-Z0-9_]/
+     * ```
+     * @type {(char:string) => 1|0}
+     */
+    static isWordPart = (() => {
+        const table = new Uint8Array(128).fill(0);
+        for (let i = 48; i <= 57; i++) table[i] = 1; // [0-9] 48-57
+        //                                   [A-Z] 65-90     [a-z] 97-122
+        for (let i = 0; i < 26; i++) table[65 + i] = table[97 + i] = 1;
+        table[95] = 1; // [_] 95
+        return char => {
+            const code = char.charCodeAt(0);
+            return code < 128 ? table[code] : 0;
+        };
+    })();
+    /** @type {Array<LexerOption<T>>} */
+    #tokenTypes = [];
+    /**
+     * @param {Array<LexerOption<T>>} options
+     */
+    constructor(options) {
+        for (const option of options) {
+            if (option.data) {
+                const { data } = option;
+                option.match = source => {
+                    if (source.startsWith(data)) return data;
+                };
+            }
+            if (!option.match) throw new Error("未实现match");
+            this.#tokenTypes.push(option);
+        }
     }
-};
+    /**
+     * @param {string} source
+     * @returns {Iterable<Token<T>,Token<T>,Token<T>>}
+     */
+    tokenise(source) {
+        let remain = source;
+        let i = 0;
+        const tokenTypes = this.#tokenTypes;
+        // const { Token } = Lexer;
+        return {
+            *[Symbol.iterator]() {
+                $: while (remain.length) {
+                    for (const { id, match, ignore, value } of tokenTypes) {
+                        let data = match(remain);
+                        if (!data) continue;
+                        remain = remain.slice(data.length); // 消耗长度
+                        const start = i;
+                        i += data.length;
+                        if (ignore) continue $;
+                        if (value) data = value(data);
+                        yield new Token(id, data, start, i);
+                        continue $;
+                    }
+                    throw new SyntaxError(`无法匹配到合适的Token类型, ${i} \n${remain}`);
+                }
+                yield Token.eof(i);
+            }
+        };
+    }
+}
 
 /**
  * @typedef {`>=${Number}`|`<=${Number}`|`${Number}~${Number}`|`${Number}`} RangeValueExp
@@ -242,6 +276,8 @@ const util = {
 class RangeValue {
     /** 是否为固定值 */
     isFixed = false;
+    /** @type {number} */
+    median;
     /**
      * @overload
      * @param {RangeValueExp} exp 范围表达式
@@ -258,6 +294,15 @@ class RangeValue {
      * @overload
      * @param {Number} value 固定值
      */
+
+    static {
+        Reflect.defineProperty(this.prototype, Symbol.toStringTag, {
+            value: "RangeValue",
+            configurable: false,
+            writable: false,
+            enumerable: false
+        });
+    }
 
     constructor(...args) {
         if (args.length > 1) {
@@ -301,6 +346,8 @@ class RangeValue {
             this.median = this.min = this.max = args[0];
             this.isFixed = true;
         }
+        Reflect.defineProperty(this, "median", { enumerable: false, value: this.median });
+        Reflect.defineProperty(this, "isFixed", { enumerable: false, value: this.isFixed });
         /** Object.freeze 防止意外修改 */
         freeze(this);
     }
@@ -311,6 +358,14 @@ class RangeValue {
         if (this.min === -Infinity) return "≤ " + this.max + unitSymbol;
         if (this.max - this.min) return `${this.min}${unitSymbol} ~ ${this.max}${unitSymbol}`;
         else return this.median + unitSymbol;
+    }
+
+    valueOf() {
+        return this.median;
+    }
+
+    toJSON() {
+        return { min: this.min, max: this.max };
     }
 
     /**
@@ -336,14 +391,25 @@ class RangeValue {
     }
 
     /**
-     *
      * @param {(value:Number)=>any} callback
      * @param {Number} [step]
      */
     for(callback, step = 1) {
         for (let i = this.min; i <= this.max; i += step) callback(i);
     }
+
+    /**
+     * @param {Number} step
+     * @returns {Array<Number>}
+     */
+    asArray(step = 1) {
+        const array = [];
+        for (let i = this.min; i <= this.max; i += step) array.push(i);
+        return array;
+    }
 }
+
+window.RangeValue = RangeValue;
 
 /** 游戏时间换算对象 */
 class GameTime {
@@ -363,20 +429,20 @@ class GameTime {
 }
 
 /** 包围盒 */
-class AABB {
+class AABB extends DOMRect {
     /**
      *
      * @param {Number} width
      * @param {Number} height
      */
     constructor(width, height) {
-        /** @type {Number} */
-        this.width = width;
-        /** @type {Number} */
-        this.height = height;
+        super(0, 0, width, height);
     }
     toString() {
         return this.width + "×" + this.height;
+    }
+    toJSON() {
+        return { width: this.width, height: this.height };
     }
 }
 
@@ -396,6 +462,7 @@ class SpriteSpliter {
             const canvas = new OffscreenCanvas(width, bitmap.height);
             const ctx = canvas.getContext("2d");
             ctx.drawImage(bitmap, -i * width, 0);
+            // bitmaps[i] = canvas.transferToImageBitmap();
             blobs[i] = canvas.convertToBlob(imageEncodeOptions);
         }
         // 非常奇怪的是 Chromium浏览器在file协议下无法使用 worker生成blob-url
@@ -416,7 +483,7 @@ class SpriteSpliter {
         req.addEventListener("success", ({ target }) => {
             /** @type {IDBDatabase} */
             const db = target.result;
-            resolve(db.transaction(["Base64URL"], mode).objectStore("Base64URL"));
+            resolve(db.transaction(["Blob"], mode).objectStore("Blob"));
         });
         return promise;
     }
@@ -441,15 +508,15 @@ class SpriteSpliter {
         (await this.#getStore("readwrite")).add(value, key);
     }
 
-    // Base64缓存状态获取
+    // Blob缓存状态获取
     static {
-        const { promise, reject, resolve } = Promise.withResolvers();
+        const { promise, resolve } = Promise.withResolvers();
         /** @type {Promise<Boolean>} */
         this.hasCache = promise;
         const requset = indexedDB.open("noitaLib", 1);
         /** @param {IDBDatabase} db */
         const createStroe = db => {
-            db.createObjectStore("Base64URL", { autoIncrement: true });
+            db.createObjectStore("Blob", { autoIncrement: true });
             resolve(false);
         };
         requset.addEventListener(
@@ -457,7 +524,7 @@ class SpriteSpliter {
             ({ target }) => {
                 /** @type {IDBDatabase} */
                 const db = target.result;
-                if (db.objectStoreNames.contains("Base64URL")) {
+                if (db.objectStoreNames.contains("Blob")) {
                     db.close();
                     resolve(true);
                 } else createStroe(db);
@@ -469,24 +536,27 @@ class SpriteSpliter {
 
     /**
      * @overload 通用简单类型
-     * @param {String} name 解析线程名称
-     * @param {String} url 精灵图路径/Base64URL
-     * @param {Number} [width] 图标宽度
+     * @param {string} name 解析线程名称
+     * @param {string} url 精灵图路径/Base64URL
+     * @param {number} [width] 图标宽度
      */
     /**
      * @overload 自定义类型
-     * @param {String} name 解析线程名称
+     * @param {string} name 解析线程名称
      * @param {()=>void} workerFn Web Worker 函数
      * @param {[message:any,transfer:Array<Transferable>]} postData Web Worker 所需参数
      */
     constructor(name, a, b) {
         name = "Noita:" + name;
         const { promise, resolve } = Promise.withResolvers();
-        /** @type {Promise<Array<String>>} */
+        /** @type {Promise<Array<string>>} */
         this.results = promise;
         SpriteSpliter.hasCache.then(async hasCache => {
             // 缓存优先
-            if (hasCache) return resolve(await SpriteSpliter.get(name));
+            if (hasCache) {
+                const res = await Promise.all((await SpriteSpliter.get(name)).map(URL.createObjectURL));
+                return resolve(res);
+            }
             /** @type {Worker} */
             let worker, workerUrl, postData;
             if (typeof a === "function") {
@@ -497,9 +567,12 @@ class SpriteSpliter {
             URL.revokeObjectURL(workerUrl);
             worker.addEventListener(
                 "message",
-                ({ data }) => {
-                    resolve(data);
-                    SpriteSpliter.set(name, data);
+                async ({ data }) => {
+                    console.log("非缓存", name);
+                    /** @type {Array<Blob>} */
+                    const blobs = await Promise.all(data.map(async b64 => await (await fetch(b64)).blob()));
+                    resolve(blobs.map(URL.createObjectURL));
+                    SpriteSpliter.set(name, blobs);
                     worker.terminate();
                 },
                 { once: true }
@@ -548,8 +621,8 @@ const $icon = (() => {
             return canvas.toDataURL("image/png");
         }
 
-        static $defineElement(name) {
-            customElements.define("noita-" + name, this, { extends: "img" });
+        static define(name) {
+            h.img["noita-" + name] = this;
         }
     }
     return (size, altTag) => {
@@ -559,17 +632,20 @@ const $icon = (() => {
             constructor() {
                 super(size);
             }
-            /** @param {Promise<String>} url */
+            /** @param {Promise<string>|string} url */
             set src(url) {
+                if (typeof url === "string") url = Promise.resolve(url);
                 url.then(v => {
                     if (v) {
                         this.decoding = "async";
-                        // this.loading = "lazy";
                         this.style.imageRendering = "pixelated";
                         super.alt = this.#alt;
                         super.src = v;
                     } else this.hidden = true;
                 });
+            }
+            get src() {
+                return super.src;
             }
             set alt(value) {
                 this.#alt = altTag + value;
@@ -578,50 +654,52 @@ const $icon = (() => {
     };
 })();
 
-const math = {
-    /**
-     * 四舍五入保留x小数
-     * @param {Number} num
-     * @param {Number} [x] 最多保留的小数位数 默认保留两位
-     * @returns {Number}
-     */
-    roundTo(num, x = 2) {
-        const t = Math.pow(10, x);
-        return Math.round(num * t) / t;
-    },
-    /**
-     * 以弧度为单位转换为以角度为单位
-     * @param {Number} rad 弧度
-     * @returns {Number} 角度
-     */
-    radianToDegree: rad => (rad * 180) / Math.PI,
-    /**
-     * 获得夹逼后的值
-     * @param {Number} value 待夹逼的值
-     * @param {Number} min 最小值
-     * @param {Number} max 最大值
-     * @returns 夹逼后的值
-     */
-    clamp: (value, min, max) => Math.min(Math.max(value, min), max),
-    /**
-     * 返回随机数
-     */
-    /**
-     * @overload
-     * @param  {Number} min
-     * @param  {Number} max
-     * @returns {Number}
-     */
-    /**
-     * @overload
-     * @param  {Number} max
-     * @returns {Number}
-     */
-    random(...param) {
-        if (param.length === 1) {
-            if (param[0]) return Math.round(Math.random() * param[0]);
-            else return 0;
-        } else {
+const _Math = (() => {
+    const inject = {
+        /**
+         * 四舍五入保留x小数
+         * @param {Number} num
+         * @param {Number} [x] 最多保留的小数位数 默认保留两位
+         * @returns {Number}
+         */
+        roundTo(num, x = 2) {
+            const t = Math.pow(10, x);
+            return Math.round(num * t) / t;
+        },
+        /**
+         * 以弧度为单位转换为以角度为单位
+         * @param {Number} rad 弧度
+         * @returns {Number} 角度
+         */
+        radianToDegree: rad => (rad * 180) / Math.PI,
+        /**
+         * 获得夹逼后的值
+         * @param {Number} value 待夹逼的值
+         * @param {Number} min 最小值
+         * @param {Number} max 最大值
+         * @returns 夹逼后的值
+         */
+        clamp: (value, min, max) => Math.min(Math.max(value, min), max),
+        /**
+         * 返回随机数
+         */
+        /**
+         * @overload
+         * @param  {Number} min
+         * @param  {Number} max
+         * @returns {Number}
+         */
+        /**
+         * @overload
+         * @param  {Number} max
+         * @returns {Number}
+         */
+        random(...param) {
+            if (param.length === 0) return window.Math.random();
+            if (param.length === 1) {
+                if (param[0]) return window.Math.round(window.Math.random() * param[0]);
+                else return 0;
+            }
             let min, max;
             if (param[0] > param[1]) {
                 max = param[0];
@@ -631,96 +709,44 @@ const math = {
                 min = param[0];
             } else return param[0];
             return Math.round(Math.random() * (max - min) + min);
-        }
-    },
-    /**
-     * 随机分布
-     * @param {Number} min 最小值
-     * @param {Number} max 最大值
-     * @param {Number} mean 平均值
-     * @param {Number} sharpness 锐度
-     * @param {Number} baseline 基线
-     * @returns {Number}
-     */
-    randomDistribution(min, max, mean, sharpness = 1, baseline = 0.005) {
-        if (min < max && mean > min && mean < max) {
-            let val = ((Math.random() - baseline) / (1 - baseline)) * (max - min) + min;
-            return val;
-        } else {
-            console.error(new Error("参数非法"));
-            return NaN;
-        }
-    },
-    /**
-     * **洗牌** 打乱数组顺序
-     * @param {Array} array
-     */
-    shuffle(array) {
-        if (array.length > 1) {
-            for (let i = array.length; i > 0; i--) {
-                let j = this.random(0, i);
-                const temp = array[j];
-                array[j] = array[i];
-                array[i] = temp;
+        },
+        /**
+         * 随机分布
+         * @param {Number} min 最小值
+         * @param {Number} max 最大值
+         * @param {Number} mean 平均值
+         * @param {Number} sharpness 锐度
+         * @param {Number} baseline 基线
+         * @returns {Number}
+         */
+        randomDistribution(min, max, mean, sharpness = 1, baseline = 0.005) {
+            if (min < max && mean > min && mean < max) {
+                let val = ((Math.random() - baseline) / (1 - baseline)) * (max - min) + min;
+                return val;
+            } else {
+                console.error(new Error("参数非法"));
+                return NaN;
+            }
+        },
+        /**
+         * **洗牌** 打乱数组顺序
+         * @param {Array} array
+         */
+        shuffle(array) {
+            if (array.length > 1) {
+                for (let i = array.length; i > 0; i--) {
+                    let j = this.random(0, i);
+                    const temp = array[j];
+                    array[j] = array[i];
+                    array[i] = temp;
+                }
             }
         }
-    }
-};
-
-const $symbols = {
-    initStyle: Symbol("init-style")
-};
-
-/**
- * @template {String} V
- * @typedef $ValueOption 访问/设置器配置
- * @prop {String} name HTML 属性名 `<E name="">`
- * @prop {V} [$default] 默认属性值
- * @prop {Boolean} [needObserve=true] 需要监控变化
- * @prop {V} [$type] 合法值(仅作为泛型参数 不需要传入)
- */
-
-/**
- * ### 为构造器创建子类构造器并返回
- * ---
- * * 为子类的`prototype`添加`getter`, `setter`并绑定到html属性
- * * * `setter`调用 {@linkcode HTMLElement#setAttribute}
- * * * `getter`调用 {@linkcode HTMLElement#getAttribute}
- * * 将属性添加到被观察列表中 `observedAttributes`
- * @template {{ [key:string]: $ValueOption }} T
- * @template {{prototype: HTMLElement,new(): HTMLElement}} C
- * @param {C} constructor 构造器
- * @param {T} propAttrMap objectProp与HTMLAttribute的映射表
- * @returns {{
- * prototype: C["prototype"] & {[K in keyof T]: T[K]["$type"]},
- * new(): C["prototype"] & {[K in keyof T]: T[K]["$type"]};
- * observedAttributes: Array<keyof T>
- *}}
- */
-//prettier-ignore
-const $class = (constructor = HTMLElement, propAttrMap = {}) => class extends constructor {
-    static observedAttributes = [];
-    static {
-        for (const prop in propAttrMap) {
-            const { name, $default, needObserve = true, converter } = propAttrMap[prop];
-            if (needObserve) this.observedAttributes.push(name);
-            Reflect.defineProperty(this.prototype, prop, {
-                get() {
-                    return this.hasAttribute(name) ? this.getAttribute(name) : $default;
-                },
-                set(value = null) {
-                    if (value === null) return this.removeAttribute(name);
-                    //防止首次设置属性不能自动更新内容
-                    if (!this.hasAttribute(name)) this.setAttribute(name, "");
-                    this.setAttribute(name, value);
-                },
-                enumerable: false
-            });
-        }
-        freeze(this.observedAttributes);
-        freeze(this);
-    }
-};
+    };
+    /** @type {typeof inject & Math} */
+    const result = Object.assign(Object.create(window.Math), inject);
+    return result;
+})();
 
 const Callable = new Proxy(Function, {
     construct(_, [fn], { name, prototype }) {
@@ -737,45 +763,60 @@ class OverloadFunction extends Callable {
      * 函数名应该是仅由 typeof 结果("string" | "number" | "bigint" | "boolean" | "symbol" | "undefined" | "object" | "function") 构成的字符串(大驼峰)
      * @param {String} name
      */
-    static #toTypes(name) {
-        return name.replace(/[a-z]([A-Z])/g, ",$1").toLowerCase();
+    static #nameToTypes(name) {
+        return name.split("_").join().toLocaleLowerCase();
+    }
+    /**
+     * @param {Array} args
+     */
+    static #argToTypes(args) {
+        const result = new Array(args.length);
+        for (let i = 0; i < args.length; i++) {
+            const arg = args[i];
+            result[i] = typeof args[i];
+            if (arg instanceof Object) {
+                const { constructor } = arg;
+                if (constructor) result[i] = constructor.name.toLowerCase();
+            }
+        }
+        return result.join();
     }
     /** @type {Map<String,Function>} */
-    #fnMap = new Map();
-    /** @type {Function} */
-    #defaultFn;
+    #fnMap;
 
     /**
      * @overload
-     * @param {...Function} overloads 重载函数表(具名函数的函数名表示类型(大驼峰) 匿名函数表示默认函数)
+     * @param {...Function} overloads 重载函数表(具名函数的函数名表示类型(下划线分隔类型) 匿名函数表示默认函数)
      */
     /**
      * @overload
-     * @param {{[key: String]: Function}} [overloads] 重载函数表(成员名表示类型(大驼峰))
+     * @param {{[key: String]: Function}} [overloads] 重载函数表(成员名表示类型(下划线分隔类型))
      * @param {Function} [defaultFn] 默认函数
      */
     constructor(...args) {
-        super((...args) => {
-            const types = args.map(arg => typeof arg);
-            const fn = this.#fnMap.get(types.join()) ?? this.#defaultFn;
-            if (fn) return fn(...args);
-            else this.#error(types);
+        const fnMap = new Map();
+        let defaultFn;
+        super(function (...args) {
+            const types = OverloadFunction.#argToTypes(args);
+            const fn = fnMap.get(types) ?? defaultFn;
+            if (!fn) return OverloadFunction.#error(types.split(","), fnMap);
+            if (new.target) return new fn(...args);
+            return fn.apply(this, args);
         });
+        this.#fnMap = fnMap;
         if (args[0] instanceof Function) {
             for (let i = 0; i < args.length; i++) {
-                if (args[i].name) this.#fnMap.set(OverloadFunction.#toTypes(args[i].name), args[i]);
-                else this.#defaultFn = args[i];
+                if (args[i].name) this.#fnMap.set(OverloadFunction.#nameToTypes(args[i].name), args[i]);
+                else defaultFn = args[i];
             }
         } else {
             let overloads;
-            [overloads, this.#defaultFn] = args;
-            for (const name in overloads) this.#fnMap.set(OverloadFunction.#toTypes(name), overloads[name]);
+            [overloads, defaultFn] = args;
+            for (const name in overloads) this.#fnMap.set(OverloadFunction.#nameToTypes(name), overloads[name]);
         }
     }
-    /**
-     * @param {Array<"string" | "number" | "bigint" | "boolean" | "symbol" | "undefined" | "object" | "function">} types
-     */
-    #error(types) {
+
+    static #error(types, fnMap) {
         const args = [];
         const msg = [`未实现的重载形式\nfn(`];
         for (let i = 0; i < types.length; i++) {
@@ -783,7 +824,7 @@ class OverloadFunction extends Callable {
             args.push("background:#1f1f1f80;color:#3ac9b0;padding:1px 3px;margin:1px;border-radius:3px;font-weight:800", "background:none");
         }
         msg[msg.length - 1] = "%c)";
-        console.error(msg.join(""), ...args, "\n", this.#fnMap);
+        console.error(msg.join(""), ...args, "\n", fnMap);
         throw new TypeError("未实现的重载形式");
     }
     /**
@@ -797,104 +838,293 @@ class OverloadFunction extends Callable {
     }
 }
 
-const promptMsg = {
-    symbol: Symbol("promptMessage"),
-    box: (() => {
-        const box = h.dialog({
-            style: {
-                background: "none",
-                border: "none",
-                display: "block",
-                width: "max-content",
-                height: "max-content",
-                position: "fixed",
-                zIndex: 1024
-            }
-        });
-        DOMContentLoaded.then(() => document.body.append(box));
-        box.addEventListener("click", () => promptMsg.hide());
-        return box;
-    })(),
-    /**
-     * ### 显示提示窗口
-     * @param {Node} node
-     * @param {HTMLElement} targetElement
-     */
-    show(node, targetElement) {
-        const { box } = this;
-        const { style } = box;
-        const { innerHeight, innerWidth } = window;
-
-        const { top, bottom, right, left } = targetElement.getBoundingClientRect();
-        box.append(node);
-        style.display = "block";
-        // 立刻获取尺寸是不准确的 这里需要用一个宏任务
-        requestAnimationFrame(() => {
-            const { height, width } = box.getBoundingClientRect();
-
-            // 左右抉择
-            const overflowRight = right + width - innerWidth;
-            const overflowLeft = -(left - width);
-
-            if (overflowRight <= 0) style.left = right + "px"; // 显示到右侧(最高优先级)
-            else if (overflowLeft < overflowRight) {
-                // 显示到左侧
-                const compensation = overflowLeft > 0 ? overflowLeft : 0; // 溢出补偿
-                style.left = left - width + compensation + "px";
-            } else {
-                // 显示到右侧
-                const compensation = overflowRight > 0 ? overflowRight : 0; // 溢出补偿
-                style.left = style.left = right - compensation + "px";
-            }
-
-            // 上下抉择
-            const overflowBottom = bottom + height - innerHeight;
-            const overflowTop = -(top - height);
-
-            if (overflowBottom <= 0) style.top = bottom + "px"; // 显示到下侧(最高优先级)
-            else if (overflowTop < overflowBottom) {
-                // 显示到上侧
-                const compensation = overflowTop > 0 ? overflowTop : 0; // 溢出补偿
-                style.top = top - height + compensation + "px";
-            } else {
-                // 显示到下侧
-                const compensation = overflowBottom > 0 ? overflowBottom : 0; // 溢出补偿
-                style.top = bottom - compensation + "px";
-            }
-        });
-    },
-    /**
-     * ### 隐藏提示窗口
-     */
-    hide() {
-        this.box.style.display = "none";
-        this.box.innerHTML = "";
-    },
-    /**
-     * 创建消息盒子
-     * @template {HTMLElement} T
-     * @param {T} target 附加悬浮提示的目标元素
-     * @param {Array<Node>} nodes 内容
-     * @param {"common"|"white"} style 盒子样式
-     * @returns {T}
-     */
-    attach(target, nodes, style = "common") {
-        const panel = createElement("noita-panel");
-        panel.borderStyle = style;
-        panel.append(h.div(...nodes));
-        target[this.symbol] = panel;
-        h.$(target, { Event: this.event });
-        return target;
-    },
-    event: {
+/** 悬浮提示 */
+const hoverMsg = (() => {
+    const box = h.dialog({
+        role: "tooltip",
+        style: {
+            background: "none",
+            border: "none",
+            display: "flex",
+            gap: "5px",
+            flexDirection: "column",
+            placeItems: "start",
+            width: "max-content",
+            height: "max-content",
+            position: "fixed",
+            zIndex: 1024,
+            pointerEvents: "none"
+        }
+    });
+    const { style } = box;
+    DOMContentLoaded.then(() => document.body.append(box));
+    box.addEventListener("click", () => {
+        if (!supportHover) hoverMsg.hide();
+    });
+    /** @type {() => void} */
+    const showAnimate = (() => {
+        if (matchMedia("(prefers-reduced-motion: reduce)").matches) return _ => _;
+        return box.animate.bind(
+            box,
+            [
+                { opacity: 0, transform: "scale(0.9)" },
+                { opacity: 1, transform: "scale(1)" }
+            ],
+            { duration: 150, easing: "ease-out" }
+        );
+    })();
+    const symbol = Symbol("promptMessage");
+    const event = {
         /**
          * @param {MouseEvent}
          */
-        mouseenter({ currentTarget }) {
-            promptMsg.show(currentTarget[promptMsg.symbol], currentTarget);
+        mouseenter: ({ currentTarget }) => hoverMsg.show(currentTarget[symbol], currentTarget),
+        mousemove: ({ currentTarget }) => {
+            if (style.display === "none") {
+                hoverMsg.show(currentTarget[symbol], currentTarget);
+            }
         },
-        mouseleave() {
-            promptMsg.hide();
+        mouseleave: ({ currentTarget }) => {
+            currentTarget[symbol].remove();
+            style.display = "none";
         }
+    };
+    return {
+        symbol,
+        box,
+        /**
+         * ### 显示提示窗口
+         * @param {Node} node
+         * @param {HTMLElement} targetElement
+         */
+        show(node, targetElement) {
+            /** 已经被显示的悬浮提示只需要追加新内容 不需要重新应用动画 否则会导致内容模糊 */
+            let needAnimate = false;
+            if (style.display === "none") {
+                box.innerHTML = ""; // 清空上次内容
+                needAnimate = true;
+            }
+            const { innerHeight, innerWidth } = window;
+            const { top, bottom, right, left } = targetElement.getBoundingClientRect();
+            // 移除仅允许单独展示的悬浮内容
+            for (const e of box.children) {
+                if (e.hasAttribute("data-single-show")) e.remove();
+            }
+            box.append(node);
+            style.display = "flex";
+            const toShow = () => {
+                const { height, width } = box.getBoundingClientRect();
+                // 判断是否获取成功 否则等待下一帧
+                if (!(height && width)) return requestAnimationFrame(toShow);
+
+                // 左右抉择
+                const overflowRight = right + width - innerWidth;
+                const overflowLeft = -(left - width);
+
+                if (overflowRight <= 0) style.left = right + "px"; // 显示到右侧(最高优先级)
+                else if (overflowLeft < overflowRight) {
+                    // 显示到左侧
+                    const compensation = overflowLeft > 0 ? overflowLeft : 0; // 溢出补偿
+                    style.left = left - width + compensation + "px";
+                } else {
+                    // 显示到右侧
+                    const compensation = overflowRight > 0 ? overflowRight : 0; // 溢出补偿
+                    style.left = style.left = right - compensation + "px";
+                }
+
+                // 上下抉择
+                const overflowBottom = bottom + height - innerHeight;
+                const overflowTop = -(top - height);
+
+                if (overflowBottom <= 0) style.top = bottom + "px"; // 显示到下侧(最高优先级)
+                else if (overflowTop < overflowBottom) {
+                    // 显示到上侧
+                    const compensation = overflowTop > 0 ? overflowTop : 0; // 溢出补偿
+                    style.top = top - height + compensation + "px";
+                } else {
+                    // 显示到下侧
+                    const compensation = overflowBottom > 0 ? overflowBottom : 0; // 溢出补偿
+                    style.top = bottom - compensation + "px";
+                }
+                if (needAnimate) showAnimate();
+            };
+
+            // 立刻获取尺寸是不准确的 这里需要用一个宏任务
+            requestAnimationFrame(toShow);
+            for (const element of box.children) {
+                /** @type {HTMLElement} */
+                const { shadowRoot } = element;
+                if (!shadowRoot) continue;
+                if (!keyboard.isShiftDown) continue;
+                if (shadowRoot.host.dataset.isShiftDown === "true") continue;
+                shadowRoot.host.dataset.isShiftDown = true;
+                // 需要用宏任务等待内容加载完成
+                requestAnimationFrame(() => contentConvertFn(shadowRoot));
+            }
+        },
+        /**
+         * ### 隐藏提示窗口
+         */
+        hide: () => (style.display = "none"),
+        /**
+         * 创建消息盒子
+         * @template {HTMLElement} T
+         * @param {T} target 附加悬浮提示的目标元素
+         * @param {Array<Node>} nodes 内容
+         * @param {"common"|"white"} style 盒子样式
+         * @param {boolean} [replace=false]
+         * @returns {T}
+         */
+        attachWithPanel(target, nodes, style = "common", replace = false) {
+            this.attach(target, h`noita-panel`({ "border-style": style }, h.div(...nodes)), replace);
+            return target;
+        },
+        /**
+         * @param {HTMLElement} target
+         * @param {Node} node
+         */
+        attach(target, node, replace = false) {
+            if (!node) return;
+            if (!replace && target[symbol] && target[symbol] !== node) return console.warn("被多个<noita-panel>绑定", node, target);
+            target[symbol] = node;
+            h.$(target, { Event: event });
+        }
+    };
+})();
+
+const supportHover = matchMedia("(any-hover:hover)").matches;
+
+const keyboard = {
+    isShiftDown: false
+};
+const contentConvertFn = (() => {
+    /** @type {Set<ShadowRoot>} */
+    const needConvertShadowRoots = new Set();
+    /** @type {Set<HTMLElement>} */
+    const convertedElements = new Set();
+    /** @type {Set<HTMLElement>} */
+    const convertedHostElements = new Set();
+    /**
+     * @param {ShadowRoot} shadowRoot
+     */
+    const convert = shadowRoot => {
+        convertedHostElements.add(shadowRoot.host);
+        /** @type {Array<HTMLElement>} */
+        for (const element of shadowRoot.querySelectorAll("[data-use-shift-convert]")) {
+            element[contentConvertFn.fnSymbol]();
+            convertedElements.add(element);
+        }
+    };
+
+    const listenKeyDown = ({ key }) => {
+        if (key === "Shift") {
+            keyboard.isShiftDown = true;
+            for (const shadowRoot of needConvertShadowRoots) {
+                shadowRoot.host.dataset.isShiftDown = true;
+                convert(shadowRoot);
+            }
+            addEventListener("keyup", listenKeyUp, { capture: true, once: true });
+        } else addEventListener("keydown", listenKeyDown, { capture: true, once: true });
+    };
+    const listenKeyUp = ({ key }) => {
+        if (key === "Shift") {
+            keyboard.isShiftDown = false;
+            for (const element of convertedHostElements) element.removeAttribute("data-is-shift-down");
+            for (const element of convertedElements) element[contentConvertFn.fnSymbol]();
+            convertedHostElements.clear();
+            convertedElements.clear();
+            addEventListener("keydown", listenKeyDown, { capture: true, once: true });
+        } else addEventListener("keyup", listenKeyUp, { capture: true, once: true });
+    };
+    addEventListener("keydown", listenKeyDown, { capture: true, once: true });
+    return Object.assign(convert, {
+        /** @type {typeof needConvertShadowRoots.delete} */
+        delete: needConvertShadowRoots.delete.bind(needConvertShadowRoots),
+        /** @type {typeof needConvertShadowRoots.add} */
+        add: needConvertShadowRoots.add.bind(needConvertShadowRoots),
+        fnSymbol: Symbol("contentConvert")
+    });
+})();
+
+/** 创建音效播放函数 */
+const createSoundEffectPlayFn = src => {
+    /** @type {Set<HTMLAudioElement>} */
+    const pool = new Set();
+    function del() {
+        pool.delete(this);
     }
+    function add() {
+        pool.add(this);
+    }
+
+    return () => {
+        if (pool.size) return [...pool][0].play();
+        const audio = new Audio(src);
+        audio.addEventListener("play", del);
+        audio.addEventListener("ended", add);
+        audio.play();
+    };
+};
+
+const soundEffect = {
+    click: createSoundEffectPlayFn(embed(`#button_click_soft.flac`)),
+    select: createSoundEffectPlayFn(embed(`#button_select.flac`))
+};
+
+/** 在库准备好后加载 */
+const runAtEnd = (() => {
+    /** @type {Array<()=>void>} */
+    let taskList = [];
+    /** @type {typeof taskList.push} */
+    const push = taskList.push.bind(taskList);
+    const run = () => {
+        taskList.forEach(task => task());
+        taskList.length = 0;
+    };
+    return Object.assign(push, { run });
+})();
+
+const CPP = {
+    RandomDistribution: (() => {
+        let seed;
+
+        {
+            const seeds = new Uint32Array(1);
+            crypto.getRandomValues(seeds);
+            [seed] = seeds;
+        }
+
+        function Next() {
+            let v4 = Math.trunc(seed * 0x41a7 + Math.trunc(seed / 0x1f31d) * -0x7fffffff);
+            if (v4 < 0) v4 += 0x7fffffff;
+            seed = v4;
+            return seed / 0x7fffffff;
+        }
+
+        function GetDistribution(mean, sharpness, baseline) {
+            let i = 0;
+            do {
+                let r1 = Next();
+                let r2 = Next();
+                let div = Math.abs(r1 - mean);
+                if (r2 < (1.0 - div) * baseline) return r1;
+
+                if (div < 0.5) {
+                    let v11 = Math.sin((0.5 - mean + r1) * Math.PI);
+                    let v12 = Math.pow(v11, sharpness);
+                    if (v12 > r2) return r1;
+                }
+                i++;
+            } while (i < 100);
+            return Next();
+        }
+
+        return function RandomDistribution(min, max, mean, sharpness) {
+            if (sharpness === 0) return Math.random() * (max - min) + min;
+            let adjMean = (mean - min) / (max - min);
+            const v7 = GetDistribution(adjMean, sharpness, 0.005);
+            const d = Math.floor((max - min) * v7);
+            return min + d;
+        };
+    })()
 };
