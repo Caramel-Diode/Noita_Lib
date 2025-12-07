@@ -11,6 +11,10 @@
                     "description": "作为悬浮提示，值为目标元素的id 多个目标元素id使用空格分隔"
                 },
                 {
+                    "name": "prompt-for-parent",
+                    "description": "作为父元素的悬浮提示"
+                },
+                {
                     "name": "prompt-for.selector",
                     "description": "作为悬浮提示，值为目标元素选择器"
                 }
@@ -21,6 +25,14 @@
             "description": "### Noita法术组件✨",
             "attributes": [
                 {
+                    "name": "no-panel-hover",
+                    "description": "禁用悬浮面板"
+                },
+                {
+                    "name": "no-panel-click",
+                    "description": "禁用点击面板"
+                },
+                {
                     "name": "display",
                     "description": "显示模式",
                     "values": [
@@ -29,8 +41,16 @@
                             "description": "### 图标模式"
                         },
                         {
+                            "name": "icon:projectilesProvided",
+                            "description": "### 图标模式  \n---  \n提供投射物"
+                        },
+                        {
                             "name": "panel",
                             "description": "### 面板模式"
+                        },
+                        {
+                            "name": "list",
+                            "description": "### 列表模式"
                         }
                     ]
                 },
@@ -1753,13 +1773,18 @@
                 },
                 {
                     "name": "wand.fire-rate-wait",
-                    "description": "施放延迟 `整数 f`",
+                    "description": "施放延迟 `整数`(f)",
                     "values": [ { "name": "1" } ]
                 },
                 {
                     "name": "wand.reload-time",
-                    "description": "充能时间 `整数 f`",
+                    "description": "充能时间 `整数`(f)",
                     "values": [ { "name": "1" } ]
+                },
+                {
+                    "name": "wand.cd",
+                    "description": "施放延迟/充能时间 `整数 / 整数 `",
+                    "values": [ { "name": "1 / 1" } ]
                 },
                 {
                     "name": "wand.shuffle",
@@ -1778,13 +1803,18 @@
                 },
                 {
                     "name": "wand.mana-charge-speed",
-                    "description": "法力恢复速度 `整数 /s`",
+                    "description": "法力恢复速度 `整数`(/s)",
                     "values": [ { "name": "0" } ]
                 },
                 {
                     "name": "wand.mana-max",
                     "description": "法力上限 `整数`",
                     "values": [ { "name": "1000" } ]
+                },
+                {
+                    "name": "wand.mana",
+                    "description": "法力上限/法力恢复速度 `整数 / 整数`",
+                    "values": [ { "name": "1000 / 0" } ]
                 },
                 {
                     "name": "wand.static-spells",
@@ -1795,6 +1825,11 @@
                     "name": "wand.dynamic-spells",
                     "description": "槽位法术 `法术序列`",
                     "values": [ { "name": "TNT^16:1~5" } ]
+                },
+                {
+                    "name": "wand.spells",
+                    "description": "始终/槽位法术 `法术序列 / 法术序列`",
+                    "values": [ { "name": "BOMB^3:1~2 / TNT^16:1~5" } ]
                 },
                 {
                     "name": "wand.frozen",
@@ -1808,6 +1843,40 @@
                 {
                     "name": "wand.info",
                     "description": "魔杖自定义提示信息"
+                },
+                {
+                    "name": "wand.template",
+                    "description": "魔杖数据生成模板",
+                    "values": [
+                        { "name": "lv1" },
+                        { "name": "lv2" },
+                        { "name": "lv3" },
+                        { "name": "lv4" },
+                        { "name": "lv5" },
+                        { "name": "lv6" },
+                        { "name": "lv10" },
+                        { "name": "lv1.fast" },
+                        { "name": "lv1.slow" },
+                        { "name": "lv1.random" },
+                        { "name": "lv2.fast" },
+                        { "name": "lv2.slow" },
+                        { "name": "lv2.random" },
+                        { "name": "lv3.fast" },
+                        { "name": "lv3.slow" },
+                        { "name": "lv3.random" },
+                        { "name": "lv4.fast" },
+                        { "name": "lv4.slow" },
+                        { "name": "lv4.random" },
+                        { "name": "lv5.fast" },
+                        { "name": "lv5.slow" },
+                        { "name": "lv5.random" },
+                        { "name": "lv6.fast" },
+                        { "name": "lv6.slow" },
+                        { "name": "lv6.random" },
+                        { "name": "lv10.fast" },
+                        { "name": "lv10.slow" },
+                        { "name": "lv10.random" }
+                    ]
                 }
             ]
         },
@@ -2165,8 +2234,20 @@
                             "description": "### 面板模式"
                         },
                         {
-                            "name": "reaction",
+                            "name": "panel-reaction",
                             "description": "### 反应面板模式"
+                        },
+                        {
+                            "name": "panel-reaction-catalyzer",
+                            "description": "### 反应面板模式(仅作为催化剂)"
+                        },
+                        {
+                            "name": "panel-reaction-input",
+                            "description": "### 反应面板模式(仅作为原料)"
+                        },
+                        {
+                            "name": "panel-reaction-output",
+                            "description": "### 反应面板模式(仅作为原料)"
                         }
                     ]
                 },
