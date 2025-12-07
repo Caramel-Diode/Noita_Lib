@@ -42,11 +42,11 @@ class Status {
             this.desc,
             this.entity,
             this.iconIndex,
-            bitsToNum([
+            new Bits([
                 this.fireProtection,
                 this.harmful,
                 this.removeCells
-            ]),
+            ]).toBigInt(),
             this.threshold === 0 ? blank : this.threshold
 
         ]);
