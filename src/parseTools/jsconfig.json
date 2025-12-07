@@ -1,13 +1,12 @@
 {
     "compilerOptions": {
-        // "lib": ["DOM", "ES2017"],
+        "lib": [ "DOM", "ESNext" ],
         "allowSyntheticDefaultImports": true,
         "declaration": true,
         "allowJs": true,
-        "module": "None",
+        "module": "esnext",
         "target": "esnext",
         "checkJs": true,
-        "paths": {}
     },
-    "include": ["serve.js", "../public/xmlParser.js", "../public/csvParser.js"]
+    "include": [ "util.js", "serve.js", "../public/xmlParser.js", "../public/csvParser.js", "../public/htmlTools.js", "../public/cssTools.js" ]
 }
