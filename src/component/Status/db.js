@@ -15,7 +15,7 @@ class Icon extends $icon(12, "状态") {
     }
 }
 
-Icon.$defineElement("-status");
+Icon.define("-status");
 
 class StatusData {
     /** @type {Map<String,Array<StatusData>>} */
@@ -41,7 +41,7 @@ class StatusData {
 
     constructor(data) {
         [this.id, this.name, this.desc, this.entity, this.#iconIndex, , this.threshold] = data;
-        [this.fireProtection, this.harmful, this.removeCells] = toBits(data[5], true);
+        [this.fireProtection, this.harmful, this.removeCells] = new Bits(data[5]).toArray(3);
     }
 
     /** @return {Promise<String>} */
@@ -54,7 +54,7 @@ class StatusData {
     }
 
     static init() {
-        toChunks(embed(`#data.js`), 7).forEach(e => {
+        [...embed(`#data.js`).values().chunks(7)].forEach(e => {
             const data = freeze(new this(e));
             const exists = this.data.get(data.id);
             if (exists) exists.push(data);
