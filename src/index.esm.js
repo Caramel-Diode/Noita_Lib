@@ -20,8 +20,8 @@ const noitaLib = mode => {
         `${font_style}font-size:12px;`);
     return ver;
 };
-
+runAtEnd.run();
 // 允许按需导入
-export { translation, Material, Entity, Spell, Wand, Perk, Container, Message, Status, cursor };
+export { translation, Material, Entity, Spell, Wand, Perk, Container, Message, Status, cursor, XML, CSV };
 // 提供默认导出 允许直接使用 import noitaLib form "./noitaLib.esm.js" 的方式进行导入
-export default Object.freeze(Object.assign(noitaLib, { translation, Material, Entity, Spell, Wand, Perk, Container, Message, Status, Orb, cursor }));
+export default Object.freeze(Object.assign(noitaLib, { translation, Material, Entity, Spell, Wand, Perk, Container, Message, Status, Orb, cursor, XML, CSV }));
