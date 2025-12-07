@@ -1,3 +1,4 @@
+import { HTMLNoitaElement } from "./@panel";
 type MaterialId =
     | "air"
     | "fire"
@@ -477,34 +478,34 @@ type MaterialType = "fire" | "liquid" | "solid" | "gas";
 /** 材料数据 */
 export type MaterialData = {
     /** 材料id */ id: MaterialId;
-    /** 名称 */ name: String;
+    /** 名称 */ name: string;
     /** 标签 */ tags: Array<MaterialTag>;
     /** 父类 */ parent: MaterialData | undefined;
-    /** 反应继承 */ inheritReactions: Boolean;
-    /** 可燃性 */ burnable: Boolean;
-    /** 密度 */ density: Number;
+    /** 反应继承 */ inheritReactions: boolean;
+    /** 可燃性 */ burnable: boolean;
+    /** 密度 */ density: number;
     /** 类型 */ type: MaterialType;
-    /** 硬度 */ durability: Number;
-    /** 血量 */ hp: Number;
-    /** 燃烧血量 */ fireHp: Number;
-    /** 导电性 */ electricalConductivity: Boolean;
-    /** 生成烟雾 */ generatesSmoke: Boolean;
-    /** 液体重力 */ liquidGravity: Number;
-    /** 流沙类型 */ liquidSand: Boolean;
-    /** 摩擦力 */ solidFriction: Number;
-    /** 火焰温度 */ temperatureOfFire: Number;
-    /** 自燃温度 */ autoignitionTemperature: Number;
-    /** 始终燃烧 */ onFire: Boolean;
-    /** 燃烧需氧 */ requiresOxygen: Boolean;
-    /** 装瓶颜色 */ color: String;
-    /** 摄入效果 */ statusEffects_ingestion: String;
-    /** 沾染效果 */ statusEffects_stains: String;
+    /** 硬度 */ durability: number;
+    /** 血量 */ hp: number;
+    /** 燃烧血量 */ fireHp: number;
+    /** 导电性 */ electricalConductivity: boolean;
+    /** 生成烟雾 */ generatesSmoke: boolean;
+    /** 液体重力 */ liquidGravity: number;
+    /** 流沙类型 */ liquidSand: boolean;
+    /** 摩擦力 */ solidFriction: number;
+    /** 火焰温度 */ temperatureOfFire: number;
+    /** 自燃温度 */ autoignitionTemperature: number;
+    /** 始终燃烧 */ onFire: boolean;
+    /** 燃烧需氧 */ requiresOxygen: boolean;
+    /** 装瓶颜色 */ color: string;
+    /** 摄入效果 */ statusEffects_ingestion: string;
+    /** 沾染效果 */ statusEffects_stains: string;
     /** 冻结转化 */ coldFreezesToMaterial: MaterialData | undefined;
     /** 加热转化 */ warmthMeltsToMaterial: MaterialData | undefined;
     /** 碎裂转化 */ solidBreakToType: MaterialData | undefined;
-    /** 存在时间 */ lifetime: Number;
-    /** 平台类型 */ platformType: Boolean;
-    /** 名称翻译键 */ nameKey: String;
+    /** 存在时间 */ lifetime: number;
+    /** 平台类型 */ platformType: boolean;
+    /** 名称翻译键 */ nameKey: string;
     /* 图标 */ icon: HTMLImageElement;
 };
 
@@ -512,15 +513,15 @@ export namespace MaterialData {
     /** 材料数据组 */
     type DataGroup = {
         tag?: MaterialTag;
-        parent?: String;
-        idPart?: String;
+        parent?: string;
+        idPart?: string;
         list: Array<MaterialData>;
     };
     type ReactionData = {
         /** 反应速度 */
-        speed: Number;
+        speed: number;
         /** 快速反应 */
-        rapidly: Boolean;
+        rapidly: boolean;
         /** 原料 */
         inputs: Array<DataGroup>;
         /** 产物 */
@@ -538,26 +539,26 @@ export namespace MaterialData {
          * @param agent 代理材料ID (用于反应中的不定材料的确定)
          * @param format 格式
          */
-        toString: (agent: MaterialId, format: "PlainText" | "MathML") => String;
+        toString: (agent: MaterialId, format: "PlainText" | "MathML") => string;
     };
 }
 
-type HTMLNoitaMaterialElement = HTMLElement & {
-    contentUpdate: () => never;
-    panelContentSwitchTo: (index: Number) => never;
-    displayMode: "icon" | "panel" | "reaction";
+type HTMLNoitaMaterialElement = HTMLNoitaElement & {
+    panelContentSwitchTo: (index: number) => never;
+    displayMode: "panel-reaction" | "panel-reaction-catalyzer" | "panel-reaction-input" | "panel-reaction-output";
     materialId: MaterialId;
     materialTag: MaterialTag;
     materialInherit: MaterialId;
 };
 
 export type Class = {
-    new (option?: { display?: "icon" | "panel" | "reaction"; id?: MaterialId; tag?: MaterialTag }): HTMLNoitaMaterialElement;
+    new (option?: { display?: "panel-reaction" | "panel-reaction-catalyzer" | "panel-reaction-input" | "panel-reaction-output"; id?: MaterialId; tag?: MaterialTag }): HTMLNoitaMaterialElement;
     readonly datas: Array<MaterialData>;
+    readonly materialTags: Array<string>;
     readonly reactionDatas: Array<MaterialData.ReactionData>;
-    queryById: (id: String) => MaterialData;
-    queryByTag: (tag: MaterialTag) => Array<MaterialData>;
-    queryReaction: (keyword: String | MaterialTag) => {
+    queryById: (id: string) => MaterialData;
+    queryByTag: (tag: MaterialTag) => { tag: MaterialTag; list: Array<MaterialData> };
+    queryReaction: (keyword: string | MaterialTag) => {
         asInput: Array<MaterialData.ReactionData>;
         asOutput: Array<MaterialData.ReactionData>;
         asCatalyzer: Array<MaterialData.ReactionData>;

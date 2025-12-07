@@ -1,3 +1,4 @@
+import { HTMLNoitaElement } from "./@panel";
 type Preset$ = {
     FUNGAL_SHIFT: "你听见“?”这个词在回响，变换着色彩";
     BOOBY_TRAPPED: "这里陷阱遍布";
@@ -29,15 +30,15 @@ type MessageBackgroundId = "important" | "fungal_shift" | "booby_trapped" | "con
 
 type MessagePresetId = keyof Preset$;
 
-type HTMLNoitaMessageElement = HTMLElement & {
+type HTMLNoitaMessageElement = HTMLNoitaElement & {
     contentUpdate: () => never;
     displayMode: "#";
     messageStyle: MessageBackgroundId;
     messagePreset: MessagePresetId;
-    messageContent: String;
+    messageContent: string;
 };
 
 export type Class = {
     new (preset?: MessagePresetId): HTMLNoitaMessageElement;
-    new (style?: MessageBackgroundId, content?: String): HTMLNoitaMessageElement;
+    new (style?: MessageBackgroundId, content?: string): HTMLNoitaMessageElement;
 };

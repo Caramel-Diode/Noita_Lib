@@ -72,5 +72,10 @@ declare const noitaLib: {
      * <noita-cursor>
      * ```
      */
-    readonly cursor: { disable: Boolean };
+    readonly cursor: { disable: boolean };
 };
+
+/**
+ * ## 创建`HTML`节点
+ */
+declare var h: import("./h").H;

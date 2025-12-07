@@ -1,3 +1,5 @@
+import { RangeValue, RangeValueExp, Icon } from "./public";
+import { HTMLNoitaElement } from "./@panel";
 type SpellIdNameMap = {
     BOMB: "炸弹";
     LIGHT_BULLET: "火花弹";
@@ -439,62 +441,70 @@ type SpellType = "projectile" | "staticProjectile" | "modifier" | "drawMany" | "
 type SpellLevel = 0 | 1 | 2 | 3 | 4 | 5 | 6 | 7 | 10;
 
 /** `🔤 法术标签` */
-type SpellTag = "#map" | "#all" | "#type_projectile" | "#type_staticProjectile" | "#type_modifier" | "#type_drawMany" | "#type_material" | "#type_other" | "#type_utility" | "#type_passive" | "#lv0" | "#lv1" | "#lv2" | "#lv3" | "#lv4" | "#lv5" | "#lv6" | "#lv7" | "#lv10" | "#lifetime_mod" | "#lifetime_up" | "#lifetime_down" | "#mana_0" | "#mana_drainlowly" | "#mana_increase" | "#extra_modifier" | "#speed_mod" | "#draw" | "#draw_common" | "#draw_hit" | "#draw_timer" | "#draw_death" | "#damage_mod" | "#damage_add" | "#damage_sub" | "#damage_reset" | "#damage_mod_projectile" | "#damage_add_projectile" | "#damage_sub_projectile" | "#damage_reset_projectile" | "#damage_mod_melee" | "#damage_add_melee" | "#damage_sub_melee" | "#damage_reset_melee" | "#damage_mod_electricity" | "#damage_add_electricity" | "#damage_sub_electricity" | "#damage_reset_electricity" | "#damage_mod_fire" | "#damage_add_fire" | "#damage_sub_fire" | "#damage_reset_fire" | "#damage_mod_explosion" | "#damage_add_explosion" | "#damage_sub_explosion" | "#damage_reset_explosion" | "#damage_mod_ice" | "#damage_add_ice" | "#damage_sub_ice" | "#damage_reset_ice" | "#damage_mod_slice" | "#damage_add_slice" | "#damage_sub_slice" | "#damage_reset_slice" | "#damage_reset_healing" | "#damage_add_healing" | "#damage_sub_healing" | "#damage_mod_curse" | "#damage_add_curse" | "#damage_sub_curse" | "#damage_reset_curse" | "#damage_mod_drill" | "#damage_add_drill" | "#damage_sub_drill" | "#damage_reset_drill" | "#damage_mod_holy" | "#damage_add_holy" | "#damage_sub_holy" | "#damage_reset_holy" | "#spawnRequiresFlag" | "#LIGHT_BULLET" | "#BULLET" | "#HEAVY_BULLET" | "#SLOW_BULLET" | "#BLACK_HOLE" | "#SPITTER" | "#DISC_BULLET" | "#LANCE" | "#GRENADE" | "#MINE" | "#LASER_EMITTER" | "#LUMINOUS_DRILL" | "#TENTACLE" | "#HEAL_BULLET" | "#MAGIC_SHIELD" | "#FIREBALL" | "#BOMB_HOLY" | "#SUMMON_EGG" | "#TNTBOX" | "#DEATH_CROSS" | "#MIST" | "#TELEPORT_PROJECTILE" | "#NUKE" | "#BLACK_HOLE_BIG" | "#BLACK_HOLE_GIGA" | "#SUMMON" | "#WALL" | "#EXPLOSION" | "#FIELD" | "#VACUUM" | "#CLOUD" | "#BOUNCE" | "#HOMING" | "#CRITICAL_HIT" | "#HITFX" | "#RAY" | "#RAY_ENEMY" | "#CURSE" | "#ORBIT" | "#ARC" | "#TRAIL" | "#LARPA" | "#COLOR" | "#BURST" | "#SCATTER" | "#SHAPE" | "#CIRCLE" | "#MATERIAL" | "#TOUCH" | "#SEA" | "#OCARINA" | "#KANTELE" | "#RANDOM" | "#ADD_TRIGGER" | "#SYMBOL" | "#DIVIDE" | "#IF" | "#SHOT" | "#ALL";
+type SpellTag = "#all" | "#type_projectile" | "#type_staticProjectile" | "#type_modifier" | "#type_drawMany" | "#type_material" | "#type_other" | "#type_utility" | "#type_passive" | "#lv0" | "#lv1" | "#lv2" | "#lv3" | "#lv4" | "#lv5" | "#lv6" | "#lv7" | "#lv10" | "#maxLv1" | "#maxLv2" | "#maxLv3" | "#maxLv4" | "#maxLv5" | "#maxLv6" | "#maxLv7" | "#holdable" | "#offerProjectile" | "#offerProjectiles" | "#offerProjectile_onCollisionNotDie" | "#timesLimited" | "#neverUnlimited" | "#recursive" | "#aiNeverUses" | "#generatable" | "#generatedByWand" | "#generatedByWand_static" | "#generatedByWand_dynamic" | "#friendlyFire" | "#recoil_mod" | "#recoil_add" | "#recoil_sub" | "#recoil_reset" | "#lifetime_mod" | "#lifetime_up" | "#lifetime_down" | "#mana_0" | "#mana_drainlowly" | "#mana_increase" | "#extra_modifier" | "#speed_mod" | "#draw" | "#draw_common" | "#draw_hit" | "#draw_timer" | "#draw_death" | "#damage_mod" | "#damage_add" | "#damage_sub" | "#damage_reset" | "#spawnRequiresFlag" | "#spawnManualUnlock" | "#activateSunStone" | "#damage_add_projectile" | "#damage_sub_projectile" | "#damage_reset_projectile" | "#damage_mod_projectile" | "#offerProjectile_damage_projectile" | "#damage_projectile" | "#damage_add_melee" | "#damage_sub_melee" | "#damage_reset_melee" | "#damage_mod_melee" | "#offerProjectile_damage_melee" | "#damage_melee" | "#damage_add_electricity" | "#damage_sub_electricity" | "#damage_reset_electricity" | "#damage_mod_electricity" | "#offerProjectile_damage_electricity" | "#damage_electricity" | "#damage_add_fire" | "#damage_sub_fire" | "#damage_reset_fire" | "#damage_mod_fire" | "#offerProjectile_damage_fire" | "#damage_fire" | "#damage_add_explosion" | "#damage_sub_explosion" | "#damage_reset_explosion" | "#damage_mod_explosion" | "#offerProjectile_damage_explosion" | "#damage_explosion" | "#damage_add_ice" | "#damage_sub_ice" | "#damage_reset_ice" | "#damage_mod_ice" | "#offerProjectile_damage_ice" | "#damage_ice" | "#damage_add_slice" | "#damage_sub_slice" | "#damage_reset_slice" | "#damage_mod_slice" | "#offerProjectile_damage_slice" | "#damage_slice" | "#damage_add_healing" | "#damage_sub_healing" | "#damage_reset_healing" | "#damage_mod_healing" | "#offerProjectile_damage_healing" | "#damage_healing" | "#damage_add_curse" | "#damage_sub_curse" | "#damage_reset_curse" | "#damage_mod_curse" | "#offerProjectile_damage_curse" | "#damage_curse" | "#damage_add_drill" | "#damage_sub_drill" | "#damage_reset_drill" | "#damage_mod_drill" | "#offerProjectile_damage_drill" | "#damage_drill" | "#damage_add_holy" | "#damage_sub_holy" | "#damage_reset_holy" | "#damage_mod_holy" | "#offerProjectile_damage_holy" | "#damage_holy" | "#damage_add_overeating" | "#damage_sub_overeating" | "#damage_reset_overeating" | "#damage_mod_overeating" | "#offerProjectile_damage_overeating" | "#damage_overeating" | "#damage_add_physicsHit" | "#damage_sub_physicsHit" | "#damage_reset_physicsHit" | "#damage_mod_physicsHit" | "#offerProjectile_damage_physicsHit" | "#damage_physicsHit" | "#damage_add_poison" | "#damage_sub_poison" | "#damage_reset_poison" | "#damage_mod_poison" | "#offerProjectile_damage_poison" | "#damage_poison" | "#damage_add_radioactive" | "#damage_sub_radioactive" | "#damage_reset_radioactive" | "#damage_mod_radioactive" | "#offerProjectile_damage_radioactive" | "#damage_radioactive" | "#LIGHT_BULLET" | "#BULLET" | "#HEAVY_BULLET" | "#SLOW_BULLET" | "#BLACK_HOLE" | "#SPITTER" | "#DISC_BULLET" | "#LANCE" | "#GRENADE" | "#MINE" | "#LASER_EMITTER" | "#LUMINOUS_DRILL" | "#TENTACLE" | "#HEAL_BULLET" | "#MAGIC_SHIELD" | "#FIREBALL" | "#BOMB_HOLY" | "#SUMMON_EGG" | "#TNTBOX" | "#DEATH_CROSS" | "#MIST" | "#TELEPORT_PROJECTILE" | "#NUKE" | "#BLACK_HOLE_BIG" | "#BLACK_HOLE_GIGA" | "#SUMMON" | "#WALL" | "#EXPLOSION" | "#FIELD" | "#PROJECTILE_FIELD" | "#VACUUM" | "#CLOUD" | "#BOUNCE" | "#HOMING" | "#CRITICAL_HIT" | "#HITFX" | "#RAY" | "#RAY_ENEMY" | "#CURSE" | "#ORBIT" | "#ARC" | "#TRAIL" | "#LARPA" | "#COLOR" | "#CONVERT" | "#BURST" | "#SCATTER" | "#SHAPE" | "#CIRCLE" | "#MATERIAL" | "#TOUCH" | "#SEA" | "#OCARINA" | "#KANTELE" | "#RANDOM" | "#ADD" | "#SYMBOL" | "#DIVIDE" | "#IF" | "#WALL_PLATFORM" | "#CAST" | "#SHOT" | "#ALL";
 
 /** 法术数据 */
 export type SpellData = {
     /** ID */ id: SpellId;
     /** 名称 */ name: SpellName;
     /** 别名 */ alias: Array<SpellAlias>;
-    /** 描述 */ desc: String;
+    /** 描述 */ desc: string;
     /** 类型 */ type: "null" | SpellType;
-    /** 最大使用次数 */ maxUse: Number;
-    /** 可无限化 */ unlimited: Boolean;
-    /** 法力消耗 */ mana: Number;
-    /** 价格 */ price: Number;
-    /** 被动效果 */ passive: String;
+    /** 最大使用次数 */ maxUse: number;
+    /** 可无限化 */ unlimited: boolean;
+    /** 法力消耗 */ mana: number;
+    /** 价格 */ price: SpellData.Price;
+    /** 被动效果 */ passive: string;
     /** 法术生成数据 */ spawn: SpellData.SpawningData;
-    /** 法术抽取数 */ draw: Number;
+    /** 法术抽取数 */ draw: number;
     /** 提供投射物 */ offeredProjectile: Array<SpellData.ProjectileData>;
     /** 修正行为 */ modifierAction: SpellData.ModifierAction;
     /** 法术行为 */ action: Function | null;
-    /** 名称翻译键 */ nameKey: String;
-    /** 描述翻译键 */ descKey: String;
-    /** 图标 */ icon: HTMLImageElement;
-    /** 创建带有剩余次数的实例 */ instance: (remain: Number) => SpellData<SpellId> & { remain: Number };
+    /** 名称翻译键 */ nameKey: string;
+    /** 描述翻译键 */ descKey: string;
+    /** 递归法术 */ recursive: boolean;
+    /** AI不可使用 */ aiNeverUses: boolean;
+    /** 图标 */ icon: Icon;
+    /** 创建带有剩余次数的实例 */ instance: (remain: number) => SpellData<SpellId> & EventTarget & { remain: number };
 };
 
 export declare namespace SpellData {
+    type Price = Array<number> & {
+        base: number;
+        valueOf: () => number;
+        length: 8;
+    };
     /** 法术生成数据 -1表示非该等级法术 */
     type SpawningData = {
-        /** 0级生成权重 */ prob_lv0: Number;
-        /** 0级生成权重 */ 0: Number;
-        /** 1级生成权重 */ prob_lv1: Number;
-        /** 1级生成权重 */ 1: Number;
-        /** 2级生成权重 */ prob_lv2: Number;
-        /** 2级生成权重 */ 2: Number;
-        /** 3级生成权重 */ prob_lv3: Number;
-        /** 3级生成权重 */ 3: Number;
-        /** 4级生成权重 */ prob_lv4: Number;
-        /** 4级生成权重 */ 4: Number;
-        /** 5级生成权重 */ prob_lv5: Number;
-        /** 5级生成权重 */ 5: Number;
-        /** 6级生成权重 */ prob_lv6: Number;
-        /** 6级生成权重 */ 6: Number;
-        /** 7级生成权重 */ prob_lv7: Number;
-        /** 7级生成权重 */ 7: Number;
-        /** 10级生成权重 */ prob_lv10: Number;
-        /** 10级生成权重 */ 10: Number;
-        /** 生成前置条件(解锁) */ requiresFlag: "None" | String;
+        /** 0级生成权重 */ prob_lv0: number;
+        /** 0级生成权重 */ 0: number;
+        /** 1级生成权重 */ prob_lv1: number;
+        /** 1级生成权重 */ 1: number;
+        /** 2级生成权重 */ prob_lv2: number;
+        /** 2级生成权重 */ 2: number;
+        /** 3级生成权重 */ prob_lv3: number;
+        /** 3级生成权重 */ 3: number;
+        /** 4级生成权重 */ prob_lv4: number;
+        /** 4级生成权重 */ 4: number;
+        /** 5级生成权重 */ prob_lv5: number;
+        /** 5级生成权重 */ 5: number;
+        /** 6级生成权重 */ prob_lv6: number;
+        /** 6级生成权重 */ 6: number;
+        /** 7级生成权重 */ prob_lv7: number;
+        /** 7级生成权重 */ 7: number;
+        /** 10级生成权重 */ prob_lv10: number;
+        /** 10级生成权重 */ 10: number;
+        /** 生成前置条件(解锁) */ requiresFlag: "None" | string;
+        manualUnlock: boolean;
         /** 法术等级 */ lvs: Array<"lv0" | "lv1" | "lv2" | "lv3" | "lv4" | "lv5" | "lv6" | "lv7" | "lv10">;
         /** 法术等级(非0权重) */ lvs_nonzero: Array<"lv0" | "lv1" | "lv2" | "lv3" | "lv4" | "lv5" | "lv6" | "lv7" | "lv10">;
         /** 原始数据 */ raw: {
-            lv: String;
-            prob: String;
+            lv: string;
+            prob: string;
         };
         /** 获取百分比形式概率 */
-        percentage: (lv: "lv0" | "lv1" | "lv2" | "lv3" | "lv4" | "lv5" | "lv6" | "lv7" | "lv10") => Number;
-        forEach: (callback: (lv: "lv0" | "lv1" | "lv2" | "lv3" | "lv4" | "lv5" | "lv6" | "lv7" | "lv10", prob: Number) => void) => void;
+        percentage: (lv: "lv0" | "lv1" | "lv2" | "lv3" | "lv4" | "lv5" | "lv6" | "lv7" | "lv10") => number;
+        forEach: (callback: (lv: "lv0" | "lv1" | "lv2" | "lv3" | "lv4" | "lv5" | "lv6" | "lv7" | "lv10", prob: number) => void) => void;
     };
 
     /** 投射物信息 */
@@ -513,12 +523,12 @@ export declare namespace SpellData {
          * * `timer` : 作为定时发射的投射物
          */
         type: "common" | "relate" | "cast" | "orbit" | "bounce" | "low-speed" | "death" | "hit" | "timer";
-        /** 投射物最小数量 */ amountMin: Number;
-        /** 投射物最大数量 */ amountMax: Number;
-        drawCount_Death: Number;
-        drawCount_Hit: Number;
-        drawCount_Timer: Number;
-        drawDelay_Timer: Number;
+        /** 投射物最小数量 */ amountMin: number;
+        /** 投射物最大数量 */ amountMax: number;
+        drawCount_Death: number;
+        drawCount_Hit: number;
+        drawCount_Timer: number;
+        drawDelay_Timer: number;
     };
 
     type ModifierAction = {
@@ -528,18 +538,18 @@ export declare namespace SpellData {
         fireRateWait?: {
             type: "+" | "-" | "=";
             pos: "before" | "after" | "none";
-            value: Number;
+            value: number;
         };
 
         speed?: {
             type: "*" | "=";
             pos: "before" | "after" | "none";
-            value: Number;
+            value: number;
         };
         explosionRadius?: {
             type: "+" | "-" | "=";
             pos: "before" | "after" | "none";
-            value: Number;
+            value: number;
         };
         /**
          * ![](data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAAA4AAAAOCAYAAAAfSC3RAAAAAXNSR0IArs4c6QAAAExJREFUOE+lkkESACAIAuP/j6aTTdk0YHpmA0wMc0hyl8Lkhg1eQuAweTraoBLmSsuxDAaA1EEtDd9gvFyO2gZzJ5Wg/49qi/bJqegTfVc3/yd1yB4AAAAASUVORK5CYII=) [`散射`](http://localhost)
@@ -547,17 +557,17 @@ export declare namespace SpellData {
         spreadDegrees?: {
             type: "+" | "-" | "=";
             pos: "before" | "after" | "none";
-            value: Number;
+            value: number;
         };
         patternDegrees?: {
             type: "=";
             pos: "before" | "after" | "none";
-            value: Number;
+            value: number;
         };
         meleeDamage?: {
             type: "+" | "-";
             pos: "before" | "after" | "none";
-            value: Number;
+            value: number;
         };
         /**
          * ![](data:image/webp;base64,UklGRmoAAABXRUJQVlA4WAoAAAAQAAAADQAADQAAQUxQSCAAAAABDzD/ERFCURsp0Eji+C5gfc3hIaL/4fMhRNMOx3HEA1ZQOCAkAAAAMAEAnQEqDgAOAAEAHCWkAANwAP73nf//o3X/+jPf//0bsAAA) [`投射物`](https://noita.wiki.gg/zh/wiki/伤害类型#投射物伤害)
@@ -565,137 +575,137 @@ export declare namespace SpellData {
         projectileDamage?: {
             type: "+" | "-";
             pos: "before" | "after" | "none";
-            value: Number;
+            value: number;
         };
         electricityDamage?: {
             type: "+" | "-";
             pos: "before" | "after" | "none";
-            value: Number;
+            value: number;
         };
         fireDamage?: {
             type: "+" | "-";
             pos: "before" | "after" | "none";
-            value: Number;
+            value: number;
         };
         explosionDamage?: {
             type: "+" | "-";
             pos: "before" | "after" | "none";
-            value: Number;
+            value: number;
         };
         iceDamage?: {
             type: "+" | "-";
             pos: "before" | "after" | "none";
-            value: Number;
+            value: number;
         };
         sliceDamage?: {
             type: "+" | "-";
             pos: "before" | "after" | "none";
-            value: Number;
+            value: number;
         };
         healingDamage?: {
             type: "+" | "-";
             pos: "before" | "after" | "none";
-            value: Number;
+            value: number;
         };
         curseDamage?: {
             type: "+" | "-";
             pos: "before" | "after" | "none";
-            value: Number;
+            value: number;
         };
         drillDamage?: {
             type: "+" | "-";
             pos: "before" | "after" | "none";
-            value: Number;
+            value: number;
         };
         overeatingDamage?: {
             type: "+" | "-";
             pos: "before" | "after" | "none";
-            value: Number;
+            value: number;
         };
         physicsHitDamage?: {
             type: "+" | "-";
             pos: "before" | "after" | "none";
-            value: Number;
+            value: number;
         };
         poisonDamage?: {
             type: "+" | "-";
             pos: "before" | "after" | "none";
-            value: Number;
+            value: number;
         };
         radioactiveDamage?: {
             type: "+" | "-";
             pos: "before" | "after" | "none";
-            value: Number;
+            value: number;
         };
         holyDamage?: {
             type: "+" | "-";
             pos: "before" | "after" | "none";
-            value: Number;
+            value: number;
         };
         damageCriticalChance?: {
             type: "+";
             pos: "before" | "after" | "none";
-            value: Number;
+            value: number;
         };
         knockbackForce?: {
             type: "+";
             pos: "before" | "after" | "none";
-            value: Number;
+            value: number;
         };
         material?: {
             type: "+";
             pos: "before" | "after" | "none";
-            value: String;
+            value: string;
         };
         materialAmount?: {
             type: "+";
             pos: "before" | "after" | "none";
-            value: Number;
+            value: number;
         };
         trailMaterial?: {
             type: "+";
             pos: "before" | "after" | "none";
-            value: String;
+            value: string;
         };
         trailMaterialAmount?: {
             type: "+";
             pos: "before" | "after" | "none";
-            value: Number;
+            value: number;
         };
         bounces?: {
             type: "+" | "-";
             pos: "before" | "after" | "none";
-            value: Number;
+            value: number;
         };
         friendlyFire?: {
             type: "=";
             pos: "before" | "after" | "none";
-            value: Boolean;
+            value: boolean;
         };
         lifetime?: {
             type: "+" | "-";
             pos: "before" | "after" | "none";
-            value: Number;
+            value: number;
         };
         extraEntities?: {
             type: "+";
             pos: "before" | "after" | "none";
-            value: String;
+            value: string;
         };
         gameEffectEntities?: {
             type: "+" | "-";
             pos: "before" | "after" | "none";
-            value: String;
+            value: string;
         };
         reloadTime?: {
             type: "+" | "-";
             pos: "before" | "after" | "none";
-            value: Number;
+            value: number;
         };
         recoil?: {
             type: "+" | "-";
             pos: "before" | "after" | "none";
-            value: Number;
+            value: number;
         };
     };
 }
@@ -712,21 +722,24 @@ type ConstructorOption = {
     /** 实例数据 */
     instance?: {
         /** 剩余使用次数 */
-        remain: Number;
+        remain: number;
     };
+    /** 禁用悬浮面板 */
+    noPanelHover?: boolean;
+    /** 禁用点击面板 */
+    noPanelClick?: boolean;
 };
 
-type HTMLNoitaSpellElement = HTMLElement & {
+type HTMLNoitaSpellElement = HTMLNoitaElement & {
     spellDatas: Array<SpellData<SpellId>>;
-    contentUpdate: () => never;
-    panelContentSwitchTo: (index: Number) => never;
+    panelContentSwitchTo: (index: number) => never;
     instance: {
-        remain: Number;
+        remain: number;
     };
     displayMode: "icon" | "panel";
     spellId: SpellId | SpellName | SpellAlias;
     spellExp: SpellId | SpellTag;
-    spellRemain: String;
+    spellRemain: string;
 };
 
 /** ## [`✨ 法术`](https://noita.wiki.gg/zh/wiki/法术) */
@@ -744,5 +757,19 @@ export type Class = {
      * @returns 法术数据
      */
     query: (key: SpellId) => SpellData;
-    queryByExp: (exp: SpellId | SpellTag) => Array<SpellData>;
+    /**
+     * 通过表达式获取法术
+     * @param exp
+     * @returns
+     */
+    queryByExp: <T extends string>(exp: T) => Array<SpellData> & { exp: T };
+    /**
+     * 根据等级权重随机获取法术
+     * @param level 法术等级
+     * @param exp 限制表达式 默认不做额外限制
+     * @returns
+     */
+    getRandomSpellData: (level: 1 | 2 | 3 | 4 | 5 | 7 | 10, exp?: string) => SpellData;
+    /** 全部可用法术标签 */
+    spellTags: Array<string>;
 };

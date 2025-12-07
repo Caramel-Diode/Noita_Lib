@@ -1,15 +1,21 @@
-import { RangeValue, RangeValueExp } from "./public";
+import { HTMLNoitaElement } from "./@panel";
+import { RangeValue, RangeValueExp, Icon } from "./public";
 /** `🔤 法杖名称` */
-type wandName = "初始攻击杖" | "初始炸弹杖" | "长笛" | "康特勒琴" | "狗鱼下颚骨" | "康特勒琴(狗鱼下颚骨强化)" | "桑拿拂尘" | "桦木拂尘" | "迅捷之杖" | "毁灭之杖" | "群体之杖" | "闪光实验性魔杖" | "条件实验性魔杖" | "机枪实验性魔杖" | "拐杖" | "玫瑰" | "权杖" | "许愿骨" | "魔法扫帚";
+type wandName = String | ("魔杖" | "初始攻击杖" | "初始炸弹杖" | "长笛" | "康特勒琴" | "狗鱼下颚骨" | "康特勒琴(狗鱼下颚骨强化)" | "桑拿拂尘" | "桦木拂尘" | "迅捷之杖" | "毁灭之杖" | "群体之杖" | "闪光实验性魔杖" | "条件实验性魔杖" | "机枪实验性魔杖" | "拐杖" | "玫瑰" | "权杖" | "许愿骨" | "魔法扫帚");
 
-type WandIcon = HTMLImageElement & { name: String; index: Number; asyncUrl: Promise<String>; length: Number; base64: (zoom: Number) => String };
+type WandIcon = Icon & {
+    name: string;
+    index: number;
+    asyncUrl: Promise<string>;
+    length: number;
+};
 
 /** 法杖数据 */
 export type WandData = {
     /** 法杖名称 */
-    name: Enum.wandName;
+    name: wandName;
     /** 乱序 */
-    shuffle: Boolean;
+    shuffle: boolean;
     /** 容量 */
     capacity: RangeValue;
     /** 抽取数 */
@@ -34,60 +40,59 @@ export type WandData = {
     icon: WandIcon;
 };
 
-namespace WandData {
+declare namespace WandData {
     type IconInfo = {
         /** 图标索引 */
-        index: Number;
+        index: number;
         /** 图标名称 */
-        name: String;
+        name: string;
         /** 图标 */
         icon: HTMLImageElement;
     };
     type MatchData = {
         /** 名称 */
-        name: String;
+        name: string;
         /** 图标数据 */
         icon: WandIcon;
         /** 容量 */
-        capacity: Number;
+        capacity: number;
         /** 抽取数 */
-        draw: Number;
+        draw: number;
         /** 施放延迟 */
-        fireRateWait: Number;
+        fireRateWait: number;
         /**  充能时间 */
-        reloadTime: Number;
+        reloadTime: number;
         /** 乱序 */
-        shuffle: Boolean;
+        shuffle: boolean;
         /**  散射角度 */
-        spreadDegrees: Number;
+        spreadDegrees: number;
     };
 }
 
-type HTMLNoitaWandElement = HTMLElement & {
+type HTMLNoitaWandElement = HTMLNoitaElement & {
     wandData: WandData;
-    contentUpdate: () => never;
     displayMode: "panel" | "panel-simple";
     displayTimeUnit: "s" | "f";
-    displayBlankSlot: "true" | "false";
-    displayManaWarning: "true" | "false";
-    displayBlankWarning: "true" | "false";
-    wandFrozen: "true" | "false";
-    wandInfo: String;
-    wandWarn: String;
-    wandName: String;
-    wandTemplate: String;
-    wandIcon: String;
-    wandCapacity: String;
-    wandDraw: String;
-    wandFireRateWait: String;
-    wandReloadTime: String;
-    wandShuffle: String;
-    wandSpreadDegrees: String;
-    wandSpeedMultiplier: String;
-    wandManaChargeSpeed: String;
-    wandManaMax: String;
-    wandStaticSpells: String;
-    wandDynamicSpells: String;
+    displayBlankSlot: `${boolean}`;
+    displayManaWarning: `${boolean}`;
+    displayBlankWarning: `${boolean}`;
+    wandFrozen: `${boolean}`;
+    wandInfo: string;
+    wandWarn: string;
+    wandName: string;
+    wandTemplate: string;
+    wandIcon: string;
+    wandCapacity: string;
+    wandDraw: string;
+    wandFireRateWait: string;
+    wandReloadTime: string;
+    wandShuffle: string;
+    wandSpreadDegrees: string;
+    wandSpeedMultiplier: string;
+    wandManaChargeSpeed: string;
+    wandManaMax: string;
+    wandStaticSpells: string;
+    wandDynamicSpells: string;
 };
 
 export type Class = {
@@ -95,31 +100,31 @@ export type Class = {
         /** 显示模式 */
         display?: "panel" | "panel-simple";
         /** 魔杖模板 */
-        template?: String;
+        template?: string;
         /** 魔杖数据 */
         data?: {
             /** 名称 */
-            name?: String;
+            name?: string;
             /** 图标 */
-            icon?: String;
+            icon?: string;
             /** 容量 */
-            capacity?: RangeValueExp | Number;
+            capacity?: RangeValueExp | number;
             /** 抽取数 */
-            draw?: RangeValueExp | Number;
+            draw?: RangeValueExp | number;
             /** 施放延迟 */
-            fireRateWait?: RangeValueExp | Number;
+            fireRateWait?: RangeValueExp | number;
             /** 充能时间 */
-            reloadTime?: RangeValueExp | Number;
+            reloadTime?: RangeValueExp | number;
             /** 乱序 */
-            shuffle?: Boolean;
+            shuffle?: boolean;
             /** 散射角度 */
-            spreadDegrees?: RangeValueExp | Number;
+            spreadDegrees?: RangeValueExp | number;
             /** 法力恢复速度 */
-            manaChargeSpeed?: RangeValueExp | Number;
+            manaChargeSpeed?: RangeValueExp | number;
             /** 法力上限 */
-            manaMax?: RangeValueExp | Number;
-            staticSpells?: String;
-            dynamicSpells?: String;
+            manaMax?: RangeValueExp | number;
+            staticSpells?: string;
+            dynamicSpells?: string;
         };
     }): HTMLNoitaWandElement;
 };

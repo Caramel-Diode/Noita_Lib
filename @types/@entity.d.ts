@@ -1,19 +1,20 @@
+import { HTMLNoitaElement } from "./@panel";
 /** 实体数据 */
 export type EntityData = {
     /** 实体id */
-    id: String;
+    id: string;
     /** 实体名称 */
-    name: String;
+    name: string;
     /** 标签 */
-    tags: Array<String>;
+    tags: Array<string>;
     projectileComponent: EntityData.Component.Projectile;
     damageModelComponent: EntityData.Component.DamageModel;
     animalAIComponent: EntityData.Component.AnimalAI;
-    variableStorageComponent: { [key: String]: EntityData.Component.VariableStorage };
+    variableStorageComponent: { [key: string]: EntityData.Component.VariableStorage };
     aIAttackComponent: Array<EntityData.Component.AIAttack>;
     lifetimeComponent: EntityData.Component.Lifetime;
     genomeDataComponent: EntityData.Component.GenomeData;
-    loadEntitiesComponent: { [key: String]: EntityData.Component.LoadEntities };
+    loadEntitiesComponent: { [key: string]: EntityData.Component.LoadEntities };
     areaDamageComponent: Array<EntityData.Component.AreaDamage>;
     explodeOnDamageComponent: EntityData.Component.ExplodeOnDamage;
     explosionComponent: EntityData.Component.Explosion;
@@ -23,6 +24,9 @@ export type EntityData = {
     magicConvertMaterialComponent: Array<EntityData.Component.MagicConvertMaterial>;
     cellEaterComponent: Array<EntityData.Component.CellEater>;
     hitBoxComponent: EntityData.Component.Hitbox;
+    velocityComponent: EntityData.Component.Velocity;
+    gameEffectComponent: Array<EntityData.Component.GameEffect>;
+    laserEmitterComponent: Array<EntityData.Component.LaserEmitter>;
 };
 
 export namespace EntityData {
@@ -37,67 +41,67 @@ export namespace EntityData {
             /**
              * 友方命中
              */
-            friendlyFire: Boolean;
+            friendlyFire: boolean;
             /**
              * 爆炸造成伤害
              */
-            explosionDamageMortals: Boolean;
+            explosionDamageMortals: boolean;
             /**
              * 爆炸无自伤
              */
-            explosionDontDamageShooter: Boolean;
+            explosionDontDamageShooter: boolean;
             /**
              * 命中实体
              */
-            collideWithEntities: Boolean;
+            collideWithEntities: boolean;
             /**
              * 命中地形
              */
-            collideWithWorld: Boolean;
+            collideWithWorld: boolean;
             /**
              * 差速伤害加成
              */
-            damageScaledBySpeed: Boolean;
+            damageScaledBySpeed: boolean;
             /**
              * 接触液体时失效
              */
-            dieOnLiquidCollision: Boolean;
+            dieOnLiquidCollision: boolean;
             /**
              * 低速时失效
              */
-            dieOnLowVelocity: Boolean;
+            dieOnLowVelocity: boolean;
             /**
              * 碰撞(命中)时失效
              */
-            onCollisionDie: Boolean;
+            onCollisionDie: boolean;
             /**
              * 失效时爆炸
              */
-            onDeathExplode: Boolean;
+            onDeathExplode: boolean;
             /**
              * 存在时间结束时爆炸
              */
-            onLifetimeOutExplode: Boolean;
+            onLifetimeOutExplode: boolean;
             /**
              * 在碰撞时生成实体
              */
-            onCollisionSpawnEntity: Boolean;
+            onCollisionSpawnEntity: boolean;
             /**
              * 生成实体是投射物 (具备施法者信息)
              */
-            spawnEntityIsProjectile: Boolean;
+            spawnEntityIsProjectile: boolean;
             /**
              * 穿透实体
              */
-            penetrateEntities: Boolean;
+            penetrateEntities: boolean;
             /**
              * 穿透地形
              */
-            penetrateWorld: Boolean;
+            penetrateWorld: boolean;
             /**
              * 不产生命中
              */
-            doMovetoUpdate: Boolean;
+            doMovetoUpdate: boolean;
             /**
              * 提供伤害
              */
@@ -105,7 +109,7 @@ export namespace EntityData {
             /**
              * 爆炸半径
              */
-            explosionRadius: Number;
+            explosionRadius: number;
             /**
              * 存在时间
              */
@@ -121,39 +125,39 @@ export namespace EntityData {
             /**
              * 击退
              */
-            knockbackForce: Number;
+            knockbackForce: number;
             /**
              * 弹跳次数
              */
-            bounces: Number;
+            bounces: number;
             /**
              * 伤害间隔
              */
-            damageInterval: Number;
+            damageInterval: number;
             /**
              * 榨血系数?
              */
-            bloodCountMultiplier: Number;
+            bloodCountMultiplier: number;
             /**
              * 安全时间
              */
-            collideWithShooterFrames: Number;
+            collideWithShooterFrames: number;
             /**
              * 游戏效果实体
              */
-            damageGameEffectEntities: String;
+            damageGameEffectEntities: string;
             /**
              * 碰撞加载实体
              */
-            collisionEntity: String;
+            collisionEntity: string;
             /**
              * 爆炸加载实体
              */
-            explosionEntity: String;
+            explosionEntity: string;
             /**
              * 爆炸击退系数
              */
-            explosionKnockbackForce: Number;
+            explosionKnockbackForce: number;
         };
         /**
          * 伤害模型组件
@@ -165,39 +169,39 @@ export namespace EntityData {
             /**
              * 生命值上限
              */
-            maxHp: Number;
+            maxHp: number;
             /**
              * 血液材料
              */
-            bloodMaterial: String;
+            bloodMaterial: string;
             /**
              * 飞溅血液材料
              */
-            bloodSprayMaterial: String;
+            bloodSprayMaterial: string;
             /**
              * 身体材料
              */
-            ragdollMaterial: String;
+            ragdollMaterial: string;
             /**
              * 材料伤害表
              */
-            materialDamageData: { [key: String]: Number };
+            materialDamageData: { [key: string]: number };
             /**
              * 肺容量
              */
-            airInLungsMax: Number;
+            airInLungsMax: number;
             /**
              * 窒息伤害
              */
-            airLackOfDamage: Number;
+            airLackOfDamage: number;
             /**
              * 点燃概率
              */
-            fireProbabilityOfIgnition: Number;
+            fireProbabilityOfIgnition: number;
             /**
              * 点燃伤害量
              */
-            fireDamageIgnitedAmount: Number;
+            fireDamageIgnitedAmount: number;
             /**
              * 摔落伤害
              */
@@ -209,11 +213,11 @@ export namespace EntityData {
             /**
              * 暴击抗性
              */
-            criticalDamageResistance: Number;
+            criticalDamageResistance: number;
             /**
              * 沾湿伤害量
              */
-            wetStatusEffectDamage: Number;
+            wetStatusEffectDamage: number;
             /**
              * 承伤系数
              */
@@ -221,27 +225,27 @@ export namespace EntityData {
             /**
              * 需要呼吸
              */
-            airNeeded: Boolean;
+            airNeeded: boolean;
             /**
              * 始终燃烧
              */
-            isOnFire: Boolean;
+            isOnFire: boolean;
             /**
              * 受到摔落伤害
              */
-            fallingDamages: Boolean;
+            fallingDamages: boolean;
             /**
              * 遗留尸体
              */
-            createRagdoll: Boolean;
+            createRagdoll: boolean;
             /**
              * 扣血显示
              */
-            uiReportDamage: Boolean;
+            uiReportDamage: boolean;
             /**
              * 受冲击伤害
              */
-            physicsObjectsDamage: Boolean;
+            physicsObjectsDamage: boolean;
         };
         /**
          * 动物AI组件
@@ -253,19 +257,19 @@ export namespace EntityData {
             /**
              * 近战伤害(冲撞)
              */
-            dashDamage: Number;
+            dashDamage: number;
             /**
              * 冲撞距离
              */
-            dashDistance: Number;
+            dashDistance: number;
             /**
              * 冲撞冷却时间
              */
-            dashFramesCD: Number;
+            dashFramesCD: number;
             /**
              * 冲撞速度
              */
-            dashSpeed: Number;
+            dashSpeed: number;
             /**
              * 近战伤害
              */
@@ -273,43 +277,43 @@ export namespace EntityData {
             /**
              * 近战最大距离
              */
-            meleeMaxDistance: Number;
+            meleeMaxDistance: number;
             /**
              * 食物(回血)
              */
-            food: String;
+            food: string;
             /**
              * 只会反击
              */
-            attackOnlyIfAttacked: Boolean;
+            attackOnlyIfAttacked: boolean;
             /**
              * 可飞行
              */
-            canFly: Boolean;
+            canFly: boolean;
             /**
              * 可行走
              */
-            canWalk: Boolean;
+            canWalk: boolean;
             /**
              * 有排泄行为
              */
-            defecatesAndPees: Boolean;
+            defecatesAndPees: boolean;
             /**
              * 同阵营误伤不还手
              */
-            dontCounterAttackOwnHerd: Boolean;
+            dontCounterAttackOwnHerd: boolean;
             /**
              * 寻底
              */
-            senseCreatures: Boolean;
+            senseCreatures: boolean;
             /**
              * 透视寻底
              */
-            senseCreaturesThroughWalls: Boolean;
+            senseCreaturesThroughWalls: boolean;
             /**
              * 使用远程攻击攻击友方 (辅助形怪物)
              */
-            triesToRangedAttackFriends: Boolean;
+            triesToRangedAttackFriends: boolean;
         };
         /**
          * AI攻击组件(远程)
@@ -321,7 +325,7 @@ export namespace EntityData {
             /**
              * 使用的投射物实体
              */
-            entity: String;
+            entity: string;
             /**
              * 发射数量
              */
@@ -333,11 +337,11 @@ export namespace EntityData {
             /**
              * 每次攻击的冷却时间
              */
-            framesBetween: Number;
+            framesBetween: number;
             /**
              * 全局攻击冷却
              */
-            framesBetweenGlobal: Number;
+            framesBetweenGlobal: number;
             /**
              * 攻击状态持续时间
              */
@@ -345,7 +349,7 @@ export namespace EntityData {
             /**
              * 使用率
              */
-            useProbability: Number;
+            useProbability: number;
         };
         /**
          * 变量存储组件
@@ -354,10 +358,10 @@ export namespace EntityData {
          * ```
          */
         type VariableStorage = {
-            string: String;
-            bool: Boolean;
-            float: Number;
-            int: Number;
+            string: string;
+            bool: boolean;
+            float: number;
+            int: number;
         };
         /**
          * 存在时间组件
@@ -366,7 +370,7 @@ export namespace EntityData {
          * ```
          */
         type Lifetime = {
-            lifetime: RangeValue | Number;
+            lifetime: RangeValue | number;
         };
         /**
          * 基因组组件
@@ -378,19 +382,19 @@ export namespace EntityData {
             /**
              * 食物链等级
              */
-            foodChainRank: Number;
+            foodChainRank: number;
             /**
              * 阵营
              */
-            herd: String;
+            herd: string;
             /**
              * 狂暴不攻击友方
              */
-            berserkDontAttackriends: Boolean;
+            berserkDontAttackriends: boolean;
             /**
              * 肉食性
              */
-            isPredator: Boolean;
+            isPredator: boolean;
         };
         /**
          * 实体加载组件
@@ -399,7 +403,7 @@ export namespace EntityData {
          * ```
          */
         type LoadEntities = {
-            count: RangeValue | Number;
+            count: RangeValue | number;
         };
         /**
          * 范围伤害组件
@@ -410,11 +414,11 @@ export namespace EntityData {
         type AreaDamage = {
             size: AABB;
             damage: DamageData;
-            damageInterval: Number;
+            damageInterval: number;
             /**
              * 半径(使用圆形领域)
              */
-            circleRadius: Number;
+            circleRadius: number;
         };
         /**
          * 受伤爆炸组件
@@ -426,39 +430,39 @@ export namespace EntityData {
             /**
              * 伤害(爆炸)
              */
-            damage: Number;
+            damage: number;
             /**
              * 半径
              */
-            radius: Number;
+            radius: number;
             /**
              * 爆炸有伤害
              */
-            damageMortals: Boolean;
+            damageMortals: boolean;
             /**
              * 受伤爆炸概率
              */
-            explodeOnDamagePercent: Number;
+            explodeOnDamagePercent: number;
             /**
              * 失效爆炸概率
              */
-            explodeOnDeathPercent: Number;
+            explodeOnDeathPercent: number;
             /**
              * 受损失效概率
              */
-            physicsBodyModifiedDeathProbability: Number;
+            physicsBodyModifiedDeathProbability: number;
             /**
              * 损毁所需受损占比
              */
-            physicsBodyDestructionRequired: Number;
+            physicsBodyDestructionRequired: number;
             /**
              * 加载实体
              */
-            entity?: String;
+            entity?: string;
             /**
              * 击退系数
              */
-            knockbackForce: Number;
+            knockbackForce: number;
         };
         /**
          * 爆炸组件
@@ -474,27 +478,27 @@ export namespace EntityData {
             /**
              * 伤害(爆炸)
              */
-            damage: Number;
+            damage: number;
             /**
              * 半径
              */
-            radius: Number;
+            radius: number;
             /**
              * 爆炸造成伤害
              */
-            damageMortals: Boolean;
+            damageMortals: boolean;
             /**
              * 加载实体
              */
-            entity: String;
+            entity: string;
             /**
              * 击退系数
              */
-            knockbackForce: Number;
+            knockbackForce: number;
             /**
              * 爆炸时清除具有本组件的实体
              */
-            killEntity: Boolean;
+            killEntity: boolean;
             /**
              * 定时触发的延迟
              */
@@ -510,31 +514,31 @@ export namespace EntityData {
             /**
              * 爆炸造成伤害
              */
-            explosionDamageMortals: Boolean;
+            explosionDamageMortals: boolean;
             /**
              * 爆炸具有闪电链?
              */
-            explosionType: Boolean;
+            explosionType: boolean;
             /**
              * 视作投射物
              */
-            isProjectile: Boolean;
+            isProjectile: boolean;
             /**
              * 爆炸伤害
              */
-            explosionDamage: Number;
+            explosionDamage: number;
             /**
              * 爆炸半径
              */
-            explosionRadius: Number;
+            explosionRadius: number;
             /**
              * 爆炸加载实体
              */
-            explosionEntity: String;
+            explosionEntity: string;
             /**
              * 爆炸击退系数
              */
-            explosionKnockbackForce: Number;
+            explosionKnockbackForce: number;
         };
         /**
          * 范围效果组件
@@ -546,11 +550,11 @@ export namespace EntityData {
             /**
              * 半径
              */
-            radius: Number;
+            radius: number;
             /**
              * 伤害间隔 (-1表示只生效一次)
              */
-            cd: Number;
+            cd: number;
         };
         /**
          * 追踪组件
@@ -562,30 +566,30 @@ export namespace EntityData {
             /**
              * 追踪施法者(回旋镖)
              */
-            targetWhoShot: Boolean;
+            targetWhoShot: boolean;
             /**
              * 仅转向而不改变速度
              */
-            justRotateWowardsTarget: Boolean;
+            justRotateWowardsTarget: boolean;
             /**
              * 目标标签反选
              */
-            predefinedTarget: Boolean;
+            predefinedTarget: boolean;
             /**
              * 仅追踪根实体
              */
-            lookForRootEntitiesOnly: Boolean;
+            lookForRootEntitiesOnly: boolean;
             /**
              * 探测距离
              */
-            distance: Number;
-            targetingCoeff: Number;
-            velocityMultiplier: Number;
-            maxTurnRate: Number;
+            distance: number;
+            targetingCoeff: number;
+            velocityMultiplier: number;
+            maxTurnRate: number;
             /**
              * 追踪目标要拥有的标签
              */
-            targetTag: String;
+            targetTag: string;
         };
         /**
          * 材料转化组件
@@ -597,35 +601,27 @@ export namespace EntityData {
             /**
              * 转化实体(对实体造成伤害)
              */
-            convertEntities: Boolean;
+            convertEntities: boolean;
             /**
              * 是圆形
              */
-            isCircle: Boolean;
+            isCircle: boolean;
             /**
              * 无视原料类型
              */
-            fromAnyMaterial: Boolean;
+            fromAnyMaterial: boolean;
             /**
              * 完成后清除具有本组件的实体
              */
-            killWhenFinished: Boolean;
+            killWhenFinished: boolean;
             /**
              * 半径
              */
-            radius: Number;
-            /**
-             * 原料
-             */
-            fromMaterial: String;
-            /**
-             * 产物
-             */
-            toMaterial: String;
+            radius: number;
             /**
              * 转化表
              */
-            reaction: { [key: String]: String };
+            convertMap: { [key: string]: string };
         };
         /**
          * 材料吞噬组件
@@ -634,14 +630,14 @@ export namespace EntityData {
          * ```
          */
         type CellEater = {
-            eatDynamicPhysicsBodies: Boolean;
-            limitedMaterials: Boolean;
-            onlyStain: Boolean;
-            radius: Number;
-            eatProbability: Number;
-            ignoredMaterial: String;
-            ignoredMaterialTag: String;
-            materials: Array<String>;
+            eatDynamicPhysicsBodies: boolean;
+            limitedMaterials: boolean;
+            onlyStain: boolean;
+            radius: number;
+            eatProbability: number;
+            ignoredMaterial: string;
+            ignoredMaterialTag: string;
+            materials: Array<string>;
         };
         /**
          * 碰撞箱组件
@@ -651,22 +647,73 @@ export namespace EntityData {
          */
         type Hitbox = {
             size: AABB;
-            damageMultiplier: Number;
+            damageMultiplier: number;
+        };
+
+        /**
+         * 速度组件
+         * ```xml
+         * <VelocityComponent>
+         * ```
+         */
+        type Velocity = {
+            airFriction: number;
+            gravity: number;
+            mass: number;
+            speedMax: number;
+        };
+
+        /**
+         * 游戏效果组件
+         * ```xml
+         * <GameEffectComponent>
+         * ```
+         */
+        type GameEffect = {
+            effectType: string;
+            duration: number;
+        };
+
+        /**
+         * 射线发射组件
+         * ```xml
+         * <LaserEmitterComponent>
+         * ```
+         */
+        type LaserEmitter = {
+            damage: number;
+            destroyDurability: number;
+            destroyEnergy: number;
+            size: AABB;
+            material: string;
+        };
+        /**
+         * 物品拾取组件
+         * ```xml
+         * <ItemPickUpperComponent>
+         * ```
+         */
+        type ItemPickUpper = {
+            dropItems: boolean;
+            isImmuneToKicks: boolean;
         };
     }
 }
 
-type HTMLNoitaEntityElement = HTMLElement & {
+type HTMLNoitaEntityElement = HTMLNoitaElement & {
     entityData: EntityData;
-    contentUpdate: () => never;
     displayMode: "panel";
-    entityId: String;
+    entityId: string;
 };
 
 /** ## [`🧨 实体`](https://noita.wiki.gg/zh/wiki) */
 export type Class = {
     prototype: HTMLElement;
-    new (param?: EntityData | String): HTMLNoitaEntityElement;
-    query: (id: String) => EntityData;
-    getDataSection: (entityData: EntityData, extraData: { drawCount_Death: Number; drawCount_Hit: Number; drawCount_Timer: Number }) => HTMLElement;
+    new (param?: EntityData | string): HTMLNoitaEntityElement;
+    query: (id: string) => EntityData;
+    queryByName: (id: string) => Array<EntityData>;
+    queryByTag: (tag: string) => Array<EntityData>;
+    queryByPath: (queryByTag) => Array<EntityData>;
+    queryByComponent: (...components: string[]) => Array<EntityData>;
+    getDataSection: (entityData: EntityData, extraData: { drawCount_Death: number; drawCount_Hit: number; drawCount_Timer: number }) => HTMLElement;
 };
