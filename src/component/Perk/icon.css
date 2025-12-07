@@ -10,12 +10,15 @@
     height: 16px;
 }
 
-div.background {
+.background {
+    --base: no-repeat border-box;
+    /* height: 42px;
+    width: 42px; */
+    zoom: 3;
     grid-area: main;
-    display: grid;
+    /* display: grid; */
     place-content: center;
     place-items: center;
-    zoom: 3;
 }
 
 /* 叠加次数 */
@@ -30,68 +33,89 @@ data {
     padding: 3px;
 }
 
+.blank-icon {
+    display: none;
+}
+
+.blank-icon::after {
+    --font-size: 8px;
+    --font-weight: bolder;
+    color: var(--c1);
+    -webkit-text-stroke: var(--c2) 0.4px;
+    content: "?";
+}
+
+:host:has([hidden]) > .blank-icon {
+    place-content: center;
+    place-items: center;
+    display: flex;
+}
+
 .background:is(.common, .disposable, .essence) {
+    border: 1px solid #0000;
     width: 14px;
     height: 14px;
-    --bg1: linear-gradient(var(--c1), var(--c1));
-    --bg2: linear-gradient(var(--c2), var(--c2));
-    --bg3: linear-gradient(var(--c3), var(--c3));
-    --bg4: linear-gradient(var(--c4), var(--c4));
-    --bg5: linear-gradient(var(--c5), var(--c5));
+    --bg1: linear-gradient(var(--c1) 0 0);
+    --bg2: linear-gradient(var(--c2) 0 0);
+    --bg3: linear-gradient(var(--c3) 0 0);
+    --bg4: linear-gradient(var(--c4) 0 0);
+    --bg5: linear-gradient(var(--c5) 0 0);
     /* 1*1 像素点 宽高参数 */
-    --p: 1px 1px no-repeat;
+    --p: 1px 1px var(--base);
     /* 内侧装饰线(垂直方向) 宽高参数 */
-    --dH: 1px 3px no-repeat;
+    --dH: 1px 3px var(--base);
     /* 内侧装饰线(垂直方向) 宽高参数 */
-    --dV: 3px 1px no-repeat;
+    --dV: 3px 1px var(--base);
     /* prettier-ignore */
-    --background-default: /* 背景框 */
+    --background-default:
+        /* 背景框 */
         /* 外层框线 */
-        var(--bg1) top center / 10px 1px no-repeat,
-        var(--bg1) bottom center / 10px 1px no-repeat,
-        var(--bg1) center left/ 1px 10px no-repeat,
-        var(--bg1) center right/ 1px 10px no-repeat,
+        var(--bg1) top center / 10px 1px var(--base),
+        var(--bg1) bottom center / 10px 1px var(--base),
+        var(--bg1) center left/ 1px 10px var(--base),
+        var(--bg1) center right/ 1px 10px var(--base),
         /* 外层框线装饰点 (框线端点) */
-        var(--bg2) top center / 12px 1px no-repeat,
-        var(--bg2) bottom center / 12px 1px no-repeat,
-        var(--bg2) center left/1px 12px no-repeat,
-        var(--bg2) center right/1px 12px no-repeat,
+        var(--bg2) top center / 12px 1px var(--base),
+        var(--bg2) bottom center / 12px 1px var(--base),
+        var(--bg2) center left/1px 12px var(--base),
+        var(--bg2) center right/1px 12px var(--base),
         /* 内侧四角装饰 */
-            /* 四角黑点 */
+        /* 四角黑点 */
         var(--bg3) top 1px left 1px/var(--p),
         var(--bg3) bottom 1px left 1px/var(--p),
         var(--bg3) top 1px right 1px/var(--p),
         var(--bg3) bottom 1px right 1px/var(--p),
-            /* 左上角 */
+        /* 左上角 */
         var(--bg4) top 1px left 1px/var(--dH),
         var(--bg4) top 1px left 1px/var(--dV),
-            /* 左下角 */
+        /* 左下角 */
         var(--bg4) bottom 1px left 1px/var(--dH),
         var(--bg4) bottom 1px left 1px/var(--dV),
-            /* 右上角 */
+        /* 右上角 */
         var(--bg4) top 1px right 1px/var(--dH),
         var(--bg4) top 1px right 1px/var(--dV),
-            /* 右下角 */
+        /* 右下角 */
         var(--bg4) bottom 1px right 1px/var(--dH),
         var(--bg4) bottom 1px right 1px/var(--dV),
         /* 中心背景 */
-        var(--bg5) center center/12px 12px no-repeat;
+        var(--bg5) center center/12px 12px var(--base);
     /* --background-image 用于在css中覆盖默认背景 */
     /* 聚焦时使用聚焦边框 否则使用透明渐变回退 */
-    background: var(--focus\#border, linear-gradient(#00000000, #00000000)), var(--background-image, var(--background-default));
+    background: var(--focus\#border, linear-gradient(#00000000 0 0)), var(--background-image, var(--background-default));
 }
 
 :host(:focus-visible) > .background:is(.common, .disposable, .essence) {
     /* prettier-ignore */
-    --focus\#border: /* 聚焦边框 */
-        var(--focus\#bg1) top center / 10px 1px no-repeat,
-        var(--focus\#bg1) bottom center / 10px 1px no-repeat,
-        var(--focus\#bg1) center left/ 1px 10px no-repeat,
-        var(--focus\#bg1) center right/ 1px 10px no-repeat,
-        var(--focus\#bg2) top center / 12px 1px no-repeat,
-        var(--focus\#bg2) bottom center / 12px 1px no-repeat,
-        var(--focus\#bg2) center left/1px 12px no-repeat,
-        var(--focus\#bg2) center right/1px 12px no-repeat;
+    --focus\#border:
+        /* 聚焦边框 */
+        var(--focus\#bg1) top center / 10px 1px var(--base),
+        var(--focus\#bg1) bottom center / 10px 1px var(--base),
+        var(--focus\#bg1) center left/ 1px 10px var(--base),
+        var(--focus\#bg1) center right/ 1px 10px var(--base),
+        var(--focus\#bg2) top center / 12px 1px var(--base),
+        var(--focus\#bg2) bottom center / 12px 1px var(--base),
+        var(--focus\#bg2) center left/1px 12px var(--base),
+        var(--focus\#bg2) center right/1px 12px var(--base);
 }
 
 /* 普通天赋与一次性天赋共享的中心色盘 */
