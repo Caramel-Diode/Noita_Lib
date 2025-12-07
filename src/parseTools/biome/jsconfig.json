@@ -1,0 +1,13 @@
+{
+    "compilerOptions": {
+        "lib": [ "DOM", "ESNext" ],
+        "allowSyntheticDefaultImports": true,
+        "declaration": true,
+        "allowJs": true,
+        "module": "esnext",
+        "target": "esnext",
+        "checkJs": true,
+        "paths": { }
+    },
+    "include": [ "script.js", "../../public/XML.js", "../../public/CSV.js", "../../public/damageData.js", "../../public/htmlTools.js", "../util.js" ]
+}
