@@ -4,6 +4,7 @@
 /tool
 .prettierrc
 dsektop.ini
+.emmyrc.json
 log/build.log
 src/component/Spell/tool/gun_actions
 src/component/Spell/tool/gun_actions.lua
