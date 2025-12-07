@@ -1,18 +1,21 @@
-class HTMLNoitaInventoryElement extends $class(HTMLElement, {
+class HTMLNoitaInventoryElement extends $extends(HTMLElement, {
     /** @type {$ValueOption<"ol">} */
     type: { name: "type", $default: "ol" },
     /** @type {$ValueOption<"auto">} */
     size: { name: "size", $default: "auto" },
-    /** @type {$ValueOption<"false"|"true">} */
-    displayBlankSlot: { name: "display.blank-slot", $default: "false" }
+    /** @type {$ValueOption<boolean>} */
+    displayBlankSlot: { name: "display.blank-slot" }
 }) {
-    static #styleSheet = [styleSheet.base, css(embed(`#inventory.css`))];
+    static #styleSheet = [globalCSS, css(embed(`#inventory.css`), { name: "inventory-base" })];
     #shadowRoot = this.attachShadow({ mode: "open", slotAssignment: "manual" });
     /** @type {HTMLUListElement|HTMLOListElement} */
     #list;
+    /** 用于确定是否已经渲染过内容 */
+    #rendered = false;
 
     constructor() {
         super();
+        this.#shadowRoot.adoptedStyleSheets = HTMLNoitaInventoryElement.#styleSheet;
     }
 
     /**
@@ -66,9 +69,8 @@ class HTMLNoitaInventoryElement extends $class(HTMLElement, {
             return target.children[0];
         }
     }
-
-    async connectedCallback() {
-        this.#shadowRoot.adoptedStyleSheets = HTMLNoitaInventoryElement.#styleSheet;
+    async contentUpdate() {
+        this.#rendered = true;
         /* prettier-ignore */
         /** @type {HTMLUListElement|HTMLOListElement} */
         const list = this.#list ??= h[this.type]();
@@ -82,8 +84,17 @@ class HTMLNoitaInventoryElement extends $class(HTMLElement, {
             queueMicrotask(() => slot.assign(this.children[i]));
         }
         if (isNaN(this.size)) return;
-        if (this.displayBlankSlot === "false") return;
-        for (let i = this.size - list.children.length; i >= 1; i--) list.append(h.li({ part: "inventory-slot" }));
+        if (this.displayBlankSlot) {
+            for (let i = this.size - list.children.length; i >= 1; i--) list.append(h.li({ part: "inventory-slot" }));
+        }
     }
+
+    async connectedCallback() {
+        if (this.#rendered) return;
+        this.contentUpdate();
+    }
+
+    //prettier-ignore
+    get [Symbol.toStringTag]() { return "HTMLNoitaInventoryElement" }
 }
-customElements.define("noita-inventory", freeze(HTMLNoitaInventoryElement));
+h["noita-inventory"] = freeze(HTMLNoitaInventoryElement);
