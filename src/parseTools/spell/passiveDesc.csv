@@ -30,7 +30,7 @@ FLAMETHROWER,火焰喷射器,逸散火花 冒烟
 ICEBALL,冰球,逸散蓝色火花 冒烟
 SLIMEBALL,粘液球,泄露可燃气与挥发性性辐射液滴
 DARKFLAME,黑焰,微光 逸散黑焰
-GLITTER_BOMB,闪烁炸弹,glitter_bomb
+GLITTER_BOMB,闪烁炸弹, 
 BOMB_HOLY,神圣炸弹,逸散火花 冒烟
 BOMB_HOLY_GIGA,巨型神圣炸弹,逸散火花 冒烟
 ACIDSHOT,酸液球,泄露可燃气与挥发性性辐射液滴
@@ -81,6 +81,6 @@ TORCH_ELECTRIC,电子火把,强光 萦绕电弧 迸射蓝色粒子 放电
 ENERGY_SHIELD,能量盾,能量护盾
 ENERGY_SHIELD_SECTOR,半圆能量盾,残缺能量护盾
 TINY_GHOST,迷你幽灵,小幽灵跟随
-SUMMON_PORTAL,召唤传送门,summon_portal.xml
+SUMMON_PORTAL,召唤传送门, 
 METEOR_RAIN,陨石雨,逸散火花 冒烟
 WORM_RAIN,蠕虫雨,微光 逸散粉色粒子
