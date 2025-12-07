@@ -1,22 +1,51 @@
 id,法术名,提供投射物,//此表是手动维护无法通过解析出的法术会使用的投射物(关联投射物与施法块投射物均可以解析出来)
-_ROCKET_DOWNWARDS,下方向集束魔弹,ROCKET_DOWNWARDS:5#5
-_ROCKET_OCTAGON,八角形集束魔弹,ROCKET_DOWNWARDS:8#5
-_BOUNCE_EXPLOSION,易爆弹跳,BOUNCE_EXPLOSION:#4
-_BOUNCE_SPARK,泡泡弹跳,BOUNCE_SPARK_FRIENDLY_FIRE#4 BOUNCE_SPARK_FRIENDLY_FIRE_SILENT:0~1#4
-_BOUNCE_LASER,激光弹跳,BOUNCE_LASER:4#4
-_BOUNCE_SMALL_EXPLOSION,闪烁弹跳,BOUNCE_SMALL_EXPLOSION:#4
-_BOUNCE_LIGHTNING,雷电弹跳,BOUNCE_LIGHTNING:#4
-_FIREBALL_RAY,火球发射器,FIREBALL_RAY:#8
-_LIGHTNING_RAY,闪电发射器,LIGHTNING_EXTRA_ARCS:#8
-_TENTACLE_RAY,触手怪,TENTACLE:#8
-_LASER_EMITTER_RAY,电浆束发射器,ORB_LASEREMITTER_WEAK:#8
-_FIREBALL_RAY_LINE,双向火球发射器,FIREBALL_RAY_SMALL:2#8,//火球双向发射 此处算两个
-_FIREBALL_RAY_ENEMY,专属火球发射器,FIREBALL_RAY:500#8,//在持续时间内会射出500个
-_LIGHTNING_RAY_ENEMY,专属闪电发射器,LIGHTNING_EXTRA_ARCS:50#8,//在持续时间内会射出50个
-_TENTACLE_RAY_ENEMY,专属触手怪,TENTACLE:500#8,//在持续时间内会射出500个
-_ORBIT_DISCS,锯片环绕,ORBIT_DISCS_DISC:4#3
-_ORBIT_FIREBALLS,火球环绕,ORBIT_FIREBALLS_FIREBALL:4#3
-_ORBIT_NUKES,核弹环绕,ORBIT_NUKES_NUKE:4#3
-_ORBIT_LASERS,电浆束环绕,ORBIT_ORB_LASEREMITTER_WEAK:4#3
+ROCKET_DOWNWARDS,下方向集束魔弹,projectiles/deck/rocket_downwards:5#5
+ROCKET_OCTAGON,八角形集束魔弹,projectiles/deck/rocket_downwards:8#5
+BOUNCE_HOLE,真空弹跳,projectiles/deck/bounce_hole:#4
+BOUNCE_EXPLOSION,易爆弹跳,projectiles/deck/bounce_explosion:#4
+BOUNCE_SPARK,泡泡弹跳,projectiles/deck/bounce_spark_friendly_fire:#4 projectiles/deck/bounce_spark_friendly_fire_silent:0~1#4
+BOUNCE_LASER,激光弹跳,projectiles/deck/bounce_laser:4#4
+BOUNCE_LASER_EMITTER,电浆束弹跳,projectiles/deck/orb_laseremitter_weak_opposite:#4
+BOUNCE_SMALL_EXPLOSION,闪烁弹跳,projectiles/deck/bounce_small_explosion:#4
+BOUNCE_LIGHTNING,雷电弹跳,projectiles/deck/bounce_lightning:#4
+FIREBALL_RAY,火球发射器,projectiles/deck/fireball_ray:#8
+LIGHTNING_RAY,闪电发射器,projectiles/deck/lightning_extra_arcs:#8
+TENTACLE_RAY,触手怪,projectiles/deck/tentacle:#8
+LASER_EMITTER_RAY,电浆束发射器,projectiles/deck/orb_laseremitter_weak:#8
+FIREBALL_RAY_LINE,双向火球发射器,projectiles/deck/fireball_ray_small:2#8,//火球双向发射 此处算两个
+FIREBALL_RAY_ENEMY,专属火球发射器,projectiles/deck/fireball_ray:500#8,//在持续时间内会射出500个
+LIGHTNING_RAY_ENEMY,专属闪电发射器,projectiles/deck/lightning_extra_arcs:50#8,//在持续时间内会射出50个
+TENTACLE_RAY_ENEMY,专属触手怪,projectiles/deck/tentacle:500#8,//在持续时间内会射出500个
+ORBIT_DISCS,锯片环绕,projectiles/deck/disc_bullet_big:4#3
+ORBIT_FIREBALLS,火球环绕,misc/orbit_fireballs_fireball:4#3
+ORBIT_NUKES,核弹环绕,misc/orbit_nukes_nuke:4#3
+ORBIT_LASERS,电浆束环绕,projectiles/deck/orb_laseremitter_weak:4#3
 FIREWORK,烟花！,projectiles/deck/fireworks/firework_pink projectiles/deck/fireworks/firework_green:#2 projectiles/deck/fireworks/firework_blue:#2 projectiles/deck/fireworks/firework_orange:#2
 SUMMON_EGG,召唤蛋,items/pickup/egg_monster items/pickup/egg_slime:#2 items/pickup/egg_red:#2 items/pickup/egg_fire:#2
+SPORE_POD,多刺孢子荚,projectiles/deck/spore_pod projectiles/deck/spore_pod_spike:20#6
+DEATH_CROSS_BIG,巨型死亡十字,projectiles/deck/death_cross_big projectiles/deck/death_cross_big_laser:12#6
+FIZZLE,闪灭,projectiles/deck/fizzle:5#6
+CLUSTERMOD,集束弹,projectiles/deck/grenade_small:8#5
+WALL_SQUARE,方形粒子屏障,projectiles/deck/wall_square projectiles/deck/wall_piece:76#6
+WALL_HORIZONTAL,水平粒子屏障,projectiles/deck/wall_horizontal projectiles/deck/wall_piece:19#6
+WALL_VERTICAL,垂直粒子屏障,projectiles/deck/wall_vertical projectiles/deck/wall_piece:19#6
+PURPLE_EXPLOSION_FIELD,盛大场面,projectiles/deck/purple_explosion_field projectiles/deck/purple_explosion:#8
+CHAIN_BOLT,连锁魔弹,projectiles/deck/chain_bolt projectiles/deck/chain_bolt_explosion:#7
+MAGIC_SHIELD,魔法护卫,projectiles/deck/magic_shield_start projectiles/deck/magic_shield_part:4#3
+BIG_MAGIC_SHIELD,大型魔法护卫,projectiles/deck/big_magic_shield_start projectiles/deck/big_magic_shield_part:4#3
+PEBBLE,岩石精灵,projectiles/deck/pebble_player projectiles/deck/pebble_player_physics:#8
+DARKFLAME,黑焰,projectiles/darkflame projectiles/darkflame_stationary:#8
+THUNDERBALL,雷霆冲击,projectiles/thunderball projectiles/lightning_thunderburst:8#6
+GLITTER_BOMB,闪烁炸弹,projectiles/deck/glitter_bomb projectiles/deck/glitter_bomb_shrapnel:12#6
+HITFX_EXPLOSION_SLIME,黏液引爆,misc/hitfx_explode_explosion:#7
+HITFX_EXPLOSION_SLIME_GIGA,巨型黏液引爆,misc/hitfx_explode_explosion_giga:#7
+HITFX_EXPLOSION_ALCOHOL,烈酒引爆,misc/hitfx_explode_explosion:#7
+HITFX_EXPLOSION_ALCOHOL_GIGA,巨型烈酒引爆,misc/hitfx_explode_explosion_giga:#7
+RANDOM_EXPLOSION,混沌魔法,projectiles/deck/acidshot:#7 projectiles/deck/alcohol_blast:#7 projectiles/deck/black_hole_big:#7 projectiles/deck/cloud_thunder:#7 projectiles/deck/cloud_acid:#7 projectiles/deck/cloud_blood:#7 projectiles/deck/cloud_water:#7 projectiles/deck/death_cross:#7 projectiles/deck/death_cross_big:#7 projectiles/deck/fireball:#7 projectiles/deck/firebomb:#7 projectiles/deck/grenade:#7 projectiles/deck/grenade_tier_2:#7 projectiles/deck/grenade_tier_3:#7 projectiles/deck/lightning:#7 projectiles/deck/meteor:#7 projectiles/deck/nuke:#7 projectiles/deck/regeneration_field:#7 projectiles/deck/rocket:#7 projectiles/deck/rocket_tier_2:#7 projectiles/deck/rocket_tier_3:#7 projectiles/deck/tentacle_portal:#7 projectiles/deck/thunder_blast:#7 projectiles/deck/wall_square:#7 projectiles/deck/xray:#7
+ALL_NUKES,核弹置换术,projectiles/deck/all_nukes projectiles/deck/nuke:#8
+ALL_DISCS,巨型圆锯置换术,projectiles/deck/all_discs projectiles/deck/disc_bullet_big:#8
+ALL_ROCKETS,魔法飞弹置换术,projectiles/deck/all_rockets projectiles/deck/rocket:#7 projectiles/deck/rocket_tier_2:#7 projectiles/deck/rocket_tier_3:#7
+ALL_DEATHCROSSES,死亡十字置换术,projectiles/deck/all_deathcrosses projectiles/deck/death_cross:#7  projectiles/deck/death_cross:#7
+ALL_BLACKHOLES,黑洞置换术,projectiles/deck/all_blackholes projectiles/deck/black_hole:#7
+ALL_ACID,酸液置换术,projectiles/deck/all_acid projectiles/deck/acidburst:#7
+SPIRAL_SHOT,螺旋魔弹,projectiles/deck/spiral_shot projectiles/deck/spiral_part:4#3
