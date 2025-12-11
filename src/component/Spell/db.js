@@ -437,6 +437,10 @@ class SpellData {
 
         /** @type {SpellSet} 提供碰撞失效的投射物 */
         offerProjectile_onCollisionNotDie: new Set(),
+        /** @type {SpellSet} 提供无重力的投射物 */
+        offerProjectile_noGravity: new Set(),
+        /** @type {SpellSet} 提供多重爆炸的投射物 */
+        offerProjectile_multipleExplode: new Set(),
 
         /** @type {SpellSet} 次数限制法术 */ timesLimited: new Set(),
         /** @type {SpellSet} 不可无限化法术 */ neverUnlimited: new Set(),
@@ -760,17 +764,24 @@ class SpellData {
                     if (amountMax > 1) storage.offerProjectiles.add(data);
                 }
                 for (const { drawCount_Hit, drawCount_Timer, drawCount_Death, projectile } of data.offeredProjectile) {
+                    let explodeAmount = 0;
                     if (projectile.projectileComponent) {
-                        // console.log(projectile.projectileComponent);
-
-                        const { damage, onCollisionDie, friendlyFire, explosionEntity = "" } = projectile.projectileComponent;
+                        const { damage, onCollisionDie, friendlyFire, explosionEntity = "", onLifetimeOutExplode, onDeathExplode } = projectile.projectileComponent;
                         if (explosionEntity.split(",").includes("misc/explosion_was_here")) storage.activateSunStone.add(data);
                         if (!onCollisionDie) storage.offerProjectile_onCollisionNotDie.add(data);
                         if (friendlyFire) storage.friendlyFire.add(data);
                         for (const damageType in damage) {
                             if (damage[damageType]) storage[`offerProjectile_damage_${damageType}`].add(data);
                         }
+                        if ((onDeathExplode || onLifetimeOutExplode) && damage.explosion > 0) explodeAmount++;
                     }
+                    if (projectile.velocityComponent) {
+                        const { gravity } = projectile.velocityComponent;
+                        if (gravity === 0) storage.offerProjectile_noGravity.add(data);
+                    }
+                    if (projectile.explodeOnDamageComponent) explodeAmount++;
+                    if (projectile.explosionComponent) explodeAmount++;
+                    if (explodeAmount > 1) storage.offerProjectile_multipleExplode.add(data);
                     if (drawCount_Death) storage.draw_death.add(data);
                     if (drawCount_Hit) storage.draw_hit.add(data);
                     if (drawCount_Timer) storage.draw_timer.add(data);
