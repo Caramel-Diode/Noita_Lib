@@ -142,12 +142,13 @@ const Wand = (() => {
 
         /**
          * @param {string} xmlString
+         * @param {string} [display="panel"] 
          */
-        static formPlayerXML(xmlString) {
+        static formPlayerXML(xmlString, display = "panel") {
             return XML.parse(xmlString, { ignore: ["#text", "#comment"] })
                 .childNodes.query("Entity")
                 .filter(entity => entity.attr.get("tags").split(",").includes("wand"))
-                .map(entity => new this({ data: entity.toString("RAW") }));
+                .map(entity => new this({ data: entity.toString("RAW"), display }));
         }
         /**
          * 加载法术列表项
