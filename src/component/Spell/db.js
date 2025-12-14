@@ -435,7 +435,7 @@ class SpellData {
         /** @type {SpellSet} 提供投射物 */ offerProjectile: new Set(),
         /** @type {SpellSet} 提供多个投射物 */ offerProjectiles: new Set(),
 
-        /** @type {SpellSet} 提供碰撞失效的投射物 */
+        /** @type {SpellSet} 提供碰撞不失效的投射物 */
         offerProjectile_onCollisionNotDie: new Set(),
         /** @type {SpellSet} 提供无重力的投射物 */
         offerProjectile_noGravity: new Set(),
