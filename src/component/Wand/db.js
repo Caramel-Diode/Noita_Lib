@@ -1,8 +1,8 @@
 class Icon extends $icon(15, "魔杖") {
-    /** @typedef {{index:Number,name:String,url:String,length:Number,frame:Number}} IconInfo */
-    /** @type {Map<String,IconInfo>}  */
+    /** @typedef {{index:number,name:string,url:string,length:number,frame:number}} IconInfo */
+    /** @type {Map<string,IconInfo>}  */
     static #dataMap = new Map();
-    /** @type {Number} 辅助变量 用于记录法杖图标索引 */
+    /** @type {number} 辅助变量 用于记录法杖图标索引 */
     static #currentIndex = 1;
     #data;
 
@@ -78,7 +78,17 @@ class Icon extends $icon(15, "魔杖") {
      * @param {Number} [frame] 动画帧数 默认1
      */
     static cache(name = "#" + this.#currentIndex, length, frame = 1) {
-        this.#dataMap.set(name, { index: this.#currentIndex, name, length, frame });
+        const proto = { index: this.#currentIndex, length, frame };
+
+        if (!name.startsWith("#")) {
+            const [name1, name2] = name.split(" ");
+            this.#dataMap.set(name1, Object.assign(Object.create(proto), { name: name1 }));
+            this.#dataMap.set(name2, Object.assign(Object.create(proto), { name: name2 }));
+        } else {
+            this.#dataMap.set(name, Object.assign(Object.create(proto), { name }));
+            const name2 = `wand_${(this.#currentIndex - 1).toString().padStart(4, 0)}`;
+            this.#dataMap.set(name2, Object.assign(Object.create(proto), { name: name2 }));
+        }
         this.#currentIndex++;
         return name;
     }
@@ -598,7 +608,8 @@ class WandData {
 
         #length;
         constructor(datas) {
-            /** @type {String} 名称 */ this.name = datas[0];
+            /** @type {string} 名称 */
+            this.name = datas[0].split(" ")[0];
             //图标长度为0代表法杖图标自动生成
             if (!datas[1]) this.icon = null;
             else {
@@ -707,6 +718,52 @@ class WandData {
             this.#iconName = WandData.MatchData.getInfo(this).name;
             if (this.name === "AUTO") /** @type {String} 名称 */ this.name = info.name;
         } else this.#iconName = iconName;
+    }
+
+    /**
+     * 从魔杖实体XML创建
+     * @param {string} xmlString
+     */
+    static fromXML(xmlString) {
+        // 允许从包含魔杖实体的XML中提取
+        const wandEntity = XML.parse(xmlString, { ignore: ["#text", "#comment"] })
+            .childNodes.query("Entity")
+            .find(entity => entity.attr.get("tags").split(",").includes("wand")).xmlObject;
+        const staticSpells = [];
+        const dynamicSpells = [];
+        for (const {
+            ItemActionComponent: [itemActionComp],
+            ItemComponent: [itemComp]
+        } of wandEntity.Entity) {
+            const { action_id } = itemActionComp("attr");
+            const { permanently_attached, uses_remaining } = itemComp("attr");
+            let data = action_id;
+            if (uses_remaining !== "-1") data += "^" + uses_remaining;
+            if (+permanently_attached) staticSpells.push(data);
+            else dynamicSpells.push(data);
+        }
+        const [abilityComp] = wandEntity.AbilityComponent;
+        const [gunConfig] = abilityComp.gun_config;
+        const [gunactionConfig] = abilityComp.gunaction_config;
+        const attr1 = abilityComp("attr");
+        const attr2 = gunConfig("attr");
+        const attr3 = gunactionConfig("attr");
+        /* prettier-ignore */
+        return new this([
+            "魔杖",
+            attr1.sprite_file.split(/[/.]/).at(-2),
+            +attr2.deck_capacity,
+            +attr2.actions_per_round,
+            +attr3.fire_rate_wait,
+            +attr2.reload_time,
+            !!+attr2.shuffle_deck_when_empty,
+            +attr3.spread_degrees,
+            +attr3.speed_multiplier,
+            +attr1.mana_charge_speed,
+            +attr1.mana_max,
+            staticSpells.join(" "),
+            dynamicSpells.join(" ")
+        ]);
     }
     /**
      * 是否包含某个法术
