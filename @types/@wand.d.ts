@@ -102,29 +102,33 @@ export type Class = {
         /** 魔杖模板 */
         template?: string;
         /** 魔杖数据 */
-        data?: {
-            /** 名称 */
-            name?: string;
-            /** 图标 */
-            icon?: string;
-            /** 容量 */
-            capacity?: RangeValueExp | number;
-            /** 抽取数 */
-            draw?: RangeValueExp | number;
-            /** 施放延迟 */
-            fireRateWait?: RangeValueExp | number;
-            /** 充能时间 */
-            reloadTime?: RangeValueExp | number;
-            /** 乱序 */
-            shuffle?: boolean;
-            /** 散射角度 */
-            spreadDegrees?: RangeValueExp | number;
-            /** 法力恢复速度 */
-            manaChargeSpeed?: RangeValueExp | number;
-            /** 法力上限 */
-            manaMax?: RangeValueExp | number;
-            staticSpells?: string;
-            dynamicSpells?: string;
-        };
+        data?:
+            | {
+                  /** 名称 */
+                  name?: string;
+                  /** 图标 */
+                  icon?: string;
+                  /** 容量 */
+                  capacity?: RangeValueExp | number;
+                  /** 抽取数 */
+                  draw?: RangeValueExp | number;
+                  /** 施放延迟 */
+                  fireRateWait?: RangeValueExp | number;
+                  /** 充能时间 */
+                  reloadTime?: RangeValueExp | number;
+                  /** 乱序 */
+                  shuffle?: boolean;
+                  /** 散射角度 */
+                  spreadDegrees?: RangeValueExp | number;
+                  /** 法力恢复速度 */
+                  manaChargeSpeed?: RangeValueExp | number;
+                  /** 法力上限 */
+                  manaMax?: RangeValueExp | number;
+                  staticSpells?: string;
+                  dynamicSpells?: string;
+              }
+            | string;
+        /** 从玩家XML构建多个魔杖组件 */
+        formPlayerXML: (xmlString: string, display: "panel" | "panel-simple") => Array<HTMLNoitaWandElement>;
     }): HTMLNoitaWandElement;
 };
