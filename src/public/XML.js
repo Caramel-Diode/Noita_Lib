@@ -350,6 +350,7 @@ const XML = (() => {
         }
         #rawData = null;
 
+        /** @type {XMLObject} */
         get xmlObject() {
             return toXMLObject(this, this.tagName);
         }
