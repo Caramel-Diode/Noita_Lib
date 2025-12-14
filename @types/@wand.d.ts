@@ -128,7 +128,7 @@ export type Class = {
                   dynamicSpells?: string;
               }
             | string;
+        }): HTMLNoitaWandElement;
         /** 从玩家XML构建多个魔杖组件 */
         formPlayerXML: (xmlString: string, display: "panel" | "panel-simple") => Array<HTMLNoitaWandElement>;
-    }): HTMLNoitaWandElement;
 };
