@@ -71,39 +71,39 @@ const Wand = (() => {
         wandInfo: { name: "wand.info", $default: "" },
         /** 魔杖警告 @type {$ValueOption<boolean>} */
         wandWarn: { name: "wand.warn", $default: "" },
-        /** 魔杖名 @type {$ValueOption<String>} */
+        /** 魔杖名 @type {$ValueOption<string>} */
         wandName: { name: "wand.name", $default: "魔杖" },
-        /** 魔杖模板 @type {$ValueOption<String>} */
+        /** 魔杖模板 @type {$ValueOption<string>} */
         wandTemplate: { name: "wand.template" },
         /** 图标 @type {$ValueOption<"AUTO"|`#<number>`|import("TYPE").wandName>} */
         wandIcon: { name: "wand.icon", $default: "AUTO" },
-        /** 容量 @type {$ValueOption<String>} */
+        /** 容量 @type {$ValueOption<string>} */
         wandCapacity: { name: "wand.capacity", $default: "26" },
-        /** 抽取数 @type {$ValueOption<String>} */
+        /** 抽取数 @type {$ValueOption<string>} */
         wandDraw: { name: "wand.draw", $default: "1" },
-        /** 施放延迟 @type {$ValueOption<String>} */
+        /** 施放延迟 @type {$ValueOption<string>} */
         wandFireRateWait: { name: "wand.fire-rate-wait", $default: "0" },
-        /** 充能时间 @type {$ValueOption<String>} */
+        /** 充能时间 @type {$ValueOption<string>} */
         wandReloadTime: { name: "wand.reload-time", $default: "0" },
-        /** 冷却时间(施放延迟/充能时间) @type {$ValueOption<String>} */
+        /** 冷却时间(施放延迟/充能时间) @type {$ValueOption<string>} */
         wandCD: { name: "wand.cd", $default: "" },
         /** 乱序 @type {$ValueOption<"true"|"false">} */
         wandShuffle: { name: "wand.shuffle", $default: "false" },
-        /** 散射 @type {$ValueOption<String>} */
+        /** 散射 @type {$ValueOption<string>} */
         wandSpreadDegrees: { name: "wand.spread-degrees", $default: "0" },
-        /** 速度倍数 @type {$ValueOption<String>} */
+        /** 速度倍数 @type {$ValueOption<string>} */
         wandSpeedMultiplier: { name: "wand.speed-multiplier", $default: "1" },
-        /** 法力恢复速度 @type {$ValueOption<String>} */
+        /** 法力恢复速度 @type {$ValueOption<string>} */
         wandManaChargeSpeed: { name: "wand.mana-charge-speed", $default: "0" },
-        /** 法力上限 @type {$ValueOption<String>} */
+        /** 法力上限 @type {$ValueOption<string>} */
         wandManaMax: { name: "wand.mana-max", $default: "1000" },
-        /** 法力上限 @type {$ValueOption<String>} */
+        /** 法力上限 @type {$ValueOption<string>} */
         wandMana: { name: "wand.mana", $default: "" },
-        /** 始终法术 @type {$ValueOption<String>} */
+        /** 始终法术 @type {$ValueOption<string>} */
         wandStaticSpells: { name: "wand.static-spells", $default: "" },
-        /** 法术槽法术 @type {$ValueOption<String>} */
+        /** 法术槽法术 @type {$ValueOption<string>} */
         wandDynamicSpells: { name: "wand.dynamic-spells", $default: "" },
-        /** 始终/法术槽法术 @type {$ValueOption<String>} */
+        /** 始终/法术槽法术 @type {$ValueOption<string>} */
         wandSpells: { name: "wand.spells", $default: "" }
     }) {
         /** @type {import("@wand").WandData} */
@@ -112,20 +112,20 @@ const Wand = (() => {
         /**
          * @param {Object} [option] 构造配置
          * @param {"icon"|"panel"|"panel-simple"} [option.display] 显示模式
-         * @param {String} [option.template] 模板
+         * @param {string} [option.template] 模板
          * @param {Object} [option.data] 魔杖数据
-         * @param {String} [option.data.name] 名称
-         * @param {String} [option.data.icon] 图标
-         * @param {Number|RangeValueExp} [option.data.capacity] 容量
-         * @param {Number} [option.data.draw] 抽取数
-         * @param {Number|RangeValueExp} [option.data.fireRateWait] 施放延迟
-         * @param {Number|RangeValueExp} [option.data.reloadTime] 充能时间
-         * @param {Boolean} [option.data.shuffle] 乱序
-         * @param {Number|RangeValueExp} [option.data.spreadDegrees] 散射角度
-         * @param {Number|RangeValueExp} [option.data.manaChargeSpeed] 法力恢复速度
-         * @param {Number|RangeValueExp} [option.data.manaMax] 法力上限
-         * @param {String} [option.data.staticSpells] 始终法术 法术表达式
-         * @param {String} [option.data.dynamicSpells] 法术槽 法术表达式
+         * @param {string} [option.data.name] 名称
+         * @param {string} [option.data.icon] 图标
+         * @param {number|RangeValueExp} [option.data.capacity] 容量
+         * @param {number} [option.data.draw] 抽取数
+         * @param {number|RangeValueExp} [option.data.fireRateWait] 施放延迟
+         * @param {number|RangeValueExp} [option.data.reloadTime] 充能时间
+         * @param {boolean} [option.data.shuffle] 乱序
+         * @param {number|RangeValueExp} [option.data.spreadDegrees] 散射角度
+         * @param {number|RangeValueExp} [option.data.manaChargeSpeed] 法力恢复速度
+         * @param {number|RangeValueExp} [option.data.manaMax] 法力上限
+         * @param {string} [option.data.staticSpells] 始终法术 法术表达式
+         * @param {string} [option.data.dynamicSpells] 法术槽 法术表达式
          */
         constructor({ display, template, data } = {}) {
             super();
@@ -134,9 +134,20 @@ const Wand = (() => {
             if (display) this.displayMode = display;
             if (template) this.wandData = WandData.getDataByTemplate(template);
             if (data instanceof WandData) this.wandData = data;
+            else if (typeof data === "string") this.wandData = WandData.fromXML(data);
             else if (data)
                 /* prettier-ignore */
                 this.wandData = new WandData([data.name ?? "魔杖", data.icon ?? "AUTO", data.capacity ?? 0, data.draw ?? 1, data.fireRateWait ?? 0, data.reloadTime ?? 0, data.shuffle ?? false, data.spreadDegrees ?? 0, data.speedMultiplier ?? 1, data.manaChargeSpeed ?? 0, data.manaMax ?? 1500, data.staticSpells ?? "", data.dynamicSpells ?? ""]);
+        }
+
+        /**
+         * @param {string} xmlString
+         */
+        static formPlayerXML(xmlString) {
+            return XML.parse(xmlString, { ignore: ["#text", "#comment"] })
+                .childNodes.query("Entity")
+                .filter(entity => entity.attr.get("tags").split(",").includes("wand"))
+                .map(entity => new this({ data: entity.toString("RAW") }));
         }
         /**
          * 加载法术列表项
