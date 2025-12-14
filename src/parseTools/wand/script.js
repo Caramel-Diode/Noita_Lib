@@ -40,17 +40,20 @@ const extraDatasAndImgs = (async () => {
     const extraDataCSV = await parseCSVFromUrl("extraData.csv");
     console.log(extraDataCSV);
     const wandnames = [...extraDataCSV.columnHeads];
-    wandnames.shift(); //移除"魔杖名"(表态)
+    wandnames.shift(); //移除"魔杖名"(表头)
     const promiseList = [];
     /** @type {Array<{name:String,frame:Number,width:Number}>} */
     const extraDatas = [];
     for (const name of wandnames) {
-        extraDatas.push({
+        const extraData = {
             name,
             frame: extraDataCSV.get(name, "帧数(动画)"),
             width: -1
-        });
+        };
+        extraDatas.push(extraData);
+        /** @type {string} */
         const iconPath = extraDataCSV.get(name, "图标路径");
+        extraData.name += " " + iconPath.split(/[./]/).at(-2); // 文件名作为别名
         promiseList.push(PNG.removeGAMA(`/${iconPath}`));
     }
     /** @type {Array<HTMLImageElement>} */
