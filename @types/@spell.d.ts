@@ -448,6 +448,7 @@ export type SpellData = {
     /** ID */ id: SpellId;
     /** 名称 */ name: SpellName;
     /** 别名 */ alias: Array<SpellAlias>;
+    /** 标签 */ tags: Set<SpellTag>;
     /** 描述 */ desc: string;
     /** 类型 */ type: "null" | SpellType;
     /** 最大使用次数 */ maxUse: number;
