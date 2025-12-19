@@ -1005,7 +1005,7 @@ const Base = (() => {
 
         /**
          * @type {typeof HTMLElement.prototype.attachShadow}
-         * @override 在 {@linkcode connectedCallback} 中被调用以达到自动创建shadowRoot的目的
+         * @override 在 {@linkcode contentUpdate} 中被调用以达到自动创建shadowRoot的目的
          * @see HTMLElement#attachShadow
          */
         attachShadow(init) {
@@ -1051,30 +1051,16 @@ const Base = (() => {
         async [$content]() {
             // 此函数被调用时意味着需要从LightDOM中获取内容
             await DOMContentLoaded;
-            /** @type {Array<HTMLTemplateElement>} */
-            const templates = [];
-            /** @type {Array<HTMLElement>} */
-            const children = [...this.children];
-            for (let i = 0; i < children.length; i++) {
-                /** @type {HTMLTemplateElement} */
-                const element = children[i];
-                if (element.tagName === "TEMPLATE") {
-                    element.dataset.scope = true; //从LightDOM获取的内容需要隔离样式
-                    templates.push(element);
-                    element.remove(); // 不要移除其他元素 允许作为插槽内容嵌入
-                }
-            }
-            if (templates.length) this.loadPanelContent(templates);
-            else {
-                /* prettier-ignore */
-                this.#shadowRoot.append(
-                    h.div({class:"background"}),
+            const templates = [...this.getElementsByTagName("template")];
+            for (const element of templates) element.dataset.scope ??= true; //从LightDOM获取的内容需要隔离样式
+            if (templates.length) return this.loadPanelContent(templates);
+            /* prettier-ignore */
+            this.#shadowRoot.append(
+                h.div({class:"background"}),
                 h.section(
-                    h.slot(h.pre(`使用多个<tempalte title="选项卡名称">内容</tempalte>以选项卡模式填充内容\n或直接在内部以简易模式填充内容`))
-                    ),
-                    
-                );
-            }
+                h.slot(h.pre(`使用多个<tempalte title="选项卡名称">内容</tempalte>以选项卡模式填充内容\n或直接在内部以简易模式填充内容`))
+                )
+            );
         }
 
         /**
@@ -1113,7 +1099,6 @@ const Base = (() => {
                 } else section.append(content);
 
                 const li = h.li({ role: "tab", "aria-selected": "false", tabindex: 0, Event: panelTabsSwitch.event, $: { content: section } }, h.span(title));
-                // li.switch = panelTabsSwitch.main(li);
                 if (template.hasAttribute("data-default")) lis.$default = li;
                 lis[i] = li;
                 this.#shadowRoot.append(section);
@@ -1127,25 +1112,15 @@ const Base = (() => {
             lis.$default.content.hidden = false;
         }
 
-        connectedCallback() {
-            if (this.shadowRoot) contentConvertFn.add(this.shadowRoot);
+        addPromptMsgTo(target) {
+            hoverMsg.attach(target, this);
+        }
 
-            if (this.#rendered) return;
-            this.attachShadow({ mode: "open" });
-            this.#shadowRoot.innerHTML = "";
-
-            this.contentUpdate();
-            this.#rendered = true; // 防止重复渲染
-
-            // 作为悬浮提示挂载到其它元素
-            /**
-             * 为元素添加悬浮提示
-             * @param {HTMLElement} target
-             */
-            const addPromptMsgTo = target => hoverMsg.attach(target, this);
+        /** 作为悬浮提示挂载到其它元素 */
+        #addPromptMsg() {
             if (this.promptForParent) {
                 const parent = this.parentElement ?? this.parentNode?.host;
-                if (parent) addPromptMsgTo(parent);
+                if (parent) this.addPromptMsgTo(parent);
                 else console.warn(`父元素不存在`);
                 this.promptForParent = null;
                 this.remove();
@@ -1159,7 +1134,7 @@ const Base = (() => {
                         console.warn(`无法找到id=${id}的元素`);
                         continue;
                     }
-                    addPromptMsgTo(target);
+                    this.addPromptMsgTo(target);
                 }
                 this.promptFor = null;
                 this.remove();
@@ -1169,15 +1144,28 @@ const Base = (() => {
                 const root = this.parentElement ?? this.getRootNode();
                 const { promptForSelector } = this;
                 this.promptForSelector = null;
-                root.querySelectorAll(promptForSelector).forEach(addPromptMsgTo);
+                
+                root.querySelectorAll(promptForSelector).forEach(this.addPromptMsgTo.bind(this));
 
                 /** 观察文档节点的增加 以便于自动为新元素添加悬浮提示 */
-                const observer = new MutationObserver(mutationsList => {
-                    root.querySelectorAll(promptForSelector).forEach(addPromptMsgTo);
-                });
+                const observer = new MutationObserver(mutationsList => root.querySelectorAll(promptForSelector).forEach(this.addPromptMsgTo.bind(this)));
                 observer.observe(root, { childList: true, subtree: true });
                 this.remove();
             }
+        }
+
+        connectedCallback() {
+            if (this.shadowRoot) contentConvertFn.add(this.shadowRoot);
+
+            if (this.#rendered) return;
+            this.attachShadow({ mode: "open" });
+            this.#shadowRoot.replaceChildren();
+            this.#shadowRoot.innerHTML = "";
+
+            this.contentUpdate();
+            this.#rendered = true; // 防止重复渲染
+
+            this.#addPromptMsg();
         }
 
         disconnectedCallback() {
