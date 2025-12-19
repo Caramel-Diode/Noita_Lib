@@ -66,7 +66,7 @@ const XML = (() => {
         }
         if ($.text.length) Reflect.defineProperty(obj, Symbol("<text>"), { value: $.text });
         if ($.comment.length) Reflect.defineProperty(obj, Symbol("<comment>"), { value: $.comment });
-        if ($.document.length) Reflect.defineProperty(obj, Symbol("<document>"), { value: $.comment });
+        if ($.document.length) Reflect.defineProperty(obj, Symbol("<document>"), { value: $.document });
 
         for (const child of childNodes) {
             const { tagName, type, content } = child;
@@ -1649,5 +1649,5 @@ const XML = (() => {
         if (option?.ignore) root.childNodes.query(node => option.ignore.includes(node.type)).forEach(node => node.remove());
         return root;
     };
-    return { Attr: _Attr, parse, DocumentNode, ElementNode, TextNode, CommentNode, CDataSectionNode, ProcessingInstructionNode, DocumentNode };
+    return { Attr: _Attr, parse, DocumentNode, ElementNode, TextNode, CommentNode, CDataSectionNode, ProcessingInstructionNode };
 })();
