@@ -93,9 +93,9 @@ const Spell = (() => {
         displayTimeUnit: { name: "display.time-unit", $default: "s" },
         /** @type {$ValueOption<SpellId|SpellName|SpellAlias>} */
         spellId: { name: "spell.id" },
-        /** @type {$ValueOption<String>} */
+        /** @type {$ValueOption<string>} */
         spellExp: { name: "spell.exp" },
-        /** @type {$ValueOption<String>} */
+        /** @type {$ValueOption<string>} */
         spellRemain: { name: "spell.remain" },
         /** @type {$ValueOption<boolean>} */
         noPanelHover: { name: "no-panel-hover" },
