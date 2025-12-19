@@ -717,8 +717,8 @@ const $extends = (constructor = HTMLElement, propAttrMap = {}) => class extends 
                 if (newValue !== oldValue && this.isConnected) {
                     // 决定是否需要重置内容
                     if (needResetContentAttr.has(name)) {
-                        if (this.shadowRoot) this.shadowRoot.innerHTML = "";
-                        else this.innerHTML = ""
+                        if (this.shadowRoot) this.shadowRoot.replaceChildren();
+                        else this.replaceChildren();
                     }
                     // 调用子类重写的版本 若子类中不存在contentUpdate 则抛出错误
                     if(!this.contentUpdate) throw new Error("contentUpdate() is not implemented in " + this.constructor.name);
