@@ -502,6 +502,7 @@ class SpellData {
         /** @type {SpellSet} 带有碰撞触发抽取的法术 */ draw_hit: new Set(),
         /** @type {SpellSet} 带有定时触发抽取的法术 */ draw_timer: new Set(),
         /** @type {SpellSet} 带有失效触发抽取的法术 */ draw_death: new Set(),
+        /** @type {SpellSet} 抽取单次法术 */ draw_once: new Set(),
 
         /** @type {SpellSet} 影响伤害的法术 */
         get damage_mod() {
@@ -529,7 +530,7 @@ class SpellData {
             return result;
         },
 
-        /** @type {Array<SpellData>} 生成需要解锁法术 */ spawnRequiresFlag: new Set(),
+        /** @type {SpellSet} 生成需要解锁法术 */ spawnRequiresFlag: new Set(),
         /** @type {SpellSet} 只能手动解锁的法术 */ spawnManualUnlock: new Set(),
 
         /** @type {SpellSet} 可激活太阳种子的法术 */
@@ -606,6 +607,15 @@ class SpellData {
             return icon;
         }
         return new Icon(this);
+    }
+
+    /** @type {Set<string>} */
+    get tags() {
+        const result = new Set();
+        for (const [tag, set] of Object.entries(SpellData.tagSets)) {
+            if (set.has(this)) result.add("#" + tag);
+        }
+        return result;
     }
 
     /**
@@ -785,6 +795,7 @@ class SpellData {
                     if (drawCount_Death) storage.draw_death.add(data);
                     if (drawCount_Hit) storage.draw_hit.add(data);
                     if (drawCount_Timer) storage.draw_timer.add(data);
+                    if (drawCount_Hit === 1 || drawCount_Timer === 1 || drawCount_Death === 1) storage.draw_once.add(data);
                 }
             }
 
@@ -801,7 +812,10 @@ class SpellData {
 
             if (data.spawn.manualUnlock) storage.spawnManualUnlock.add(data);
 
-            if (data.draw) storage.draw_common.add(data);
+            if (data.draw) {
+                storage.draw_common.add(data);
+                if (data.draw === 1) storage.draw_once.add(data);
+            }
 
             if ("friendlyFire" in data.modifierAction) storage.friendlyFire.add(data);
 
