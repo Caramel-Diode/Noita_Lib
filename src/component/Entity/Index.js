@@ -6,7 +6,7 @@ const Entity = (() => {
     const entityComponentHoverPanelMap = {
         ProjectileComponent: h`noita-panel`("投射物组件 实体会具备投射物的相关特性。"),
         AIAttackComponent: h`noita-panel`("AI攻击组件 实体会继续远程攻击。"),
-        AnimalAIComponentComponent: h`noita-panel`("动物AI组件"),
+        AnimalAIComponent: h`noita-panel`("动物AI组件"),
         LightningComponent: h`noita-panel`("闪电组件"),
         ExplosionComponent: h`noita-panel`("爆炸组件 此组件的爆炸不具备施放者信息。"),
         ExplodeOnDamageComponent: h`noita-panel`("受伤爆炸组件 此组件的爆炸不具备施放者信息。"),
@@ -31,7 +31,7 @@ const Entity = (() => {
         /** @type {$ValueOption<"panel">} */
         displayMode: { name: "display", $default: "panel" },
         /** @type {$ValueOption<String>} 实体id (path) */
-        entityId: { name: "entity.id" },
+        entityPath: { name: "entity.path" },
         /** @type {$ValueOption<string>} */
         entityFoldComponents: { name: "entity.fold-components", $default: "" }
     }) {
@@ -79,7 +79,7 @@ const Entity = (() => {
         constructor(data) {
             super();
             this.attachShadow({ mode: "open" });
-            if (typeof data === "string") this.entityId = data;
+            if (typeof data === "string") this.entityPath = data;
             else if (typeof data === "object") this.entityData = data;
         }
 
@@ -105,9 +105,11 @@ const Entity = (() => {
             /** @param {typeof EntityData.Component.prototype} component*/
             const createLoader = ({ $type }, multiple = false) => {
                 const loader = new this.PanelAttrLoader(ignore, timeUnit);
+                loader.container.ariaLabel = `${$type} 属性表`;
                 const summary = h.summary($type + (multiple ? "s" : ""));
-                hoverMsg.attach(summary, entityComponentHoverPanelMap[$type + (multiple ? "s" : "")]);
-                const details = h.details({ class: "entity-component", open: true }, summary, h.div(loader.container));
+                const hoverPanel = entityComponentHoverPanelMap[$type + (multiple ? "s" : "")];
+                hoverMsg.attach(summary, hoverPanel);
+                const details = h.details({ class: "entity-component", "aria-label": `实体组件(${$type})`, "aria-description": hoverPanel.innerText, open: true }, summary, h.div(loader.container));
                 details.open = !foldComponents.includes($type);
                 section.append(details);
                 return {
@@ -429,7 +431,7 @@ const Entity = (() => {
                     airFriction: { value: comp.airFriction },
                     gravity: { value: comp.gravity, hidden: comp.gravity === 0 },
                     mass: { value: comp.mass },
-                    speedMax: { value: comp.speedMax }
+                    speedMax: { value: comp.speedMax, hidden: comp.speedMax === Infinity }
                 });
             }
             if (entityData.gameEffectComponent)
@@ -521,15 +523,15 @@ const Entity = (() => {
 
         async #loadPanelContent() {
             const ed = this.entityData;
-            const template = h.template(createPanelH1(ed.path, ed.name), await HTMLNoitaEntityElement.getDataSection(this.entityData, { foldComponents: this.entityFoldComponents.split(" ") }));
+            const template = h.template(createPanelH1(ed.path, ed.name, "实体"), await HTMLNoitaEntityElement.getDataSection(this.entityData, { foldComponents: this.entityFoldComponents.split(" ") }));
             this.loadPanelContent([template]);
         }
 
         static [$css] = { panel: [css(embed(`#panel.css`), { name: "entity-panel" })] };
 
         [$content]() {
-            const entityId = this.entityId;
-            if (entityId) this.entityData = EntityData.queryById(entityId);
+            const { entityPath } = this;
+            if (entityPath) this.entityData = EntityData.query(entityPath);
             else this.entityData ??= EntityData.$NULL;
             //prettier-ignore
             switch (this.displayMode) {
@@ -539,6 +541,7 @@ const Entity = (() => {
                     break;
                 default: throw new TypeError("不支持的显示模式");
             }
+            this.ariaLabel = "Noita 实体";
         }
 
         //prettier-ignore
