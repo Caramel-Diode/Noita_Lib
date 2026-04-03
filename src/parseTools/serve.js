@@ -6,6 +6,7 @@ import { platform } from "os";
 import { URL } from "url";
 import { createRequire } from "module";
 import { generateAnimalsEntitiesPaths } from "./generateAnimalsEntitiesPaths.js";
+import { saveData } from "./saveData.js";
 
 const require = createRequire(import.meta.url);
 
@@ -153,6 +154,19 @@ const server = http.createServer(async (req, res) => {
                 stream.pipe(res);
             }
         } else {
+            {
+                const url = new URL($path, `http://localhost:${port}`);
+                const pathToSave = url.searchParams.get("save-file");
+                if (pathToSave) {
+                    const chunks = [];
+                    req.addListener("data", chunk => chunks.push(chunk));
+                    req.addListener("end", () => {
+                        saveData(pathToSave, Buffer.concat(chunks));
+                    });
+                    res.statusCode = 200;
+                    return res.end();
+                }
+            }
             res.setHeader("Content-Type", "text/html");
             res.statusCode = 404;
             res.end(fs.readFileSync(config.file.get("404.html")));
