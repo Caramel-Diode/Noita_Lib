@@ -69,13 +69,18 @@ class CSV {
                 startPos = i + 1;
                 _column++; // 列索引增加
             } else if (this.#isLineEnd(char)) {
-                // 对连续换行(空行)和"\r\n"(Windows换行符)特殊处理
+                // 处理换行
                 if (!this.#isLineEnd(data[i - 1])) {
                     result.set(_row, _column, data.slice(startPos, i));
-                    startPos = i + 2;
-                    _row++; // 行索引增加
-                    _column = 0; // 列索引归零
+                    _row++;
+                    _column = 0;
                 }
+
+                // 根据换行符类型跳过相应字符数
+                let skip = 1;
+                if (data[i] === "\r" && i + 1 < len && data[i + 1] === "\n") skip++; // "\r\n"
+                startPos = i + skip;
+                i += skip - 1; // 因为循环结束后 i 会自增，所以这里先减1
             }
         }
         Object.freeze(result.cells);
