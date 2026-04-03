@@ -1,29 +1,9 @@
-@property --c1 {
-    syntax: "<color>";
-    inherits: true;
-    initial-value: #0000;
-}
-
-@property --c2 {
-    syntax: "<color>";
-    inherits: true;
-    initial-value: #0000;
-}
-
-@property --c3 {
-    syntax: "<color>";
-    inherits: true;
-    initial-value: #0000;
-}
-
 *,
 :host,
 ::after,
 ::before {
-
     --mono-font: Fira Code, JetBrains Mono, sans-serif;
     position: relative;
-    color: #fff;
     /*
      * 使用 --font-size 来设定字体大小
      * 使用 --font-weight 来设定字重
@@ -43,6 +23,7 @@
 }
 
 :host {
+    color: #fff;
     display: inline-grid;
     margin: 3px;
 }
@@ -80,12 +61,6 @@ ul {
     list-style: none;
     width: fit-content;
     place-content: center;
-}
-
-@keyframes fade {
-    100% {
-        opacity: 0.5;
-    }
 }
 
 @keyframes fade-in {
@@ -186,11 +161,13 @@ div.destroy-durability {
     display: grid;
     place-items: center;
     height: 32px;
-    background: linear-gradient(#0003, #0003), var(--img) center/16px 16px repeat;
+    background:
+        linear-gradient(#0003, #0003),
+        var(--img) center/16px 16px repeat;
     border-radius: 6px;
 }
 
-.destroy-durability>canvas {
+.destroy-durability > :is(canvas, img) {
     zoom: 3;
     top: 1px;
     left: 0.5px;
