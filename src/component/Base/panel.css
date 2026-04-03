@@ -459,6 +459,7 @@ tr:is(:focus-visible, :hover)[tabindex] > td,
 }
 .attrs {
     border-radius: 2px;
+    width: fit-content;
 }
 /* 首个th  */
 .attrs > tr > th:nth-child(1) {
@@ -469,13 +470,13 @@ tr:is(:focus-visible, :hover)[tabindex] > td,
 
 .attrs > tr > th:nth-child(2) {
     padding-left: 10px;
-    min-width: 180px;
-    width: 180px;
+    min-width: 240px;
+    /* width: 240px; */
     color: #cfcfcf;
     --font-weight: 300;
 }
 
-.attrs td {
+.attrs :is(td, data) {
     min-width: 80px;
     font-family: var(--mono-font);
 }
@@ -583,6 +584,7 @@ section.attrs {
 .entities-tablist > li {
     display: flex;
     place-items: center;
+    gap: 6px;
     cursor: pointer;
     color: color-mix(in srgb, var(--mark-color, #fff), #0000);
     --font-size: 18px;
@@ -590,6 +592,9 @@ section.attrs {
     background:
         var(---foucs-bg-left),
         linear-gradient(var(--relation-color, #0000) 0 0) center right/4px 4px no-repeat;
+}
+.entities-tablist > li > img {
+    zoom: 2;
 }
 
 /* 选中时 */
@@ -621,7 +626,8 @@ section.attrs {
 .relation\=low-speed,
 .relation\=death,
 .relation\=hit,
-.relation\=timer {
+.relation\=timer,
+.relation\=convert {
     --relation-color: #ffcd43;
 }
 
@@ -726,7 +732,19 @@ section.attrs {
     content: "";
     --p: linear-gradient(red, red);
     --s: /1px 1px no-repeat;
-    background: var(--p) left 0px top 0px var(--s), var(--p) left 1px top 1px var(--s), var(--p) left 2px top 2px var(--s), var(--p) left 3px top 3px var(--s), var(--p) left 4px top 4px var(--s), var(--p) left 5px top 5px var(--s), var(--p) left 6px top 6px var(--s), var(--p) left 7px top 7px var(--s), var(--p) left 8px top 8px var(--s), var(--p) left 9px top 9px var(--s), var(--p) left 10px top 10px var(--s), var(--p) left 11px top 11px var(--s);
+    background:
+        var(--p) left 0px top 0px var(--s),
+        var(--p) left 1px top 1px var(--s),
+        var(--p) left 2px top 2px var(--s),
+        var(--p) left 3px top 3px var(--s),
+        var(--p) left 4px top 4px var(--s),
+        var(--p) left 5px top 5px var(--s),
+        var(--p) left 6px top 6px var(--s),
+        var(--p) left 7px top 7px var(--s),
+        var(--p) left 8px top 8px var(--s),
+        var(--p) left 9px top 9px var(--s),
+        var(--p) left 10px top 10px var(--s),
+        var(--p) left 11px top 11px var(--s);
 }
 
 .invalid::after {
