@@ -70,6 +70,7 @@
     {
         iceDamage: "冰冻伤害",
         iceDamageMultiplier: "冰冻承伤",
+        extinguishFire: "灭火"
     },
     // 16
     {

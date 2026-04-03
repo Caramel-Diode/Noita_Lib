@@ -1404,6 +1404,8 @@ const NoitaEntity = (() => {
             const kill_when_finished = +attr.kill_when_finished;
             // 点燃材料
             const ignite_materials = $value(+attr.ignite_materials, 0);
+            // 灭火
+            const extinguish_fire = $value(+attr.extinguish_fire, 0);
 
             /* prettier-ignore */
             return trim([
@@ -1415,7 +1417,8 @@ const NoitaEntity = (() => {
                 radius, //===================== [1] 半径
                 steps_per_frame, //============ [2] 扩散速度(/f)
                 abbrList.abbr(this.convertMap), // [3] 转换表
-                ignite_materials //============ [4] 点燃材料
+                ignite_materials, //============ [4] 点燃材料
+                extinguish_fire //============== [5] 灭火
             ]);
         }
     }

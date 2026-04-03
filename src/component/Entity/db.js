@@ -403,7 +403,8 @@ class EntityData {
                 for (const [from, to] of Object.entries(data[3] ?? 0)) {
                     this.convertMap[getMaterialID(from) ?? from] = getMaterialID(to);
                 }
-                this.igniteMaterials = data[4] ?? 0;
+                this.igniteMaterials = !!data[4];
+                this.extinguishFire = !!data[5];
             }
         };
 

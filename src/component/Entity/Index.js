@@ -486,8 +486,9 @@ const Entity = (() => {
                     loader.load({
                         materialConvertRadius: { value: comp.radius },
                         materialConvertEntities: { value: comp.convertEntities },
-                        igniteMaterials: { value: comp.igniteMaterials, hidden: !comp.igniteMaterials },
-                        materialConvertMap: { value: comp.convertMap, hidden: !Object.keys(comp.convertMap).length }
+                        materialConvertMap: { value: comp.convertMap, hidden: !Object.keys(comp.convertMap).length },
+                        igniteMaterials: { value: comp.igniteMaterials },
+                        extinguishFire: { value: comp.extinguishFire }
                     });
                 }
             }
