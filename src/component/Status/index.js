@@ -48,6 +48,7 @@ const Status = (() => {
                     this.#loadIconContent();
                     break;
             }
+            this.ariaLabel = "Noita 状态";
         }
 
         get [Symbol.toStringTag]() {
