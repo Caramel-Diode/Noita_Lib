@@ -34,9 +34,11 @@ class Spell {
 //      修正属性                    简写
         fire_rate_wait           :"frw",
         speed_multiplier         :"spm",
+        child_speed_multiplier   :"csp",
         explosion_radius         :"exr",
         spread_degrees           :"spd",
         pattern_degrees          :"pad",
+        lightning_count          :"lnc",
         
         damage_melee_add         :"dmM",
         damage_projectile_add    :"dmP",
@@ -302,9 +304,16 @@ class Spell {
                     const spells_str = data.join(",\n    ");
                     const comment = getCommentText(`共${data.length}条法术数据`);
                     const fileContent = `${comment}\n((\n    ${abbrList.toString()}\n)=>[\n    ${spells_str}\n])()`;
-                    console.log(abbrList);
-                    console.log(fileContent);
-                    download(fileContent, "spell.data.js");
+                    // console.log(abbrList);
+                    // console.log(fileContent);
+                    // download(fileContent, "spell.data.js");
+                    fetch("?save-file=" + "Spell/data.js", {
+                        method: "POST",
+                        headers: {
+                            "Content-Type": "text/javascript"
+                        },
+                        body: fileContent
+                    });
                 }
             },
             "生成法术数据"
