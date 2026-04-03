@@ -152,6 +152,7 @@ const Container = (() => {
                 case "icon": this.#loadIconContent(); break;
                 default: throw new TypeError("不支持的显示模式");
             }
+            this.ariaLabel = "Noita 容器";
         }
 
         get [Symbol.toStringTag]() {
