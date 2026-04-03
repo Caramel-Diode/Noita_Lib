@@ -63,7 +63,8 @@
     {
         fireDamage: "火焰伤害",
         fireDamageMultiplier: "火焰承伤",
-        igniteMaterials: "点燃材料"
+        igniteMaterials: "点燃材料",
+        consume: "消耗"
     },
     // 15
     {
@@ -88,8 +89,9 @@
     // 19
     {
         electricityDamage: "雷电伤害",
+        lightningCount: "导电电弧数",
         electricityDamageMultiplier: "雷电承伤",
-        conductivity: "导电性"
+        conductivity: "导电性",
     },
     // 20
     {
@@ -145,6 +147,7 @@
     // 29
     {
         speed: "投射初速度",
+        childSpeedMultiplier: "载荷投射速度倍数",
         speedMultiplier: "投射速度倍数"
     },
     // 30
@@ -310,6 +313,7 @@
     },
     // 64
     {
+        reference:"引用",
         _11: "图钉"
     },
     // 65
@@ -479,7 +483,8 @@
     },
     //136
     {
-        materialConvertMap:"材料转换"
+        materialConvertMap:"材料转换",
+        iteration:"迭代"
     },
     // 137 
     {
@@ -582,10 +587,16 @@
     // 184
     {
         unused: "不被使用的",
-        ignoredEatMaterials:"无法吞噬材料"
+        ignoredEatMaterials:"无法吞噬材料",
+        noDrawing:"禁用抽取"
     },
     // 185
     {
         fallingDamageHeight: "摔伤高度"
     },
+    // 186
+    {
+        return: "返回",
+        rollBack: "回滚"
+    }
 ]
