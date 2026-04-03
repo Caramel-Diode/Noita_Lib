@@ -41,16 +41,18 @@ const Perk = (() => {
             this.setAttribute("tabindex", "0");
             this.title = `${name}\n${id}`;
             hoverMsg.attachWithPanel(this, [h.pre(this.perkData.desc)]);
+            // 兼容语音朗读识别信息
+            this.append(h.span({ slot: "info" }, name));
         }
 
-        #loadPanelContent() {
+        async #loadPanelContent() {
             const pd = this.perkData;
             //prettier-ignore
-            const loader = new Base.PanelAttrLoader().load({
+            const loader = await new Base.PanelAttrLoader().load({
                 maxStack: { value: pd.maxStack }, //堆叠极限
                 maxInPool: { value: pd.maxInPool, hidden: pd.maxInPool === 0 } //天赋池最大数量
             });
-            this.loadPanelContent([h.template(pd.icon, createPanelH1(pd.id, pd.name), h.p(pd.desc), loader.container)]);
+            this.loadPanelContent([h.template(pd.icon, createPanelH1(pd.id, pd.name,"天赋"), h.p(pd.desc), loader.container)]);
         }
 
         static [$css] = {
@@ -68,6 +70,7 @@ const Perk = (() => {
                 case "icon": this.#loadIconContent(); break;
                 default: throw new TypeError("不支持的显示模式");
             }
+            this.ariaLabel = "Noita 天赋";
         }
 
         //prettier-ignore
