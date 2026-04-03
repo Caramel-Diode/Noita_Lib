@@ -39,6 +39,8 @@ class HTMLNoitaInputRangeElement extends $extends(HTMLElement, {
         inputRange.min = 0;
         addEventListener("load", () => (inputRange.max = this.offsetWidth - this.offsetHeight));
         this.title = this.value ?? 0;
+        this.role = "range";
+        this.ariaLabel = "Noita Range";
     }
 
     connectedCallback() {
