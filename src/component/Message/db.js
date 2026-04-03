@@ -1,5 +1,5 @@
 class MessageData {
-    static #bgUrls = new SpriteSpliter("MessageBackgrounds", async () => {
+    static #bgUrls = new SpriteSpliter("MessageBackgrounds", async saveData => {
         const reader = new FileReaderSync();
         /** @type {ImageEncodeOptions} */
         const imageEncodeOptions = { type: "image/webp", quality: 1 };
@@ -17,7 +17,8 @@ class MessageData {
             ctx.drawImage(bitmap, offset, 0, 18, 24, 0, 0, 18, 24);
             blobs[i] = canvas.convertToBlob(imageEncodeOptions);
         }
-        postMessage((await Promise.all(blobs)).map(blob => reader.readAsDataURL(blob)));
+        saveData(await Promise.all(blobs));
+        // postMessage((await Promise.all(blobs)).map(blob => reader.readAsDataURL(blob)));
     }).results;
 
     /** @type {Map<String,MessageData>} */
