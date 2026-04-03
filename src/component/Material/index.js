@@ -23,6 +23,8 @@ const Material = (() => {
         static queryById = MaterialData.queryById.bind(MaterialData);
         /** @type {typeof MaterialData.queryByTag} */
         static queryByTag = MaterialData.queryByTag.bind(MaterialData);
+        /** @type {typeof MaterialData.queryByInherit} */
+        static queryByInherit = MaterialData.queryByInherit.bind(MaterialData);
         /** @type {typeof MaterialData.ReactionData.query} */
         static queryReaction = MaterialData.ReactionData.query.bind(MaterialData.ReactionData);
 
@@ -129,6 +131,7 @@ const Material = (() => {
             } else if (mode.startsWith("icon")) this.#loadIconContent();
             else if (mode.startsWith("panel")) {
             } else throw new TypeError("不支持的显示模式");
+            this.ariaLabel = "Noita 材料";
         }
 
         //prettier-ignore
