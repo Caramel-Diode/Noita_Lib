@@ -76,9 +76,12 @@ const Base = (() => {
                     if (event.key === "Enter") {
                         soundEffect.click();
                         main(event.currentTarget); // 切换到该选项卡
-                    } else if (event.key === "Escape") event.target.blur(); // 退出焦点
-                    else if (event.key === "ArrowLeft") navigate(event.currentTarget, -1); // 左
-                    else if (event.key === "ArrowRight") navigate(event.currentTarget, 1); // 右
+                    } else if (event.key === "Escape")
+                        event.target.blur(); // 退出焦点
+                    else if (event.key === "ArrowLeft")
+                        navigate(event.currentTarget, -1); // 左
+                    else if (event.key === "ArrowRight")
+                        navigate(event.currentTarget, 1); // 右
                     else if (event.key === "ArrowDown") {
                         // 下
                         /** @type {ShadowRoot} */
@@ -156,12 +159,10 @@ const Base = (() => {
          * @param {HTMLElement} element
          */
         const main = element => {
-            const dataElements = element.querySelectorAll("[data-time]");
-            for (let i = 0; i < dataElements.length; i++) {
-                /** @type {HTMLElement} */
-                const e = element.children[i];
-                e.hidden = !e.hidden;
-            }
+            console.log(element);
+
+            const [s, f] = element.childNodes;
+            [s.hidden, f.hidden] = [f.hidden, s.hidden];
         };
         return {
             main,
@@ -170,13 +171,13 @@ const Base = (() => {
                 mouseenter: soundEffect.select,
                 click: event => {
                     soundEffect.click();
-                    main(event.target);
+                    main(event.currentTarget);
                 },
                 keydown: event => {
                     if (event.key === "Enter") {
                         soundEffect.click();
-                        main(event.target);
-                    } else if (event.key === "Escape") event.target.blur();
+                        main(event.currentTarget);
+                    } else if (event.key === "Escape") event.currentTarget.blur();
                 }
             }
         };
@@ -198,10 +199,12 @@ const Base = (() => {
             if (element.classList.contains(relateData1.className)) {
                 element.replaceChildren(...relateData2.content);
                 element.classList.replace(relateData1.className, relateData2.className);
+                element.ariaLabel = relateData2.className;
                 return;
             }
             element.replaceChildren(...relateData1.content);
             element.classList.replace(relateData2.className, relateData1.className);
+            element.ariaLabel = relateData1.className;
         };
 
         return {
@@ -270,19 +273,19 @@ const Base = (() => {
         }
         /** @type {HTMLTableElement} 表格容器 */
         container = h.table({ class: "attrs" });
-        /** @type {(prop:String)=>Boolean} */
+        /** @type {(prop:string)=>boolean} */
         #isIgnored;
         #timeUnit;
         /**
-         * @param {Array<String>} ignore
+         * @param {Array<string>} ignore
          * @param {"s"|"f"} timeUnit 默认显示时间单位
          */
         constructor(ignore = [], timeUnit = "s") {
             this.#timeUnit = timeUnit;
             this.#isIgnored = Array.prototype.includes.bind(ignore);
         }
-        /** @param {{[key: string]: {value:*,needSign:Boolean?,hidden:Boolean?}}} datas */
-        load(datas) {
+        /** @param {{[key: string]: {value:*,needSign:boolean?,hidden:boolean?}}} datas */
+        async load(datas) {
             for (const prop in datas) {
                 if (this.#isIgnored(prop)) continue; //跳过被忽略的面板属性
                 let { value, hidden, type = "", pos } = datas[prop]; // type 是修正运算符
@@ -309,6 +312,7 @@ const Base = (() => {
                     case "collideWithShooterFrames": //==== 自命中延迟
                         target = this.collideWithShooterFrames(value); break;
                     case "speedMultiplier": //=== 投射物速度倍数
+                    case "childSpeedMultiplier": //=== 载荷投射物速度倍数
                         target = this.#tr(prop,type + value); break;
                     case "speedMax": //========== 投射物速度上限
                         target = this.speedMax(value); break;
@@ -347,9 +351,9 @@ const Base = (() => {
                         if(datas.explosionTrigger?.hidden === true) target.classList.add("disable");
                         break;
                     case "destroyDurability":
-                        target = this.destroyDurability(prop, value); break;
+                        target = await this.destroyDurability(prop, value); break;
                     case "explosionDestroyDurability":
-                        target = this.destroyDurability(prop, value);
+                        target = await this.destroyDurability(prop, value);
                         //不爆炸时启用disable样式
                         if(datas.explosionTrigger?.hidden === true) target.classList.add("disable");
                         break;
@@ -439,13 +443,13 @@ const Base = (() => {
 
         /**
          * 创建单位数据单元格
-         * @param {String} s
-         * @param {String} f
+         * @param {string} s
+         * @param {string} f
          */
         #createUnitDataTd(s, f) {
-            const spanSecond = h.span({ dataset: { time: "second" }, hidden: this.#timeUnit === "f" }, s);
-            const spanFrame = h.span({ dataset: { time: "frame" }, hidden: this.#timeUnit === "s" }, f);
-            const td = h.td({ Event: unitConvert.event, dataset: { useShiftConvert: true } }, spanSecond, spanFrame);
+            const dataSecond = h.data({ "aria-label": "时间(秒)", value: s, hidden: this.#timeUnit === "f" }, s);
+            const dataFrame = h.data({ "aria-label": "时间(帧)", value: f, hidden: this.#timeUnit === "s" }, f);
+            const td = h.td({ Event: unitConvert.event, dataset: { useShiftConvert: true } }, dataSecond, dataFrame);
             td[contentConvertFn.fnSymbol] = () => unitConvert.main(td);
             return td;
         }
@@ -462,6 +466,7 @@ const Base = (() => {
                 tr[trContentSwitch.relateDataSymbol1] = { className, content: [h.th(icon), h.th(name), h.td(opt1.content)] };
                 tr.classList.add(className);
                 tr.append(...tr[trContentSwitch.relateDataSymbol1].content);
+                tr.ariaLabel = className;
             }
             {
                 const { icon, name, className = "" } = PanelAttrInfo.query(opt2.prop);
@@ -479,7 +484,7 @@ const Base = (() => {
          */
         #tr(prop, content) {
             const { icon, name, className = "" } = PanelAttrInfo.query(prop);
-            const tr = h.tr({ class: className }, h.th(icon), h.th(name));
+            const tr = h.tr({ class: className, "aria-label": className }, h.th({ "aria-hidden": true }, icon), h.th(name));
             if (content) tr.append(h.td(content));
             return tr;
         }
@@ -509,7 +514,7 @@ const Base = (() => {
          * 加载`施放延迟`|`充能时间`面板属性
          * @param {"fireRateWait"|"reloadTime"|"damageInterval"} prop CD类型
          * @param {number|RangeValue} value
-         * @param {Boolean|String} [sign]
+         * @param {boolean|string} [sign]
          */
         castCD(prop, value, sign) {
             let s, f;
@@ -530,7 +535,7 @@ const Base = (() => {
          * 加载`存在时间`面板属性
          * @param {"lifetime"|"lifetimeMax"} prop
          * @param {number|RangeValue} value
-         * @param {Boolean|String} [sign]
+         * @param {boolean|string} [sign]
          */
         lifetime(prop, value, sign) {
             let s, f;
@@ -645,7 +650,7 @@ const Base = (() => {
         /**
          * 加载`散射角度`面板属性
          * @param {number|RangeValue} value
-         * @param {Boolean|String} [sign]
+         * @param {boolean|string} [sign]
          */
         spreadDegrees(value, sign) {
             let content;
@@ -657,7 +662,7 @@ const Base = (() => {
         /**
          * 加载`最大使用次数`|`剩余使用次数`面板属性
          * @param {"maxUse"|"remainingUse"} prop
-         * @param {{max:number,remain:number?,unlimited:Boolean}} value
+         * @param {{max:number,remain:number?,unlimited:boolean}} value
          */
         timesUsed(prop, value) {
             const content = h.data();
@@ -726,8 +731,8 @@ const Base = (() => {
 
         /**
          * 加载`血液材料(尸体材料)`属性
-         * @param {String} valueHurt
-         * @param {String} valueDie
+         * @param {string} valueHurt
+         * @param {string} valueDie
          */
         bloodMaterial(valueHurt, valueDie) {
             let content = h();
@@ -777,7 +782,7 @@ const Base = (() => {
 
         /**
          *
-         * @param {Array<String>} value
+         * @param {Array<string>} value
          */
         tag(value) {
             const ul = h.ul({ class: "entity-tag-list" });
@@ -797,14 +802,10 @@ const Base = (() => {
         materialConvertMap(value) {
             const table = h.table({ class: "material-convert-map" });
             for (const [from, to] of Object.entries(value)) {
-                // console.log({ from, to });
-
                 const fromtd = h.td();
                 if (from.startsWith("[")) fromtd.append(h.span({ class: "material-tag" }, from));
                 else if (from === "*") fromtd.append(h.span("任何"));
-                else {
-                    fromtd.append(h.img({ is: "noita--material", title: from, dataset: { id: from }, class: "material-icon" }), Material.queryById(from).name);
-                }
+                else fromtd.append(h.img({ is: "noita--material", title: from, dataset: { id: from }, class: "material-icon" }), Material.queryById(from).name);
                 table.append(
                     /* prettier-ignore */
                     h.tr(
@@ -865,7 +866,7 @@ const Base = (() => {
          * @param {"destroyDurability"|"explosionDestroyDurability"} prop
          * @param {number} value
          */
-        destroyDurability(prop, value) {
+        async destroyDurability(prop, value) {
             const tr = this.#tr(prop);
             const map = [
                 "glass_box2d", //   0
@@ -888,7 +889,7 @@ const Base = (() => {
             ];
             const container = h.div({ class: "destroy-durability", style: { width: value > 9 ? "48px" : "32px" } });
             if (Number.isFinite(value)) {
-                container.append(getPixelFontsImg(value));
+                container.append(await getPixelFontsImg(value));
                 let materialId = map[value];
                 while (!materialId) materialId = map[--value];
                 /** @type {HTMLImageElement} */
@@ -963,8 +964,8 @@ const Base = (() => {
         /**
          * 加载面板属性(无特殊处理)
          * @param {PanelAttrIDEnum} type
-         * @param {number|String} value
-         * @param {Boolean|String} sign
+         * @param {number|string} value
+         * @param {boolean|string} sign
          */
         default(type, value, sign) {
             let content;
@@ -1036,8 +1037,7 @@ const Base = (() => {
             return this.#getStyleSheets(displayMode, sheets, Object.getPrototypeOf(constructor));
         }
 
-        async contentUpdate() {
-            if (this.#rendered) return;
+        contentUpdate() {
             let { displayMode } = this;
             if (displayMode.startsWith("panel")) displayMode = "panel";
             else if (displayMode.startsWith("icon")) displayMode = "icon";
@@ -1052,8 +1052,10 @@ const Base = (() => {
             // 此函数被调用时意味着需要从LightDOM中获取内容
             await DOMContentLoaded;
             const templates = [...this.getElementsByTagName("template")];
+            templates.forEach(e => e.remove());
             for (const element of templates) element.dataset.scope ??= true; //从LightDOM获取的内容需要隔离样式
             if (templates.length) return this.loadPanelContent(templates);
+            if (this.#shadowRoot.childNodes.length) return;
             /* prettier-ignore */
             this.#shadowRoot.append(
                 h.div({class:"background"}),
@@ -1101,14 +1103,20 @@ const Base = (() => {
                 const li = h.li({ role: "tab", "aria-selected": "false", tabindex: 0, Event: panelTabsSwitch.event, $: { content: section } }, h.span(title));
                 if (template.hasAttribute("data-default")) lis.$default = li;
                 lis[i] = li;
+                section.ariaLabel = `选项卡面板(${title})`;
                 this.#shadowRoot.append(section);
             }
             lis.$default ??= lis[0];
-            this.#shadowRoot.prepend(h.div({ class: "background" }));
+            this.#shadowRoot.prepend(h.div({ class: "background", "aria-hidden": "true" }));
             if (templates.length > 1) {
                 this.#shadowRoot.prepend(h.menu({ role: "tablist" }, lis));
                 panelTabsSwitch.main(lis.$default);
-            } else this.#shadowRoot.childNodes[0].removeAttribute("role"); // 移除选项卡面板无障碍语义
+            } else {
+                /** @type {HTMLElement} */
+                const section = this.#shadowRoot.childNodes[1];
+                section.removeAttribute("role"); // 移除选项卡面板无障碍语义
+                section.removeAttribute("aria-label");
+            }
             lis.$default.content.hidden = false;
         }
 
@@ -1144,7 +1152,7 @@ const Base = (() => {
                 const root = this.parentElement ?? this.getRootNode();
                 const { promptForSelector } = this;
                 this.promptForSelector = null;
-                
+
                 root.querySelectorAll(promptForSelector).forEach(this.addPromptMsgTo.bind(this));
 
                 /** 观察文档节点的增加 以便于自动为新元素添加悬浮提示 */
@@ -1154,17 +1162,12 @@ const Base = (() => {
             }
         }
 
-        connectedCallback() {
+        async connectedCallback() {
             if (this.shadowRoot) contentConvertFn.add(this.shadowRoot);
-
             if (this.#rendered) return;
             this.attachShadow({ mode: "open" });
-            this.#shadowRoot.replaceChildren();
-            this.#shadowRoot.innerHTML = "";
-
             this.contentUpdate();
             this.#rendered = true; // 防止重复渲染
-
             this.#addPromptMsg();
         }
 
@@ -1189,73 +1192,79 @@ h["noita-panel"] = freeze(Base);
 
 /**
  *
- * @param {string} str
+ * @param {string} text
  * @returns {HTMLCanvasElement}
  */
-const getPixelFontsImg = str => {
-    str = String(str);
-    let width = 0;
-    for (const char of str) {
-        if ("0123456789".includes(char)) {
-            width += 6;
-            continue;
-        }
-        if ("ABCDEFGHIJKLMNOPQRSTUVWXYZ".includes(char)) {
-            width += 7;
-            continue;
-        }
-        if ("abcdefghijklmnopqrstuvwxyz".includes(char)) {
-            width += 5;
-            continue;
-        }
-        if (char === " ") {
-            width += 2;
-            continue;
-        }
-        throw new TypeError("仅支持A-Za-z0-9的字符");
-    }
+const getPixelFontsImg = (() => {
+    /** @type {Map<string,HTMLImageElement>} */
+    const cache = new Map();
+    /** @type {Map<string,HTMLImageElement>} */
+    const fontIcons = new Map();
+    fontIcons.set(" ", null);
 
-    const canvas = h.canvas({ width, height: 10 });
-    const ctx = canvas.getContext("2d");
-    /** @type {typeof CanvasRenderingContext2D.prototype.drawImage} */
-    const draw = ctx.drawImage.bind(ctx);
-    let currWidth = 0;
-    (async () => {
-        for (const char of str) {
+    /** @type {{[key:string]:number}} */
+    const fontWidths = { " ": 2 };
+    for (const char of "0123456789") fontWidths[char] = 6;
+    for (const char of "ABCDEFGHIJKLMNOPQRSTUVWXYZ") fontWidths[char] = 7;
+    for (const char of "abcdefghijklmnopqrstuvwxyz") fontWidths[char] = 5;
+    /** @param {string} text */
+    const createNew = async text => {
+        const canvas = h.canvas({
+            width: [...text].reduce((n, char) => n + fontWidths[char], 0),
+            height: 10
+        });
+        const ctx = canvas.getContext("2d");
+        let currWidth = 0;
+        canvas.ready = Promise.all(
+            [...text]
+                .filter(char => !fontIcons.has(char))
+                .map(async char => {
+                    if (fontIcons.has(char)) return;
+                    const { icon } = Base.PanelAttrInfo.query(char);
+                    const { promise, resolve } = Promise.withResolvers();
+                    icon.connectedCallback();
+                    icon.addEventListener("load", resolve, { once: true });
+                    await promise;
+                    fontIcons.set(char, icon);
+                })
+        );
+        await canvas.ready;
+        for (const char of text) {
             if (char === " ") {
                 currWidth += 2;
                 continue;
             }
-            const { icon } = Base.PanelAttrInfo.query(char);
-            icon.connectedCallback();
-            const { promise, resolve } = Promise.withResolvers();
-            icon.addEventListener("load", () => {
-                if ("0123456789".includes(char)) {
-                    draw(icon, 1, 0, 6, 7, currWidth, 0, 6, 7);
-                    currWidth += 6;
-                } else if ("0123456789ABCDEFGHIJKLMNOPQRSTUVWXYZ".includes(char)) {
-                    draw(icon, 0, 0, 7, 7, currWidth, 0, 7, 7);
-                    currWidth += 7;
-                } else if ("abcdefhiklmnorstuvwxz".includes(char)) {
-                    draw(icon, 1, 0, 5, 7, currWidth, 0, 5, 7);
-                    currWidth += 5;
-                } else if ("jgpqy".includes(char)) {
-                    draw(icon, 1, 0, 5, 7, currWidth, 3, 5, 7);
-                    currWidth += 5;
-                }
-                resolve();
-            });
-            await promise;
+            const icon = fontIcons.get(char);
+            if ("0123456789".includes(char)) {
+                ctx.drawImage(icon, 1, 0, 6, 7, currWidth, 0, 6, 7);
+                currWidth += 6;
+            } else if ("ABCDEFGHIJKLMNOPQRSTUVWXYZ".includes(char)) {
+                ctx.drawImage(icon, 0, 0, 7, 7, currWidth, 0, 7, 7);
+                currWidth += 7;
+            } else if ("abcdefhiklmnorstuvwxz".includes(char)) {
+                ctx.drawImage(icon, 1, 0, 5, 7, currWidth, 0, 5, 7);
+                currWidth += 5;
+            } else if ("jgpqy".includes(char)) {
+                ctx.drawImage(icon, 1, 0, 5, 7, currWidth, 3, 5, 7);
+                currWidth += 5;
+            }
         }
-    })();
-    canvas.textContent = str;
-    return canvas;
-};
+        const img = new Image(canvas.width, canvas.height);
+        img.src = canvas.toDataURL();
+        img.alt = text;
+        cache.set(text, img);
+    };
+    return async text => {
+        text = "" + text;
+        if (!cache.has(text)) await createNew(text);
+        return cache.get(text).cloneNode();
+    };
+})();
 
 /**
  * 创建面板 **`<h1>`** 标题
- * @param {String} id
- * @param {String} name
+ * @param {string} id
+ * @param {string} name
  * @returns {HTMLHeadingElement} `<h1>` 元素
  */
 const createPanelH1 = (() => {
@@ -1266,8 +1275,8 @@ const createPanelH1 = (() => {
          * 切换标题
          */
         const main = h1 => {
-            const { id, name } = h1.dataset;
-            h1.textContent = h1.textContent === id ? name : id;
+            const [id, name] = h1.childNodes;
+            [id.hidden, name.hidden] = [name.hidden, id.hidden];
         };
         return {
             main,
@@ -1302,8 +1311,13 @@ const createPanelH1 = (() => {
             }
         };
     })();
-    return (id, name) => {
-        const h1 = h.h1({ "data-id": id, "data-name": name, Event: panelTitleSwitch.event, dataset: { useShiftConvert: true } }, name);
+    return (id, name, ariaLabel = "") => {
+        /* prettier-ignore */
+        const h1 = h.h1(
+            { Event: panelTitleSwitch.event, dataset: { useShiftConvert: true } }, 
+            h.span({"aria-label":ariaLabel+"ID",hidden:true},id),
+            h.span({"aria-label":ariaLabel+"名称"},name)
+        );
         h1[contentConvertFn.fnSymbol] = () => panelTitleSwitch.main(h1);
         return h1;
     };
