@@ -154,6 +154,7 @@ class Lexer {
             id: "SPELL_ID",
             match(source) {
                 let i = 0;
+                if (source.startsWith("$")) i = 1;
                 while (i < source.length && Lexer.isWordPart(source[i])) i++;
                 if (i > 0) return source.slice(0, i);
             }
@@ -448,6 +449,22 @@ class AABB extends DOMRect {
 
 /** 精灵图分割器 */
 class SpriteSpliter {
+    /**
+     * @param {Array<Blob>} blobs
+     */
+    static #saveDataForWoker = blobs => {
+        indexedDB.open("noitaLib", 1).addEventListener("success", async ({ target }) => {
+            /** @type {IDBDatabase} */
+            const db = target.result;
+            db.transaction(["Blob"], "readwrite")
+                .objectStore("Blob")
+                .add(await Promise.all(blobs), name)
+                .addEventListener("success", event => {
+                    db.close();
+                    postMessage({ state: "finished" });
+                });
+        });
+    };
     static #defaultWorker = (async (base64, width) => {
         const bitmap = await createImageBitmap(await (await fetch(base64)).blob());
         /** @type {ImageEncodeOptions} */
@@ -457,20 +474,27 @@ class SpriteSpliter {
         // 图标是水平排列的
         const iconAmount = bitmap.width / width;
         /** @type {Array<Promise<Blob>>} */
-        const blobs = new Array(iconAmount);
+        const blobPromises = new Array(iconAmount);
         for (let i = 0; i < iconAmount; i++) {
             const canvas = new OffscreenCanvas(width, bitmap.height);
             const ctx = canvas.getContext("2d");
             ctx.drawImage(bitmap, -i * width, 0);
-            // bitmaps[i] = canvas.transferToImageBitmap();
-            blobs[i] = canvas.convertToBlob(imageEncodeOptions);
+            blobPromises[i] = canvas.convertToBlob(imageEncodeOptions);
         }
-        // 非常奇怪的是 Chromium浏览器在file协议下无法使用 worker生成blob-url
-        // const urls = (await Promise.all(blobs)).map(blob => URL.createObjectURL(blob));
-        const reader = new FileReaderSync();
-        postMessage((await Promise.all(blobs)).map(blob => reader.readAsDataURL(blob)));
         bitmap.close();
-        close(); //使用Blob-URL时不要终止
+        const blobs = await Promise.all(blobPromises);
+        indexedDB.open("noitaLib", 1).addEventListener("success", async ({ target }) => {
+            /** @type {IDBDatabase} */
+            const db = target.result;
+            db.transaction(["Blob"], "readwrite")
+                .objectStore("Blob")
+                .add(blobs, name)
+                .addEventListener("success", event => {
+                    db.close();
+                    console.log("数据已保存", blobPromises.length);
+                    postMessage({ state: "finished" });
+                });
+        });
     }).toString();
 
     /**
@@ -489,9 +513,9 @@ class SpriteSpliter {
     }
 
     /**
-     * 从IndexDB中获取Base64缓存
-     * @param {String} key
-     * @returns {Promise<Array<String>>}
+     * 从IndexDB中获取Blob缓存
+     * @param {string} key
+     * @returns {Promise<Array<Blob>>}
      */
     static async get(key) {
         const { promise, resolve } = Promise.withResolvers();
@@ -500,9 +524,9 @@ class SpriteSpliter {
     }
 
     /**
-     * 缓存Base64数据
-     * @param {String} key
-     * @param {Array<String>} value Base64数据
+     * 缓存Blob数据
+     * @param {string} key
+     * @param {Array<Blob>} value Blob数据
      */
     static async set(key, value) {
         (await this.#getStore("readwrite")).add(value, key);
@@ -560,7 +584,7 @@ class SpriteSpliter {
             /** @type {Worker} */
             let worker, workerUrl, postData;
             if (typeof a === "function") {
-                workerUrl = URL.createObjectURL(new Blob(["(", a, ")()"]));
+                workerUrl = URL.createObjectURL(new Blob(["(", a, ")(", SpriteSpliter.#saveDataForWoker.toString(), ")"]));
                 postData = b;
             } else workerUrl = URL.createObjectURL(new Blob(["(", SpriteSpliter.#defaultWorker, ")('", a, "',", b, ")"]));
             worker = new Worker(workerUrl, { name });
@@ -568,11 +592,11 @@ class SpriteSpliter {
             worker.addEventListener(
                 "message",
                 async ({ data }) => {
-                    console.log("非缓存", name);
-                    /** @type {Array<Blob>} */
-                    const blobs = await Promise.all(data.map(async b64 => await (await fetch(b64)).blob()));
-                    resolve(blobs.map(URL.createObjectURL));
-                    SpriteSpliter.set(name, blobs);
+                    console.log("首次缓存", name);
+                    if (data.state === "finished") {
+                        const blobs = await SpriteSpliter.get(name);
+                        resolve(blobs.map(URL.createObjectURL));
+                    }
                     worker.terminate();
                 },
                 { once: true }
@@ -921,7 +945,8 @@ const hoverMsg = (() => {
                 const overflowRight = right + width - innerWidth;
                 const overflowLeft = -(left - width);
 
-                if (overflowRight <= 0) style.left = right + "px"; // 显示到右侧(最高优先级)
+                if (overflowRight <= 0)
+                    style.left = right + "px"; // 显示到右侧(最高优先级)
                 else if (overflowLeft < overflowRight) {
                     // 显示到左侧
                     const compensation = overflowLeft > 0 ? overflowLeft : 0; // 溢出补偿
@@ -936,7 +961,8 @@ const hoverMsg = (() => {
                 const overflowBottom = bottom + height - innerHeight;
                 const overflowTop = -(top - height);
 
-                if (overflowBottom <= 0) style.top = bottom + "px"; // 显示到下侧(最高优先级)
+                if (overflowBottom <= 0)
+                    style.top = bottom + "px"; // 显示到下侧(最高优先级)
                 else if (overflowTop < overflowBottom) {
                     // 显示到上侧
                     const compensation = overflowTop > 0 ? overflowTop : 0; // 溢出补偿
@@ -1047,24 +1073,27 @@ const contentConvertFn = (() => {
 })();
 
 /** 创建音效播放函数 */
-const createSoundEffectPlayFn = src => {
-    /** @type {Set<HTMLAudioElement>} */
-    const pool = new Set();
-    function del() {
-        pool.delete(this);
-    }
-    function add() {
-        pool.add(this);
-    }
-
-    return () => {
-        if (pool.size) return [...pool][0].play();
-        const audio = new Audio(src);
-        audio.addEventListener("play", del);
-        audio.addEventListener("ended", add);
-        audio.play();
+const createSoundEffectPlayFn = (() => {
+    const ctx = new AudioContext();
+    return url => {
+        let waitForPlaying = null;
+        const audioBuffer = fetch(url)
+            .then(resp => resp.arrayBuffer())
+            .then(buffer => ctx.decodeAudioData(buffer));
+        return async function play() {
+            if (ctx.state === "suspended") {
+                waitForPlaying?.reject(); // 取消积压的播放任务 防止之前等待的播放任务同时播放
+                const { promise, resolve, reject } = (waitForPlaying = Promise.withResolvers());
+                ctx.resume().then(resolve);
+                return promise.then(play).catch(() => console.warn("用户未与页面交互，取消播放。"));
+            }
+            const source = ctx.createBufferSource();
+            source.buffer = await audioBuffer;
+            source.connect(ctx.destination);
+            source.start();
+        };
     };
-};
+})();
 
 const soundEffect = {
     click: createSoundEffectPlayFn(embed(`#button_click_soft.flac`)),
@@ -1127,4 +1156,43 @@ const CPP = {
             return min + d;
         };
     })()
+};
+/** 用于在File协议下正常生成UUID */
+class UUID {
+    /** @type {FinalizationRegistry<UUID>} */
+    static #finalizationRegistry = new FinalizationRegistry(value => value());
+    #url = URL.createObjectURL(new Blob([Date.now()]));
+    toString() {
+        return this.#url.split("/").at(-1);
+    }
+    [Symbol.dispose]() {
+        URL.revokeObjectURL(this.#url);
+    }
+    /** @type {Map<string,UUID>} */
+    static #map = new Map();
+    static create() {
+        const uuid = new this();
+        const url = uuid.#url;
+        this.#finalizationRegistry.register(uuid, () => URL.revokeObjectURL(url));
+        const id = uuid.toString();
+        this.#map.set(id, uuid);
+        return id;
+    }
+    /** @param {string} uuid  */
+    static free(uuid) {
+        const uuidObj = this.#map.get(uuid);
+        if (!uuidObj) throw ReferenceError("The uuid does not exist!");
+        this.#map.delete(uuid);
+    }
+
+    static freeAll() {
+        this.#map.clear();
+    }
+}
+/**
+ * @param {{"@context"?:string,"@type":string}} option
+ */
+const JSON_LD = option => {
+    option["@context"] ??= "https://schema.org";
+    return h.script({ type: "application/ld+json" }, JSON.stringify(option));
 };
