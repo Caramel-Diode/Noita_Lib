@@ -549,7 +549,20 @@ class MaterialData {
      * @param {MaterialId} parentMaterialId
      * @returns {MaterialData.DataGroup}
      */
-    static queryByInherit = parentMaterialId => this.data.inherit_map.get(parentMaterialId) ?? { parent: parentMaterialId, list: [this.queryById(parentMaterialId)] };
+    static queryByInherit = (parentMaterialId, recursive = true, inheritReactions = true) => {
+        const queryResult = this.data.inherit_map.get(parentMaterialId);
+        if (!queryResult) return { parent: parentMaterialId, list: [this.queryById(parentMaterialId)] };
+        const result = { parent: parentMaterialId, list: [...queryResult.list] };
+        if (!recursive) return result;
+        const appendData = [];
+        for (const { id } of result.list.slice(1)) {
+            let inheritsList = this.queryByInherit(id, true).list;
+            if (inheritReactions) inheritsList = inheritsList.filter(e => e.inheritReactions);
+            appendData.push(...inheritsList);
+        }
+        result.list = [...new Set([...result.list, ...appendData])];
+        return result;
+    };
 
     /** 初始化数据库 */
     static init() {
