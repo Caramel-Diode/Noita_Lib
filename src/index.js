@@ -9,13 +9,12 @@ embed(`#public/polyfill.js`);
  */
 const noitaLib = (() => {
     /** @type {Console} 代理console实现在非dev模式下不在控制台显示调试信息 */
-    let { console } = window;
+    let console = ((blank = _ => 0) => new Proxy({}, { get: () => blank }))();
     embed(`#embedList.js`);
-    console = ((blank = _ => 0) => new Proxy({}, { get: () => blank }))();
     /**
      *
-     * @param {String} mode
-     * @returns {String}
+     * @param {string} mode
+     * @returns {string}
      */
     const noitaLib = mode => {
         const ver = "1.0";
