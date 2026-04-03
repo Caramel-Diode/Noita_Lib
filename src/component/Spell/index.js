@@ -18,12 +18,13 @@ const Spell = (() => {
         common: h`noita-panel`("预载投射物", h.br(), "关联投射物"),
         cast: h`noita-panel`("预载投射物"),
         relate: h`noita-panel`("关联投射物"),
-        orbit: h`noita-panel`("生成的环绕投射物"),
-        bounce: h`noita-panel`("弹跳时生成投射物"),
-        "low-speed": h`noita-panel`("低速时生成投射物"),
-        death: h`noita-panel`("失效时生成投射物"),
-        hit: h`noita-panel`("碰撞时生成投射物"),
-        timer: h`noita-panel`("定时或周期性生成投射物")
+        orbit: h`noita-panel`("环绕生成的投射物"),
+        bounce: h`noita-panel`("弹跳时生成的投射物"),
+        "low-speed": h`noita-panel`("低速时生成的投射物"),
+        death: h`noita-panel`("失效时生成的投射物"),
+        hit: h`noita-panel`("碰撞时生成的投射物"),
+        timer: h`noita-panel`("定时或周期性生成的投射物"),
+        convert: h`noita-panel`("转换生成的投射物")
     };
 
     const switchWeightAndProp = (() => {
@@ -35,12 +36,16 @@ const Spell = (() => {
             const { dataset } = table;
             if (dataset.display === "prop") {
                 th_title.innerText = "生成权重";
-                for (const e of td_values) e.innerText = e.dataset.weight;
+                // for (const e of td_values) e.innerText = e.dataset.weight;
                 dataset.display = "weight";
             } else {
                 th_title.innerText = "生成概率";
-                for (const e of td_values) e.innerText = e.dataset.prop;
+                // for (const e of td_values) e.innerText = e.dataset.prop;
                 dataset.display = "prop";
+            }
+            for (const e of td_values) {
+                const [weight, prop] = e.children;
+                [weight.hidden, prop.hidden] = [prop.hidden, weight.hidden];
             }
         };
         return {
@@ -196,7 +201,7 @@ const Spell = (() => {
         /** 加载图标模式内容
          * @param {String} markIconId
          */
-        #loadIconContent(markIconId) {
+        async #loadIconContent(markIconId) {
             this.addEventListener("mouseenter", soundEffect.select);
             this.addEventListener("focus", soundEffect.select);
             this.addEventListener("click", soundEffect.click);
@@ -259,8 +264,8 @@ const Spell = (() => {
                     if (event.key === "Enter") this.click();
                 });
             }
-            const fragment = h(ol, h.slot(), h.slot({ name: "info" }));
-            if (this.instanceData.remain !== Infinity) fragment.append(h.data({ value: this.instanceData.remain }, getPixelFontsImg(this.instanceData.remain)));
+            const fragment = h(ol, h.slot());
+            if (this.instanceData.remain !== Infinity) fragment.append(h.data({ value: this.instanceData.remain, "aria-label": "剩余使用次数" }, await getPixelFontsImg(this.instanceData.remain)));
             if (markIconId) fragment.append(Base.PanelAttrInfo.query(markIconId).icon);
             this.shadowRoot.append(fragment);
 
@@ -269,9 +274,15 @@ const Spell = (() => {
         }
 
         #loadListContent() {
+            const names = [];
             const ul = h.ul({ part: "list" });
-            for (const sd of this.spellDatas) ul.append(h.li(new Spell([sd])));
+            for (const sd of this.spellDatas) {
+                names.push(sd.name);
+                ul.append(h.li(new Spell([sd])));
+            }
             this.shadowRoot.append(ul);
+            // 兼容语音朗读识别信息
+            this.append(h.span({ slot: "info" }, names.join("、")));
         }
 
         /**
@@ -317,13 +328,13 @@ const Spell = (() => {
                 if (i === index) template.dataset.default = 0;
                 templates.push(template);
                 if (sd.type === "special") {
-                    template.content.append(createPanelH1(sd.id, sd.name), h.p(sd.desc));
+                    template.content.append(createPanelH1(sd.id, sd.name, "法术"), h.p({ "aria-label": "法术描述" }, sd.desc));
                     continue;
                 }
 
                 //#region 属性区
                 /*###############################################################################*/
-                const section = h.section({ class: "attrs" });
+                const section = h.section({ class: "attrs", "aria-label": "属性表" });
 
                 //#region 投射物信息
 
@@ -335,6 +346,7 @@ const Spell = (() => {
                     /* prettier-ignore */
                     /** @type {HTMLElement} */
                     const sectionOfferedProjectile = relatedSectionElements[i] = Entity.getDataSection(projectile, {extraData:data,ignore,timeUnit:this.displayTimeUnit,foldComponents} );
+                    sectionOfferedProjectile.ariaLabel = "实体信息(ProjectileEntity)";
                     /* prettier-ignore */
                     /** @type {HTMLLIElement} */
                     const li = lis[i] = h.li(
@@ -349,6 +361,11 @@ const Spell = (() => {
                     hoverMsg.attach(li, projectileHoverPanelMap[type]);
                     li.relatedSectionElements = relatedSectionElements;
                     li.dataset.relatedId = sectionOfferedProjectile.dataset.relatedId = i;
+                    if (data.randomGroup) {
+                        const randomGroupIcon = h.img({ is: "noita--perk", dataset: { id: "PERKS_LOTTERY" } });
+                        li.prepend(randomGroupIcon);
+                        hoverMsg.attachWithPanel(randomGroupIcon, [`随机选择组: ${data.randomGroup}`]);
+                    }
                     section.append(sectionOfferedProjectile); // 在修正信息和基本信息之间添加投射物信息
                 }
                 //#endregion
@@ -357,6 +374,7 @@ const Spell = (() => {
                 {
                     const config = { ...sd.modifierAction };
                     const modLoader = new Base.PanelAttrLoader(ignore, this.displayTimeUnit);
+                    modLoader.container.ariaLabel = "修正信息";
                     section.append(modLoader.container);
                     if (sd.modifierAction.extraEntities) {
                         /** @type {Array<EntityData>} */
@@ -367,6 +385,7 @@ const Spell = (() => {
                             /* prettier-ignore */
                             /** @type {HTMLElement} */
                             const sectionEntity = relatedSectionElements[i] = Entity.getDataSection(data, {ignore,timeUnit:this.displayTimeUnit,foldComponents} );
+                            sectionEntity.ariaLabel = "实体信息(ExtraEntity)";
                             /* prettier-ignore */
                             const li = lis[i] = h.li(data.name);
                             li.relatedSectionElements = relatedSectionElements;
@@ -385,6 +404,7 @@ const Spell = (() => {
                             /* prettier-ignore */
                             /** @type {HTMLElement} */
                             const sectionEntity = relatedSectionElements[i] = Entity.getDataSection(data, {ignore,timeUnit:this.displayTimeUnit,foldComponents} );
+                            sectionEntity.ariaLabel = "实体信息(GameEffectEntity)";
                             /* prettier-ignore */
                             const li = lis[i] = h.li(data.name);
                             li.relatedSectionElements = relatedSectionElements;
@@ -402,7 +422,7 @@ const Spell = (() => {
                 //#region 基本信息
                 const holdable = SpellData.tagSets.holdable.has(sd);
                 //prettier-ignore
-                const baseLoader = new Base.PanelAttrLoader(ignore).load({
+                const baseLoader = await new Base.PanelAttrLoader(ignore).load({
                     spellType: { value: typeInfoMap[sd.type][0] },
                     manaDrain: { value: sd.mana },
                     [ isFinite(this.instanceData.remain) ? "remainingUse" : "maxUse" ]: {
@@ -423,16 +443,16 @@ const Spell = (() => {
                     price: {value: sd.price },
                     projectilesProvided: { value: lis, hidden: !lis[0] }
                 });
-
+                baseLoader.container.ariaLabel = "基本信息";
                 section.prepend(baseLoader.container); //添加到最前
                 //#endregion
                 /*###############################################################################*/
                 //#endregion
 
-                template.content.append(sd.icon, createPanelH1(sd.id, sd.name), h.p(sd.desc), section);
+                template.content.append(sd.icon, createPanelH1(sd.id, sd.name, "法术"), h.p({ "aria-label": "法术描述" }, sd.desc), section);
                 //#region 生成权重
                 if (!ignore.includes("probs")) {
-                    const table = h.table({ class: "probs", tabindex: 0, dataset: { display: "prop", useShiftConvert: true }, Event: switchWeightAndProp.event });
+                    const table = h.table({ class: "probs", tabindex: 0, "aria-label": "生成概率与权重", dataset: { display: "prop", useShiftConvert: true }, Event: switchWeightAndProp.event });
                     table[contentConvertFn.fnSymbol] = () => switchWeightAndProp.main(table);
                     const { name, icon } = Base.PanelAttrInfo.query("probs");
 
@@ -442,13 +462,20 @@ const Spell = (() => {
                     table.append(tr_lv, tr_prob);
                     const { spawn } = sd;
 
-                    tr_lv.append(h.td({ class: "mark-left", rowspan: 2 }));
+                    tr_lv.append(h.td({ class: "mark-left", rowspan: 2, "aria-hidden": "true" }));
                     for (const lv of spawn.lvs) {
                         const prop = `${spawn.percentage(lv).toFixed(3)}%`;
-                        tr_lv.append(h.th({ class: "lv" }, await getPixelFontsImg(lv.toUpperCase())));
-                        tr_prob.append(h.td({ class: "value", dataset: { weight: spawn[`prob_${lv}`], prop } }, prop));
+                        const weight = spawn[`prob_${lv}`];
+                        tr_lv.append(h.th({ class: "lv", "aria-label": `法术等级 ${lv}` }, await getPixelFontsImg(lv.toUpperCase())));
+
+                        /* prettier-ignore */
+                        tr_prob.append(h.td(
+                            { class: "value" },
+                            h.data({value: prop,"aria-label":"生成概率"},prop),
+                            h.data({value: weight,"aria-label":"生成权重", hidden: true},weight)
+                        ));
                     }
-                    tr_lv.append(h.td({ class: "mark-right", rowspan: 2 }));
+                    tr_lv.append(h.td({ class: "mark-right", rowspan: 2, "aria-hidden": "true" }));
                     template.content.append(table);
                 }
                 //#endregion
@@ -468,22 +495,17 @@ const Spell = (() => {
          * @see Base#contentUpdate
          */
         [$content]() {
-            const { spellId } = this;
-            if (spellId) {
-                const ids = spellId.split(" ");
-                this.spellDatas = ids.map(Spell.query);
-                // this.spellDatas = [SpellData.query(spellId)];
-            } else {
-                const { spellExp } = this;
-                if (spellExp)
-                    try {
-                        this.spellDatas = SpellData.queryByExp(spellExp);
-                    } catch (e) {
-                        console.error(e);
-                        this.spellDatas = [SpellData.$NULL];
-                        this.spellDatas[SpellData.errorSymbol] = e;
-                    }
-            }
+            const { spellId, spellExp } = this;
+            if (spellId) this.spellDatas = spellId.split(" ").map(Spell.query);
+            else if (spellExp)
+                try {
+                    this.spellDatas = SpellData.queryByExp(spellExp);
+                } catch (e) {
+                    console.error(e);
+                    this.spellDatas = [SpellData.$NULL];
+                    this.spellDatas[SpellData.errorSymbol] = e;
+                }
+
             const spellRemain = this.spellRemain;
             if (spellRemain) this.instanceData.remain = +spellRemain;
 
@@ -502,6 +524,7 @@ const Spell = (() => {
                         break;
                     }
             }
+            this.ariaLabel = "Noita 法术";
         }
 
         get [Symbol.toStringTag]() {
