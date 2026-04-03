@@ -35,6 +35,7 @@ const Orb = (() => {
             if (this.orbId === "common" || this.orbId === "red") this.shadowRoot.append(h.div({ class: "insert" }, h.slot()));
             else this.shadowRoot.append(spellIcon);
             this.title = name;
+            this.ariaLabel = "Noita 魔球";
         }
 
         //prettier-ignore
