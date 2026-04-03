@@ -1,4 +1,3 @@
-import { list } from "./entityList.js";
 const blank = Symbol("");
 /**
  * #### 用于将属性转化类型 若属性为默认值则返回 *空白 `Symbol("")`*
@@ -24,8 +23,6 @@ const zh_cn = langData.getZH_CN;
  */
 const minPath = path => {
     let paths = path.split(",").map(p => p.replace("data/entities/", "").replace(".xml", ""));
-    // paths = paths.filter(p => !p.startsWith("particles/"));
-    // return paths.join(",");
     if (paths.length) return paths.join(",");
     return blank;
 };
@@ -735,7 +732,7 @@ const NoitaEntity = (() => {
             // 爆炸挖掘能量等级为20000时应当省略
             const ray_energy = $value(configExplosion.ray_energy, 20000);
 
-            const ground_penetration_coeff = +attr.ground_penetration_coeff;
+            let ground_penetration_coeff = +attr.ground_penetration_coeff;
             if (ground_penetration_coeff > 0) {
                 if (ground_penetration_max_durability_to_destroy === 0) {
                     ground_penetration_max_durability_to_destroy = Infinity; // 此时应当认为穿透无视挖掘等级
@@ -988,7 +985,7 @@ const NoitaEntity = (() => {
             let blood_spray_material = materialMap.indexOf(attr.blood_spray_material);
             let ragdoll_material = materialMap.indexOf(attr.ragdoll_material);
 
-            console.log({ blood_material_id: blood_material, blood_spray_material_id: blood_spray_material, ragdoll_material_id: ragdoll_material, path: this.path });
+            // console.log({ blood_material_id: blood_material, blood_spray_material_id: blood_spray_material, ragdoll_material_id: ragdoll_material, path: this.path });
 
             if (materialMap.indexOf(attr.blood_material) < 0) blood_material = blank;
             if (materialMap.indexOf(attr.blood_spray_material) < 0) blood_spray_material = blank;
@@ -1478,7 +1475,8 @@ const NoitaEntity = (() => {
             const air_friction = +attr.air_friction;
             const gravity = +attr.gravity_y;
             const mass = +attr.mass;
-            const terminal_velocity = $value(+attr.terminal_velocity, 1000);
+            const apply_terminal_velocity = +attr.apply_terminal_velocity;
+            const terminal_velocity = apply_terminal_velocity ? $value(+attr.terminal_velocity, 1000) : Infinity;
 
             /* prettier-ignore */
             return trim([
@@ -1624,24 +1622,31 @@ const NoitaEntity = (() => {
          * @param {string} path
          */
         constructor(doc, path) {
-            // console.log(path.split("/").at(-1).slice(0, -4));
-
             this.path = path;
             /** @type {XML_Element} */
             const root = doc.childNodes[0];
             this.tags = root.attr.get("tags").split(",");
             for (const tag of this.tags) {
                 if (tag === "") continue;
-                if (tag in NoitaEntity.tags) {
-                    NoitaEntity.tags[tag]++;
-                } else {
-                    NoitaEntity.tags[tag] = 1;
-                }
+                NoitaEntity.tags[tag] ??= 0;
+                NoitaEntity.tags[tag]++;
             }
-            // namekey要以文件名为准 name属性有错的 (ps:超级坦克的name属性写错成了kk坦克的翻译key)
+            // !!! namekey要以文件名为准 name属性有错的 (ps:超级坦克的name属性写错成了kk坦克的翻译key)
             let nameKey = root.attr.get("name").split("$").at(-1);
             // 检测是否为animals前缀
-            if (nameKey.startsWith("animal_")) nameKey = "animal_" + path.split("/").at(-1).slice(0, -4);
+            if (nameKey.startsWith("animal_")) {
+                // 狗R的 又是特殊情况
+                const filename = path.split("/").at(-1).slice(0, -4);
+                const newNameKey = "animal_" + filename;
+                if (newNameKey !== nameKey) {
+                    console.error("文件名与翻译key不一致，优先采用文件名作为key\n", nameKey, "=>", filename);
+                    // 优先采用文件名 文件名作为key不存在时回退到name属性的key
+                    if (zh_cn(newNameKey)) nameKey = newNameKey;
+                    else {
+                        console.error(`文件名(${filename})查找失败，回退name属性(${nameKey}=>${zh_cn(nameKey)})\n`);
+                    }
+                }
+            }
             if (nameKey === "DEBUG_NAME:player") nameKey = "animal_player";
             if (nameKey === "unknown") {
                 this.name = blank;
@@ -1855,30 +1860,20 @@ const NoitaEntity = (() => {
 (async () => {
     await langData.ready;
     NoitaEntity.lifetimeList = await parseCSVFromUrl("lifetimeList.csv");
-    const all = list;
+    const { list } = await import("./entityList.js");
     //可读性极好的代码
     /* prettier-ignore */
-    const r = (await Promise.all(all.map(async url => {
-        const doc = XML.parse(await (await fetch(url)).text(), { ignore: ["#text", "#comment"] });
-        let rawDoc;
-        try {
-            // const text = await (await fetch("/" + url)).text();
-            // rawDoc = XML.parse(text, { ignore: ["#text", "#comment"] });
-        } catch (error) { // 404 处理
-            rawDoc = null;
-        }
-        const data = new NoitaEntity(doc,url);
-        return data;
+    const r = (await Promise.all(list.map(async url => {
+        const xmlText = await (await fetch(url)).text()
+        const doc = XML.parse(xmlText, { ignore: ["#text", "#comment"] });
+        return new NoitaEntity(doc,url);
     }))).map(e => e.compile());
 
     const result = Object.create(null);
     for (let i = 0; i < r.length; i++) {
-        // console.log(all[i], i);
-        /** @type {String} */
-        const path = minPath(all[i]);
-        // console.log(path);
+        /** @type {string} */
+        const path = minPath(list[i]);
         const _namespaces = path.split("/");
-
         const id = _namespaces.pop();
         let target = result;
         for (const _ of _namespaces) target = target[_] ??= Object.create(null);
@@ -1886,16 +1881,7 @@ const NoitaEntity = (() => {
     }
     console.log(result, r.length);
 
-    /* prettier-ignore */
-    console.log(`((${
-        abbrList
-        // NoitaEntity.DamageModelComponent.materialDamageDataMapArray.map((v, i) => `$${i.toString(36)}=${v}`).join(",")
-        })=>[${
-            JSON5.stringify(result)},"${NoitaEntity.sortedTags.join(" ")
-        }"])()`);
-
-    console.log(abbrList);
-    console.log(attackRangedEntityFiles);
-
-    // NoitaEntity.DamageModelComponent.getMaterialDamageDataIndex({});
+    const fileContent = `((${abbrList})=>[${JSON5.stringify(result)},"${NoitaEntity.sortedTags.join(" ")}"])()`;
+    saveData("Entity/data.js", fileContent);
+    // console.log(attackRangedEntityFiles);
 })();
