@@ -26,6 +26,7 @@ const Wand = (() => {
                     const tip = map[name];
                     if (tip) {
                         hoverMsg.attach(tr, tip);
+                        tr.ariaDescription = tip.innerText;
                         break;
                     }
                 }
@@ -39,7 +40,7 @@ const Wand = (() => {
      */
     const createManaNotEnoughWarnIcon = ({ name, mana }, manaMax) =>
         hoverMsg.attachWithPanel(
-            h.i({ class: "warn-icon", part: "warn-icon" }),
+            h.i({ class: "warn-icon", part: "warn-icon", "aria-label": "法力不足警告" }),
             /* prettier-ignore */
             [h.pre(`警告 - 这支魔杖自身没有足够法力来施放 “${name}”\n魔杖的最大法力为${manaMax}，施放 “${name}” 需要${mana}法力`)],
             "white"
@@ -129,6 +130,7 @@ const Wand = (() => {
          */
         constructor({ display, template, data } = {}) {
             super();
+
             // 需要手动分配插槽
             this.attachShadow({ mode: "open", slotAssignment: "manual" });
             if (display) this.displayMode = display;
@@ -142,7 +144,7 @@ const Wand = (() => {
 
         /**
          * @param {string} xmlString
-         * @param {string} [display="panel"] 
+         * @param {string} [display="panel"]
          */
         static formPlayerXML(xmlString, display = "panel") {
             return XML.parse(xmlString, { ignore: ["#text", "#comment"] })
@@ -191,10 +193,10 @@ const Wand = (() => {
                     const { mana } = item.datas[0];
                     if (mana > manaMax) {
                         // 这里需要法力不足的警告图标
-                        for (; j < item.min; j++) lis.push(h.li({ part: "inventory-slot" }, new Spell(item), createManaNotEnoughWarnIcon(item.datas[0], manaMax)));
+                        for (; j < item.min; j++) lis.push(h.li({ part: "inventory-slot", "aria-label": "固定法术" }, new Spell(item), createManaNotEnoughWarnIcon(item.datas[0], manaMax)));
                         hoverPanel = hoverPanels.b;
                         for (; j < item.max; j++) {
-                            const li = h.li({ part: "inventory-slot" }, h.$(new Spell(item), { part: "optional-spell" }), createManaNotEnoughWarnIcon(item.datas[0], manaMax));
+                            const li = h.li({ part: "inventory-slot" }, h.$(new Spell(item), { part: "optional-spell", "aria-label": hoverPanel.innerText }), createManaNotEnoughWarnIcon(item.datas[0], manaMax));
                             hoverMsg.attach(li, hoverPanel);
                             lis.push(li);
                         }
@@ -204,31 +206,36 @@ const Wand = (() => {
                 if (item.datas.length > 1) hoverPanel = hoverPanels.a;
                 for (; j < item.min; j++) {
                     const li = h.li({ part: "inventory-slot" }, new Spell(item));
-                    if (hoverPanel) hoverMsg.attach(li, hoverPanel);
+                    if (hoverPanel) {
+                        hoverMsg.attach(li, hoverPanel);
+                        li.ariaLabel = hoverPanel.innerText;
+                    }
                     lis.push(li);
                 }
                 hoverPanel = item.datas.length > 1 ? hoverPanels.c : hoverPanels.b;
                 for (; j < item.max; j++) {
                     const li = h.li({ part: "inventory-slot" }, h.$(new Spell(item), { part: "optional-spell" }));
                     hoverMsg.attach(li, hoverPanel);
+                    li.ariaLabel = hoverPanel.innerText;
                     lis.push(li);
                 }
             }
 
             // 始终法术
-            if (type === "static") return h.ol({ class: "static-spells" }, staicLis);
+            if (type === "static") return h.ol({ class: "static-spells", "aria-label": "始终法术序列" }, staicLis);
             const fragment = h();
             if (staicLis.length) {
-                const staticInventory = h`noita-inventory`({ class: "static-spells solts", type: "ol" });
+                const staticInventory = h`noita-inventory`({ class: "static-spells solts", type: "ol", "aria-label": "始终法术序列" });
                 staticInventory.initList(...staicLis);
                 fragment.append(staticInventory);
             }
-            if (dynamicLis.length) {
+            if (dynamicLis.length || this.displayBlankSlot) {
                 const dynamicInventory = h`noita-inventory`({
                     class: "dynamic-spells solts",
                     type: wd.shuffle ? "ul" : "ol",
                     size: wd.capacity,
-                    "display.blank-slot": this.displayBlankSlot
+                    "display.blank-slot": this.displayBlankSlot,
+                    "aria-label": "动态法术序列"
                 });
                 dynamicInventory.initList(...dynamicLis);
                 fragment.append(dynamicInventory);
@@ -248,7 +255,7 @@ const Wand = (() => {
 
             let loader;
             if (isSimple) {
-                hoverMsg.attach(this, h.$(new Wand({ display: "panel", data: this.wandData }), { dataset: { singleShow: true } }));
+                hoverMsg.attach(this, h.$(new Wand({ display: "panel", data: this.wandData }), { dataset: { singleShow: true }, "display.blank-slot": this.displayBlankSlot }));
                 template.className = "simple";
                 template.style.setProperty("--length", wd.icon.length);
                 // 简易模式下这些面板属性将不会被展示
@@ -278,7 +285,7 @@ const Wand = (() => {
                 if (this.wandWarn) promptsIcons.append(hoverMsg.attachWithPanel(h.i({ class: "warn-icon" }), [this.wandWarn], "white"));
             } else {
                 loader = new Base.PanelAttrLoader(void 0, this.displayTimeUnit);
-                template.content.append(h.h1(wd.name), loader.container);
+                template.content.append(h.h1({ "aria-label": "魔杖名" }, wd.name), loader.container);
             }
 
             //#region 属性区
@@ -296,6 +303,7 @@ const Wand = (() => {
                 speedMultiplier: { value: wd.speedMultiplier, hidden: wd.speedMultiplier == 1 }, //这里用的就是非严格相等
                 staticSpells: { value: this.#spellList(wd.staticSpells, "static"), hidden: !wd.staticSpells.length }
             });
+            loader.container.ariaLabel = "属性表";
             createWandAttrTips(loader.container);
             //#endregion
 
@@ -347,20 +355,62 @@ const Wand = (() => {
             panel: [css(embed(`#panel.css`), { name: "wand-panel" })]
         };
 
-        [$content]() {
-            if (!this.wandData) {
-                const templateName = this.wandTemplate;
-                let { wandReloadTime, wandFireRateWait, wandManaMax, wandManaChargeSpeed, wandStaticSpells, wandDynamicSpells } = this;
-
-                if (this.wandCD) [wandReloadTime, wandFireRateWait] = this.wandCD.split("/");
-                if (this.wandMana) [wandManaMax, wandManaChargeSpeed] = this.wandMana.split("/");
-                if (this.wandSpells) {
-                    const exps = this.wandSpells.split("/");
-                    if (exps.length > 1) wandStaticSpells = exps[0];
-                    if (exps.at(-1)) wandDynamicSpells = exps.at(-1);
+        #initWandData() {
+            // 这里要判断是否从html属性中生成WandData
+            // 构造函数中直接传入数据时 没有html属性
+            // 不能单纯判断wandData是否存在 否则无法根据html属性变化更新
+            checkAttr: {
+                for (const { name } of this.attributes) {
+                    switch (name) {
+                        case "wand.name":
+                        case "wand.icon":
+                        case "wand.capacity":
+                        case "wand.fire-rate-wait":
+                        case "wand.reload-time":
+                        case "wand.cd":
+                        case "wand.shuffle":
+                        case "wand.spread-degrees":
+                        case "wand.speed-multiplier":
+                        case "wand.mana-charge-speed":
+                        case "wand.mana-max":
+                        case "wand.mana":
+                        case "wand.static-spells":
+                        case "wand.dynamic-spells":
+                        case "wand.spells":
+                            break checkAttr;
+                    }
                 }
+                if (this.wandData) return;
+            }
+            const templateName = this.wandTemplate;
+            let { wandReloadTime, wandFireRateWait, wandManaMax, wandManaChargeSpeed, wandStaticSpells, wandDynamicSpells } = this;
+
+            if (this.wandCD) [wandReloadTime, wandFireRateWait] = this.wandCD.split("/");
+            if (this.wandMana) [wandManaMax, wandManaChargeSpeed] = this.wandMana.split("/");
+            if (this.wandSpells) {
+                const exps = this.wandSpells.split("/");
+                if (exps.length > 1) wandStaticSpells = exps[0];
+                if (exps.at(-1)) wandDynamicSpells = exps.at(-1);
+            }
+
+            if (templateName) {
+                const custom = Object.create(null);
+                if (this.hasAttribute("wand.name")) custom.name = this.wandName;
+                if (this.hasAttribute("wand.icon")) custom.icon = this.wandIcon;
+                if (this.hasAttribute("wand.capacity")) custom.capacity = new RangeValue(this.wandCapacity);
+                if (this.hasAttribute("wand.fire-rate-wait") || this.hasAttribute("wand.cd")) custom.fireRateWait = new RangeValue(wandFireRateWait);
+                if (this.hasAttribute("wand.reload-time") || this.hasAttribute("wand.cd")) custom.reloadTime = new RangeValue(wandReloadTime);
+                if (this.hasAttribute("wand.shuffle")) custom.shuffle = this.wandShuffle === "true";
+                if (this.hasAttribute("wand.spread-degrees")) custom.spreadDegrees = this.wandSpreadDegrees;
+                if (this.hasAttribute("wand.speed-multiplier")) custom.speedMultiplier = this.wandSpeedMultiplier;
+                if (this.hasAttribute("wand.mana-charge-speed") || this.hasAttribute("wand.mana")) custom.manaChargeSpeed = new RangeValue(wandManaChargeSpeed);
+                if (this.hasAttribute("wand.mana-max") || this.hasAttribute("wand.mana")) custom.manaMax = new RangeValue(wandManaMax);
+                if (this.hasAttribute("wand.static-spells") || this.hasAttribute("wand.spells")) custom.staticSpells = wandStaticSpells;
+                if (this.hasAttribute("wand.dynamic-spells") || this.hasAttribute("wand.spells")) custom.dynamicSpells = wandDynamicSpells;
                 /** @type {import("@wand").WandData} */
-                const customWandData = new WandData([
+                this.wandData = WandData.getDataByTemplate(templateName, true, custom);
+            } else
+                this.wandData = new WandData([
                     //prettier-ignore
                     this.wandName,
                     this.wandIcon,
@@ -376,24 +426,10 @@ const Wand = (() => {
                     wandStaticSpells,
                     wandDynamicSpells
                 ]);
-                if (templateName) {
-                    const custom = Object.create(null);
-                    if (this.hasAttribute("wand.name")) custom.name = this.wandName;
-                    if (this.hasAttribute("wand.icon")) custom.icon = this.wandIcon;
-                    if (this.hasAttribute("wand.capacity")) custom.capacity = new RangeValue(this.wandCapacity);
-                    if (this.hasAttribute("wand.fire-rate-wait") || this.hasAttribute("wand.cd")) custom.fireRateWait = new RangeValue(wandFireRateWait);
-                    if (this.hasAttribute("wand.reload-time") || this.hasAttribute("wand.cd")) custom.reloadTime = new RangeValue(wandReloadTime);
-                    if (this.hasAttribute("wand.shuffle")) custom.shuffle = this.wandShuffle === "true";
-                    if (this.hasAttribute("wand.spread-degrees")) custom.spreadDegrees = this.wandSpreadDegrees;
-                    if (this.hasAttribute("wand.speed-multiplier")) custom.speedMultiplier = this.wandSpeedMultiplier;
-                    if (this.hasAttribute("wand.mana-charge-speed") || this.hasAttribute("wand.mana")) custom.manaChargeSpeed = new RangeValue(wandManaChargeSpeed);
-                    if (this.hasAttribute("wand.mana-max") || this.hasAttribute("wand.mana")) custom.manaMax = new RangeValue(wandManaMax);
-                    if (this.hasAttribute("wand.static-spells") || this.hasAttribute("wand.spells")) custom.staticSpells = wandStaticSpells;
-                    if (this.hasAttribute("wand.dynamic-spells") || this.hasAttribute("wand.spells")) custom.dynamicSpells = wandDynamicSpells;
-                    /** @type {import("@wand").WandData} */
-                    this.wandData = WandData.getDataByTemplate(templateName, true, custom);
-                } else this.wandData = customWandData;
-            }
+        }
+
+        [$content]() {
+            this.#initWandData();
 
             //prettier-ignore
             switch (this.displayMode) {
@@ -402,6 +438,8 @@ const Wand = (() => {
                 case "icon": this.#loadIconContent(); break;
                 default: throw new TypeError("不支持的显示模式");
             }
+
+            this.ariaLabel = "Noita 魔杖";
         }
 
         //prettier-ignore
