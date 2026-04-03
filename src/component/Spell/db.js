@@ -62,10 +62,11 @@ class SpellData {
     };
 
     static ProjectileData = class ProjectileData {
-        /** 类型映射表                   0         1         2       3        4         5            6        7      8*/
-        static #typeMap = ["common", "relate", "cast", "orbit", "bounce", "low-speed", "death", "hit", "timer"];
-        /** @type {Number} 最小数量 */ amountMin = 1;
-        /** @type {Number} 最大数量 */ amountMax = 1;
+        /** 类型映射表                   0         1         2       3        4         5            6        7      8        9      */
+        static #typeMap = ["common", "relate", "cast", "orbit", "bounce", "low-speed", "death", "hit", "timer", "convert"];
+        randomGroup = null;
+        /** @type {number} 最小数量 */ amountMin = 1;
+        /** @type {number} 最大数量 */ amountMax = 1;
         /**
          * @type {"common"|"relate"|"cast"|"orbit"|"bounce"|"low-speed"|"death"|"hit"|"timer"} 类型(关联投射物的方式)
          * * `common`: 提供给施法块/作为关联投射物(享受修正)
@@ -79,12 +80,13 @@ class SpellData {
          * * `timer` : 作为定时发射的投射物
          */
         type = "common";
-        /** @type {Number} 失效触发抽取数 */ drawCount_Death = 0;
-        /** @type {Number} 碰撞触发抽取数 */ drawCount_Hit = 0;
-        /** @type {Number} 定时触发抽取数 */ drawCount_Timer = 0;
-        /** @type {Number} 定时触发延迟 */ drawDelay_Timer = 0;
-        /** @param {String} exp */
-        constructor(exp) {
+        /** @type {number} 失效触发抽取数 */ drawCount_Death = 0;
+        /** @type {number} 碰撞触发抽取数 */ drawCount_Hit = 0;
+        /** @type {number} 定时触发抽取数 */ drawCount_Timer = 0;
+        /** @type {number} 定时触发延迟 */ drawDelay_Timer = 0;
+        /** @param {string} exp */
+        constructor(exp, randomGroup) {
+            if (randomGroup) this.randomGroup = randomGroup;
             const [projectileId, _exp = []] = exp.split(":");
             if (projectileId.endsWith("_nil")) this.projectile = null;
             else {
@@ -154,13 +156,18 @@ class SpellData {
             Object.freeze(this);
         }
 
-        /** @param {String} exp */
+        /** @param {string} exp */
         static createDatas(exp) {
+            if (!exp) return [];
             const result = [];
-            if (exp) {
-                const exps = exp.split(" ");
-                for (let i = 0; i < exps.length; i++) {
-                    const data = new this(exps[i]);
+            const exps = exp.split(" ");
+            for (let i = 0; i < exps.length; i++) {
+                const groupExp = exps[i];
+                // 随机投射物组
+                const projectileExps = groupExp.split("|");
+                for (const projectileExp of projectileExps) {
+                    const data = new this(projectileExp, projectileExps.length > 1 ? i + 1 : null);
+                    // if (projectileExps.length > 1) data.randomGroup = i + 1;
                     if (data.projectile) result.push(data);
                 }
             }
@@ -171,30 +178,30 @@ class SpellData {
     /** 法术生成数据 -1表示非该等级法术 */
     static SpawningData = class SpawningData {
         static sum = { prob_lv0: 0, prob_lv1: 0, prob_lv2: 0, prob_lv3: 0, prob_lv4: 0, prob_lv5: 0, prob_lv6: 0, prob_lv7: 0, prob_lv10: 0 };
-        /** @type {Number} */ prob_lv0 = -1;
-        /** @type {Number} */ [0] = -1;
-        /** @type {Number} */ prob_lv1 = -1;
-        /** @type {Number} */ [1] = -1;
-        /** @type {Number} */ prob_lv2 = -1;
-        /** @type {Number} */ [2] = -1;
-        /** @type {Number} */ prob_lv3 = -1;
-        /** @type {Number} */ [3] = -1;
-        /** @type {Number} */ prob_lv4 = -1;
-        /** @type {Number} */ [4] = -1;
-        /** @type {Number} */ prob_lv5 = -1;
-        /** @type {Number} */ [5] = -1;
-        /** @type {Number} */ prob_lv6 = -1;
-        /** @type {Number} */ [6] = -1;
-        /** @type {Number} */ prob_lv7 = -1;
-        /** @type {Number} */ [7] = -1;
-        /** @type {Number} */ prob_lv10 = -1;
-        /** @type {Number} */ [10] = -1;
-        /** @type {String} 生成解锁条件 */ requiresFlag;
+        /** @type {number} */ prob_lv0 = -1;
+        /** @type {number} */ [0] = -1;
+        /** @type {number} */ prob_lv1 = -1;
+        /** @type {number} */ [1] = -1;
+        /** @type {number} */ prob_lv2 = -1;
+        /** @type {number} */ [2] = -1;
+        /** @type {number} */ prob_lv3 = -1;
+        /** @type {number} */ [3] = -1;
+        /** @type {number} */ prob_lv4 = -1;
+        /** @type {number} */ [4] = -1;
+        /** @type {number} */ prob_lv5 = -1;
+        /** @type {number} */ [5] = -1;
+        /** @type {number} */ prob_lv6 = -1;
+        /** @type {number} */ [6] = -1;
+        /** @type {number} */ prob_lv7 = -1;
+        /** @type {number} */ [7] = -1;
+        /** @type {number} */ prob_lv10 = -1;
+        /** @type {number} */ [10] = -1;
+        /** @type {string} 生成解锁条件 */ requiresFlag;
         /** @type {Array<"lv0"|"lv1"|"lv2"|"lv3"|"lv4"|"lv5"|"lv6"|"lv7"|"lv10">} */ lvs = [];
         /** @type {Array<"lv0"|"lv1"|"lv2"|"lv3"|"lv4"|"lv5"|"lv6"|"lv7"|"lv10">} */ lvs_nonzero = [];
         /**
-         * @param {{[key: Number]:Number}} probs
-         * @param {String} requiresFlag
+         * @param {{[key: number]:number}} probs
+         * @param {string} requiresFlag
          */
         constructor(probs, requiresFlag, manualUnlock) {
             this.manualUnlock = manualUnlock;
@@ -240,7 +247,7 @@ class SpellData {
         }
 
         /**
-         * @param {(lv:"lv0"|"lv1"|"lv2"|"lv3"|"lv4"|"lv5"|"lv6"|"lv7"|"lv10",prob:Number) => void} callabck
+         * @param {(lv:"lv0"|"lv1"|"lv2"|"lv3"|"lv4"|"lv5"|"lv6"|"lv7"|"lv10",prob:number) => void} callabck
          */
         forEach(callabck) {
             for (const lv of this.lvs) callabck(lv, this[key.slice(2)]);
@@ -256,10 +263,12 @@ class SpellData {
         static #abbrMap = {
             //简写:全称(in js)
             frw: "fireRateWait",
+            csp: "childSpeedMultiplier",
             spm: "speedMultiplier",
             exr: "explosionRadius",
             spd: "spreadDegrees",
             pad: "patternDegrees",
+            lnc: "lightningCount",
             dmM: "meleeDamage",
             dmP: "projectileDamage",
             dmL: "electricityDamage",
@@ -289,11 +298,11 @@ class SpellData {
             rlt: "reloadTime",
             rkb: "recoil"
         };
-        /** @param {String} data */
+        /** @param {string} data */
         constructor(data) {
             if (data) {
                 const parts = data.split("#");
-                let /** @type {String} */ before, /** @type {String} */ after, /** @type {String} */ common;
+                let /** @type {string} */ before, /** @type {string} */ after, /** @type {string} */ common;
                 if (parts.length === 2) [before, after] = parts;
                 else common = parts[0];
                 if (common) this.#parse(common, "none");
@@ -303,13 +312,13 @@ class SpellData {
                 }
             }
         }
-        /** @param {String} data */
+        /** @param {string} data */
         #parse(data, pos) {
             if (!data) return;
             const parts = data.split(";");
             for (let i = 0; i < parts.length; i++) {
                 const part = parts[i];
-                /** @type {String} */
+                /** @type {string} */
                 const prop = ModifierAction.#abbrMap[part.slice(0, 3)];
                 const type = part.slice(3, 4);
                 const data = part.slice(4);
@@ -333,10 +342,12 @@ class SpellData {
                         value = data * 25;
                         break;
                     case "fireRateWait":
+                    case "childSpeedMultiplier":
                     case "speedMultiplier":
                     case "explosionRadius":
                     case "spreadDegrees":
                     case "patternDegrees":
+                    case "lightningCount":
                     case "damageCriticalChance":
                     case "knockbackForce":
                     case "materialAmount":
@@ -439,8 +450,28 @@ class SpellData {
         offerProjectile_onCollisionNotDie: new Set(),
         /** @type {SpellSet} 提供无重力的投射物 */
         offerProjectile_noGravity: new Set(),
+        /** @type {SpellSet} 提供无空气阻力的投射物 */
+        offerProjectile_noAirFriction: new Set(),
         /** @type {SpellSet} 提供多重爆炸的投射物 */
-        offerProjectile_multipleExplode: new Set(),
+        offerProjectile_multipleExplosion: new Set(),
+        /** @type {SpellSet} 提供无爆炸的投射物 */
+        offerProjectile_noExplosion: new Set(),
+        /** @type {SpellSet} 提供存在时间固定的投射物 */
+        offerProjectile_fixedLifetime: new Set(),
+        /** @type {SpellSet} 提供存在时间浮动的投射物 */
+        offerProjectile_floatingLifetime: new Set(),
+        /** @type {SpellSet} 提供存在时间受限的投射物 */
+        offerProjectile_limitedLifetime: new Set(),
+        /** @type {SpellSet} 提供有生命的投射物 */
+        offerProjectile_alive: new Set(),
+        /** @type {SpellSet} 提供有转化材料的投射物 */
+        offerProjectile_convertMaterial: new Set(),
+        /** @type {SpellSet} 提供可被拉帕的投射物 */
+        offerProjectile_canBeLarpa: new Set(),
+        /** @type {SpellSet} 提供友伤投射物 */
+        offerProjectile_friendlyFire: new Set(),
+        /** @type {SpellSet} 提供无投射物组件的投射物 */
+        offerProjectile_withoutProjectileComponent: new Set(),
 
         /** @type {SpellSet} 次数限制法术 */ timesLimited: new Set(),
         /** @type {SpellSet} 不可无限化法术 */ neverUnlimited: new Set(),
@@ -474,6 +505,22 @@ class SpellData {
         /** @type {SpellSet} 增加座力的法术 */ recoil_add: new Set(),
         /** @type {SpellSet} 减少座力的法术 */ recoil_sub: new Set(),
         /** @type {SpellSet} 重置座力的法术 */ recoil_reset: new Set(),
+
+        /** @type {SpellSet} 修改充能时间的法术 */
+        get reloadTime_mod() {
+            return this.reloadTime_reset.union(this.reloadTime_add).union(this.reloadTime_sub);
+        },
+        /** @type {SpellSet} 增加充能时间的法术 */ reloadTime_add: new Set(),
+        /** @type {SpellSet} 减少充能时间的法术 */ reloadTime_sub: new Set(),
+        /** @type {SpellSet} 重置充能时间的法术 */ reloadTime_reset: new Set(),
+
+        /** @type {SpellSet} 修改施放延迟的法术 */
+        get fireRateWait_mod() {
+            return this.fireRateWait_reset.union(this.fireRateWait_add).union(this.fireRateWait_sub);
+        },
+        /** @type {SpellSet} 增加施放延迟的法术 */ fireRateWait_add: new Set(),
+        /** @type {SpellSet} 减少施放延迟的法术 */ fireRateWait_sub: new Set(),
+        /** @type {SpellSet} 重置施放延迟的法术 */ fireRateWait_reset: new Set(),
 
         /** @type {SpellSet} 影响存在时间的法术 [自动管理 直接添加到对应的存在时间修改类型即可] */
         get lifetime_mod() {
@@ -532,20 +579,22 @@ class SpellData {
 
         /** @type {SpellSet} 生成需要解锁法术 */ spawnRequiresFlag: new Set(),
         /** @type {SpellSet} 只能手动解锁的法术 */ spawnManualUnlock: new Set(),
+        /** @type {SpellSet} 通过魔球解锁的法术 */ spawnOrbUnlock: new Set(),
+        /** @type {SpellSet} 通过魔球解锁的法术 */ spawnKillUnlock: new Set(),
 
         /** @type {SpellSet} 可激活太阳种子的法术 */
         activateSunStone: new Set()
     };
 
-    /** @type {Map<String,SpellData>} */
+    /** @type {Map<string,SpellData>} */
     static data = new Map();
 
     static #typeList = [/* 无 */ "special", /* 投射物 */ "projectile", /* 静态投射物 */ "staticProjectile", /* 修正 */ "modifier", /* 多重 */ "drawMany", /* 材料 */ "material", /* 其它 */ "other", /* 实用 */ "utility", /* 被动 */ "passive"];
-    /** @type {String} 图标url */ #iconIndex;
+    /** @type {string} 图标url */ #iconIndex;
     name;
     /**
-     * @param {Array<String>} data
-     * @param {Number} index
+     * @param {Array<string>} data
+     * @param {number} index
      */
     constructor(data, index) {
         this.#iconIndex = index;
@@ -595,7 +644,7 @@ class SpellData {
         return "actiondesc_" + this.id.toLowerCase();
     }
 
-    /** @return {Promise<String>} */
+    /** @return {Promise<string>} */
     get asyncIconUrl() {
         return new Promise(resolve => Icon.urls.then(value => resolve(value[this.#iconIndex])));
     }
@@ -618,10 +667,14 @@ class SpellData {
         return result;
     }
 
+    get [Symbol.toStringTag]() {
+        return `SpellData (${this.id})`;
+    }
+
     /**
      * 创建具有剩余使用次数的法术数据实例
-     * @param {Number} remain
-     * @returns {SpellData & EventTarget & {remain:Number}}
+     * @param {number} remain
+     * @returns {SpellData & EventTarget & {remain:number}}
      */
     instance(remain) {
         const eventTarget = new EventTarget();
@@ -738,7 +791,7 @@ class SpellData {
         const storage = this.tagSets;
         // 初始化标签库的键
         {
-            const define = (key, attr = { value: new Set() }) => Reflect.defineProperty(storage, key, attr);
+            const define = (key, attr = { value: new Set() }) => Reflect.defineProperty(storage, key, { ...attr, enumerable: true });
             for (const damageType of DamageData.types) {
                 // 提供此伤害类型修正(增加,减少,重置)的法术
                 for (const modType of ["add", "sub", "reset"]) define(`damage_${modType}_${damageType}`);
@@ -751,7 +804,27 @@ class SpellData {
             }
         }
 
-        // [...embed(`#data.js`).values().chunks(18)].forEach((v, i) => {
+        /**
+         * @param {string} atrrName
+         * @param {SpellData} spellData
+         */
+        const registerNumberAttrTag = (atrrName, spellData) => {
+            const { modifierAction } = spellData;
+            if (!(atrrName in modifierAction)) return;
+
+            switch (modifierAction[atrrName].type) {
+                case "+":
+                    storage[atrrName + "_add"].add(spellData);
+                    break;
+                case "-":
+                    storage[atrrName + "_sub"].add(spellData);
+                    break;
+                case "=":
+                    storage[atrrName + "_reset"].add(spellData);
+                    break;
+            }
+        };
+
         [...embed(`#data.js`).values().chunks(16)].forEach((v, i) => {
             const data = new this(v, i);
             //#region 向数据库中写入
@@ -766,32 +839,57 @@ class SpellData {
                 if (!data.unlimited) storage.neverUnlimited.add(data);
             }
 
-            if (data.offeredProjectile.length) {
-                const filtered = data.offeredProjectile.filter(e => e.type === "common" || e.type === "cast");
+            $offeredProjectile: if (data.offeredProjectile.length) {
+                // 仅检查预载提供的投射物
+                const filtered = data.offeredProjectile.filter(e => e.type === "common" || e.type === "cast" || e.type === "relate");
                 if (filtered.length) storage.offerProjectile.add(data);
-                if (filtered.length > 1) storage.offerProjectiles.add(data);
-                for (const { amountMax } of filtered) {
-                    if (amountMax > 1) storage.offerProjectiles.add(data);
+                else break $offeredProjectile;
+                if (filtered.length > 1) {
+                    // 判断多个投射物是否处于同个随机组中 处于同个随机组中不应该认为提供多个投射物
+                    const groups = new Set();
+                    for (let i = 0; i < filtered.length; i++) {
+                        const { randomGroup } = filtered[i];
+                        if (randomGroup) groups.add(randomGroup);
+                        else {
+                            storage.offerProjectiles.add(data);
+                            break;
+                        }
+                    }
+                    if (groups.size > 1) storage.offerProjectiles.add(data);
                 }
-                for (const { drawCount_Hit, drawCount_Timer, drawCount_Death, projectile } of data.offeredProjectile) {
+                for (const { amountMax } of filtered) {
+                    if (amountMax > 1) {
+                        storage.offerProjectiles.add(data);
+                        break;
+                    }
+                }
+                for (const { drawCount_Hit, drawCount_Timer, drawCount_Death, projectile } of filtered) {
                     let explodeAmount = 0;
                     if (projectile.projectileComponent) {
-                        const { damage, onCollisionDie, friendlyFire, explosionEntity = "", onLifetimeOutExplode, onDeathExplode } = projectile.projectileComponent;
+                        const { damage, onCollisionDie, friendlyFire, explosionEntity = "", onLifetimeOutExplode, onDeathExplode, lifetime } = projectile.projectileComponent;
                         if (explosionEntity.split(",").includes("misc/explosion_was_here")) storage.activateSunStone.add(data);
                         if (!onCollisionDie) storage.offerProjectile_onCollisionNotDie.add(data);
-                        if (friendlyFire) storage.friendlyFire.add(data);
+                        if (friendlyFire) storage.offerProjectile_friendlyFire.add(data);
                         for (const damageType in damage) {
                             if (damage[damageType]) storage[`offerProjectile_damage_${damageType}`].add(data);
                         }
                         if ((onDeathExplode || onLifetimeOutExplode) && damage.explosion > 0) explodeAmount++;
-                    }
+                        if (lifetime.isFixed) storage.offerProjectile_fixedLifetime.add(data);
+                        else storage.offerProjectile_floatingLifetime.add(data);
+                    } else storage.offerProjectile_withoutProjectileComponent.add(data);
                     if (projectile.velocityComponent) {
-                        const { gravity } = projectile.velocityComponent;
-                        if (gravity === 0) storage.offerProjectile_noGravity.add(data);
+                        const { gravity, airFriction } = projectile.velocityComponent;
+                        if (!gravity) storage.offerProjectile_noGravity.add(data);
+                        if (!airFriction) storage.offerProjectile_noAirFriction.add(data);
                     }
                     if (projectile.explodeOnDamageComponent) explodeAmount++;
                     if (projectile.explosionComponent) explodeAmount++;
-                    if (explodeAmount > 1) storage.offerProjectile_multipleExplode.add(data);
+                    if (explodeAmount > 1) storage.offerProjectile_multipleExplosion.add(data);
+                    if (!explodeAmount) storage.offerProjectile_noExplosion.add(data);
+                    if (projectile.lifetimeComponent) storage.offerProjectile_limitedLifetime.add(data);
+                    if (projectile.damageModelComponent) storage.offerProjectile_alive.add(data);
+                    if (projectile.magicConvertMaterialComponent) storage.offerProjectile_convertMaterial.add(data);
+                    if (projectile?.variableStorageComponent?.projectile_file) storage.offerProjectile_canBeLarpa.add(data);
                     if (drawCount_Death) storage.draw_death.add(data);
                     if (drawCount_Hit) storage.draw_hit.add(data);
                     if (drawCount_Timer) storage.draw_timer.add(data);
@@ -808,7 +906,11 @@ class SpellData {
             // 可正常生成的
             if (data.spawn.lvs_nonzero.length !== 0) storage.generatable.add(data);
 
-            if (data.spawn.requiresFlag) storage.spawnRequiresFlag.add(data);
+            if (data.spawn.requiresFlag) {
+                storage.spawnRequiresFlag.add(data);
+                if (/拾取\S*魔球/.test(data.spawn.requiresFlag)) storage.spawnOrbUnlock.add(data);
+                if (/击杀\S*/.test(data.spawn.requiresFlag)) storage.spawnKillUnlock.add(data);
+            }
 
             if (data.spawn.manualUnlock) storage.spawnManualUnlock.add(data);
 
@@ -819,12 +921,9 @@ class SpellData {
 
             if ("friendlyFire" in data.modifierAction) storage.friendlyFire.add(data);
 
-            if ("recoil" in data.modifierAction) {
-                const { type } = data.modifierAction.recoil;
-                if (type === "+") storage.recoil_add.add(data);
-                else if (type === "-") storage.recoil_sub.add(data);
-                else if (type === "=") storage.recoil_reset.add(data);
-            }
+            registerNumberAttrTag("recoil", data);
+            registerNumberAttrTag("reloadTime", data);
+            registerNumberAttrTag("fireRateWait", data);
 
             if ("lifetime" in data.modifierAction) {
                 if (data.modifierAction.lifetime.type === "+") storage.lifetime_up.add(data);
@@ -980,6 +1079,8 @@ class SpellData {
         add`OCARINA OCARINA_A OCARINA_B OCARINA_C OCARINA_D OCARINA_E OCARINA_F OCARINA_GSHARP OCARINA_A2`;
         // 康特勒琴音符类
         add`KANTELE KANTELE_A KANTELE_D KANTELE_DIS KANTELE_E KANTELE_G`;
+        // 音符
+        add`MUSIC_NOTE OCARINA_A OCARINA_B OCARINA_C OCARINA_D OCARINA_E OCARINA_F OCARINA_GSHARP OCARINA_A2 KANTELE_A KANTELE_D KANTELE_DIS KANTELE_E KANTELE_G`;
         // 随机法术类
         add`RANDOM RANDOM_SPELL DRAW_RANDOM DRAW_RANDOM_X3 DRAW_3_RANDOM RANDOM_PROJECTILE RANDOM_STATIC_PROJECTILE RANDOM_MODIFIER`;
         // 追加触发类
@@ -998,5 +1099,7 @@ class SpellData {
         add`SHOT I_SHOT Y_SHOT T_SHOT W_SHOT QUAD_SHOT PENTA_SHOT HEXA_SHOT`;
         // 置换术类
         add`ALL ALL_NUKES ALL_DISCS ALL_ROCKETS ALL_DEATHCROSSES ALL_BLACKHOLES ALL_ACID`;
+        // 高级法术
+        this.tagSets.advanced = new Set(this.queryByExp(`#SYMBOL|#DIVIDE|#IF|#SHOT|#ADD|#RANDOM|RESET|DUPLICATE`));
     }
 }
