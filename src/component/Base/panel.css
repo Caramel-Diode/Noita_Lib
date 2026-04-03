@@ -476,7 +476,8 @@ tr:is(:focus-visible, :hover)[tabindex] > td,
     --font-weight: 300;
 }
 
-.attrs :is(td, data) {
+.attrs td,
+.attrs data {
     min-width: 80px;
     font-family: var(--mono-font);
 }
