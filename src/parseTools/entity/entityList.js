@@ -1,4 +1,5 @@
 export const list = [
+    "data/entities/projectiles/deck/projectile_thunder_lightning.xml", // 投射物雷电领域 雷电
     "data/entities/projectiles/deck/bounce_hole.xml", // 真空弹跳 额外实体
     "data/entities/misc/static_to_sand.xml", //化沙 额外实体
     "data/entities/particles/freeze_charge.xml", // 冰冻 额外实体
