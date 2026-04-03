@@ -1,9 +1,10 @@
 /** #home: 主入口 @file Noita Web Lib */
+let console = ((blank = _ => 0) => new Proxy({}, { get: () => blank }))();
 embed(`#public/polyfill.js`);
-/** @type {Console} 代理console实现在非dev模式下不在控制台显示调试信息 */
-let { console } = window;
+
 embed(`#embedList.js`);
-console = ((blank = _ => 0) => new Proxy({}, { get: () => blank }))();
+/** @type {Console} 代理console实现在非dev模式下不在控制台显示调试信息 */
+
 const noitaLib = mode => {
     const ver = "1.0";
     const author = "半导体果冻";
