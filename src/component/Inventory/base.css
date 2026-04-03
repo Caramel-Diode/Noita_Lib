@@ -30,7 +30,8 @@ li {
     /* 左/右 边框线渐变参数 */
     --S: linear-gradient(180deg, var(--0) 6%, var(--2) 12%, var(--4) 22%, var(--1) 28%, var(--2) 34%, var(--4) 38%, var(--1) 44%, var(--2) 50%, var(--4) 56%, var(--1) 62%, var(--2) 66%, var(--4) 72%, var(--1) 78%, var(--2) 84%, var(--3) 94%, var(--0) 100%);
     /* prettier-ignore */
-    background: /* 法术槽背景 */
+    background: /* 物品槽背景 */
+        var(--hover-bg, linear-gradient(#0000 0 0)),
         /* 上侧边框线 */
         linear-gradient(90deg, var(--0) 6%, var(--2) 22%, var(--1) 28%, var(--2) 38%, var(--1) 44%, var(--2) 56%, var(--1) 62%, var(--2) 72%, var(--1) 78%, var(--2) 94%, var(--0) 100%) top var(--h),
         /* 下侧边框线 */
@@ -41,6 +42,34 @@ li {
         var(--S) right var(--v),
         /* 中心底色 */
         linear-gradient(var(--c), var(--c)) center/ 88% 88% no-repeat;
+}
+
+li:hover {
+    /* 边框线渐变基本参数 5 */
+    --5: #e7ae81 0;
+    /* 边框线渐变基本参数 6 */
+    --6: #d18670 0;
+    /* 边框线渐变基本参数 7 */
+    --7: #543a32c2 0;
+    /* 边框线渐变基本参数 8 */
+    --8: #794738c4 0;
+    --public-lg-param1: var(--0) 12%, var(--5) 22%, #d18670 0 28%, var(--5) 34%, #d18670 0 66%, var(--5) 72%, #d18670 0 78%, var(--5) 88%, var(--0) 100%;
+    --h-lg1: linear-gradient(90deg, var(--public-lg-param1));
+    --v-lg1: linear-gradient(180deg, var(--public-lg-param1));
+    --public-lg-param2: var(--0) 6%, var(--5) 12%, #543a32c2 0 24%, #794738c4 0 76%, #543a32c2 0 88%, var(--5) 94%, var(--0) 100%;
+    --h-lg2: linear-gradient(90deg, var(--public-lg-param2));
+    --v-lg2: linear-gradient(180deg, var(--public-lg-param2));
+    /* prettier-ignore */
+    --hover-bg:
+        var(--h-lg1) top center/100% 6% no-repeat,
+        var(--h-lg1) bottom center/100% 6% no-repeat,
+        var(--v-lg1) center left/6% 100% no-repeat,
+        var(--v-lg1) center right/6% 100% no-repeat,
+        var(--h-lg2) top 6% center / 100% 6% no-repeat,
+        var(--h-lg2) bottom 6% center / 100% 6% no-repeat,
+        var(--v-lg2) center left 6% / 6% 100% no-repeat,
+        var(--v-lg2) center right 6% / 6% 100% no-repeat,
+        linear-gradient(var(--8) 0) center / 76% 76% no-repeat;
 }
 
 :hover noita-spell::part(tape) {
