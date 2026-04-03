@@ -51,6 +51,7 @@ const Message = (() => {
 
         [$content]() {
             this.shadowRoot.append(h.h1(h.slot(MessageData.data.get(this.messagePreset)?.text ?? this.messageContent ?? "内部未填充内容")));
+            this.ariaLabel = "Noita 消息框";
         }
 
         //prettier-ignore
