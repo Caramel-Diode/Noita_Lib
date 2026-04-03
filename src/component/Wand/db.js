@@ -2,6 +2,7 @@ class Icon extends $icon(15, "魔杖") {
     /** @typedef {{index:number,name:string,url:string,length:number,frame:number}} IconInfo */
     /** @type {Map<string,IconInfo>}  */
     static #dataMap = new Map();
+    static #iconLengths = [];
     /** @type {number} 辅助变量 用于记录法杖图标索引 */
     static #currentIndex = 1;
     #data;
@@ -19,7 +20,7 @@ class Icon extends $icon(15, "魔杖") {
         return this.#data?.name;
     }
 
-    /** @type {Promise<String>} */
+    /** @type {Promise<string>} */
     get asyncUrl() {
         const { promise, resolve } = Promise.withResolvers();
         Icon.urls.then(urls => resolve(urls[this.#data?.index - 1]));
@@ -73,20 +74,23 @@ class Icon extends $icon(15, "魔杖") {
 
     /**
      * 创建图标数据缓存
-     * @param {Number} length 长度
-     * @param {String} [name] 名称  自动生成`#index`格式名称
-     * @param {Number} [frame] 动画帧数 默认1
+     * @param {number} length 长度
+     * @param {string} [name] 名称  自动生成`#index`格式名称
+     * @param {number} [frame] 动画帧数 默认1
      */
     static cache(name = "#" + this.#currentIndex, length, frame = 1) {
+        Icon.#iconLengths.push(length);
         const proto = { index: this.#currentIndex, length, frame };
 
-        if (!name.startsWith("#")) {
-            const [name1, name2] = name.split(" ");
-            this.#dataMap.set(name1, Object.assign(Object.create(proto), { name: name1 }));
+        if (name.startsWith("#")) {
+            const name2 = `wand_${(this.#currentIndex - 1).toString().padStart(4, 0)}`;
+            proto[Symbol.toStringTag] = name2;
+            this.#dataMap.set(name, Object.assign(Object.create(proto), { name }));
             this.#dataMap.set(name2, Object.assign(Object.create(proto), { name: name2 }));
         } else {
-            this.#dataMap.set(name, Object.assign(Object.create(proto), { name }));
-            const name2 = `wand_${(this.#currentIndex - 1).toString().padStart(4, 0)}`;
+            const [name1, name2] = name.split(" ");
+            proto[Symbol.toStringTag] = name1;
+            this.#dataMap.set(name1, Object.assign(Object.create(proto), { name: name1 }));
             this.#dataMap.set(name2, Object.assign(Object.create(proto), { name: name2 }));
         }
         this.#currentIndex++;
@@ -96,37 +100,51 @@ class Icon extends $icon(15, "魔杖") {
     static async init() {
         const { promise, resolve } = Promise.withResolvers();
         this.urls = promise;
+        const aliasMap = {
+            822: "紫色心情",
+            833: "大丁丁",
+            707: "大宝剑",
+            762: "刺剑",
+            650: "蓝刺剑",
+            627: "手电筒",
+            512: "红杖",
+            485: "木棍",
+            655: "绿木棍",
+            725: "蓝木棍",
+            847: "紫木棍"
+        };
+
+        for (const [index, alias] of Object.entries(aliasMap)) this.#dataMap.set(alias, this.#dataMap.get(`#${index}`));
+
         if (await SpriteSpliter.hasCache) return resolve((await SpriteSpliter.get("Noita:WandIcons")).map(URL.createObjectURL));
 
-        const values = [...this.#dataMap.values()];
-        const workerFn = async () => {
+        const workerFn = async saveData => {
+            /** @type {ImageEncodeOptions} */
+            const imageEncodeOptions = { type: "image/webp", quality: 1 };
+            const deg = -Math.PI / 2;
+            const reader = new FileReaderSync();
             addEventListener("message", async ({ data: buffer }) => {
+                const bitmap = await createImageBitmap(await (await fetch(embed(`#icon.png`))).blob());
                 const lengths = new Uint8Array(buffer);
                 const amount = lengths.length;
                 /** @type {Array<Promise<Blob>>} */
                 const blobs = new Array(amount);
-                const bitmap = await createImageBitmap(await (await fetch(embed(`#icon.png`))).blob());
-                const deg = -Math.PI / 2;
-                /** @type {ImageEncodeOptions} */
-                const imageEncodeOptions = { type: "image/webp", quality: 1 };
+
                 for (let i = 0, origin = 0; i < amount; i++) {
                     const length = lengths[i];
                     const canvas = new OffscreenCanvas(15, length);
                     const ctx = canvas.getContext("2d");
-                    ctx.rotate(-Math.PI / 2);
+                    ctx.rotate(deg); // 魔杖需要旋转90° 以保存为纵向形式
                     ctx.drawImage(bitmap, origin, 0, length, 15, -length, 0, length, 15);
                     blobs[i] = canvas.convertToBlob(imageEncodeOptions);
                     origin += length;
                 }
-                const reader = new FileReaderSync();
-                postMessage((await Promise.all(blobs)).map(blob => reader.readAsDataURL(blob)));
+                saveData(await Promise.all(blobs));
                 bitmap.close();
-                close();
             });
         };
-        const lengths = Uint8Array.from([...this.#dataMap.values()].map(e => e.length));
-        const { buffer } = lengths;
-
+        const { buffer } = Uint8Array.from(this.#iconLengths);
+        this.#iconLengths = null; //释放占用
         resolve(await new SpriteSpliter("WandIcons", workerFn, [buffer, [buffer]]).results);
     }
 }
@@ -541,8 +559,8 @@ class WandData {
                     if (random(100) < 20) variation = "slow";
                     if (random(100) < 15) variation = "fast";
                 }
-                if (variation === "slow") (params.manaChargeSpeed /= 5), (params.manaMax *= 3);
-                else if (variation === "fast") (params.manaChargeSpeed *= 5), (params.manaMax /= 3);
+                if (variation === "slow") ((params.manaChargeSpeed /= 5), (params.manaMax *= 3));
+                else if (variation === "fast") ((params.manaChargeSpeed *= 5), (params.manaMax /= 3));
 
                 if (params.manaMax < 50) params.manaMax = 50;
                 if (params.manaChargeSpeed < 10) params.manaChargeSpeed = 10;
@@ -639,7 +657,7 @@ class WandData {
 
     /**
      * 通过模板获取法杖数据
-     * @todo 暂时未实现
+     * @todo 实现部分
      * @param {string} name
      * @param {*} custom
      */
@@ -676,7 +694,7 @@ class WandData {
     /** @param {Array} data */
     constructor(data) {
         [
-            /** @type {String} 名称 */
+            /** @type {string} 名称 */
             this.name,
             ,
             /** @type {RangeValue} 容量 */
@@ -687,7 +705,7 @@ class WandData {
             this.fireRateWait,
             /** @type {RangeValue} 充能时间 */
             this.reloadTime,
-            /** @type {Boolean} 乱序 */
+            /** @type {boolean} 乱序 */
             this.shuffle,
             /** @type {RangeValue} 散射角度 */
             this.spreadDegrees,
@@ -729,6 +747,8 @@ class WandData {
         const wandEntity = XML.parse(xmlString, { ignore: ["#text", "#comment"] })
             .childNodes.query("Entity")
             .find(entity => entity.attr.get("tags").split(",").includes("wand")).xmlObject;
+        // window.console.dir(wandEntity);
+
         const staticSpells = [];
         const dynamicSpells = [];
         for (const {
