@@ -16,6 +16,7 @@ class HTMLNoitaInventoryElement extends $extends(HTMLElement, {
     constructor() {
         super();
         this.#shadowRoot.adoptedStyleSheets = HTMLNoitaInventoryElement.#styleSheet;
+        // this.setAttribute("exportparts","")
     }
 
     /**
@@ -87,6 +88,7 @@ class HTMLNoitaInventoryElement extends $extends(HTMLElement, {
         if (this.displayBlankSlot) {
             for (let i = this.size - list.children.length; i >= 1; i--) list.append(h.li({ part: "inventory-slot" }));
         }
+        this.ariaLabel = "Noita 物品槽位";
     }
 
     async connectedCallback() {
