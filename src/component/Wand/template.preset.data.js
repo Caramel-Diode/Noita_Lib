@@ -11,7 +11,7 @@
     ["长笛 flute",14,],
     ["康特勒琴 kantele",14,],
     ["狗鱼下颚骨 leukaluu",18,],
-    ["康特勒琴(狗鱼下颚骨强化) leukaluu_kantele",14,],
+    ["鱼骨康特勒琴 leukaluu_kantele",14,],
     ["桑拿拂尘 vasta",18,],
     ["桦木拂尘 vihta",18,],
     ["迅捷之杖 good_01",23,],
