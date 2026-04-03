@@ -18,9 +18,9 @@
     place-self: start end;
 }
 
-slot[name="info"] {
+/* slot[name="info"] {
     display: none;
-}
+} */
 
 ::slotted(:is(.\[left-top\], .\[lt\], .\[1\])) {
     place-self: start;
@@ -50,7 +50,7 @@ data {
     filter: drop-shadow(1px 1px 0 #000a) drop-shadow(-1px -1px 0 #000a);
 }
 
-data > canvas {
+data > :is(canvas, img) {
     position: relative;
     zoom: 2;
 }
@@ -128,7 +128,9 @@ li > img {
     width: var(--size);
     border: 4px solid #0000;
     /* 聚焦时使用聚焦边框 否则回退使用正常边框 */
-    background: var(--focus\#border, var(--common\#border)), /* 底色 */ var(--b);
+    background:
+        var(--focus\#border, var(--common\#border)),
+        /* 底色 */ var(--b);
 }
 
 li > img::selection {
