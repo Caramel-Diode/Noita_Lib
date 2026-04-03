@@ -41,13 +41,17 @@
 }
 
 :host > .simple > .attrs {
+    margin-left: 12px;
     place-self: center start;
 }
 
 :host>.simple table .attr-icon,
 /* 简易面板不显示属性图标 */
-:host>.simple>.attrs th:nth-child(1) {
+:host>.simple>.attrs > tr > th:nth-child(1) {
     display: none;
+}
+:host > .simple > .attrs > tr > th:nth-child(2) {
+    min-width: 160px;
 }
 
 :host > .simple .mixed-spells {
@@ -125,10 +129,16 @@ h2 > ::slotted(data) {
     width: 40px;
 }
 
+@keyframes blink {
+    100% {
+        opacity: 0.5;
+    }
+}
+
 /* 可选位置 */
 noita-inventory::part(optional-spell),
 [part="optional-spell"] {
-    animation: fade 0.7s ease-out infinite alternate;
+    animation: blink 0.7s ease-out infinite alternate;
 }
 
 /* 法力不足时的警告图标(仅在简易模式展示) */
