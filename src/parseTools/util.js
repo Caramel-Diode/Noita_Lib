@@ -1092,3 +1092,14 @@ class AbbrList {
         return this.#sortedKeys.map((key, index) => `$${index.toString(36)}=${key}`).join(",");
     }
 }
+
+const saveData = async (ptah, fileContent) => {
+    await fetch("?save-file=" + ptah, {
+        method: "POST",
+        headers: {
+            "Content-Type": "text/javascript"
+        },
+        body: fileContent
+    });
+    console.log(`已保存至src/component/${ptah}`);
+};
