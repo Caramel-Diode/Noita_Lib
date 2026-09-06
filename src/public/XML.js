@@ -480,13 +480,13 @@ const XML = (() => {
         };
     })();
 
-    /** 判断特殊字符 "'-<=>? */
+    /** 判断特殊字符 <>/?-]="' */
     const isSpecial = (() => {
-        const table = new Uint8Array(64).fill(0);
-        for (const c of `"'-<=>?`) table[c.charCodeAt(0)] = 1;
+        const table = new Uint8Array(128).fill(0);
+        for (const c of `<>/?-]="'`) table[c.charCodeAt(0)] = 1;
         return char => {
             const code = char.charCodeAt(0);
-            return code < 64 ? table[code] : 0;
+            return code < 128 ? table[code] : 0;
         };
     })();
     class Token {
@@ -725,6 +725,8 @@ const XML = (() => {
                 pos.index++;
             }
         }
+        console.log(tokens);
+        
         return tokens;
     };
 
@@ -1071,7 +1073,7 @@ const XML = (() => {
                             this.tokens.push(token);
                             return true;
                         }
-                        if ((this.state = "0")) {
+                        if (this.state === "0") {
                             this.tokens.push(token);
                             if (token.type === "]]>") {
                                 this.state = "1";
