@@ -15,6 +15,7 @@
         轮播带
 \*==================*/
 [part="tape"] {
+    --amount: attr(data-amount type(<integer>));
     display: flex;
     list-style: none;
     flex-direction: column;
