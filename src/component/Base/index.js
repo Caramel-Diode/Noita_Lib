@@ -1,6 +1,8 @@
 const globalCSS = css(embed(`#base.css`), { name: "base" });
+const offscreenCSS = css(embed(`#offscreen.css`), { name: "offscreen" });
 const $css = Symbol("css");
 const $content = Symbol("content");
+
 const Base = (() => {
     const styleSheet = {
         icon: css(embed(`#icon.css`), { name: "base-icon" }),
@@ -159,8 +161,6 @@ const Base = (() => {
          * @param {HTMLElement} element
          */
         const main = element => {
-            console.log(element);
-
             const [s, f] = element.childNodes;
             [s.hidden, f.hidden] = [f.hidden, s.hidden];
         };
@@ -382,6 +382,8 @@ const Base = (() => {
                         target = this.materialList(prop,value); break;
                     case "materialConvertMap":
                         target = this.materialConvertMap(value); break;
+                    case "damageProbability":
+                        target = this.damageProbability(value); break;
                     default:
                         // 伤害/承伤 属性
                         for(const damageType of DamageData.types) {
@@ -698,7 +700,7 @@ const Base = (() => {
 
         /**
          * 加载`生成锁 ⇌ 解锁条件`
-         * @param {import("@spell").SpellData.SpawningData} spawn 生成数据
+         * @param {} spawn 生成数据
          */
         unlock({ requiresFlag, manualUnlock }) {
             return this.#createSwitchTr({ prop: "lock", content: "* ".repeat(Math.min(requiresFlag.length, 5)) }, { prop: "unlock", content: requiresFlag + (manualUnlock ? " (手动解锁)" : "") });
@@ -706,7 +708,7 @@ const Base = (() => {
 
         /**
          * 加载`价格 ⇌ 价格基准`
-         * @param {import("@spell").SpellData.Price} value
+         * @param {} value
          */
         price(value) {
             return this.#createSwitchTr({ prop: "price", content: value.toString() }, { prop: "priceBase", content: value.valueOf() });
@@ -725,7 +727,7 @@ const Base = (() => {
             for (const li of lis) h.$(li, { role: "tab", "aria-selected": "true", Event: panelInfoSwitch.event });
             lis[0].setAttribute("aria-selected", "false");
             panelInfoSwitch.main(lis[0]); //提供的数据会全部展示 此处点击以实现仅显示首个投射物信息
-            if (menu.innerText.length > 100) menu.style.flexDirection = "column";
+            if (menu.textContent.length > 100) menu.style.flexDirection = "column";
             return this.#tr(prop, menu);
         }
 
@@ -962,6 +964,14 @@ const Base = (() => {
         }
 
         /**
+         * 伤害概率
+         * @param {number} value
+         */
+        damageProbability(value) {
+            return this.#tr(`damageProbability`, value * 100 + "%");
+        }
+
+        /**
          * 加载面板属性(无特殊处理)
          * @param {PanelAttrIDEnum} type
          * @param {number|string} value
@@ -1019,9 +1029,9 @@ const Base = (() => {
          * 样式表将继承父类的样式表
          */
         static [$css] = {
-            base: [globalCSS],
-            icon: [globalCSS, styleSheet.icon],
-            panel: [globalCSS, styleSheet.panel]
+            base: [globalCSS, offscreenCSS],
+            icon: [globalCSS, styleSheet.icon, offscreenCSS],
+            panel: [globalCSS, styleSheet.panel, offscreenCSS]
         };
 
         /**
@@ -1058,7 +1068,7 @@ const Base = (() => {
             if (this.#shadowRoot.childNodes.length) return;
             /* prettier-ignore */
             this.#shadowRoot.append(
-                h.div({class:"background"}),
+                h.div({class:"background","aria-hidden": "true" }),
                 h.section(
                 h.slot(h.pre(`使用多个<tempalte title="选项卡名称">内容</tempalte>以选项卡模式填充内容\n或直接在内部以简易模式填充内容`))
                 )
@@ -1301,7 +1311,7 @@ const createPanelH1 = (() => {
                         main(event.currentTarget); // 切换标题
                     } else if (event.key === "Escape") event.currentTarget.blur();
                     else if (event.ctrlKey || event.metaKey) {
-                        if (event.key.toLocaleUpperCase() === "C") navigator.clipboard.writeText(event.currentTarget.innerText); // 复制标题
+                        if (event.key.toUpperCase() === "C") navigator.clipboard.writeText(event.currentTarget.textContent); // 复制标题
                     } else if (event.key === "ArrowUp") {
                         /** @type {ShadowRoot} */
                         const shadowRoot = event.currentTarget.getRootNode();
