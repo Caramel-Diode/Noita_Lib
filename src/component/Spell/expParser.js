@@ -5,6 +5,17 @@ const lexer = new Lexer([
     Lexer.preset.BLANK,
     Lexer.preset.SPELL_ID,
     Lexer.preset.SPELL_TAG,
+    // {
+    //     id:"FILTER_EXP",
+    //     match(source) {
+    //         if (!source.startsWith("{")) return;
+    //         let i = 1;
+    //         for (; i < source.length; i++) {
+    //             if (source[i] === "}") return source.slice(0, i + 1);
+    //         }
+    //     },
+    //     value: raw => raw.slice(1, -1)
+    // },
     { id: "PARENTHESE_LEFT", data: "(" },
     { id: "PARENTHESE_RIGHT", data: ")" },
     { id: "NOT", data: "!" },
@@ -13,7 +24,141 @@ const lexer = new Lexer([
     { id: "DIFF", data: "-" },
     { id: "XOR", data: "^" }
 ]);
+/**
+ * 解析 `PARAM1 比较符 PARAM2` 结构
+ */
+// const parseFilterExp = (() => {
+//     const lexer = new Lexer([
+//         Lexer.preset.BLANK,
+//         { id: "GE", data: ">=" },
+//         { id: "LE", data: "<=" },
+//         { id: "GT", data: ">" },
+//         { id: "LT", data: "<" },
+//         { id: "EQ", data: "=" },
+//         { id: "NEQ", data: "!=" },
+//         {
+//             id: "PARAM",
+//             match(source) {
+//                 let i = 0;
+//                 while (i < source.length && (Lexer.isWordPart(source[i]) || Lexer.isNumberPart(source[i]) || source[i] === ".")) i++;
+//                 if (i > 0) return source.slice(0, i);
+//             }
+//         }
+//     ]);
+//     /** @type {Dict<Map>} */
+//     const valueMap = {
+//         get "speedMultiplier.Mul"() {
+//             const map = new Map();
+//             for (const data of SpellData.tagSets.speedMultiplierMul) map.set(data, data.modifierAction.speedMultiplier.value);
+//             return map;
+//         },
+//         get "speedMultiplier.Reset"() {
+//             const map = new Map();
+//             for (const data of SpellData.tagSets.speedMultiplierReset) map.set(data, data.modifierAction.speedMultiplier.value);
+//             return map;
+//         }
+//     };
+//     for (const attr of ["fireRateWait", "explosionRadius", "spreadDegrees", "patternDegrees", "damageCriticalChance", "knockbackForce", "material", "materialAmount", "trailMaterial", "trailMaterialAmount", "bounces", "friendlyFire", "lifetime", "reloadTime", "recoil"]) {
+//         for (const op of ["Add", "Sub", "Reset"]) {
+//             const key1 = `${attr}.${op}`;
+//             const key2 = `${attr}${op}`;
+//             Reflect.defineProperty(valueMap, key1, {
+//                 get() {
+//                     const map = new Map();
+//                     for (const data of SpellData.tagSets[key1]) {
+//                         map.set(data.modifierAction[key2], data);
+//                     }
+//                 }
+//             });
+//         }
+//     }
+//     for (const damageType of DamageData.types) {
+//         for (const op of ["Add", "Sub", "Reset"]) {
+//             const key1 = `${damageType}Damage.${op}`;
+//             const key2 = `damage${op}${damageType}`;
+//             Reflect.defineProperty(valueMap, key1, {
+//                 get() {
+//                     const map = new Map();
+//                     for (const data of SpellData.tagSets[key1]) {
+//                         map.set(data.modifierAction[key2], data);
+//                     }
+//                 }
+//             });
+//         }
+//     }
+//     const compare = (v1, v2, op) => {
+//         //prettier-ignore
+//         switch (op) {
+//             case "GE": return v1 >= v2;
+//             case "LE": return v1 <= v2;
+//             case "GT": return v1 > v2;
+//             case "LT": return v1 < v2;
+//             case "EQ": return v1 === v2;
+//             case "NEQ": return v1 !== v2;
+//         }
+//     };
+//     /**
+//      * 从对象中逐层读取值
+//      * @param {Object} entity
+//      * @param {Array<string>} paths
+//      */
+//     const getValue = (entity, paths) => {
+//         let c = entity;
+//         for (const p of paths) {
+//             if (typeof c === "object" || typeof c === "object") {
+//                 c = c[p];
+//                 continue;
+//             }
+//             return null;
+//         }
+//         return c;
+//     };
+//     /**
+//      *
+//      * @param {string} v1
+//      * @param {any} v2
+//      * @param {string} op
+//      * @returns {Set<SpellData>}
+//      */
+//     const getFilterResult = (v1, v2, op) => {
+//         const result = new Set();
+//         if (!isNaN(v2)) v2 = +v2;
+//         if (v1 in valueMap) {
+//             /** @type {Map<any,SpellData>} */
+//             const map = valueMap[v1];
+//             for (const [data, value] of map) {
+//                 if (compare(value, v2, op)) result.add(data);
+//             }
+//             return result;
+//         }
+//         if (v1.startsWith("offerProjectile.")) {
+//             const paths = v1.split(".").slice(1);
+//             $: for (const data of SpellData.tagSets.offerProjectile) {
+//                 const filtered = data.offeredProjectile.filter(e => e.type === "common" || e.type === "cast" || e.type === "relate");
+//                 for (const { projectile } of filtered) {
+//                     const value = getValue(projectile, paths);
+//                     if (compare(value, v2, op)) {
+//                         result.add(data);
+//                         continue $;
+//                     }
+//                 }
+//             }
+//         }
+//     };
 
+//     /** @param {string} source */
+//     return source => {
+//         const result = {
+//             operator: null,
+//             param1: null,
+//             param2: null,
+//             result: null
+//         };
+//         for (const { type, data, range } of lexer.tokenise(source)) {
+//         }
+//         return result;
+//     };
+// })();
 class LogicExp {
     /**
      * @type {0|1|2|-1}
