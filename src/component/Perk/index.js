@@ -5,7 +5,7 @@ const Perk = (() => {
     return class HTMLNoitaPerkElement extends $extends(Base, {
         /** @type {$ValueOption<"icon"|"panel">} */
         displayMode: { name: "display", $default: "icon" },
-        /** @type {$ValueOption<PerkId|PerkName>} */
+        /** @type {$ValueOption<Perk['ID']|Perk['Name']>} */
         perkId: { name: "perk.id" },
         /** @type {$ValueOption<String>} */
         perkCount: { name: "perk.count" }
@@ -70,7 +70,7 @@ const Perk = (() => {
                 case "icon": this.#loadIconContent(); break;
                 default: throw new TypeError("不支持的显示模式");
             }
-            this.ariaLabel = "Noita 天赋";
+            this.ariaLabel = `Noita 天赋 {${this.perkData.name}}`;
         }
 
         //prettier-ignore
