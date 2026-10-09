@@ -439,7 +439,8 @@
     {
         questionMark: "questionMark",
         eatProbability: "吞噬概率",
-        attackProbability: "使用概率"
+        attackProbability: "使用概率",
+        damageProbability: "伤害概率"
     },
     // 126
     {
