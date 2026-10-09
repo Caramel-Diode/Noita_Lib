@@ -533,16 +533,13 @@ export declare namespace SpellData {
     };
 
     type ModifierAction = {
-        /**
-         * ![](data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAAA4AAAAOCAYAAAAfSC3RAAAAAXNSR0IArs4c6QAAADBJREFUOE9jZCATMJKpj2FEafz///9/UEAxMjKC/U2IDw8cQgrR5UdUqJKa9MgOHACz6hgPHJngWAAAAABJRU5ErkJggg==) [`施放延迟`](http://localhost)
-         */
         fireRateWait?: {
             type: "+" | "-" | "=";
             pos: "before" | "after" | "none";
             value: number;
         };
 
-        speed?: {
+        speedMultiplier?: {
             type: "*" | "=";
             pos: "before" | "after" | "none";
             value: number;
@@ -552,9 +549,6 @@ export declare namespace SpellData {
             pos: "before" | "after" | "none";
             value: number;
         };
-        /**
-         * ![](data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAAA4AAAAOCAYAAAAfSC3RAAAAAXNSR0IArs4c6QAAAExJREFUOE+lkkESACAIAuP/j6aTTdk0YHpmA0wMc0hyl8Lkhg1eQuAweTraoBLmSsuxDAaA1EEtDd9gvFyO2gZzJ5Wg/49qi/bJqegTfVc3/yd1yB4AAAAASUVORK5CYII=) [`散射`](http://localhost)
-         */
         spreadDegrees?: {
             type: "+" | "-" | "=";
             pos: "before" | "after" | "none";
@@ -570,9 +564,6 @@ export declare namespace SpellData {
             pos: "before" | "after" | "none";
             value: number;
         };
-        /**
-         * ![](data:image/webp;base64,UklGRmoAAABXRUJQVlA4WAoAAAAQAAAADQAADQAAQUxQSCAAAAABDzD/ERFCURsp0Eji+C5gfc3hIaL/4fMhRNMOx3HEA1ZQOCAkAAAAMAEAnQEqDgAOAAEAHCWkAANwAP73nf//o3X/+jPf//0bsAAA) [`投射物`](https://noita.wiki.gg/zh/wiki/伤害类型#投射物伤害)
-         */
         projectileDamage?: {
             type: "+" | "-";
             pos: "before" | "after" | "none";
