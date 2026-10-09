@@ -48,7 +48,7 @@ const Status = (() => {
                     this.#loadIconContent();
                     break;
             }
-            this.ariaLabel = "Noita 状态";
+            this.ariaLabel = `Noita 状态 {${this.statusData.name}`;
         }
 
         get [Symbol.toStringTag]() {
