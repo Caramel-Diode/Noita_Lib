@@ -1,23 +1,13 @@
 {
+    "extends": "../../../jsconfig.json",
     "compilerOptions": {
-        "lib": ["DOM", "ESNext"],
+        "lib": [ "DOM", "ESNext" ],
         "allowSyntheticDefaultImports": true,
         "declaration": true,
         "allowJs": true,
         "module": "esnext",
         "target": "esnext",
-        "checkJs": true,
-        "paths": {
-            "TYPE": ["../../../@types/@spell"],
-            "@contanier": ["../../../@types/@container"],
-            "@cursor": ["../../../@types/@cursor"],
-            "@entity": ["../../../@types/@entity"],
-            "@material": ["../../../@types/@material"],
-            "@message": ["../../../@types/@message"],
-            "@perk": ["../../../@types/@perk"],
-            "@spell": ["../../../@types/@spell"],
-            "@wand": ["../../../@types/@wand"]
-        }
+        "checkJs": false
     },
-    "include": ["db.js", "index.js", "../Base/index.js", "../../public/util.js", "../../public/htmlTools.js", "../../public/cssTools.js"]
+    "include": [ "db.js", "index.js", "../Base/index.js", "../../public/util.js", "../../public/htmlTools.js", "../../public/cssTools.js" ]
 }

@@ -1,13 +1,13 @@
 {
+    "extends": "../../../jsconfig.json",
     "compilerOptions": {
-        "lib": ["DOM", "ESNext"],
+        "lib": [ "DOM", "ESNext" ],
         "allowSyntheticDefaultImports": true,
         "declaration": true,
         "allowJs": true,
         "module": "esnext",
         "target": "esnext",
-        "checkJs": true,
-        "paths": {}
+        "checkJs": false
     },
-    "include": ["script.js", "../../public/XML.js", "../../public/CSV.js", "../util.js"]
+    "include": [ "script.js", "../../public/XML.js", "../../public/CSV.js", "../util.js" ]
 }
