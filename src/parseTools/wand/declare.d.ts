@@ -26,4 +26,3 @@ type WandTemplate = {
  * [lua file](gen_js_datas.lua)
  */
 declare const wandTemplateDatas: Array<WandTemplate>;
-
