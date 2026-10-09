@@ -3,10 +3,12 @@ SLOW_BULLET,能量球,微光 迸射蓝色粒子
 SLOW_BULLET_TRIGGER,触发能量球,微光 迸射蓝色粒子
 SLOW_BULLET_TIMER,定时能量球,微光 迸射蓝色粒子
 BLACK_HOLE,黑洞,微光 逸散粉色粒子
+WHITE_HOLE,白洞,微光 逸散白色粒子
 BLACK_HOLE_DEATH_TRIGGER,失效触发黑洞,微光 逸散粉色粒子
 BLACK_HOLE_BIG,巨型黑洞,微光 逸散粉色粒子
 WHITE_HOLE_BIG,巨型白洞,微光 逸散白色粒子
 BLACK_HOLE_GIGA,终极黑洞,微光 逸散粉色粒子
+WHITE_HOLE_GIGA,终极白洞,微光 逸散白色粒子
 LANCE,闪耀长枪,微光 迸射蓝色粒子
 LANCE_HOLY,神圣长枪,微光 迸射金色粒子
 ROCKET,魔法飞弹,微光 迸射橙色粒子
