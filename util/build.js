@@ -251,8 +251,6 @@ fs.writeFileSync(`${path.dist}/noitaLib.sf.js`, index_sf.embedingData ?? index_s
 
 // 其它目标
 {
-    // 测试目录
-    // fs.writeFileSync(`D:/Project/Web/NoitaTest/js/noitaLib.js`, index_sf.embedingData ?? index_sf.embedingData_base64);
     // 施法教学文档目录
     fs.writeFileSync(`D:/Project/Web/Noita 施法教学文档/noitaLib.js`, index_sf.embedingData ?? index_sf.embedingData_base64);
     // 直播插件目录
@@ -274,7 +272,3 @@ fs.writeFileSync(`${path.dist}/noitaLib.js`, index_common.embedingData);
 const index_esm_common = new File(`${path.src}/index.esm.js`);
 await index_esm_common.embed(`${path.dist}`);
 fs.writeFileSync(`${path.dist}/noitaLib.esm.js`, index_esm_common.embedingData);
-
-// const params = process.argv.slice(2);
-// if (!params.includes("-nolog")) {
-// }
