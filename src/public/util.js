@@ -169,6 +169,20 @@ class Lexer {
             },
             /** 移除#开头 */
             value: raw => raw.slice(1)
+        },
+        NUMBER: {
+            id: "NUMBER",
+            match(source) {
+                const sign = source[0];
+                if (sign !== "+" && sign !== "-" && !Lexer.isNumberPart(sign)) return;
+                let i = 1;
+                for (; i < source.length; i++) {
+                    if (Lexer.isNumberPart(source[i])) continue;
+                    return source.slice(0, i);
+                }
+                if (i) return source;
+            },
+            value: raw => +raw
         }
     };
     /** 检查字符是否为空白符 (仅支持ASCII范围)
@@ -182,7 +196,7 @@ class Lexer {
             return code < 64 ? table[code] : 0;
         };
     })();
-    /** 检查字符是数字构成成分
+    /** 检查字符是否是数字构成成分
      * ```javascript
      * /[0-9+-]/
      * ```
@@ -610,13 +624,13 @@ const $icon = (() => {
     class Icon extends HTMLImageElement {
         /**
          * @overload
-         * @param {Number} height
-         * @param {Number} width
+         * @param {number} height
+         * @param {number} width
          */
 
         /**
          * @overload
-         * @param {Number} size
+         * @param {number} size
          */
 
         /**
@@ -628,8 +642,8 @@ const $icon = (() => {
             this.height = height;
         }
         /**
-         * @param {Number} zoom
-         * @returns {String}
+         * @param {number} zoom
+         * @returns {string}
          */
         base64(zoom = 1) {
             const _w = this.naturalWidth * zoom,
@@ -645,34 +659,36 @@ const $icon = (() => {
             return canvas.toDataURL("image/png");
         }
 
+        /** @param {string} name  */
         static define(name) {
             h.img["noita-" + name] = this;
         }
     }
+    /**
+     * @param {number} size
+     * @param {string} altTag
+     * @returns {{
+     * new(size?:number):Icon
+     * define(name:string):void
+     * }}
+     */
     return (size, altTag) => {
         altTag = altTag + "图标:";
         return class extends Icon {
-            #alt;
+            /** @type {string} */
+            #alt = "";
             constructor() {
                 super(size);
             }
-            /** @param {Promise<string>|string} url */
+            /** @param {string} url */
             set src(url) {
-                if (typeof url === "string") url = Promise.resolve(url);
-                url.then(v => {
-                    if (v) {
-                        this.decoding = "async";
-                        this.style.imageRendering = "pixelated";
-                        super.alt = this.#alt;
-                        super.src = v;
-                    } else this.hidden = true;
-                });
+                if (url) super.src = url;
+                else this.hidden = true;
             }
-            get src() {
-                return super.src;
-            }
+            /** @param {string} value  */
             set alt(value) {
                 this.#alt = altTag + value;
+                super.alt = this.#alt;
             }
         };
     };
@@ -864,8 +880,9 @@ class OverloadFunction extends Callable {
 
 /** 悬浮提示 */
 const hoverMsg = (() => {
-    const box = h.dialog({
+    const box = h.div({
         role: "tooltip",
+        "aria-label": "悬停提示面板",
         style: {
             background: "none",
             border: "none",
@@ -881,7 +898,9 @@ const hoverMsg = (() => {
         }
     });
     const { style } = box;
-    DOMContentLoaded.then(() => document.body.append(box));
+    DOMContentLoaded.then(() => {
+        if (!env.offscreen) document.body.append(box);
+    });
     box.addEventListener("click", () => {
         if (!supportHover) hoverMsg.hide();
     });
@@ -1192,7 +1211,7 @@ class UUID {
 /**
  * @param {{"@context"?:string,"@type":string}} option
  */
-const JSON_LD = option => {
-    option["@context"] ??= "https://schema.org";
-    return h.script({ type: "application/ld+json" }, JSON.stringify(option));
-};
+// const JSON_LD = option => {
+//     option["@context"] ??= "https://schema.org";
+//     return h.script({ type: "application/ld+json" }, JSON.stringify(option));
+// };
