@@ -72,7 +72,7 @@ type H_BaseType_special = {
         (option: ElementInitOption): HTMLInputElement & { type: "month" };
         [key: string]: (option: ElementInitOption) => HTMLInputElement & { type: "month" };
     };
-    inputnumber: {
+    inputNumber: {
         (option: ElementInitOption): HTMLInputElement & { type: "number" };
         [key: string]: (option: ElementInitOption) => HTMLInputElement & { type: "number" };
     };
