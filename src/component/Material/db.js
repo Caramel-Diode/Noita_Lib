@@ -8,25 +8,19 @@ class Icon extends $icon(16, "材料") {
         this.#data = data;
     }
 
-    connectedCallback() {
+    async connectedCallback() {
         const data = this.#data ?? MaterialData.queryById(this.dataset.id);
         this.alt = data.name;
-        this.src = data.asyncIconUrl;
+        this.src = await data.asyncIconUrl;
     }
 }
 
 Icon.define("-material");
 
-/** @typedef {import("TYPE").MaterialData} MaterialData */
-/** @typedef {import("TYPE").MaterialId} MaterialId */
-/** @typedef {import("TYPE").MaterialTag} MaterialTag */
-/** @typedef {import("TYPE").MaterialData.ReactionData} MaterialData.ReactionData */
-/** @typedef {import("TYPE").MaterialData.DataGroup} MaterialData.DataGroup */
-
 /**
  * @typedef MaterialDataGroup
  * @prop {MaterialTag} [tag] 标签
- * @prop {String} [idPart] id部分
+ * @prop {string} [idPart] id部分
  * @prop {MaterialId} [parent] 父材料id
  * @prop {Array<MaterialData>} list 具体可用材料表
  */
@@ -116,37 +110,32 @@ class MaterialData {
              */
             let type = 0;
 
-            let sourceInput, sourceOutput;
+            let /** @type {string} */ sourceInput, /** @type {string} */ sourceOutput;
             const { inputs, outputs } = this;
-            $: for (let i = 0; i < inputs.length; i++) {
-                const input = inputs[i];
-                if (input.parent === id) {
+
+            $: for (const { list, tag, idPart = "", parent } of inputs) {
+                if (parent === id) {
                     sourceInput = id;
                     type += 1;
                     break;
                 }
-                const { list, tag, idPart = "" } = input;
-                for (let j = 0; j < list.length; j++) {
-                    if (list[j].id === id) {
+                for (const item of list) {
+                    if (item.id === id) {
                         type += 1; //0b01
                         sourceInput = tag + idPart;
                         break $;
                     }
                 }
             }
-
-            $: for (let i = 0; i < outputs.length; i++) {
-                const output = outputs[i];
-                if (output.parent === id) {
+            $: for (const { list, tag, idPart = "", parent } of outputs) {
+                if (parent === id) {
                     sourceOutput = id;
                     type += 2;
                     break;
                 }
-                // 单独作为产物时不可以从父材料反应中继承
-                if (type !== 1) continue;
-                const { list, tag, idPart = "" } = outputs[i];
-                for (let j = 0; j < list.length; j++) {
-                    if (list[j].id === id) {
+                if (type !== 1 && parent) continue; // 单独作为产物时不可以从父材料反应中继承
+                for (const item of list) {
+                    if (item.id === id) {
                         type += 2; //0b10
                         sourceOutput = tag + idPart;
                         break $;
@@ -160,6 +149,7 @@ class MaterialData {
                 else if (sourceInput === id) return "asInput";
                 else if (sourceOutput === id) return "asOutput";
             }
+
             return ReactionData.#relationshipType[type];
         }
 
@@ -204,7 +194,7 @@ class MaterialData {
          *
          * @param {MaterialId} [agent] 代理材料 MaterialDataGroup 中的标签将替换为材料名; list中将单独选中代理材料
          * @param {"PlainText"|"MathML"} [format] 输出格式
-         * @returns {String}
+         * @returns {string}
          */
         toString(agent, format = "PlainText") {
             /** @type {MaterialData} */ let agentMaterial = {},
@@ -217,13 +207,13 @@ class MaterialData {
 
             /**
              * @typedef {Object} MaterialDataItem
-             * @prop {Number} amount 数量
-             * @prop {String} plainText
-             * @prop {String} mathML
+             * @prop {number} amount 数量
+             * @prop {string} plainText
+             * @prop {string} mathML
              */
-            /** @type {Map<String, MaterialDataItem>} */
+            /** @type {Map<string, MaterialDataItem>} */
             const mapInput = new Map(),
-                /** @type {Map<String, MaterialDataItem>} */
+                /** @type {Map<string, MaterialDataItem>} */
                 mapOutput = new Map();
 
             const inputs = [...this.inputs];
@@ -476,9 +466,9 @@ class MaterialData {
     /** ⚪️ 空材料 @type {MaterialData} */ static $NULL;
 
     static #typeList = ["null", "fire", "liquid", "solid", "gas"];
-    /** @type {Number} 图标索引 */ #iconIndex;
+    /** @type {number} 图标索引 */ #iconIndex;
 
-    /** @param {Array} data @param {Number} index */
+    /** @param {Array} data @param {number} index */
     constructor(data, index) {
         this.#iconIndex = index;
         [
@@ -514,12 +504,16 @@ class MaterialData {
             , //==============================[18] 加热转化 (等待后续创建引用)
             , //==============================[19] 碎裂转化 (等待后续创建引用)
             this.lifetime = 0, //=============[20] 存在时间
-            this.nameKey //===================[21] 名称翻译键
+            // this.nameKey //===================[21] 名称翻译键
         ] = data;
         this.tags = [];
         new Bits(parseBigint(data[2], 36)).toArray(MaterialData.#tagMap.length).forEach((v, i) => !v || this.tags.push(MaterialData.#tagMap[i]));
         /** @type {Array<string>} */
         this.type = MaterialData.#typeList[data[6]];
+    }
+
+    get nameKey() {
+        return "mat_" + this.id;
     }
 
     get asyncIconUrl() {
@@ -532,7 +526,7 @@ class MaterialData {
 
     /**
      * 通过ID获取材料数据
-     * @param {String} id
+     * @param {string} id
      * @return {MaterialData}
      */
     static queryById = id => this.data.id_map.get(id) ?? this.$NULL;
@@ -567,7 +561,8 @@ class MaterialData {
     /** 初始化数据库 */
     static init() {
         const [rawDatas, tags] = [...embed(`#material.data.js`)];
-        const datas = [...rawDatas.values().chunks(22)];
+        // const datas = [...rawDatas.values().chunks(22)];
+        const datas = [...rawDatas.values().chunks(21)];
         this.#tagMap = tags.split(" ").map(e => `[${e}]`);
         this.$NULL = Object.freeze(new this(["_NULL", "空白", , , 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, "000000FF", "", "", , , , -1, "mat_air"], 0));
 

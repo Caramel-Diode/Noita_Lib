@@ -13,10 +13,10 @@ class PanelAttrInfo {
             this.className = "attr-icon";
         }
 
-        connectedCallback() {
+        async connectedCallback() {
             const data = this.#data ?? PanelAttrInfo.query(this.dataset.id);
             this.alt = data.name;
-            this.src = data.asyncIconUrl;
+            this.src = await data.asyncIconUrl;
         }
 
         static {
