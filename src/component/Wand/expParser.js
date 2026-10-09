@@ -9,20 +9,7 @@ const { isWordPart, isNumberPart, isBlank } = Lexer;
 
 const lexer = new Lexer([
     Lexer.preset.BLANK,
-    {
-        id: "NUMBER",
-        match(source) {
-            const sign = source[0];
-            if (sign !== "+" && sign !== "-" && !isNumberPart(sign)) return;
-            let i = 1;
-            for (; i < source.length; i++) {
-                if (isNumberPart(source[i])) continue;
-                return source.slice(0, i);
-            }
-            if (i) return source;
-        },
-        value: raw => +raw
-    },
+    Lexer.preset.NUMBER,
     Lexer.preset.SPELL_ID,
     Lexer.preset.SPELL_TAG,
     {
@@ -111,7 +98,7 @@ const parse = source => {
     }
     Reflect.defineProperty(result, "includedSpells", {
         get() {
-            new Set(result.map(({ datas }) => datas));
+            return new Set(result.map(({ datas }) => datas));
         },
         enumerable: false
     });
