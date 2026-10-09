@@ -26,7 +26,7 @@ const Wand = (() => {
                     const tip = map[name];
                     if (tip) {
                         hoverMsg.attach(tr, tip);
-                        tr.ariaDescription = tip.innerText;
+                        tr.ariaDescription = tip.textContent;
                         break;
                     }
                 }
@@ -36,11 +36,11 @@ const Wand = (() => {
 
     /**
      * 创建法力不足警告图标
-     * @param {import("@spell").SpellData} spellData
+     * @param {} spellData
      */
     const createManaNotEnoughWarnIcon = ({ name, mana }, manaMax) =>
         hoverMsg.attachWithPanel(
-            h.i({ class: "warn-icon", part: "warn-icon", "aria-label": "法力不足警告" }),
+            h.i({ class: "warn-icon", part: "warn-icon" }, "法力不足警告"),
             /* prettier-ignore */
             [h.pre(`警告 - 这支魔杖自身没有足够法力来施放 “${name}”\n魔杖的最大法力为${manaMax}，施放 “${name}” 需要${mana}法力`)],
             "white"
@@ -107,7 +107,7 @@ const Wand = (() => {
         /** 始终/法术槽法术 @type {$ValueOption<string>} */
         wandSpells: { name: "wand.spells", $default: "" }
     }) {
-        /** @type {import("@wand").WandData} */
+        /** @type {Wand["Data"]} */
         wandData;
 
         /**
@@ -146,7 +146,7 @@ const Wand = (() => {
          * @param {string} xmlString
          * @param {string} [display="panel"]
          */
-        static formPlayerXML(xmlString, display = "panel") {
+        static fromPlayerXML(xmlString, display = "panel") {
             return XML.parse(xmlString, { ignore: ["#text", "#comment"] })
                 .childNodes.query("Entity")
                 .filter(entity => entity.attr.get("tags").split(",").includes("wand"))
@@ -163,7 +163,7 @@ const Wand = (() => {
             if (recipeData[WandData.errorSymbol]) return h.div(
                 { class: type + "-spells solts" }, 
                 hoverMsg.attachWithPanel(
-                    h.i({ class: "warn-icon",style:{ display:"block", zoom: 3 } }),
+                    h.i({ class: "warn-icon",style:{ display:"block", zoom: 3 } },"解析出错"),
                     [
                         h.span({style:{color:"#f55",fontWeight:"800"}},"解析出错 "),
                         h.div({style:{paddingTop:"10px"}},h.code({style:{color:"#e4c482"}},type === "dynamic" ? this.wandDynamicSpells : this.wandStaticSpells)),
@@ -196,7 +196,7 @@ const Wand = (() => {
                         for (; j < item.min; j++) lis.push(h.li({ part: "inventory-slot", "aria-label": "固定法术" }, new Spell(item), createManaNotEnoughWarnIcon(item.datas[0], manaMax)));
                         hoverPanel = hoverPanels.b;
                         for (; j < item.max; j++) {
-                            const li = h.li({ part: "inventory-slot" }, h.$(new Spell(item), { part: "optional-spell", "aria-label": hoverPanel.innerText }), createManaNotEnoughWarnIcon(item.datas[0], manaMax));
+                            const li = h.li({ part: "inventory-slot" }, h.$(new Spell(item), { part: "optional-spell", "aria-label": hoverPanel.textContent }), createManaNotEnoughWarnIcon(item.datas[0], manaMax));
                             hoverMsg.attach(li, hoverPanel);
                             lis.push(li);
                         }
@@ -208,7 +208,7 @@ const Wand = (() => {
                     const li = h.li({ part: "inventory-slot" }, new Spell(item));
                     if (hoverPanel) {
                         hoverMsg.attach(li, hoverPanel);
-                        li.ariaLabel = hoverPanel.innerText;
+                        li.ariaLabel = hoverPanel.textContent;
                     }
                     lis.push(li);
                 }
@@ -216,7 +216,7 @@ const Wand = (() => {
                 for (; j < item.max; j++) {
                     const li = h.li({ part: "inventory-slot" }, h.$(new Spell(item), { part: "optional-spell" }));
                     hoverMsg.attach(li, hoverPanel);
-                    li.ariaLabel = hoverPanel.innerText;
+                    li.ariaLabel = hoverPanel.textContent;
                     lis.push(li);
                 }
             }
@@ -225,17 +225,16 @@ const Wand = (() => {
             if (type === "static") return h.ol({ class: "static-spells", "aria-label": "始终法术序列" }, staicLis);
             const fragment = h();
             if (staicLis.length) {
-                const staticInventory = h`noita-inventory`({ class: "static-spells solts", type: "ol", "aria-label": "始终法术序列" });
+                const staticInventory = h`noita-inventory`({ class: "static-spells solts", "inventory.type": "ol" });
                 staticInventory.initList(...staicLis);
                 fragment.append(staticInventory);
             }
             if (dynamicLis.length || this.displayBlankSlot) {
                 const dynamicInventory = h`noita-inventory`({
                     class: "dynamic-spells solts",
-                    type: wd.shuffle ? "ul" : "ol",
-                    size: wd.capacity,
-                    "display.blank-slot": this.displayBlankSlot,
-                    "aria-label": "动态法术序列"
+                    "inventory.type": wd.shuffle ? "ul" : "ol",
+                    "inventory.size": wd.capacity,
+                    "display.blank-slot": this.displayBlankSlot
                 });
                 dynamicInventory.initList(...dynamicLis);
                 fragment.append(dynamicInventory);
@@ -268,7 +267,7 @@ const Wand = (() => {
                 if (this.wandFrozen)
                     /* prettier-ignore */
                     promptsIcons.append(hoverMsg.attachWithPanel(
-                        h.i({ class: "info-icon" }),
+                        h.i({ class: "info-icon" },"提示信息"),
                         [h.pre("这支模组被冻结了\n某种魔法阻止你对这支魔杖进行修改")],
                         "white"
                     ));
@@ -276,13 +275,13 @@ const Wand = (() => {
                 if (wd.dynamicSpells + wd.staticSpells === "" && this.displayBlankWarning)
                     /* prettier-ignore */
                     promptsIcons.append(hoverMsg.attachWithPanel(
-                        h.i({ class: "warn-icon" }),
+                        h.i({ class: "warn-icon" },"警告信息"),
                         ["警告 - 这支魔杖不含法术"],
                         "white"
                     ));
 
-                if (this.wandInfo) promptsIcons.append(hoverMsg.attachWithPanel(h.i({ class: "info-icon" }), [this.wandInfo], "white"));
-                if (this.wandWarn) promptsIcons.append(hoverMsg.attachWithPanel(h.i({ class: "warn-icon" }), [this.wandWarn], "white"));
+                if (this.wandInfo) promptsIcons.append(hoverMsg.attachWithPanel(h.i({ class: "info-icon" }, "警告信息"), [this.wandInfo], "white"));
+                if (this.wandWarn) promptsIcons.append(hoverMsg.attachWithPanel(h.i({ class: "warn-icon" }, "提示信息"), [this.wandWarn], "white"));
             } else {
                 loader = new Base.PanelAttrLoader(void 0, this.displayTimeUnit);
                 template.content.append(h.h1({ "aria-label": "魔杖名" }, wd.name), loader.container);
@@ -318,11 +317,10 @@ const Wand = (() => {
 
             // 从内部<data>加载多个命名动态法术序列
             await DOMContentLoaded;
-            const datas = this.querySelectorAll("data");
+            const datas = this.getElementsByTagName("data");
             if (datas.length) {
                 const ul = h.ul({ class: "named-solts" });
-                for (let i = 0; i < datas.length; i++) {
-                    const data = datas[i];
+                for (const data of datas) {
                     const slot = h.slot();
                     // 需要slot节点已经被添加到页面后才能分配成功
                     queueMicrotask(() => slot.assign(data));
@@ -407,7 +405,7 @@ const Wand = (() => {
                 if (this.hasAttribute("wand.mana-max") || this.hasAttribute("wand.mana")) custom.manaMax = new RangeValue(wandManaMax);
                 if (this.hasAttribute("wand.static-spells") || this.hasAttribute("wand.spells")) custom.staticSpells = wandStaticSpells;
                 if (this.hasAttribute("wand.dynamic-spells") || this.hasAttribute("wand.spells")) custom.dynamicSpells = wandDynamicSpells;
-                /** @type {import("@wand").WandData} */
+                /** @type {} */
                 this.wandData = WandData.getDataByTemplate(templateName, true, custom);
             } else
                 this.wandData = new WandData([
