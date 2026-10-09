@@ -78,6 +78,8 @@ i {
     height: 11px;
     width: 11px;
     animation: fade 0.7s ease-out infinite alternate;
+    user-select: none;
+    color: #0000;
 }
 
 /* 警告图标 */
