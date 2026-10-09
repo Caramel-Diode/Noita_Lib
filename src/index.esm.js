@@ -1,16 +1,25 @@
 /** #home: 主入口 @file Noita Web Lib */
 let console = ((blank = _ => 0) => new Proxy({}, { get: () => blank }))();
 embed(`#public/polyfill.js`);
-
+const env = {
+    dev: false,
+    offscreen: false
+};
 embed(`#embedList.js`);
 /** @type {Console} 代理console实现在非dev模式下不在控制台显示调试信息 */
-
+/**
+ *
+ * @param {string} mode
+ * @returns {string}
+ */
 const noitaLib = mode => {
     const ver = "1.0";
     const author = "半导体果冻";
     const font_style = "font-family:'Fira Code','HarmonyOS Sans SC';,monospace";
     const logImgBase64 = embed(`#Noita logo.webp`);
-    if (mode?.toLocaleLowerCase() === "dev") console = window.console;
+    for (const p of (mode ?? "").split(/\s+/)) env[p.toLowerCase()] = true;
+    if (env.dev) console = window.console;
+    offscreenCSS.disabled = !env.offscreen;
     //prettier-ignore
     console.log(
         `\n%cNoita%c Web 构建工具库\n%cver%c${ver}_bate%c\nmade by ${author}`,
