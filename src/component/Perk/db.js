@@ -12,18 +12,15 @@ class Icon extends $icon(12, "天赋") {
         this.#data = data;
     }
 
-    connectedCallback() {
+    async connectedCallback() {
         const data = this.#data ?? PerkData.query(this.dataset.id);
         this.alt = data.name;
-        this.src = data.asyncIconUrl;
+        this.src = await data.asyncIconUrl;
     }
 }
 
 Icon.define("-perk");
 
-/** @typedef {import("TYPE").PerkId} PerkId */
-/** @typedef {import("TYPE").PerkName} PerkName */
-/** @typedef {import("TYPE").PerkData} PerkData */
 class PerkData {
     static data = {
         /** @type {Array<PerkData>} */ all: [],
