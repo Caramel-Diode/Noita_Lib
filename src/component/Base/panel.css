@@ -1,18 +1,3 @@
-@property --c1 {
-    syntax: "<color>";
-    inherits: true;
-}
-
-@property --c2 {
-    syntax: "<color>";
-    inherits: true;
-}
-
-@property --c3 {
-    syntax: "<color>";
-    inherits: true;
-}
-
 /* css 变量 */
 @layer variables {
     * {
