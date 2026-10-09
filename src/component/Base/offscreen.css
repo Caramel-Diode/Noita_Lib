@@ -1,0 +1,7 @@
+:host {
+    & > menu > li::before,
+    & > section,
+    & > .background {
+        animation: none !important;
+    }
+}
