@@ -497,6 +497,18 @@ class EntityData {
             }
         };
 
+        static BlackHoleComponent = class BlackHoleComponent extends Component {
+            /**
+             * @param {Array} data
+             */
+            constructor(data) {
+                super();
+                this.radius = data[0];
+                this.damageprobability = data[1];
+                this.damage = data[2];
+            }
+        };
+
         constructor() {}
     };
     #dropMoneyAble = false;
@@ -569,6 +581,8 @@ class EntityData {
         if (data[20]) this.laserEmitterComponent = data[20].map(e => new Comp.LaserEmitter(e));
         // [21] 号位 物品拾取组件
         if (data[21]) this.itemPickUpperComponent = new Comp.ItemPickUpper(data[21]);
+        // [22] 号位 黑洞组件
+        if (data[22]) this.blackHoleComponent = data[22].map(e => new Comp.BlackHoleComponent(e));
     }
 
     /**
