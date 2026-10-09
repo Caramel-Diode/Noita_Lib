@@ -39,7 +39,7 @@ class Icon extends $icon(15, "魔杖") {
         return this.#data?.frame;
     }
 
-    connectedCallback() {
+    async connectedCallback() {
         if (!this.#data) {
             this.#data = Icon.#dataMap.get(this.dataset.id);
             this.height = this.#data.length / this.#data.frame;
@@ -52,7 +52,7 @@ class Icon extends $icon(15, "魔杖") {
             this.#play();
         }
         this.alt = this.name;
-        this.src = this.asyncUrl;
+        this.src = await this.asyncUrl;
     }
 
     #play() {
@@ -151,10 +151,6 @@ class Icon extends $icon(15, "魔杖") {
 
 Icon.define("-wand");
 
-/** @typedef {import("TYPE").WandData} WandData */
-/** @typedef {import("TYPE").WandData.IconInfo} WandData.IconInfo */
-/** @typedef {import("TYPE").WandData.MatchData} WandData.MatchData */
-
 /** 法杖数据 */
 class WandData {
     static errorSymbol = Symbol("error");
@@ -208,8 +204,8 @@ class WandData {
             const { clamp, random } = _Math;
 
             /**
-             * @param {import("TYPE").WandData} data
-             * @returns {import("TYPE").WandData.MatchData}
+             * @param {} data
+             * @returns {}
              */
             return data => {
                 /* prettier-ignore */
@@ -454,14 +450,14 @@ class WandData {
             const randomSpellID = (type, lv) => {
                 if (lv > 6 && lv < 10) lv = 6;
                 else if (lv > 10) lv = 10;
-                /** @type {import("@spell").SpellData} */
+                /** @type {} */
                 const { id, maxUse } = Spell.getRandomSpellData(lv, `#type_${type}`);
                 if (isFinite(maxUse)) return `${id}^${maxUse}`;
                 return id;
             };
 
             /**
-             * @param {import("@wand").WandData} wandData
+             * @param {} wandData
              * @param {number} level
              */
             const generateSpellExp = (wandData, level, isRare) => {
@@ -747,10 +743,16 @@ class WandData {
         const wandEntity = XML.parse(xmlString, { ignore: ["#text", "#comment"] })
             .childNodes.query("Entity")
             .find(entity => entity.attr.get("tags").split(",").includes("wand")).xmlObject;
-        // window.console.dir(wandEntity);
-
+        const [abilityComp] = wandEntity.AbilityComponent;
+        const [gunConfig] = abilityComp.gun_config;
+        const [gunactionConfig] = abilityComp.gunaction_config;
+        const attr1 = abilityComp("attr");
+        const attr2 = gunConfig("attr");
+        const attr3 = gunactionConfig("attr");
+        /** 该值 = 始终法术+空槽位 */
+        const deck_capacity = +attr2.deck_capacity;
         const staticSpells = [];
-        const dynamicSpells = [];
+        const dynamicSpells = new Array(deck_capacity).fill("_");
         for (const {
             ItemActionComponent: [itemActionComp],
             ItemComponent: [itemComp]
@@ -760,19 +762,14 @@ class WandData {
             let data = action_id;
             if (uses_remaining !== "-1") data += "^" + uses_remaining;
             if (+permanently_attached) staticSpells.push(data);
-            else dynamicSpells.push(data);
+            else dynamicSpells[itemComp("attr")["inventory_slot.x"]] = data;
         }
-        const [abilityComp] = wandEntity.AbilityComponent;
-        const [gunConfig] = abilityComp.gun_config;
-        const [gunactionConfig] = abilityComp.gunaction_config;
-        const attr1 = abilityComp("attr");
-        const attr2 = gunConfig("attr");
-        const attr3 = gunactionConfig("attr");
+        dynamicSpells.length -= staticSpells.length;
         /* prettier-ignore */
         return new this([
             "魔杖",
             attr1.sprite_file.split(/[/.]/).at(-2),
-            +attr2.deck_capacity,
+            dynamicSpells.length,
             +attr2.actions_per_round,
             +attr3.fire_rate_wait,
             +attr2.reload_time,
