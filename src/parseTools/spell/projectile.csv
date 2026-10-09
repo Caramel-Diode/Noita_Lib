@@ -42,12 +42,14 @@ HITFX_EXPLOSION_SLIME_GIGA,巨型黏液引爆,misc/hitfx_explode_explosion_giga:
 HITFX_EXPLOSION_ALCOHOL,烈酒引爆,misc/hitfx_explode_explosion:#7
 HITFX_EXPLOSION_ALCOHOL_GIGA,巨型烈酒引爆,misc/hitfx_explode_explosion_giga:#7
 RANDOM_EXPLOSION,混沌魔法,projectiles/deck/acidshot:#7 projectiles/deck/alcohol_blast:#7|projectiles/deck/black_hole_big:#7|projectiles/deck/cloud_thunder:#7|projectiles/deck/cloud_acid:#7|projectiles/deck/cloud_blood:#7|projectiles/deck/cloud_water:#7|projectiles/deck/death_cross:#7|projectiles/deck/death_cross_big:#7|projectiles/deck/fireball:#7|projectiles/deck/firebomb:#7|projectiles/deck/grenade:#7|projectiles/deck/grenade_tier_2:#7|projectiles/deck/grenade_tier_3:#7|projectiles/deck/lightning:#7|projectiles/deck/meteor:#7|projectiles/deck/nuke:#7|projectiles/deck/regeneration_field:#7|projectiles/deck/rocket:#7|projectiles/deck/rocket_tier_2:#7|projectiles/deck/rocket_tier_3:#7|projectiles/deck/tentacle_portal:#7|projectiles/deck/thunder_blast:#7|projectiles/deck/wall_square:#7|projectiles/deck/xray:#7
-ALL_NUKES,核弹置换术,projectiles/deck/all_nukes projectiles/deck/nuke:#9
-ALL_DISCS,巨型圆锯置换术,projectiles/deck/all_discs projectiles/deck/disc_bullet_big:#9
-ALL_ROCKETS,魔法飞弹置换术,projectiles/deck/all_rockets projectiles/deck/rocket:#9|projectiles/deck/rocket_tier_2:#9|projectiles/deck/rocket_tier_3:#9
-ALL_DEATHCROSSES,死亡十字置换术,projectiles/deck/all_deathcrosses projectiles/deck/death_cross:#9|projectiles/deck/death_cross_big:#9
-ALL_BLACKHOLES,黑洞置换术,projectiles/deck/all_blackholes projectiles/deck/black_hole:#9
-ALL_ACID,酸液置换术,projectiles/deck/all_acid projectiles/deck/acidburst:#9
+ALL_NUKES,核弹置换术,projectiles/deck/all_nukes:#2 projectiles/deck/nuke:#9
+ALL_DISCS,巨型圆锯置换术,projectiles/deck/all_discs:#2 projectiles/deck/disc_bullet_big:#9
+ALL_ROCKETS,魔法飞弹置换术,projectiles/deck/all_rockets:#2 projectiles/deck/rocket:#9|projectiles/deck/rocket_tier_2:#9|projectiles/deck/rocket_tier_3:#9
+ALL_DEATHCROSSES,死亡十字置换术,projectiles/deck/all_deathcrosses:#2 projectiles/deck/death_cross:#9|projectiles/deck/death_cross_big:#9
+ALL_BLACKHOLES,黑洞置换术,projectiles/deck/all_blackholes:#2 projectiles/deck/black_hole:#9
+ALL_ACID,酸液置换术,projectiles/deck/all_acid:#2 projectiles/deck/acidburst:#9
 SPIRAL_SHOT,螺旋魔弹,projectiles/deck/spiral_shot projectiles/deck/spiral_part:4#3
 PROJECTILE_THUNDER_FIELD,投射物雷电领域,projectiles/deck/projectile_thunder_lightning:#9
 PROJECTILE_TRANSMUTATION_FIELD,投射物变形领域,projectiles/deck/projectile_transmutation_field animals/duck:#9 animals/sheep:#9 animals/sheep_bat:#9 animals/sheep_fly:#9
+THUNDER_BLAST,雷霆爆炸,projectiles/deck/thunder_blast projectiles/deck/lightning:4#7
+CLOUD_THUNDER,雷云,projectiles/deck/cloud_thunder projectiles/deck/lightning_extra_arcs:#8
