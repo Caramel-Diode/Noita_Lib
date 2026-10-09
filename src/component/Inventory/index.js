@@ -1,8 +1,8 @@
 class HTMLNoitaInventoryElement extends $extends(HTMLElement, {
-    /** @type {$ValueOption<"ol">} */
-    type: { name: "type", $default: "ol" },
+    /** @type {$ValueOption<"ol"|"ul">} */
+    inventoryType: { name: "inventory.type", $default: "ol" },
     /** @type {$ValueOption<"auto">} */
-    size: { name: "size", $default: "auto" },
+    inventorySize: { name: "inventory.size", $default: "auto" },
     /** @type {$ValueOption<boolean>} */
     displayBlankSlot: { name: "display.blank-slot" }
 }) {
@@ -27,7 +27,7 @@ class HTMLNoitaInventoryElement extends $extends(HTMLElement, {
      * @returns {HTMLUListElement|HTMLOListElement}
      */
     initList(...lis) {
-        this.#list = h[this.type](...lis);
+        this.#list = h[this.inventoryType](...lis);
         return this.#list;
     }
 
@@ -84,10 +84,11 @@ class HTMLNoitaInventoryElement extends $extends(HTMLElement, {
             // 需要slot节点已经被添加到页面后才能分配成功
             queueMicrotask(() => slot.assign(this.children[i]));
         }
-        if (isNaN(this.size)) return;
+        if (isNaN(this.inventorySize)) return;
         if (this.displayBlankSlot) {
-            for (let i = this.size - list.children.length; i >= 1; i--) list.append(h.li({ part: "inventory-slot" }));
+            for (let i = this.inventorySize - list.children.length; i >= 1; i--) list.append(h.li({ part: "inventory-slot" }));
         }
+        this.role = "group";
         this.ariaLabel = "Noita 物品槽位";
     }
 
