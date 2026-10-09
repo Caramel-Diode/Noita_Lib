@@ -35,12 +35,10 @@ const Spell = (() => {
             const td_values = table.querySelectorAll("td.value");
             const { dataset } = table;
             if (dataset.display === "prop") {
-                th_title.innerText = "生成权重";
-                // for (const e of td_values) e.innerText = e.dataset.weight;
+                th_title.textContent = "生成权重";
                 dataset.display = "weight";
             } else {
-                th_title.innerText = "生成概率";
-                // for (const e of td_values) e.innerText = e.dataset.prop;
+                th_title.textContent = "生成概率";
                 dataset.display = "prop";
             }
             for (const e of td_values) {
@@ -85,11 +83,14 @@ const Spell = (() => {
         document.body.append(hoverMsg.box);
     };
 
+    const entityFoldComponents = `DamageModelComponent VelocityComponent VariableStorageComponent LaserEmitterComponent MagicConvertMaterialComponent AnimalAIComponentComponent AIAttackComponent BlackHoleComponent`;
+
     /**
      * 缓存 共享 面板模式的实例
-     * @type {Map<SpellId,HTMLNoitaSpellElement>}
+     * @type {Map<string,HTMLNoitaSpellElement>}
      */
     const sharedPanelInstance = new Map();
+    const createPanelInstance = (id, instanceData = { remain: Infinity }) => new Spell({ id, display: "panel", instanceData, entityFoldComponents });
 
     return class HTMLNoitaSpellElement extends $extends(Base, {
         /** @type {$ValueOption<"icon"|"panel"|"list">} */
@@ -142,7 +143,7 @@ const Spell = (() => {
          * @prop {boolean} [noPanelClick] 禁用点击面板
          * @prop {Object} [instanceData] 实例数据
          * @prop {number} [instanceData.remain] 剩余使用次数
-         * @prop {string} [entityFoldComponents] 剩余使用次数
+         * @prop {string} [entityFoldComponents] 折叠实体组件
          */
 
         /**
@@ -182,7 +183,7 @@ const Spell = (() => {
          */
         static #sharedPanelInstance = new Map();
 
-        #IconClickFn() {
+        #iconClickFn() {
             const closeButton = h.button({ title: "鼠标右键也可关闭" }, "关闭");
             /* prettier-ignore */
             const dialog = h.dialog(
@@ -196,6 +197,19 @@ const Spell = (() => {
             dialog.addEventListener("close", closePanelFn);
             document.body.append(dialog);
             dialog.showModal();
+        }
+        #iconKeydown(event) {
+            if (event.key === "Enter") this.click();
+        }
+        /**
+         *
+         * @param {MouseEvent} event
+         */
+        #iconMouseDown1(event) {
+            if (event.button !== 1) return;
+            event.preventDefault();
+            const propName = event.shiftKey ? "name" : "id";
+            navigator.clipboard.writeText(this.spellDatas.map(e => e[propName]).join("|"));
         }
 
         /** 加载图标模式内容
@@ -215,7 +229,7 @@ const Spell = (() => {
                     h.div(
                         {style: {display:"grid",placeItems:"center"} },
                         hoverMsg.attachWithPanel(
-                            h.i({ class: "warn-icon",style:{ display:"block", zoom: 3 } }),
+                            h.i({ class: "warn-icon",style:{ display:"block", zoom: 3 } },"解析出错"),
                             [
                                 h.span({style:{color:"#f55",fontWeight:"800"}},"解析出错 "),
                                 h.div({style:{paddingTop:"10px"}},h.code({style:{color:"#e4c482"}},this.spellExp)),
@@ -228,7 +242,7 @@ const Spell = (() => {
 
             const titles = [];
             const names = [];
-            const ol = h.ol({ part: "tape", style: { "--amount": length } });
+            const ol = h.ol({ part: "tape", dataset: { amount: length } });
             for (const data of this.spellDatas) {
                 const typeInfo = typeInfoMap[data.type];
                 ol.append(h.li({ class: typeInfo[2] }, data.icon));
@@ -249,21 +263,23 @@ const Spell = (() => {
                 }
                 const [spellData] = this.spellDatas;
                 if (spellData.id[0] === "$") break hoverPanel;
-                let instance = sharedPanelInstance.get(spellData.id);
-                if (!instance) {
-                    instance = new Spell(this.spellDatas, { display: "panel", instanceData: this.instanceData, entityFoldComponents: "DamageModelComponent VelocityComponent VariableStorageComponent LaserEmitterComponent MagicConvertMaterialComponent AnimalAIComponentComponent AIAttackComponent" });
-                    sharedPanelInstance.set(spellData.id, instance);
-                }
-                hoverMsg.attach(this, instance, true);
+                //prettier-ignore
+                hoverMsg.attach(
+                    this, 
+                    this.instanceData.remain === Infinity ?
+                        sharedPanelInstance.getOrInsertComputed(spellData.id, createPanelInstance) :
+                        createPanelInstance(spellData.id, this.instanceData), // 有剩余次数不使用面板共享实例
+                    true
+                );
             }
             clickPanel: {
                 if (this.noPanelClick) break clickPanel;
                 if (length === 1 && this.spellDatas[0].id[0] === "$") break clickPanel;
-                this.addEventListener("click", this.#IconClickFn);
-                this.addEventListener("keydown", event => {
-                    if (event.key === "Enter") this.click();
-                });
+                this.addEventListener("click", this.#iconClickFn);
+                this.addEventListener("keydown", this.#iconKeydown);
             }
+            this.addEventListener("mousedown", this.#iconMouseDown1);
+
             const fragment = h(ol, h.slot());
             if (this.instanceData.remain !== Infinity) fragment.append(h.data({ value: this.instanceData.remain, "aria-label": "剩余使用次数" }, await getPixelFontsImg(this.instanceData.remain)));
             if (markIconId) fragment.append(Base.PanelAttrInfo.query(markIconId).icon);
@@ -311,7 +327,7 @@ const Spell = (() => {
                 /* prettier-ignore */
                 template.content.append(
                     h.h1(
-                    h.i({ class: "warn-icon", style: { display: "inline-block", verticalAlign: "bottom", zoom: 3 } }),
+                    h.i({ class: "warn-icon", style: { display: "inline-block", verticalAlign: "bottom", zoom: 3 } },"解析出错"),
                         h.span({style:{color:"#f55",fontWeight:"800"}}," 解析出错 "),
                     ),
                     h.p(
@@ -524,7 +540,7 @@ const Spell = (() => {
                         break;
                     }
             }
-            this.ariaLabel = "Noita 法术";
+            this.ariaLabel = `Noita 法术 {${this.spellDatas.map(e => e.name).join("、")}}`;
         }
 
         get [Symbol.toStringTag]() {
