@@ -47,8 +47,8 @@ class Perk {
 addEventListener("DOMContentLoaded", async () => {
     /** @type {HTMLButtonElement} */
     const button = document.querySelector(`#genData`);
-    const buttonText = button.innerText;
-    button.innerText = "Loading";
+    const buttonText = button.textContent;
+    button.textContent = "Loading";
     const _getImgDataWithoutBg = await getImgDataWithoutBg;
     const essencesCSV = CSV.parse(await (await fetch("essences.csv")).text());
     // console.log(essencesCSV);
@@ -106,7 +106,7 @@ addEventListener("DOMContentLoaded", async () => {
         const fileContent = `${getCommentText(`共${perkDatas.length}条天赋数据`)}\n[\n    ${data.join(",\n    ")}\n]`;
         download(fileContent, "perk.data.js");
     });
-    button.innerText = buttonText;
+    button.textContent = buttonText;
 
     // {
     //     const strs = [];

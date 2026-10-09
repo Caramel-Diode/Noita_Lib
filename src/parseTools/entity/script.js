@@ -804,10 +804,11 @@ const NoitaEntity = (() => {
             const attr = this.data("attr");
             const min = +attr["count.min"];
             const max = +attr["count.max"];
-            if(min === max) return max; // 数量固定时仅返回单个数值而不是数组
+            if (min === max)
+                return max; // 数量固定时仅返回单个数值而不是数组
             else
-            /* prettier-ignore */
-            return [
+                /* prettier-ignore */
+                return [
                 min, //=== [1] 最小数量
                 max //==== [2] 最大数量
             ]
@@ -1503,6 +1504,7 @@ const NoitaEntity = (() => {
             return [effect, frames];
         }
     }
+
     class LaserEmitterComponent extends Component {
         constructor(data) {
             super(data);
@@ -1554,6 +1556,20 @@ const NoitaEntity = (() => {
         }
     }
 
+    class BlackHoleComponent extends Component {
+        constructor(data) {
+            super(data);
+        }
+        [compile]() {
+            const data = this.data;
+            const attr = data("attr");
+            return [
+                +attr.radius, //=============半径
+                +attr.damage_probability, //=概率
+                $25(attr.damage_amount) //=======伤害量
+            ];
+        }
+    }
     return class NoitaEntity {
         /** @type {{[key: string]: string}} */
         static tags = {};
@@ -1612,7 +1628,9 @@ const NoitaEntity = (() => {
             /** @type {Array<LaserEmitterComponent>} */
             laserEmitter: [],
             /** @type {ItemPickUpperComponent} */
-            itemPickUpper: null
+            itemPickUpper: null,
+            /** @type {Array<BlackHoleComponent>} */
+            blackHole: []
         };
         /** @type {Array<String>} */
         tags = [];
@@ -1768,6 +1786,11 @@ const NoitaEntity = (() => {
                     case "ItemPickUpperComponent":
                         this.component.itemPickUpper = new ItemPickUpperComponent(values[0]);
                         break;
+                    case "BlackHoleComponent":
+                        for (let i = 0; i < values.length; i++) {
+                            this.component.blackHole.push(new BlackHoleComponent(values[i]));
+                        }
+                        break;
                 }
             }
             // 查询子实体的 GameEffect组件
@@ -1855,6 +1878,10 @@ const NoitaEntity = (() => {
                 obj[20].push(comp[compile]());
             }
             if (_.itemPickUpper) obj[21] = _.itemPickUpper[compile]();
+            for (const comp of _.blackHole) {
+                obj[22] ??= [];
+                obj[22].push(comp[compile]());
+            }
             return obj;
         }
     };

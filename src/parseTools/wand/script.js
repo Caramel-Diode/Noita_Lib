@@ -102,8 +102,8 @@ const extraDatasAndImgs = (async () => {
     const button1 = document.querySelector(`#genData1`);
     const button2 = document.querySelector(`#genData2`);
     const button3 = document.querySelector(`#genData3`);
-    const buttonText = button1.innerText;
-    button1.innerText = "Loading";
+    const buttonText = button1.textContent;
+    button1.textContent = "Loading";
     /** @type {Array<HTMLImageElement>} */
     const imgs = await Promise.all(wandTemplateDatas.map(e => PNG.removeGAMA(`/${e.file}`)));
     const { extraDatas, imgsCooked } = await extraDatasAndImgs;
@@ -165,5 +165,5 @@ const extraDatasAndImgs = (async () => {
         }
         console.log(cache.join(",\n"));
     });
-    button1.innerText = buttonText;
+    button1.textContent = buttonText;
 })();

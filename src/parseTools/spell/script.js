@@ -112,6 +112,7 @@ class Spell {
             this.descKey = data.desc;
             this.desc = data.desc;
         }
+        abbrList.add(this.desc);
         this.alias = Spell._aliasCSV.get(this.name, 1) ?? "";
         if (data.spawnRequiresFlag) {
             const unlockDesc = Spell._unlockDescCSV.get(data.id, 2);
@@ -125,8 +126,10 @@ class Spell {
         }
         if (data.passive) {
             const passiveDesc = Spell._passiveDescCSV.get(data.id, 2);
-            if (passiveDesc) this.passive = passiveDesc;
-            else {
+            if (passiveDesc) {
+                this.passive = passiveDesc;
+                abbrList.add(this.passive);
+            } else {
                 this.passive = "";
                 console.warn(`被动效果描述缺失 ${data.id}:${data.name}`);
             }
@@ -157,14 +160,14 @@ class Spell {
             // 与关联投射物xml不相同或者数量不同时单独声明关联投射物 (蠕虫雨, 召唤虫子系列, 侵扰)
             if (p.id !== relatedProjectileName || p.min !== relatedProjectileAmount) {
                 if (!cache.includes(":")) cache.push(":");
-                cache.push(`#2`); //提供类型为仅施法块
+                cache.push(`#2`); //提供类型为仅通过预载提供
                 projectilesCache.push(cache.join(""));
             } else projectilesCache.push(cache.join(""));
 
             /* 关联投射物必须存在 */
             if (relatedProjectileName && relatedProjectileName === p.id) {
                 relatedProjectileHasBeenAdded = true;
-                // 关联投射物数量与施法块投射物数量不一致时(召唤虫子系列, 侵扰)
+                // 关联投射物数量与过预载提供投射物数量不一致时(召唤虫子系列, 侵扰)
                 if (p.min !== relatedProjectileAmount) {
                     if (relatedProjectileAmount > 1) projectilesCache.push(`${id}:${relatedProjectileAmount}#1`);
                     else projectilesCache.push(`${id}:#1`);
@@ -229,22 +232,15 @@ class Spell {
                 if (prop === "exe") extraEntities.add(e.value);
                 e.value = minPath(e.value);
                 if (e.value.endsWith(",")) e.value = e.value.slice(0, -1);
-                // if (this.id === "FREEZE") {
-                //     console.log(data);
-
-                //     console.trace("???", prop, e);
-                // }
                 if (!e.value) continue;
             }
             if (typeof e.value === "boolean") e.value = Number(e.value);
             if (prop) cache.push(prop, e.type, e.value, ";");
-            // if (this.id === "FREEZE") {
-            //     console.log("###", [...cache]);
-            // }
         }
         if (cache.at(-1)) cache.pop(); //取消不必要的';'
         if (flag_separator < 0) cache.push("#");
         this.modifierAction = cache.join("");
+        abbrList.add(this.modifierAction);
         this.neverUnlimited = data.neverUnlimited;
         this.recursive = data.recursive;
         this.aiNeverUses = data.aiNeverUses;
@@ -254,18 +250,18 @@ class Spell {
     toString(spread = false) {
         const alias = this.alias ? this.alias : blank;
         const maxUse = this.maxUse === 0 ? blank : this.maxUse;
-        const passive = this.passive ? this.passive : blank;
+        const passive = this.passive ? abbrList.abbr(this.passive) : blank;
         const spawnRequiresFlag = this.spawnRequiresFlag ? abbrList.abbr(this.spawnRequiresFlag) : blank;
         const draw = this.draw === 0 ? blank : this.draw;
         const projectiles = this.projectiles ? this.projectiles : blank;
-        const modifierAction = this.modifierAction ? this.modifierAction : blank;
+        const modifierAction = this.modifierAction ? abbrList.abbr(this.modifierAction) : blank;
         const bitsNum = new Bits([this.neverUnlimited, this.recursive, this.aiNeverUses, this.spawnManualUnlock]).toBigInt();
         const str = JSON5.stringify([
             //===============================[构造器数据索引]
             this.id, //======================[0] id
             this.name, //====================[1] 名称
             alias, //========================[2] 别名
-            this.desc, //====================[3] 描述
+            abbrList.abbr(this.desc), //====================[3] 描述
             this.type, //====================[4] 类型
             maxUse, //=======================[5] 最大使用次数
             this.mana, //====================[6] 蓝耗

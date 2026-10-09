@@ -164,7 +164,7 @@ class Material {
         this.hp = Number(attr.get("hp") ?? parentData?.hp ?? 100); // 默认hp为100 --by 山雏
         this.fireHp = Number(attr.get("fire_hp") ?? parentData?.fireHp ?? 0); // 默认火焰hp为0 --by 山雏
         // 默认导电性 当它是液体的时候默认导电
-        const defult_electricalConductivity = tagsStr?.includes("[liquid]") ?? false ? 1 : 0;
+        const defult_electricalConductivity = (tagsStr?.includes("[liquid]") ?? false) ? 1 : 0;
         this.electricalConductivity = Number(attr.get("electrical_conductivity") ?? parentData?.electricalConductivity ?? defult_electricalConductivity);
         this.generatesSmoke = Number(attr.get("generates_smoke") ?? parentData?.generatesSmoke ?? 0);
         this.liquidGravity = Number(attr.get("liquid_gravity") ?? parentData?.liquidGravity ?? 0);
@@ -264,8 +264,8 @@ class Material {
             coldFreezesToMaterial, //==============================[17] 冻结转化
             warmthMeltsToMaterial, //==============================[18] 加热转化
             solidBreakToType, //===================================[19] 碎裂转化
-            this.lifetime, //======================================[20] 存在时间
-            this.name.slice(1) //===========================[21] 名称翻译键
+            this.lifetime  //======================================[20] 存在时间
+            // this.name.slice(1) //===========================[21] 名称翻译键
         ]);
 
         if (spread) return str.slice(1, -1);
@@ -343,7 +343,14 @@ addEventListener("DOMContentLoaded", async () => {
         const comment = getCommentText(`共${materialDatas.length}条材料数据`);
         // const fileContent = `${comment}\n((\n    ${params_str}\n)=>[\n    ${materials_str}\n])()`;
         const fileContent = `${comment}\n[\n[\n    ${materials_str}\n],\n\n"${Material.sortedTags.map(e => e.slice(1, -1)).join(" ")}"\n]`;
-        download(fileContent, "material.data.js");
+        // download(fileContent, "material.data.js");
+        fetch("?save-file=" + "Material/material.data.js", {
+            method: "POST",
+            headers: {
+                "Content-Type": "text/javascript"
+            },
+            body: fileContent
+        });
     });
 
     document.querySelector("#genReactionData").addEventListener("click", () => {
@@ -364,6 +371,13 @@ addEventListener("DOMContentLoaded", async () => {
             })
             .join(",\n    ");
         const fileContent = `${getCommentText(`共${reactionDatas.length}条材料反应数据`)}\n[\n    ${reaction_str}\n]`;
-        download(fileContent, "reaction.data.js");
+        // download(fileContent, "reaction.data.js");
+        fetch("?save-file=" + "Material/reaction.data.js", {
+            method: "POST",
+            headers: {
+                "Content-Type": "text/javascript"
+            },
+            body: fileContent
+        });
     });
 });
