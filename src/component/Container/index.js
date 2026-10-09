@@ -1,4 +1,3 @@
-/** @typedef {import("@material").MaterialData} MaterialData */
 const Container = (() => {
     embed(`#db.js`);
     ContainerData.init();
@@ -22,7 +21,7 @@ const Container = (() => {
          * @param {Object} [option] 构造配置
          * @param {"icon"|"panel"} [option.display] 显示模式
          * @param {"common"|"conical"|"jar"|"bag"} [option.type] 容器类型
-         * @param {String} [option.content] 容器内容
+         * @param {string} [option.content] 容器内容
          */
         constructor({ display, content, type } = {}) {
             super();
