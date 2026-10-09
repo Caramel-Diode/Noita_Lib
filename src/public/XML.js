@@ -725,7 +725,6 @@ const XML = (() => {
                 pos.index++;
             }
         }
-        console.log(tokens);
         
         return tokens;
     };
