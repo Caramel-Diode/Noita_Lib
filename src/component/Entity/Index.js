@@ -24,7 +24,8 @@ const Entity = (() => {
         MagicConvertMaterialComponent: h`noita-panel`("材料转化组件"),
         CellEaterComponent: h`noita-panel`("材料吞噬组件"),
         VariableStorageComponent: h`noita-panel`("变量存储组件"),
-        VariableStorageComponents: h`noita-panel`("变量存储组件(多个)")
+        VariableStorageComponents: h`noita-panel`("变量存储组件(多个)"),
+        BlackHoleComponent: h`noita-panel`("黑洞组件")
     };
 
     return class HTMLNoitaEntityElement extends $extends(Base, {
@@ -87,7 +88,7 @@ const Entity = (() => {
          * 获取实体数据表 (这也会暴露给法术组件使用)
          * @param {EntityData} entityData 投射物数据
          * @param {Object} option 配置
-         * @param {import("@spell").SpellData.ProjectileData} option.extraData 额外数据
+         * @param {} option.extraData 额外数据
          * @param {Array<string>} option.ignore 忽略展示属性
          * @param {"s"|"f"} option.timeUnit 时间单位
          * @param {Array<string>} option.foldComponents 需要折叠的组件
@@ -109,7 +110,7 @@ const Entity = (() => {
                 const summary = h.summary($type + (multiple ? "s" : ""));
                 const hoverPanel = entityComponentHoverPanelMap[$type + (multiple ? "s" : "")];
                 hoverMsg.attach(summary, hoverPanel);
-                const details = h.details({ class: "entity-component", "aria-label": `实体组件(${$type})`, "aria-description": hoverPanel.innerText, open: true }, summary, h.div(loader.container));
+                const details = h.details({ class: "entity-component", "aria-label": `实体组件(${$type})`, "aria-description": hoverPanel.textContent, open: true }, summary, h.div(loader.container));
                 details.open = !foldComponents.includes($type);
                 section.append(details);
                 return {
@@ -270,6 +271,18 @@ const Entity = (() => {
                     // explosionDamageTarget: {value: comp.ex},
                     loadEntities: { value: lis, hidden: !lis[0] }
                 });
+            }
+
+            if (entityData.blackHoleComponent) {
+                for (const comp of entityData.blackHoleComponent) {
+                    const loader = createLoader(comp);
+                    //prettier-ignore
+                    loader.load({
+                        physicsHitDamage: { value: comp.damage, hidden: !comp.damage},
+                        effectRadius: { value: comp.radius },
+                        damageProbability: { value: comp.damageprobability },
+                    })
+                }
             }
 
             if (entityData.explosionComponent) {
