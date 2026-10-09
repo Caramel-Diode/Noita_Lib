@@ -67,7 +67,7 @@ const Material = (() => {
                 titles.push(`${typeInfo[1]}${data.name}\n${data.id}`);
             }
             this.title = titles.join("\n\n");
-            this.shadowRoot.append(h.ol({ part: "tape", style: { "--amount": length } }, lis));
+            this.shadowRoot.append(h.ol({ part: "tape", dataset: { amount: length } }, lis));
         }
 
         /**
@@ -124,14 +124,14 @@ const Material = (() => {
                 }
             }
 
-            /** @type {String} */
+            /** @type {string} */
             const mode = this.displayMode;
             if (mode.startsWith("panel-reaction")) {
                 this.#loadReactionContent(Number(mode.split(":")[1] ?? 0));
             } else if (mode.startsWith("icon")) this.#loadIconContent();
             else if (mode.startsWith("panel")) {
             } else throw new TypeError("不支持的显示模式");
-            this.ariaLabel = "Noita 材料";
+            this.ariaLabel = `Noita 材料 {${this.materialDatas.map(e => e.name).join("、")}}`;
         }
 
         //prettier-ignore
