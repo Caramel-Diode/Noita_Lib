@@ -8,23 +8,14 @@ class Icon extends $icon(16, "法术") {
         this.#data = data;
     }
 
-    connectedCallback() {
-        // const data = this.#data ?? SpellData.query(this.getAttribute("spell.id"));
+    async connectedCallback() {
         const data = this.#data ?? SpellData.query(this.dataset.id);
         this.alt = data.name;
-        this.src = data.asyncIconUrl;
+        this.src = await data.asyncIconUrl;
     }
 }
 
 Icon.define("-spell");
-
-/** @typedef {import("TYPE").SpellId} SpellId */
-/** @typedef {import("TYPE").SpellName} SpellName */
-/** @typedef {import("TYPE").SpellAlias} SpellAlias */
-/**
- * @template {SpellId} T
- * @typedef {import("TYPE").SpellData<T>} SpellData
- */
 
 class SpellData {
     static errorSymbol = Symbol("error");
@@ -90,7 +81,7 @@ class SpellData {
             const [projectileId, _exp = []] = exp.split(":");
             if (projectileId.endsWith("_nil")) this.projectile = null;
             else {
-                /** @type {import("@entity").EntityData} 投射物数据 */
+                /** @type {} 投射物数据 */
                 this.projectile = Entity.query(projectileId);
                 let target = "amountMin"; // 数据目标
                 let cache = [];
@@ -382,7 +373,7 @@ class SpellData {
         }
     };
 
-    /** @typedef {Set<import("@spell").SpellData>} SpellSet 法术集合 */
+    /** @typedef {Set<SpellData>} SpellSet 法术集合 */
     static tagSets = {
         /** @type {SpellSet} 所有法术 */ all: new Set(),
 
@@ -441,7 +432,9 @@ class SpellData {
         },
 
         /** @type {SpellSet} 可手持的 */
-        holdable: new Set(),
+        get holdable() {
+            return new Set(SpellData.queryByExp(`BOMB|DYNAMITE|GLITTER_BOMB|BOMB_HOLY|BOMB_HOLY_GIGA|PROPANE_TANK`));
+        },
 
         /** @type {SpellSet} 提供投射物 */ offerProjectile: new Set(),
         /** @type {SpellSet} 提供多个投射物 */ offerProjectiles: new Set(),
@@ -499,35 +492,35 @@ class SpellData {
         friendlyFire: new Set(),
 
         /** @type {SpellSet} 修改后座力的法术 */
-        get recoil_mod() {
-            return this.recoil_reset.union(this.recoil_add).union(this.recoil_sub);
+        get recoilMod() {
+            return this.recoilReset.union(this.recoilAdd).union(this.recoilSub);
         },
-        /** @type {SpellSet} 增加座力的法术 */ recoil_add: new Set(),
-        /** @type {SpellSet} 减少座力的法术 */ recoil_sub: new Set(),
-        /** @type {SpellSet} 重置座力的法术 */ recoil_reset: new Set(),
+        /** @type {SpellSet} 增加座力的法术 */ recoilAdd: new Set(),
+        /** @type {SpellSet} 减少座力的法术 */ recoilSub: new Set(),
+        /** @type {SpellSet} 重置座力的法术 */ recoilReset: new Set(),
 
         /** @type {SpellSet} 修改充能时间的法术 */
-        get reloadTime_mod() {
-            return this.reloadTime_reset.union(this.reloadTime_add).union(this.reloadTime_sub);
+        get reloadTimeMod() {
+            return this.reloadTimeReset.union(this.reloadTimeAdd).union(this.reloadTimeSub);
         },
-        /** @type {SpellSet} 增加充能时间的法术 */ reloadTime_add: new Set(),
-        /** @type {SpellSet} 减少充能时间的法术 */ reloadTime_sub: new Set(),
-        /** @type {SpellSet} 重置充能时间的法术 */ reloadTime_reset: new Set(),
+        /** @type {SpellSet} 增加充能时间的法术 */ reloadTimeAdd: new Set(),
+        /** @type {SpellSet} 减少充能时间的法术 */ reloadTimeSub: new Set(),
+        /** @type {SpellSet} 重置充能时间的法术 */ reloadTimeReset: new Set(),
 
         /** @type {SpellSet} 修改施放延迟的法术 */
-        get fireRateWait_mod() {
-            return this.fireRateWait_reset.union(this.fireRateWait_add).union(this.fireRateWait_sub);
+        get fireRateWaitMod() {
+            return this.fireRateWaitReset.union(this.fireRateWaitAdd).union(this.fireRateWaitSub);
         },
-        /** @type {SpellSet} 增加施放延迟的法术 */ fireRateWait_add: new Set(),
-        /** @type {SpellSet} 减少施放延迟的法术 */ fireRateWait_sub: new Set(),
-        /** @type {SpellSet} 重置施放延迟的法术 */ fireRateWait_reset: new Set(),
+        /** @type {SpellSet} 增加施放延迟的法术 */ fireRateWaitAdd: new Set(),
+        /** @type {SpellSet} 减少施放延迟的法术 */ fireRateWaitSub: new Set(),
+        /** @type {SpellSet} 重置施放延迟的法术 */ fireRateWaitReset: new Set(),
 
         /** @type {SpellSet} 影响存在时间的法术 [自动管理 直接添加到对应的存在时间修改类型即可] */
-        get lifetime_mod() {
-            return this.lifetime_up.union(this.lifetime_down);
+        get lifetimeMod() {
+            return this.lifetimeAdd.union(this.lifetimeSub);
         },
-        /** @type {SpellSet} 增加存在时间的法术 */ lifetime_up: new Set(),
-        /** @type {SpellSet} 减少存在时间的法术 */ lifetime_down: new Set(),
+        /** @type {SpellSet} 增加存在时间的法术 */ lifetimeAdd: new Set(),
+        /** @type {SpellSet} 减少存在时间的法术 */ lifetimeSub: new Set(),
 
         /** @type {SpellSet} 不耗蓝的法术 */ mana_0: new Set(),
         /** @type {SpellSet} 低耗蓝的法术 */ mana_drainlowly: new Set(),
@@ -538,7 +531,9 @@ class SpellData {
             return this.type_projectile.union(this.type_staticProjectile).union(this.type_material);
         },
 
-        /** @type {SpellSet} 影响投射物速度的法术 */ speed_mod: new Set(),
+        /** @type {SpellSet} 影响投射物速度的法术 */ speedMultiplierMod: new Set(),
+        /** @type {SpellSet} 重置投射物速度的法术 */ speedMultiplierReset: new Set(),
+        /** @type {SpellSet} 重置投射物速度的法术 */ speedMultiplierMul: new Set(),
 
         /** @type {SpellSet} 带有抽取的法术 [自动管理 直接添加到对应抽取类型即可] */
         get draw() {
@@ -552,28 +547,28 @@ class SpellData {
         /** @type {SpellSet} 抽取单次法术 */ draw_once: new Set(),
 
         /** @type {SpellSet} 影响伤害的法术 */
-        get damage_mod() {
-            return this.damage_reset.union(this.damage_add.union(this.damage_sub));
+        get damageMod() {
+            return this.damageReset.union(this.damageAdd.union(this.damageSub));
         },
 
         /** @type {SpellSet} 增加伤害的法术 */
-        get damage_add() {
+        get damageAdd() {
             let result = new Set();
-            for (const type of DamageData.types) result = result.union(this[`damage_add_${type}`] ?? new Set());
+            for (const type of DamageData.types) result = result.union(this[`damageAdd_${type}`] ?? new Set());
             return result;
         },
 
         /** @type {SpellSet} 减少伤害的法术 */
-        get damage_sub() {
+        get damageSub() {
             let result = new Set();
-            for (const type of DamageData.types) result = result.union(this[`damage_sub_${type}`] ?? new Set());
+            for (const type of DamageData.types) result = result.union(this[`damageSub_${type}`] ?? new Set());
             return result;
         },
 
         /** @type {SpellSet} 重置伤害的法术 */
-        get damage_reset() {
+        get damageReset() {
             let result = new Set();
-            for (const type of DamageData.types) result = result.union(this[`damage_reset_${type}`] ?? new Set());
+            for (const type of DamageData.types) result = result.union(this[`damageReset_${type}`] ?? new Set());
             return result;
         },
 
@@ -583,7 +578,9 @@ class SpellData {
         /** @type {SpellSet} 通过魔球解锁的法术 */ spawnKillUnlock: new Set(),
 
         /** @type {SpellSet} 可激活太阳种子的法术 */
-        activateSunStone: new Set()
+        activateSunStone: new Set(),
+        /** @type {SpellSet} 只能固定生成的法术 */
+        spawnFixed: new Set()
     };
 
     /** @type {Map<string,SpellData>} */
@@ -794,13 +791,13 @@ class SpellData {
             const define = (key, attr = { value: new Set() }) => Reflect.defineProperty(storage, key, { ...attr, enumerable: true });
             for (const damageType of DamageData.types) {
                 // 提供此伤害类型修正(增加,减少,重置)的法术
-                for (const modType of ["add", "sub", "reset"]) define(`damage_${modType}_${damageType}`);
+                for (const modType of ["Add", "Sub", "Reset"]) define(`damage${modType}_${damageType}`);
                 // 提供此伤害类型修正的法术
-                define("damage_mod_" + damageType, { get: () => new Set(this.queryByExp(`#damage_add_${damageType}|#damage_sub_${damageType}|#damage_reset_${damageType}`)) });
+                define("damageMod_" + damageType, { get: () => new Set(this.queryByExp(`#damageAdd_${damageType}|#damageSub_${damageType}|#damageReset_${damageType}`)) });
                 // 提供此类型伤害投射物的法术
                 define("offerProjectile_damage_" + damageType);
                 // 与此伤害类型相关的法术
-                define("damage_" + damageType, { get: () => new Set(this.queryByExp(`#damage_mod_${damageType}|#offerProjectile_damage_${damageType}`)) });
+                define("damage_" + damageType, { get: () => new Set(this.queryByExp(`#damageMod_${damageType}|#offerProjectile_damage_${damageType}`)) });
             }
         }
 
@@ -811,16 +808,15 @@ class SpellData {
         const registerNumberAttrTag = (atrrName, spellData) => {
             const { modifierAction } = spellData;
             if (!(atrrName in modifierAction)) return;
-
             switch (modifierAction[atrrName].type) {
                 case "+":
-                    storage[atrrName + "_add"].add(spellData);
+                    storage[atrrName + "Add"].add(spellData);
                     break;
                 case "-":
-                    storage[atrrName + "_sub"].add(spellData);
+                    storage[atrrName + "Sub"].add(spellData);
                     break;
                 case "=":
-                    storage[atrrName + "_reset"].add(spellData);
+                    storage[atrrName + "Reset"].add(spellData);
                     break;
             }
         };
@@ -845,17 +841,30 @@ class SpellData {
                 if (filtered.length) storage.offerProjectile.add(data);
                 else break $offeredProjectile;
                 if (filtered.length > 1) {
+                    let forCast = 0;
+                    let forRelate = 0;
                     // 判断多个投射物是否处于同个随机组中 处于同个随机组中不应该认为提供多个投射物
                     const groups = new Set();
                     for (let i = 0; i < filtered.length; i++) {
-                        const { randomGroup } = filtered[i];
+                        const { randomGroup, amountMax, type } = filtered[i];
+                        if (amountMax > 1) storage.offerProjectiles.add(data);
                         if (randomGroup) groups.add(randomGroup);
                         else {
-                            storage.offerProjectiles.add(data);
-                            break;
+                            switch (type) {
+                                case "common":
+                                    forCast++;
+                                    forRelate++;
+                                    break;
+                                case "cast":
+                                    forCast++;
+                                    break;
+                                case "relate":
+                                    forRelate++;
+                                    break;
+                            }
                         }
                     }
-                    if (groups.size > 1) storage.offerProjectiles.add(data);
+                    if (forCast > 1 || forRelate > 1 || groups > 1) storage.offerProjectiles.add(data);
                 }
                 for (const { amountMax } of filtered) {
                     if (amountMax > 1) {
@@ -910,6 +919,7 @@ class SpellData {
                 storage.spawnRequiresFlag.add(data);
                 if (/拾取\S*魔球/.test(data.spawn.requiresFlag)) storage.spawnOrbUnlock.add(data);
                 if (/击杀\S*/.test(data.spawn.requiresFlag)) storage.spawnKillUnlock.add(data);
+                if (data.spawn.raw.prob === "0") storage.spawnFixed.add(data);
             }
 
             if (data.spawn.manualUnlock) storage.spawnManualUnlock.add(data);
@@ -926,19 +936,23 @@ class SpellData {
             registerNumberAttrTag("fireRateWait", data);
 
             if ("lifetime" in data.modifierAction) {
-                if (data.modifierAction.lifetime.type === "+") storage.lifetime_up.add(data);
-                else if (data.modifierAction.lifetime.type === "-") storage.lifetime_down.add(data);
+                if (data.modifierAction.lifetime.type === "+") storage.lifetimeAdd.add(data);
+                else if (data.modifierAction.lifetime.type === "-") storage.lifetimeSub.add(data);
             }
 
-            if ("speedMultiplier" in data.modifierAction) storage.speed_mod.add(data);
+            if ("speedMultiplier" in data.modifierAction) {
+                storage.speedMultiplierMod.add(data);
+                if (data.modifierAction.speedMultiplier.type === "=") storage.speedMultiplierReset.add(data);
+                if (data.modifierAction.speedMultiplier.type === "*") storage.speedMultiplierMul.add(data);
+            }
 
             for (const type of DamageData.types) {
                 if (`${type}Damage` in data.modifierAction)
                     /* prettier-ignore */
                     switch (data.modifierAction[`${type}Damage`].type) {
-                        case "+": storage[`damage_add_${type}`].add(data); break;
-                        case "-": storage[`damage_sub_${type}`].add(data); break;
-                        case "=": storage[`damage_reset_${type}`].add(data);
+                        case "+": storage[`damageAdd_${type}`].add(data); break;
+                        case "-": storage[`damageSub_${type}`].add(data); break;
+                        case "=": storage[`damageReset_${type}`].add(data);
                     }
             }
 
@@ -953,9 +967,9 @@ class SpellData {
         });
 
         // 允许手持的法术
-        for (const id of ["BOMB", "DYNAMITE", "GLITTER_BOMB", "BOMB_HOLY", "BOMB_HOLY_GIGA", "PROPANE_TANK"]) {
-            storage.holdable.add(this.query(id));
-        }
+        // for (const id of ["BOMB", "DYNAMITE", "GLITTER_BOMB", "BOMB_HOLY", "BOMB_HOLY_GIGA", "PROPANE_TANK"]) {
+        //     storage.holdable.add(this.query(id));
+        // }
 
         // 岩浆之海 和 终极核弹 可以激活太阳石
         for (const id of ["NUKE_GIGA", "SEA_LAVA"]) {
