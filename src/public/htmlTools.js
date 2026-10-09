@@ -20,7 +20,7 @@
  * @prop {Boolean} hidden 隐藏
  * @prop {number} tabindex
  * @prop {{[K in keyof GlobalEventHandlersEventMap]: (event:GlobalEventHandlersEventMap[K]) => void}} Event 事件监听器
- * @prop {Array} shadowRoot 开启shadowRoot并添加元素
+ * @prop {Array<Node|string|CSSStyleSheet>|ShadowRootInit} shadowRoot 开启shadowRoot并添加元素
  * @prop {string|Array<string>} HTML innerHTML
  * @prop {Object} $ 挂载到元素对象上的属性
  */
@@ -31,10 +31,10 @@
 
 /**
  * @typedef {{[K in keyof HTMLElementTagNameMap as K extends (keyof H_BaseType_special) ? never : K]:{
- *      (option:ElementInitOption,...nodes:Array<Node|String>):HTMLElementTagNameMap[K],
+ *      (option:ElementInitOption,...nodes:Array<Node|string>):HTMLElementTagNameMap[K],
  *      (...nodes:Array<Node|string>):HTMLElementTagNameMap[K],
- *      [key:String]: {
- *          (option:ElementInitOption,...nodes:Array<Node|String>):HTMLElementTagNameMap[K],
+ *      [key:string]: {
+ *          (option:ElementInitOption,...nodes:Array<Node|string>):HTMLElementTagNameMap[K],
  *          (...nodes:Array<Node|string>):HTMLElementTagNameMap[K],
  *      }
  * }}} H_BaseType
@@ -44,178 +44,178 @@
  * @typedef {{
  *      inputButton: {
  *          (option:ElementInitOption):HTMLInputElement & {type: "button"},
- *          [key:String]: (option:ElementInitOption) => HTMLInputElement & {type: "button"}
+ *          [key:string]: (option:ElementInitOption) => HTMLInputElement & {type: "button"}
  *      },
  *      inputCheckbox: {
  *          (option:ElementInitOption):HTMLInputElement & {type: "checkbox"},
- *          [key:String]: (option:ElementInitOption) => HTMLInputElement & {type: "checkbox"}
+ *          [key:string]: (option:ElementInitOption) => HTMLInputElement & {type: "checkbox"}
  *      },
  *      inputColor: {
  *          (option:ElementInitOption):HTMLInputElement & {type: "color"},
- *          [key:String]: (option:ElementInitOption) => HTMLInputElement & {type: "color"}
+ *          [key:string]: (option:ElementInitOption) => HTMLInputElement & {type: "color"}
  *      },
  *      inputDate: {
  *          (option:ElementInitOption):HTMLInputElement & {type: "date"},
- *          [key:String]: (option:ElementInitOption) => HTMLInputElement & {type: "date"}
+ *          [key:string]: (option:ElementInitOption) => HTMLInputElement & {type: "date"}
  *      },
  *      inputEmail: {
  *          (option:ElementInitOption):HTMLInputElement & {type: "email"},
- *          [key:String]: (option:ElementInitOption) => HTMLInputElement & {type: "email"}
+ *          [key:string]: (option:ElementInitOption) => HTMLInputElement & {type: "email"}
  *      },
  *      inputFile: {
  *          (option:ElementInitOption):HTMLInputElement & {type: "file"},
- *          [key:String]: (option:ElementInitOption) => HTMLInputElement & {type: "file"}
+ *          [key:string]: (option:ElementInitOption) => HTMLInputElement & {type: "file"}
  *      },
  *      inputHidden: {
  *          (option:ElementInitOption):HTMLInputElement & {type: "hidden"},
- *          [key:String]: (option:ElementInitOption) => HTMLInputElement & {type: "hidden"}
+ *          [key:string]: (option:ElementInitOption) => HTMLInputElement & {type: "hidden"}
  *      },
  *      inputImage: {
  *          (option:ElementInitOption):HTMLInputElement & {type: "image"},
- *          [key:String]: (option:ElementInitOption) => HTMLInputElement & {type: "image"}
+ *          [key:string]: (option:ElementInitOption) => HTMLInputElement & {type: "image"}
  *      },
  *      inputMonth: {
  *          (option:ElementInitOption):HTMLInputElement & {type: "month"},
- *          [key:String]: (option:ElementInitOption) => HTMLInputElement & {type: "month"}
+ *          [key:string]: (option:ElementInitOption) => HTMLInputElement & {type: "month"}
  *      },
  *      inputNumber: {
  *          (option:ElementInitOption):HTMLInputElement & {type: "number"},
- *          [key:String]: (option:ElementInitOption) => HTMLInputElement & {type: "number"}
+ *          [key:string]: (option:ElementInitOption) => HTMLInputElement & {type: "number"}
  *      },
  *      inputPassword: {
  *          (option:ElementInitOption):HTMLInputElement & {type: "password"},
- *          [key:String]: (option:ElementInitOption) => HTMLInputElement & {type: "password"}
+ *          [key:string]: (option:ElementInitOption) => HTMLInputElement & {type: "password"}
  *      },
  *      inputRadio: {
  *          (option:ElementInitOption):HTMLInputElement & {type: "radio"},
- *          [key:String]: (option:ElementInitOption) => HTMLInputElement & {type: "radio"}
+ *          [key:string]: (option:ElementInitOption) => HTMLInputElement & {type: "radio"}
  *      },
  *      inputRange: {
  *          (option:ElementInitOption):HTMLInputElement & {type: "range"},
- *          [key:String]: (option:ElementInitOption) => HTMLInputElement & {type: "range"}
+ *          [key:string]: (option:ElementInitOption) => HTMLInputElement & {type: "range"}
  *      },
  *      inputReset: {
  *          (option:ElementInitOption):HTMLInputElement & {type: "reset"},
- *          [key:String]: (option:ElementInitOption) => HTMLInputElement & {type: "reset"}
+ *          [key:string]: (option:ElementInitOption) => HTMLInputElement & {type: "reset"}
  *      },
  *      inputSearch: {
  *          (option:ElementInitOption):HTMLInputElement & {type: "search"},
- *          [key:String]: (option:ElementInitOption) => HTMLInputElement & {type: "search"}
+ *          [key:string]: (option:ElementInitOption) => HTMLInputElement & {type: "search"}
  *      },
  *      inputSubmit: {
  *          (option:ElementInitOption):HTMLInputElement & {type: "submit"},
- *          [key:String]: (option:ElementInitOption) => HTMLInputElement & {type: "submit"}
+ *          [key:string]: (option:ElementInitOption) => HTMLInputElement & {type: "submit"}
  *      },
  *      inputTel: {
  *          (option:ElementInitOption):HTMLInputElement & {type: "tel"},
- *          [key:String]: (option:ElementInitOption) => HTMLInputElement & {type: "tel"}
+ *          [key:string]: (option:ElementInitOption) => HTMLInputElement & {type: "tel"}
  *      },
  *      inputText: {
  *          (option:ElementInitOption):HTMLInputElement & {type: "text"},
- *          [key:String]: (option:ElementInitOption) => HTMLInputElement & {type: "text"}
+ *          [key:string]: (option:ElementInitOption) => HTMLInputElement & {type: "text"}
  *      },
  *      inputTime: {
  *          (option:ElementInitOption):HTMLInputElement & {type: "time"},
- *          [key:String]: (option:ElementInitOption) => HTMLInputElement & {type: "time"}
+ *          [key:string]: (option:ElementInitOption) => HTMLInputElement & {type: "time"}
  *      },
  *      inputUrl: {
  *          (option:ElementInitOption):HTMLInputElement & {type: "url"},
- *          [key:String]: (option:ElementInitOption) => HTMLInputElement & {type: "url"}
+ *          [key:string]: (option:ElementInitOption) => HTMLInputElement & {type: "url"}
  *      },
  *      inputWeek: {
  *          (option:ElementInitOption):HTMLInputElement & {type: "week"},
- *          [key:String]: (option:ElementInitOption) => HTMLInputElement & {type: "week"}
+ *          [key:string]: (option:ElementInitOption) => HTMLInputElement & {type: "week"}
  *      },
  *     area: {
  *         (option:ElementInitOption):HTMLAreaElement,
- *         [key:String]: (option:ElementInitOption) => HTMLAreaElement
+ *         [key:string]: (option:ElementInitOption) => HTMLAreaElement
  *     },
  *     base:{
  *         (option:ElementInitOption):HTMLBaseElement,
- *         [key:String]: (option:ElementInitOption) => HTMLBaseElement
+ *         [key:string]: (option:ElementInitOption) => HTMLBaseElement
  *     },
  *     br:{
  *         (option:ElementInitOption):HTMLBRElement,
- *         [key:String]: (option:ElementInitOption) => HTMLBRElement
+ *         [key:string]: (option:ElementInitOption) => HTMLBRElement
  *     },
  *     col:{
  *         (option:ElementInitOption):HTMLTableColElement,
- *         [key:String]: (option:ElementInitOption) => HTMLTableColElement
+ *         [key:string]: (option:ElementInitOption) => HTMLTableColElement
  *     },
  *     embed:{
  *         (option:ElementInitOption):HTMLEmbedElement,
- *         [key:String]: (option:ElementInitOption) => HTMLEmbedElement
+ *         [key:string]: (option:ElementInitOption) => HTMLEmbedElement
  *     },
  *     hr:{
  *         (option:ElementInitOption):HTMLHRElement,
- *         [key:String]: (option:ElementInitOption) => HTMLHRElement
+ *         [key:string]: (option:ElementInitOption) => HTMLHRElement
  *     },
  *     img:{
  *         (option:ElementInitOption & {width:number, height:number, src: string}):HTMLImageElement,
- *         [key:String]: (option:ElementInitOption) => HTMLImageElement
+ *         [key:string]: (option:ElementInitOption) => HTMLImageElement
  *     },
  *     input:{
  *         (option:ElementInitOption & {type: "button"|"checkbox"|"color"|"date"|"email"|"file"|"hidden"|"image"|"month"|"number"|"password"|"radio"|"range"|"reset"|"search"|"submit"|"tel"|"text"|"time"|"url"|"week"}):HTMLInputElement,
- *         [key:String]: (option:ElementInitOption & {type: "button"|"checkbox"|"color"|"date"|"email"|"file"|"hidden"|"image"|"month"|"number"|"password"|"radio"|"range"|"reset"|"search"|"submit"|"tel"|"text"|"time"|"url"|"week"}) => HTMLInputElement
+ *         [key:string]: (option:ElementInitOption & {type: "button"|"checkbox"|"color"|"date"|"email"|"file"|"hidden"|"image"|"month"|"number"|"password"|"radio"|"range"|"reset"|"search"|"submit"|"tel"|"text"|"time"|"url"|"week"}) => HTMLInputElement
  *     },
  *     link:{
  *         (option:ElementInitOption):HTMLLinkElement,
- *         [key:String]: (option:ElementInitOption) => HTMLLinkElement
+ *         [key:string]: (option:ElementInitOption) => HTMLLinkElement
  *     },
  *     meta:{
  *         (option:ElementInitOption):HTMLMetaElement,
- *         [key:String]: (option:ElementInitOption) => HTMLMetaElement
+ *         [key:string]: (option:ElementInitOption) => HTMLMetaElement
  *     },
  *     source:{
  *         (option:ElementInitOption):HTMLSourceElement,
- *         [key:String]: (option:ElementInitOption) => HTMLSourceElement
+ *         [key:string]: (option:ElementInitOption) => HTMLSourceElement
  *     },
  *     track:{
  *         (option:ElementInitOption):HTMLTrackElement,
- *         [key:String]: (option:ElementInitOption) => HTMLTrackElement
+ *         [key:string]: (option:ElementInitOption) => HTMLTrackElement
  *     },
  *     wbr:{
  *         (option:ElementInitOption):HTMLElement,
- *         [key:String]: (option:ElementInitOption) => HTMLElement
+ *         [key:string]: (option:ElementInitOption) => HTMLElement
  *     },
  *     canvas: {
- *          (option:ElementInitOption & {width:number, height:number},...nodes:Array<Node>):HTMLCanvasElement,
- *          (...nodes:Array<Node>):HTMLCanvasElement,
- *          [key:String]: {
- *              (option:ElementInitOption & {width:number, height:number},...nodes:Array<Node>):HTMLCanvasElement,
- *              (...nodes:Array<Node>):HTMLCanvasElement,
+ *          (option:ElementInitOption & {width:number, height:number},...nodes:Array<Node|string>):HTMLCanvasElement,
+ *          (...nodes:Array<Node|string>):HTMLCanvasElement,
+ *          [key:string]: {
+ *              (option:ElementInitOption & {width:number, height:number},...nodes:Array<Node|string>):HTMLCanvasElement,
+ *              (...nodes:Array<Node|string>):HTMLCanvasElement,
  *          }
  *     },
  *     option: {
- *          (option:ElementInitOption & { value: string; label: string; selected: boolean },textContent:String):HTMLOptionElement,
- *          (textContent:String):HTMLOptionElement,
- *          [key:String]: {
- *              (option:ElementInitOption & { value: string; label: string; selected: boolean },textContent:String):HTMLOptionElement,
- *              (textContent:String):HTMLOptionElement,
+ *          (option:ElementInitOption & { value: string; label: string; selected: boolean },textContent:string):HTMLOptionElement,
+ *          (textContent:string):HTMLOptionElement,
+ *          [key:string]: {
+ *              (option:ElementInitOption & { value: string; label: string; selected: boolean },textContent:string):HTMLOptionElement,
+ *              (textContent:string):HTMLOptionElement,
  *          }
  *     },
  *     script: {
- *          (option:ElementInitOption & {src:string, type:string},textContent:String):HTMLScriptElement,
- *          (textContent:String):HTMLScriptElement,
- *          [key:String]: {
- *              (option:ElementInitOption,textContent:String):HTMLScriptElement,
- *              (textContent:String):HTMLScriptElement,
+ *          (option:ElementInitOption & {src:string, type:string},textContent:string):HTMLScriptElement,
+ *          (textContent:string):HTMLScriptElement,
+ *          [key:string]: {
+ *              (option:ElementInitOption,textContent:string):HTMLScriptElement,
+ *              (textContent:string):HTMLScriptElement,
  *          }
  *     },
  *     style: {
- *          (option:ElementInitOption & {media:String},textContent:String):HTMLStyleElement,
- *          (textContent:String):HTMLStyleElement,
- *          [key:String]: {
- *              (option:ElementInitOption & {media:String},textContent:String):HTMLStyleElement,
- *              (textContent:String):HTMLStyleElement,
+ *          (option:ElementInitOption & {media:string},textContent:string):HTMLStyleElement,
+ *          (textContent:string):HTMLStyleElement,
+ *          [key:string]: {
+ *              (option:ElementInitOption & {media:string},textContent:string):HTMLStyleElement,
+ *              (textContent:string):HTMLStyleElement,
  *          }
  *     },
  *     title: {
- *          (option:ElementInitOption,textContent:String):HTMLTitleElement,
- *          (textContent:String):HTMLTitleElement,
- *          [key:String]: {
- *              (option:ElementInitOption,textContent:String):HTMLTitleElement,
- *              (textContent:String):HTMLTitleElement,
+ *          (option:ElementInitOption,textContent:string):HTMLTitleElement,
+ *          (textContent:string):HTMLTitleElement,
+ *          [key:string]: {
+ *              (option:ElementInitOption,textContent:string):HTMLTitleElement,
+ *              (textContent:string):HTMLTitleElement,
  *          }
  *     }
  * }} H_BaseType_special
@@ -224,50 +224,65 @@
 /**
  * ## 创建`HTML`节点
  * @type {{
- *   new (...nodes:Array<Node>): () => DocumentFragment,
- *   (...nodes:Array<Node>): DocumentFragment,
+ *   new (...nodes:Array<Node|string>): () => DocumentFragment,
+ *   (...nodes:Array<Node|string>): DocumentFragment,
  *   (template: { raw: readonly string[] | ArrayLike<string>; }, ...substitutions: any[]): {
- *     (option:ElementInitOption,...nodes:Array<Node>):HTMLElement,
- *     (...nodes:Array<Node>):HTMLElement,
- *     [key:String]: {
- *         (option:ElementInitOption,...nodes:Array<Node>):HTMLElement,
- *         (...nodes:Array<Node>):HTMLElement,
+ *     (option:ElementInitOption,...nodes:Array<Node|string>):HTMLElement,
+ *     (...nodes:Array<Node|string>):HTMLElement,
+ *     [key:string]: {
+ *         (option:ElementInitOption,...nodes:Array<Node|string>):HTMLElement,
+ *         (...nodes:Array<Node|string>):HTMLElement,
  *     }
  *   },
- *   $(element:HTMLElement): HTMLElement,
- *   $comment(content:Array<String>): Comment,
+ *   $: {
+ *       (element:HTMLElement,option:ElementInitOption,...nodes:Array<Node|string>): HTMLElement
+ *       (element:HTMLElement,...nodes:Array<Node|string>): HTMLElement
+ *   },
+ *   $comment(content:Array<string>): Comment,
  * } & H_BaseType & H_BaseType_special & { [Tag in Uppercase<keyof HTMLElementTagNameMap>]: HTMLElementTagNameMap[Lowercase<Tag>] }}
  */
 const h = (() => {
     /** @type {typeof Document.prototype.createElement} */
     const createElement = Document.prototype.createElement.bind(document);
-    /** @param {String} selectorText */
+    /**
+     * @type {Map<string,{id?:string,class?:Array<string>}>}
+     */
+    const selectorCache = new Map();
+    /** @param {string} selectorText */
     const parseSelector = selectorText => {
+        if (selectorCache.has(selectorText)) return selectorCache.get(selectorText);
         const result = { id: "", class: [] };
         let cache = [];
         /** @type {"id"|"class"} */
         let type;
+        let escape = false;
         for (let i = 0; i < selectorText.length; i++) {
             const char = selectorText[i];
-            const charPre = selectorText[i - 1];
-            if (charPre !== "\\") {
-                if (char === ".") {
-                    if (cache.length) {
-                        if (type === "class") result.class.push(cache.join(""));
-                        else if (type === "id") result.id = cache.join("");
-                    }
-                    type = "class";
-                    cache = [];
-                    continue;
-                } else if (char === "#") {
-                    if (cache.length) {
-                        if (type === "class") result.class.push(cache.join(""));
-                        else if (type === "id") result.id = cache.join("");
-                    }
-                    type = "id";
-                    cache = [];
-                    continue;
+            if (escape) {
+                escape = false;
+                cache.push(char);
+                continue;
+            }
+            if (char === "\\") {
+                escape = true;
+                continue;
+            }
+            if (char === ".") {
+                if (cache.length) {
+                    if (type === "class") result.class.push(cache.join(""));
+                    else if (type === "id") result.id = cache.join("");
                 }
+                type = "class";
+                cache = [];
+                continue;
+            } else if (char === "#") {
+                if (cache.length) {
+                    if (type === "class") result.class.push(cache.join(""));
+                    else if (type === "id") result.id = cache.join("");
+                }
+                type = "id";
+                cache = [];
+                continue;
             }
             cache.push(char);
         }
@@ -275,19 +290,25 @@ const h = (() => {
             if (type === "class") result.class.push(cache.join(""));
             else if (type === "id") result.id = cache.join("");
         }
+        selectorCache.set(selectorText, result);
         return result;
     };
 
     /** 判断是否为创建元素的配置对象 */
-    const isOption = value => typeof value === "object" && !(value instanceof Node) && !Array.isArray(value);
+    const isOption = value => value !== null && typeof value === "object" && !(value instanceof Node) && !Array.isArray(value);
 
     /** 展平所有节点 移除null/undefined
      * @type {(nodes:Array<Node|string|Array<Node|string>>) => Array<Node|string>}
      */
-    const flat = (
-        filter => nodes =>
-            nodes.flat(Infinity).filter(filter)
-    )(node => node !== null && node !== void 0);
+    const flat = (nodes, result = []) => {
+        for (const node of nodes) {
+            if (node === null || node === void 0) continue;
+            if (Array.isArray(node))
+                flat(node, result); // 直接写入 result
+            else result.push(node);
+        }
+        return result;
+    };
 
     /** @param {HTMLElement} $ */
     const attach = ($, attr) => {
@@ -296,40 +317,42 @@ const h = (() => {
             /** 尝试事件绑定 */
             if (key.startsWith("on")) {
                 if (key in $) {
-                    let fn, option, useCapture;
+                    let fn, option;
                     if (typeof value === "function") fn = value;
-                    else [fn, option = {}, useCapture = false] = value;
-                    $.addEventListener(key.slice(2), fn, option, useCapture);
+                    else [fn, option = {}] = value;
+                    $.addEventListener(key.slice(2), fn, option);
+                } else {
+                    $.setAttribute(key, value);
                 }
-            } else
-                switch (key) {
-                    case "is": // 忽略这个属性
-                        continue;
-                    case "class": //类名
-                        if (Array.isArray(value)) $.className = value.join(" ");
-                        else $.className = value;
-                        continue;
-                    case "style": //样式
-                        if (typeof value === "string") $.style = value;
-                        else
-                            for (const prop in value)
-                                if (prop.includes("-")) $.style.setProperty(prop, value[prop]);
-                                else $.style[prop] = value[prop];
-                        continue;
-                    case "dataset": //自定义属性
-                        for (const key in value) $.dataset[key] = value[key];
-                        continue;
-                    case "hidden": //隐藏
-                        $.hidden = value;
-                        continue;
-                    case "Event": //绑定事件
-                        for (const eventType in value) {
-                            $.addEventListener(eventType, value[eventType]);
-                            if (eventType === "keydown") $.setAttribute("tabindex", "0"); // 无障碍 允许tab聚焦
-                        }
-                        continue;
-                    case "shadowRoot": //向shadowRoot中添加元素
-                        const shadowRoot = $.attachShadow({ mode: value.mode ?? "open" });
+                continue;
+            }
+            switch (key) {
+                case "class": //类名
+                    if (Array.isArray(value)) $.className = value.join(" ");
+                    else $.className = value;
+                    continue;
+                case "style": //样式
+                    if (typeof value === "string") $.style = value;
+                    else
+                        for (const prop in value)
+                            if (prop.includes("-")) $.style.setProperty(prop, value[prop]);
+                            else $.style[prop] = value[prop];
+                    continue;
+                case "dataset": //自定义属性
+                    for (const key in value) $.dataset[key] = value[key];
+                    continue;
+                case "hidden": //隐藏
+                    $.hidden = value;
+                    continue;
+                case "Event": //绑定事件
+                    for (const eventType in value) {
+                        $.addEventListener(eventType, value[eventType]);
+                        if (eventType === "keydown") $.setAttribute("tabindex", "0"); // 无障碍 允许tab聚焦
+                    }
+                    continue;
+                case "shadowRoot": //向shadowRoot中添加元素
+                    if (Array.isArray(value)) {
+                        const shadowRoot = $.attachShadow({ mode: "open" });
                         const styleSheets = [];
                         const fragment = h();
                         for (let i = 0; i < value.length; i++) {
@@ -339,20 +362,28 @@ const h = (() => {
                         }
                         shadowRoot.adoptedStyleSheets = styleSheets;
                         shadowRoot.append(fragment);
-                        continue;
-                    case "HTML":
-                        if (Array.isArray(value)) $.innerHTML = value.join("");
-                        else $.innerHTML = value;
-                        continue;
-                    case "$":
-                        Object.assign($, value);
-                        continue;
-                    default:
-                        if (typeof value === "boolean") {
-                            if (value !== $.hasAttribute(key)) $.toggleAttribute(key);
-                        } else $.setAttribute(key, value);
-                }
+                    } else $.attachShadow(value);
+                    continue;
+                case "HTML":
+                    if (Array.isArray(value)) $.innerHTML = value.join("");
+                    else $.innerHTML = value;
+                    continue;
+                case "$":
+                    Object.assign($, value);
+                    continue;
+                default:
+                    if (key === "draggable" || key === "spellcheck") {
+                        // 枚举型 content attribute，必须显式写 "true"/"false"
+                        $.setAttribute(key, value ? "true" : "false");
+                    } else if (typeof value === "boolean") {
+                        if (value !== $.hasAttribute(key)) $.toggleAttribute(key);
+                    } else $.setAttribute(key, value);
+            }
         }
+    };
+    const builtinCustomElementsCreator = tag => (target, p, newValue, receiver) => {
+        if (typeof p === "string") customElements.define(p, newValue, { extends: tag });
+        return true;
     };
     const fnMap = {
         $(element, ...args) {
@@ -364,24 +395,12 @@ const h = (() => {
             element.append(...flat(args));
             return element;
         },
-        $comment: (...args) => new Comment(String.raw(...args)),
-        /**
-         * ### 为构造器创建子类构造器并返回
-         * ---
-         * * 为子类的`prototype`添加`getter`, `setter`并绑定到html属性
-         * * * `setter`调用 {@linkcode HTMLElement#setAttribute}
-         * * * `getter`调用 {@linkcode HTMLElement#getAttribute}
-         * * 将属性添加到被观察列表中 `observedAttributes`
-         * @template {{ [key:string]: $ValueOption }} T
-         * @template {{prototype: HTMLElement,new(): HTMLElement}} C
-         * @param {C} constructor 构造器
-         * @param {T} propAttrMap objectProp与HTMLAttribute的映射表
-         * @returns {{
-         * prototype: C["prototype"] & {[K in keyof T]: T[K]["$type"]},
-         * new(): C["prototype"] & {[K in keyof T]: T[K]["$type"]};
-         * observedAttributes: Array<keyof T>
-         *}}
-         */
+        $comment: (...args) =>
+            new Comment(
+                Array.isArray(args[0]) && Array.isArray(args[0].raw)
+                    ? String.raw(...args) // 模板标签调用
+                    : args.map(String).join("") // 普通字符串/数组调用
+            ),
         TEMPLATE: HTMLTemplateElement,
         template: (() => {
             const f = (...args) => {
@@ -394,187 +413,124 @@ const h = (() => {
                     else $ = createElement("template");
                     attach($, attr);
                 } else $ = createElement("template");
-
                 $.content.append(...flat(args));
                 return $;
             };
             return new Proxy(f, {
                 get(target, p, receiver) {
-                    if (typeof p === "string") {
-                        const r = parseSelector(p);
-                        return (...args) => {
-                            /** @type {HTMLElement} */
-                            let $;
-                            let attr = args[0];
-                            if (isOption(attr)) {
-                                args.shift();
-                                attr = { ...r, ...attr };
-                                if (attr.is) $ = createElement("template", { is: attr.is });
-                                else $ = createElement("template");
-                                attach($, attr);
-                            } else {
-                                $ = createElement("template");
-                                attach($, r);
-                            }
-                            $.append(...flat(args));
-                            return $;
-                        };
-                    }
+                    if (typeof p !== "string") return;
+                    return (...args) => {
+                        if (isOption(args[0])) Object.assign(args[0], parseSelector(p));
+                        else args.unshift(parseSelector(p));
+                        return f(...args);
+                    };
                 },
-                set(target, p, newValue, receiver) {
-                    if (typeof p === "string") customElements.define(p, newValue, { extends: "template" });
-                    return true;
-                }
+                set: builtinCustomElementsCreator("template")
             });
         })()
     };
     /**
-     * @type {Map<String,Function>} 自定义元素创建器缓存
+     * @type {Map<string,Function>} 自定义元素创建器缓存
      */
     const customElementCreatorCache = new Map();
 
-    ["a", "abbr", "address", "area", "article", "aside", "audio", "b", "bdi", "bdo", "blockquote", "body", "button", "canvas", "caption", "cite", "code", "colgroup", "data", "datalist", "dd", "del", "details", "dfn", "dialog", "div", "dl", "dt", "em", "fieldset", "figcaption", "figure", "footer", "form", "h1", "h2", "h3", "h4", "h5", "h6", "head", "header", "hgroup", "html", "i", "iframe", "input", "ins", "kbd", "label", "legend", "li", "main", "map", "mark", "menu", "meta", "meter", "nav", "noscript", "object", "ol", "optgroup", "output", "p", "picture", "pre", "progress", "q", "rp", "rt", "ruby", "s", "samp", "search", "section", "select", "slot", "small", "span", "strong", "sub", "summary", "sup", "table", "tbody", "td", "tfoot", "th", "thead", "time", "tr", "u", "ul", "var", "video"].forEach(tag => {
-        fnMap[tag.toLocaleUpperCase()] = createElement(tag).constructor;
-        fnMap[tag] = (() => {
-            const f = (...args) => {
-                /** @type {HTMLElement} */
-                let $;
-                const attr = args[0];
-                if (isOption(attr)) {
-                    args.shift();
-                    if (attr.is) $ = createElement(tag, { is: attr.is });
-                    else $ = createElement(tag);
-                    attach($, attr);
-                } else $ = createElement(tag);
-                $.append(...flat(args));
-                return $;
-            };
-            return new Proxy(f, {
-                get(target, p, receiver) {
-                    if (typeof p === "string") {
-                        const r = parseSelector(p);
-                        return (...args) => {
-                            /** @type {HTMLElement} */
-                            let $;
-                            let attr = args[0];
-                            if (isOption(attr)) {
-                                args.shift();
-                                attr = { ...r, ...attr };
-                                if (attr.is) $ = createElement(tag, { is: attr.is });
-                                else $ = createElement(tag);
-                                attach($, attr);
-                            } else {
-                                $ = createElement(tag);
-                                attach($, r);
-                            }
-                            $.append(...flat(args));
-                            return $;
-                        };
-                    }
-                },
-                set(target, p, newValue, receiver) {
-                    if (typeof p === "string") customElements.define(p, newValue, { extends: tag });
-                    return true;
-                }
-            });
-        })();
+    ["a", "abbr", "address", "article", "aside", "audio", "b", "bdi", "bdo", "blockquote", "body", "button", "canvas", "caption", "cite", "code", "colgroup", "data", "datalist", "dd", "del", "details", "dfn", "dialog", "div", "dl", "dt", "em", "fieldset", "figcaption", "figure", "footer", "form", "h1", "h2", "h3", "h4", "h5", "h6", "head", "header", "hgroup", "html", "i", "iframe", "ins", "kbd", "label", "legend", "li", "main", "map", "mark", "menu", "meter", "nav", "noscript", "object", "ol", "optgroup", "output", "p", "picture", "pre", "progress", "q", "rp", "rt", "ruby", "s", "samp", "search", "section", "select", "slot", "small", "span", "strong", "sub", "summary", "sup", "table", "tbody", "td", "tfoot", "th", "thead", "time", "tr", "u", "ul", "var", "video"].forEach(tag => {
+        fnMap[tag.toUpperCase()] = createElement(tag).constructor;
+        const f = (...args) => {
+            /** @type {HTMLElement} */
+            let $;
+            const attr = args[0];
+            if (isOption(attr)) {
+                args.shift();
+                if (attr.is) $ = createElement(tag, { is: attr.is });
+                else $ = createElement(tag);
+                attach($, attr);
+            } else $ = createElement(tag);
+            $.append(...flat(args));
+            return $;
+        };
+        fnMap[tag] = new Proxy(f, {
+            get(target, p, receiver) {
+                if (typeof p !== "string") return;
+                return (...args) => {
+                    if (isOption(args[0])) Object.assign(args[0], parseSelector(p));
+                    else args.unshift(parseSelector(p));
+                    return f(...args);
+                };
+            },
+            set: builtinCustomElementsCreator(tag)
+        });
     });
 
     // 空元素
     ["area", "base", "br", "col", "embed", "hr", "img", "input", "link", "meta", "source", "track", "wbr"].forEach(tag => {
-        fnMap[tag] = (() => {
-            fnMap[tag.toLocaleUpperCase()] = createElement(tag).constructor;
-            const f = attr => {
-                /** @type {HTMLElement} */
-                let $;
-                if (attr?.is) $ = createElement(tag, { is: attr.is });
-                else $ = createElement(tag);
-                if (attr) attach($, attr);
-                return $;
-            };
-            return new Proxy(f, {
-                get(target, p, receiver) {
-                    if (typeof p === "string") {
-                        const r = parseSelector(p);
-                        return (attr = {}) => {
-                            /** @type {HTMLElement} */
-                            let $;
-                            attr = { ...attr, ...r };
-                            if (attr?.is) $ = createElement(tag, { is: attr.is });
-                            else $ = createElement(tag);
-                            attach($, r);
-                            return $;
-                        };
-                    }
-                },
-                set(target, p, newValue, receiver) {
-                    if (typeof p === "string") customElements.define(p, newValue, { extends: tag });
-                    return true;
-                }
-            });
-        })();
+        fnMap[tag.toUpperCase()] = createElement(tag).constructor;
+        const f = attr => {
+            /** @type {HTMLElement} */
+            let $;
+            if (attr?.is) $ = createElement(tag, { is: attr.is });
+            else $ = createElement(tag);
+            if (attr) attach($, attr);
+            return $;
+        };
+        fnMap[tag] = new Proxy(f, {
+            get(target, p, receiver) {
+                if (typeof p !== "string") return;
+                return (attr = {}) => f({ ...attr, ...parseSelector(p) });
+            },
+            set: builtinCustomElementsCreator(tag)
+        });
     });
 
     // 只接受文本内容的元素
     ["option", "script", "style", "title", "textarea"].forEach(tag => {
-        fnMap[tag.toLocaleUpperCase()] = createElement(tag).constructor;
-        fnMap[tag] = (() => {
-            const f = (...args) => {
-                let $;
-                const attr = args[0];
-                if (typeof attr === "object") {
-                    args.shift();
-                    if (attr.is) $ = createElement(tag, { is: attr.is });
-                    else $ = createElement(tag);
-                    attach($, attr);
-                } else $ = createElement(tag);
-                $.textContent = flat(args).join("");
-                return $;
-            };
-            return new Proxy(f, {
-                get(target, p, receiver) {
-                    if (typeof p === "string") {
-                        const r = parseSelector(p);
-                        return (...args) => {
-                            let $;
-                            let attr = args[0];
-                            if (typeof attr === "object") {
-                                args.shift();
-                                attr = { ...attr, ...r };
-                                if (attr.is) $ = createElement(tag, { is: attr.is });
-                                else $ = createElement(tag);
-                                attach($, attr);
-                            } else {
-                                $ = createElement(tag);
-                                attach($, r);
-                            }
-                            $.innerHTML = flat(args).join("");
-                            return $;
-                        };
-                    }
-                },
-                set(target, p, newValue, receiver) {
-                    if (typeof p === "string") customElements.define(p, newValue, { extends: tag });
-                    return true;
-                }
-            });
-        })();
+        fnMap[tag.toUpperCase()] = createElement(tag).constructor;
+        const f = (...args) => {
+            let $;
+            const attr = args[0];
+            if (isOption(attr)) {
+                args.shift();
+                if (attr.is) $ = createElement(tag, { is: attr.is });
+                else $ = createElement(tag);
+                attach($, attr);
+            } else $ = createElement(tag);
+            $.textContent = flat(args).join("");
+            return $;
+        };
+        fnMap[tag] = new Proxy(f, {
+            get(target, p, receiver) {
+                if (typeof p !== "string") return;
+                return (...args) => {
+                    if (isOption(args[0])) Object.assign(args[0], parseSelector(p));
+                    else args.unshift(parseSelector(p));
+                    return f(...args);
+                };
+            },
+            set: builtinCustomElementsCreator(tag)
+        });
     });
 
     // input类
     ["inputButton", "inputCheckbox", "inputColor", "inputDate", "inputEmail", "inputFile", "inputHidden", "inputImage", "inputMonth", "inputNumber", "inputPassword", "inputRadio", "inputRange", "inputReset", "inputSearch", "inputSubmit", "inputTel", "inputText", "inputTime", "inputUrl", "inputWeek"].forEach(e => {
         const type = e.slice(5).toLowerCase();
-        fnMap[e] = attr => {
+        const f = attr => {
             /** @type {HTMLInputElement} */
             let $;
             if (attr) {
                 if (attr.is) $ = createElement("input", { is: attr.is });
                 else $ = createElement("input");
                 attach($, attr);
-            }
+            } else $ = createElement("input");
             $.type = type;
             return $;
         };
+        fnMap[e] = new Proxy(f, {
+            get(target, p, receiver) {
+                if (typeof p !== "string") return;
+                return (attr = {}) => f({ ...attr, ...parseSelector(p) });
+            },
+            set: builtinCustomElementsCreator("input")
+        });
     });
 
     return new Proxy(
@@ -697,7 +653,7 @@ const $extends = (constructor = HTMLElement, propAttrMap = {}) => class extends 
         for (const prop in propAttrMap) {
             const { name, $default = false, needObserve = true, resetContent = true } = propAttrMap[prop];
             if (needObserve) this.observedAttributes.push(name);
-            if(resetContent) needResetContentAttr.add(name);
+            if (resetContent) needResetContentAttr.add(name);
             Reflect.defineProperty(this.prototype, prop, {
                 get() {
                     return this.hasAttribute(name) ? (this.getAttribute(name) || true) : $default;
@@ -711,7 +667,7 @@ const $extends = (constructor = HTMLElement, propAttrMap = {}) => class extends 
                 enumerable: false
             });
         }
-        Reflect.defineProperty( this.prototype, "attributeChangedCallback", {
+        Reflect.defineProperty(this.prototype, "attributeChangedCallback", {
             value(name, oldValue, newValue) {
                 if (oldValue === null || oldValue === void 0) return;
                 if (newValue !== oldValue && this.isConnected) {
@@ -721,15 +677,15 @@ const $extends = (constructor = HTMLElement, propAttrMap = {}) => class extends 
                         else this.replaceChildren();
                     }
                     // 调用子类重写的版本 若子类中不存在contentUpdate 则抛出错误
-                    if(!this.contentUpdate) throw new Error("contentUpdate() is not implemented in " + this.constructor.name);
+                    if (!this.contentUpdate) throw new Error("contentUpdate() is not implemented in " + this.constructor.name);
                     this.contentUpdate(name, oldValue, newValue); //contentUpdate 会优先调用子类重写的版本
                 }
             },
             writable: false,
             enumerable: false
         });
-        freeze(this.observedAttributes);
-        freeze(this);
+        Object.freeze(this.observedAttributes);
+        Object.freeze(this);
     }
     /**
      * @abstract
