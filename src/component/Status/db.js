@@ -8,10 +8,10 @@ class Icon extends $icon(12, "状态") {
         this.#data = data;
     }
 
-    connectedCallback() {
+    async connectedCallback() {
         const data = this.#data ?? StatusData.query(this.dataset.id, +this.getAttribute("status.threshold"));
         this.alt = data.name;
-        this.src = data.asyncIconUrl;
+        this.src = await data.asyncIconUrl;
     }
 }
 
