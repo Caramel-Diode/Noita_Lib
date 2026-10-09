@@ -8,12 +8,12 @@ export type OrbData = {
     spellIcon: HTMLImageElement;
 };
 
-type HTMLNoitaPerkElement = HTMLNoitaElement & {
+type HTMLNoitaOrbElement = HTMLNoitaElement & {
     orbData: OrbData;
     contentUpdate: () => never;
     orbId: OrbId;
 };
 
 export type Class = {
-    new (id?: OrbId): HTMLNoitaPerkElement;
+    new (id?: OrbId): HTMLNoitaOrbElement;
 };
