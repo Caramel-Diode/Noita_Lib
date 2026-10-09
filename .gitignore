@@ -16,3 +16,4 @@ src/public/tool/lang/**
 src/luaForNodejs/lua_lib/**
 src/luaForNodejs/node_modules/**
 src/parseTools/entity/data/**
+tokei.exe
