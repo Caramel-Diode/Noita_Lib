@@ -1,24 +1,7 @@
-import fs, { fstatSync, fsync } from "fs";
-import { join } from "path";
-/**
- * 导入js文件里的内容
- * @param {String} path js文件路径
- * @param {String} $return 导出的变量名
- * @param {Object} context 上下文
- */
-const include = (path, $return, context) => {
-    const context_varNames = [];
-    const context_varValues = [];
-    if (context) {
-        for (const key in context) {
-            context_varNames.push(key);
-            context_varValues.push(context[key]);
-        }
-    }
-    return new Function(...context_varNames, fs.readFileSync(path).toString() + `return ${$return}`)(...context_varValues);
-};
+import fs, { fstatSync, fsync } from "node:fs";
+import path from "node:path";
+import { XML } from "./serverUtil.js";
 
-const XML = include("./src/public/XML.js", "XML");
 const asyncFS = fs.promises;
 /**
  * 递归获取目录下所有文件的展平路径数组
@@ -27,7 +10,7 @@ const asyncFS = fs.promises;
  */
 const flatPath = async (dirPath, result = []) => {
     for (const item of await asyncFS.readdir(dirPath, { withFileTypes: true })) {
-        const fullPath = join(dirPath, item.name);
+        const fullPath = path.join(dirPath, item.name);
         if (item.isDirectory()) await flatPath(fullPath, result);
         else result.push(fullPath);
     }
@@ -49,7 +32,6 @@ export const generateAnimalsEntitiesPaths = async dataPath => {
         if (!root.attr.has("name")) continue; // 无name 实体xml移除
 
         result.push(p.replaceAll("\\", "/").slice(dataPath.length - 4));
-        // console.log(root.attr.get("name"), result.at(-1));
     }
     fs.writeFileSync(`./src/parseTools/entity/animalsEntitiesList.json`, JSON.stringify(result, null, 4));
 };

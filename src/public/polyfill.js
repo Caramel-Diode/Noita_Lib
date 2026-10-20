@@ -74,3 +74,24 @@
     //     });
     // }
 }
+{
+    // Map 新API补丁
+    const getOrInsert = function (key, defaultValue) {
+        if (this.has(key)) return this.get(key);
+        this.set(key, defaultValue);
+        return defaultValue;
+    };
+    const getOrInsertComputed = function (key, callback) {
+        if (typeof callback !== "function") {
+            throw new TypeError("getOrInsertComputed: callback must be a function");
+        }
+        if (this.has(key)) return this.get(key);
+        const value = callback(key);
+        this.set(key, value);
+        return value;
+    };
+    Map.prototype.getOrInsert ??= getOrInsert;
+    WeakMap.prototype.getOrInsert ??= getOrInsert;
+    Map.prototype.getOrInsertComputed ??= getOrInsertComputed;
+    WeakMap.prototype.getOrInsertComputed ??= getOrInsertComputed;
+}

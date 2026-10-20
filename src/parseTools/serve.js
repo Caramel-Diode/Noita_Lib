@@ -1,131 +1,64 @@
-import fs from "fs";
-import http from "http";
-import path from "path";
-import { exec } from "child_process";
-import { platform } from "os";
-import { URL } from "url";
-import { createRequire } from "module";
+import fs from "node:fs";
+import http from "node:http";
+import path from "node:path";
+import os from "node:os";
+import child_process from "node:child_process";
+
+import { lua, noitaDataPath, saveData, openURL, XML, getMimeType, serverConfig, homePage } from "./serverUtil.js";
 import { generateAnimalsEntitiesPaths } from "./generateAnimalsEntitiesPaths.js";
-import { saveData } from "./saveData.js";
 
-const require = createRequire(import.meta.url);
+generateAnimalsEntitiesPaths(noitaDataPath);
 
-/** @typedef {"LUA_OK"|"LUA_YIELD"|"LUA_ERRRUN"|"LUA_ERRSYNTAX"|"LUA_ERRMEM"|"LUA_ERRERR"} LuaEvalState */
-
-/**
- * @type {{
- * doFile:(filepath:String,input: { [key: String]: any },openlibs:Boolean) => {state: LuaEvalState, return: any, error?:String},
- * doString(luaCode:String,input: { [key: String]: any },openlibs:Boolean) => {state: LuaEvalState, return: any, error?:String}
- * }}
- */
-const lua = require(`../luaForNodejs/build/Release/lua`);
-
-/**
- * 导入js文件里的内容
- * @param {String} path js文件路径
- * @param {String} $return 导出的变量名
- * @param {Object} context 上下文
- */
-const include = (path, $return, context) => {
-    const context_varNames = [];
-    const context_varValues = [];
-    if (context) {
-        for (const key in context) {
-            context_varNames.push(key);
-            context_varValues.push(context[key]);
-        }
-    }
-    return new Function(...context_varNames, fs.readFileSync(path).toString() + `return ${$return}`)(...context_varValues);
-};
-
-const XML = include("./src/public/XML.js", "XML");
-
-const config = (() => {
-    /** @type {DocumentNode} */
-    const doc = XML.parse(fs.readFileSync(`./src/parseTools/config.xml`).toString());
-
-    const fileTypeEs = doc.childNodes.query("FileType");
-    const pathEs = doc.childNodes.query("Path");
-    const fileEs = doc.childNodes.query("File");
-
-    const pathMap = new Map();
-
-    const $return = {
-        file: new Map(),
-        /** @type {Map<String,String>} */
-        fileType: new Map(),
-        /** @param {String} url */
-        getPath(url) {
-            for (const [urlStart, mapPath] of pathMap) {
-                if (url.startsWith(urlStart)) {
-                    return mapPath + url.slice(urlStart.length);
-                }
-            }
-            return url;
-        }
-    };
-    for (const fileType of fileTypeEs) {
-        const attr = fileType.attr;
-        $return.fileType.set(attr.get("extension"), attr.get("mime-type"));
-    }
-    for (const path of pathEs) {
-        const attr = path.attr;
-        pathMap.set(attr.get("url"), attr.get("map"));
-    }
-    for (const file of fileEs) {
-        const attr = file.attr;
-        $return.file.set(attr.get("name"), attr.get("map"));
-    }
-    return $return;
-})();
-
-const dataPath = config.getPath("/data/").slice(0, -1);
-generateAnimalsEntitiesPaths(dataPath);
-// console.log(dataPath);
-
+const port = 9191;
 const server = http.createServer(async (req, res) => {
-    if (req.url) {
-        const $path = config.getPath(req.url);
-        // console.log($path);
-        if ($path.startsWith(`/call.lua/`)) {
-            const url = new URL($path, `http://localhost:${port}`);
-            const tempLuaPath = url.searchParams.get("path") ?? "";
-            const mimeType = config.fileType.get(path.extname(url.pathname));
-            if (mimeType) res.setHeader("Content-Type", mimeType);
-            let luaPath = "";
-            if (tempLuaPath.startsWith("/")) luaPath = config.getPath(tempLuaPath); // 服务路径解析
-            else {
-                // 相对路径解析
-                const from = new URL(req.headers.referer);
-                luaPath = config.getPath(path.dirname(from.pathname) + "/" + tempLuaPath);
-            }
-            if (fs.existsSync(luaPath)) {
-                // 这里向lua环境提供了dataPath 即Noita解包数据的路径
-                const result = lua.doFile(path.resolve(luaPath), { dataPath }, true).return;
-                res.statusCode = 200;
-                res.end(result);
-            } else {
-                res.statusCode = 400;
-                res.end(`lua路径无效`);
-                console.warn("lua路径无效", luaPath);
-            }
-        } else if (fs.existsSync($path)) {
-            const mimeType = config.fileType.get(path.extname($path));
+    if (req.url === "/" || !req.url) {
+        res.setHeader("Content-Type", "text/html");
+        res.statusCode = 200;
+        return res.end(homePage());
+    }
 
-            res.setHeader("Content-Type", mimeType ?? "text");
+    const $path = serverConfig.getPath(req.url);
+    // console.log($path);
+    if ($path.startsWith(`/call.lua/`)) {
+        const url = new URL($path, `http://localhost:${port}`);
+        const tempLuaPath = url.searchParams.get("path") ?? "";
+        res.setHeader("Content-Type", getMimeType(url.pathname));
+        let luaPath = "";
+        if (tempLuaPath.startsWith("/"))
+            luaPath = serverConfig.getPath(tempLuaPath); // 服务路径解析
+        else {
+            // 相对路径解析
+            const from = new URL(req.headers.referer);
+            luaPath = serverConfig.getPath(path.dirname(from.pathname) + "/" + tempLuaPath);
+        }
+        if (fs.existsSync(luaPath)) {
+            // 这里向lua环境提供了dataPath 即Noita解包数据的路径
+            const result = lua.doFile(path.resolve(luaPath), { dataPath: noitaDataPath }, true).return;
             res.statusCode = 200;
-            if (mimeType === "text/html") {
-                let data = fs.readFileSync($path);
-                const doc = XML.parse(data.toString());
-                const singleTag = new Set(["br", "hr", "img", "input", "link", "meta", "area", "base", "col", "embed", "source", "track", "wbr"]);
-                doc.childNodes.query(node => {
-                    if (!(node instanceof XML.ElementNode)) return false;
-                    if (!singleTag.has(node.tagName)) node.childNodes.push(new XML.TextNode(""));
-                    return true;
-                });
-                const headElement = doc.childNodes.query("head")[0];
-                const bodyElement = doc.childNodes.query("body")[0];
-                data = `
+            res.end(result);
+        } else {
+            res.statusCode = 400;
+            res.end(`lua路径无效`);
+            console.warn("lua路径无效", luaPath);
+        }
+    } else if (fs.existsSync($path)) {
+        const mimeType = getMimeType($path);
+
+        res.setHeader("Content-Type", mimeType);
+        res.statusCode = 200;
+        // 自动注入依赖css和js
+        if (mimeType.startsWith("text/html")) {
+            let data = fs.readFileSync($path);
+            const doc = XML.parse(data.toString());
+            const singleTag = new Set(["br", "hr", "img", "input", "link", "meta", "area", "base", "col", "embed", "source", "track", "wbr"]);
+            doc.childNodes.query(node => {
+                if (!(node instanceof XML.ElementNode)) return false;
+                if (!singleTag.has(node.tagName)) node.childNodes.push(new XML.TextNode(""));
+                return true;
+            });
+            const headElement = doc.childNodes.query("head")[0];
+            const bodyElement = doc.childNodes.query("body")[0];
+            data = `
                 <!DOCTYPE html>
                 <html lang="en">
                 <head>
@@ -142,54 +75,38 @@ const server = http.createServer(async (req, res) => {
                 ${bodyElement.toString("RAW")}
                 </html>
                 `;
-                // console.log(data);
 
-                res.end(data);
-            } else {
-                if (mimeType === "image/png") {
-                    res.setHeader("Cache-Control", "max-age=90");
-                    res.setHeader("Expires", new Date(Date.now() + 90000).toGMTString());
-                }
-                const stream = fs.createReadStream($path);
-                stream.pipe(res);
-            }
+            res.end(data);
         } else {
-            {
-                const url = new URL($path, `http://localhost:${port}`);
-                const pathToSave = url.searchParams.get("save-file");
-                if (pathToSave) {
-                    const chunks = [];
-                    req.addListener("data", chunk => chunks.push(chunk));
-                    req.addListener("end", () => {
-                        saveData(pathToSave, Buffer.concat(chunks));
-                    });
-                    res.statusCode = 200;
-                    return res.end();
-                }
+            if (mimeType === "image/png") {
+                res.setHeader("Cache-Control", "max-age=90");
+                res.setHeader("Expires", new Date(Date.now() + 90000).toGMTString());
             }
-            res.setHeader("Content-Type", "text/html");
-            res.statusCode = 404;
-            res.end(fs.readFileSync(config.file.get("404.html")));
+            const stream = fs.createReadStream($path);
+            stream.pipe(res);
         }
     } else {
+        {
+            const url = new URL($path, `http://localhost:${port}`);
+            const pathToSave = url.searchParams.get("save-file");
+            if (pathToSave) {
+                const chunks = [];
+                req.addListener("data", chunk => chunks.push(chunk));
+                req.addListener("end", () => {
+                    saveData(pathToSave, Buffer.concat(chunks));
+                });
+                res.statusCode = 200;
+                return res.end();
+            }
+        }
         res.setHeader("Content-Type", "text/html");
-        res.statusCode = 200;
-        res.end(config.file.get("index.html"));
+        res.statusCode = 404;
+        res.end(fs.readFileSync(serverConfig.getPath("404.html")));
     }
 });
 
-const port = 9191;
 server.listen(port, () => {
-    const url = `http://localhost:${port}/index.html`;
+    const url = `http://localhost:${port}`;
     console.log(`已在 http://localhost:${port} 开启服务`);
-
-    const os = platform();
-    let command;
-    if (os === "win32") command = `start `;
-    else if (os === "darwin") command = `open `;
-    else command = `xdg-open `;
-
-    exec(`${command}${url}`, (error, stdout, stderr) => {
-        if (error) console.error(error);
-    });
+    openURL(url);
 });
