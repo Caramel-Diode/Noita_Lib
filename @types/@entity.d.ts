@@ -710,6 +710,7 @@ type HTMLNoitaEntityElement = HTMLNoitaElement & {
 export type Class = {
     prototype: HTMLElement;
     new (param?: EntityData | string): HTMLNoitaEntityElement;
+    readonly datas: Array<EntityData>;
     query: (id: string) => EntityData;
     queryByName: (id: string) => Array<EntityData>;
     queryByTag: (tag: string) => Array<EntityData>;
