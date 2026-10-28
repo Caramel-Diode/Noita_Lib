@@ -1,5 +1,5 @@
 class Icon extends $icon(16, "材料") {
-    static urls = new SpriteSpliter("MaterialIcons", embed(`#icon.png`)).results;
+    static urls = new SpriteSpliter("MaterialIcons", embed(`#icon.png`), null, 468).results;
     /** @type {MaterialData?} */ #data;
 
     /** @param {MaterialData} data  */

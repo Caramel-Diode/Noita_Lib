@@ -1,5 +1,5 @@
 class Icon extends $icon(12, "状态") {
-    static urls = new SpriteSpliter("StatusIcons", embed(`#icon.png`), 12).results;
+    static urls = new SpriteSpliter("StatusIcons", embed(`#icon.png`), 12, 36).results;
     /** @type {StatusData?} */ #data;
 
     /** @param {StatusData} data  */

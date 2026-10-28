@@ -472,7 +472,7 @@ class SpriteSpliter {
             const db = target.result;
             db.transaction(["Blob"], "readwrite")
                 .objectStore("Blob")
-                .add(await Promise.all(blobs), name)
+                .put(await Promise.all(blobs), name)
                 .addEventListener("success", event => {
                     db.close();
                     postMessage({ state: "finished" });
@@ -502,7 +502,7 @@ class SpriteSpliter {
             const db = target.result;
             db.transaction(["Blob"], "readwrite")
                 .objectStore("Blob")
-                .add(blobs, name)
+                .put(blobs, name)
                 .addEventListener("success", event => {
                     db.close();
                     console.log("数据已保存", blobPromises.length);
@@ -537,39 +537,45 @@ class SpriteSpliter {
         return await promise;
     }
 
-    /**
-     * 缓存Blob数据
-     * @param {string} key
-     * @param {Array<Blob>} value Blob数据
-     */
-    static async set(key, value) {
-        (await this.#getStore("readwrite")).add(value, key);
-    }
+    // /**
+    //  * 缓存Blob数据 暂时没用
+    //  * @param {string} key
+    //  * @param {Array<Blob>} value Blob数据
+    //  */
+    // static async set(key, value) {
+    //     (await this.#getStore("readwrite")).add(value, key);
+    // }
 
-    // Blob缓存状态获取
+    // Blob缓存获取
     static {
-        const { promise, resolve } = Promise.withResolvers();
-        /** @type {Promise<Boolean>} */
-        this.hasCache = promise;
+        const { promise, resolve, reject } = Promise.withResolvers();
+        /** @type {Promise<Record<string,Array<Blob>>>} */
+        this.cache = promise;
+        const cacheResult = Object.create(null);
         const requset = indexedDB.open("noitaLib", 1);
-        /** @param {IDBDatabase} db */
-        const createStroe = db => {
-            db.createObjectStore("Blob", { autoIncrement: true });
-            resolve(false);
-        };
-        requset.addEventListener(
-            "success",
-            ({ target }) => {
-                /** @type {IDBDatabase} */
-                const db = target.result;
-                if (db.objectStoreNames.contains("Blob")) {
-                    db.close();
-                    resolve(true);
-                } else createStroe(db);
-            },
-            { once: true }
-        );
-        requset.addEventListener("upgradeneeded", ({ target }) => createStroe(target.result), { once: true });
+        //prettier-ignore
+        requset.addEventListener("success",() => {
+            const db = requset.result;
+            if (!db.objectStoreNames.contains("Blob")) {
+                db.createObjectStore("Blob", { autoIncrement: true });
+                resolve(cacheResult);
+                return db.close();
+            }
+            db.transaction(["Blob"], "readonly")
+            .objectStore("Blob")
+            .getAllRecords()
+            .addEventListener("success", ({ target }) => {
+                for (const { key, value } of target.result) cacheResult[key] = value;
+                resolve(cacheResult);
+                db.close();
+            });
+        });
+        requset.addEventListener("upgradeneeded", () => {
+            requset.result.createObjectStore("Blob", { autoIncrement: true });
+            resolve(cacheResult);
+            requset.result.close();
+        });
+        requset.addEventListener("error", reject);
     }
 
     /**
@@ -577,44 +583,40 @@ class SpriteSpliter {
      * @param {string} name 解析线程名称
      * @param {string} url 精灵图路径/Base64URL
      * @param {number} [width] 图标宽度
+     * @param {number} verifyAmount 校验数量
      */
     /**
      * @overload 自定义类型
      * @param {string} name 解析线程名称
      * @param {()=>void} workerFn Web Worker 函数
      * @param {[message:any,transfer:Array<Transferable>]} postData Web Worker 所需参数
+     * @param {number} verifyAmount 校验数量
      */
-    constructor(name, a, b) {
+    constructor(name, a, b, verifyAmount) {
         name = "Noita:" + name;
         const { promise, resolve } = Promise.withResolvers();
         /** @type {Promise<Array<string>>} */
         this.results = promise;
-        SpriteSpliter.hasCache.then(async hasCache => {
+        SpriteSpliter.cache.then(async cache => {
             // 缓存优先
-            if (hasCache) {
-                const res = await Promise.all((await SpriteSpliter.get(name)).map(URL.createObjectURL));
-                return resolve(res);
-            }
-            /** @type {Worker} */
-            let worker, workerUrl, postData;
+            if (cache[name]?.length === verifyAmount) return resolve(await Promise.all(cache[name].map(URL.createObjectURL)));
+
+            let workerUrl, postData;
             if (typeof a === "function") {
                 workerUrl = URL.createObjectURL(new Blob(["(", a, ")(", SpriteSpliter.#saveDataForWoker.toString(), ")"]));
                 postData = b;
             } else workerUrl = URL.createObjectURL(new Blob(["(", SpriteSpliter.#defaultWorker, ")('", a, "',", b, ")"]));
-            worker = new Worker(workerUrl, { name });
+            const worker = new Worker(workerUrl, { name });
             URL.revokeObjectURL(workerUrl);
-            worker.addEventListener(
-                "message",
-                async ({ data }) => {
-                    console.log("首次缓存", name);
-                    if (data.state === "finished") {
-                        const blobs = await SpriteSpliter.get(name);
-                        resolve(blobs.map(URL.createObjectURL));
-                    }
-                    worker.terminate();
-                },
-                { once: true }
-            );
+            worker.addEventListener("message", async ({ data }) => {
+                console.log("首次缓存", name);
+                if (data.state === "finished") {
+                    const blobs = await SpriteSpliter.get(name);
+                    if (blobs.length !== verifyAmount) console.warn(`${name} 资源不一致,确认校验数据是否更新`);
+                    resolve(blobs.map(URL.createObjectURL));
+                }
+                worker.terminate();
+            });
             if (postData) worker.postMessage(...postData);
         });
     }

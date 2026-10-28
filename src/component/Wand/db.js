@@ -116,7 +116,7 @@ class Icon extends $icon(15, "魔杖") {
 
         for (const [index, alias] of Object.entries(aliasMap)) this.#dataMap.set(alias, this.#dataMap.get(`#${index}`));
 
-        if (await SpriteSpliter.hasCache) return resolve((await SpriteSpliter.get("Noita:WandIcons")).map(URL.createObjectURL));
+        // if (await SpriteSpliter.cache["Noita:WandIcons"]) return resolve((await SpriteSpliter.get("Noita:WandIcons")).map(URL.createObjectURL));
 
         const workerFn = async saveData => {
             /** @type {ImageEncodeOptions} */
@@ -145,7 +145,7 @@ class Icon extends $icon(15, "魔杖") {
         };
         const { buffer } = Uint8Array.from(this.#iconLengths);
         this.#iconLengths = null; //释放占用
-        resolve(await new SpriteSpliter("WandIcons", workerFn, [buffer, [buffer]]).results);
+        resolve(await new SpriteSpliter("WandIcons", workerFn, [buffer, [buffer]], 1021).results);
     }
 }
 

@@ -1,25 +1,29 @@
 class MessageData {
-    static #bgUrls = new SpriteSpliter("MessageBackgrounds", async saveData => {
-        const reader = new FileReaderSync();
-        /** @type {ImageEncodeOptions} */
-        const imageEncodeOptions = { type: "image/webp", quality: 1 };
-        const bitmap = await createImageBitmap(await (await fetch(embed(`#background.png`))).blob());
-        const bgAmount = bitmap.width / 18; //每个背景的九点图的一半是18px
-        const blobs = new Array(bgAmount);
-        for (let i = 0; i < bgAmount; i++) {
-            const canvas = new OffscreenCanvas(36, 24);
-            const ctx = canvas.getContext("2d");
-            const offset = i * 18;
-            //因为是一半的九点图 需要镜像绘制另外一侧
-            ctx.drawImage(bitmap, offset, 0, 18, 24, 0, 0, 18, 24);
-            ctx.scale(-1, 1);
-            ctx.translate(-36, 0);
-            ctx.drawImage(bitmap, offset, 0, 18, 24, 0, 0, 18, 24);
-            blobs[i] = canvas.convertToBlob(imageEncodeOptions);
-        }
-        saveData(await Promise.all(blobs));
-        // postMessage((await Promise.all(blobs)).map(blob => reader.readAsDataURL(blob)));
-    }).results;
+    static #bgUrls = new SpriteSpliter(
+        "MessageBackgrounds",
+        async saveData => {
+            const reader = new FileReaderSync();
+            /** @type {ImageEncodeOptions} */
+            const imageEncodeOptions = { type: "image/webp", quality: 1 };
+            const bitmap = await createImageBitmap(await (await fetch(embed(`#background.png`))).blob());
+            const bgAmount = bitmap.width / 18; //每个背景的九点图的一半是18px
+            const blobs = new Array(bgAmount);
+            for (let i = 0; i < bgAmount; i++) {
+                const canvas = new OffscreenCanvas(36, 24);
+                const ctx = canvas.getContext("2d");
+                const offset = i * 18;
+                //因为是一半的九点图 需要镜像绘制另外一侧
+                ctx.drawImage(bitmap, offset, 0, 18, 24, 0, 0, 18, 24);
+                ctx.scale(-1, 1);
+                ctx.translate(-36, 0);
+                ctx.drawImage(bitmap, offset, 0, 18, 24, 0, 0, 18, 24);
+                blobs[i] = canvas.convertToBlob(imageEncodeOptions);
+            }
+            saveData(await Promise.all(blobs));
+        },
+        null,
+        24
+    ).results;
 
     /** @type {Map<String,MessageData>} */
     static data = new Map();

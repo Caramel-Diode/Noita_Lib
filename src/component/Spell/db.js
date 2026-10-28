@@ -1,5 +1,5 @@
 class Icon extends $icon(16, "法术") {
-    static urls = new SpriteSpliter("SpellIcons", embed(`#icon.png`)).results;
+    static urls = new SpriteSpliter("SpellIcons", embed(`#icon.png`), null, 422).results;
     /** @type {SpellData?} */ #data;
 
     /** @param {SpellData} data  */

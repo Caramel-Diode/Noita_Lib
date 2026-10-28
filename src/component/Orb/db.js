@@ -1,6 +1,6 @@
 class OrbData {
-    static spellIconUrls = new SpriteSpliter("OrbSpellIcons", embed(`#orb-spells.png`)).results;
-    static orbUrls = new SpriteSpliter("OrbBackgrounds", embed(`#orbs.png`), 154).results;
+    static spellIconUrls = new SpriteSpliter("OrbSpellIcons", embed(`#orb-spells.png`), null, 11).results;
+    static orbUrls = new SpriteSpliter("OrbBackgrounds", embed(`#orbs.png`), 154, 4).results;
     /** @type {Map<String,OrbData>} */
     static data = new Map();
     #spellIndex;

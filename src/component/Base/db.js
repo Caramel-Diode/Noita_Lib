@@ -3,7 +3,7 @@ class PanelAttrInfo {
     /** @type {Number} 图标索引 */ #iconIndex;
 
     static Icon = class Icon extends $icon(7, "面板属性") {
-        static urls = new SpriteSpliter("PanelAttrIcons", embed(`#panelAttrIcon.png`)).results;
+        static urls = new SpriteSpliter("PanelAttrIcons", embed(`#panelAttrIcon.png`),null,186).results;
         /** @type {PanelAttrInfo?} */ #data;
 
         /** @param {PanelAttrInfo} data  */

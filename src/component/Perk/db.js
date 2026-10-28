@@ -2,7 +2,7 @@
  * 天赋图标
  */
 class Icon extends $icon(12, "天赋") {
-    static urls = new SpriteSpliter("PerkIcons", embed(`#icon.png`)).results;
+    static urls = new SpriteSpliter("PerkIcons", embed(`#icon.png`), null, 111).results;
 
     /** @type {PerkData?} */ #data;
 
