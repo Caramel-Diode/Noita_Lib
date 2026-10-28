@@ -29,10 +29,21 @@ import {/* 仅导入部分 */} from "noitaLib.esm.js"
 noitaLib("dev"); // 启用开发者模式
 ```
 ## 构建
-需要预先安装node环境, 在vscode调试中运行build即可
+
+
+
+### 准备工作
+- 汉化表(伟大汉化) 放着于`src/public/tool/lang/common_base.csv`  
+- 需要预先安装node环境
+- 按照`src/parseTools/entity/entityList.js`和`src/parseTools/entity/animalsEntitiesList.json`中的枚举在 `noita_dev`中导出实体xml到`src/parseTools/entity/data/entities`目录中
+
+ 在vscode调试中运行build即可
 也可以手动执行build.js
 在`out`目录会生成`noitaLib.esm(.sf).js`、`noitaLib(.sf).mjs`(es6模块) 与一些资源文件  
 sf表示单文件形式 一般会使用此版本
+`src/parseTools` 提供了数据解析服务的支持  
+需要使用时应先启用 parser server
+
 ## 法术组件
 ```html
 <!-- 图标模式(display可缺省) -->
