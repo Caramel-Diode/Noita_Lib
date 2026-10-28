@@ -263,9 +263,7 @@ await index_esm_common.embed(`${path.dist}`);
 fs.writeFileSync(`${path.dist}/noitaLib.esm.js`, index_esm_common.embedingData);
 
 // 其它目标
-if (process.env.OUTPUTS) {
-    for (const p of JSON.parse(process.env.OUTPUTS)) {
-        fs.writeFileSync(p, index_sf.embedingData ?? index_sf.embedingData_base64);
-        console.log("已输出到:", p);
-    }
+for (const p of JSON.parse(process.env.OUTPUTS ?? "[]")) {
+    fs.writeFileSync(p, index_sf.embedingData ?? index_sf.embedingData_base64);
+    console.log("已输出到:", p);
 }
