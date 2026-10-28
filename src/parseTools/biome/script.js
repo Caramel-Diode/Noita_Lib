@@ -1,273 +1,127 @@
-document.body;
 /**
- * 解析图像为 `{点 => 颜色}` 的映射表
- * @param {string|HTMLCanvasElement} urlOrCanvas
- * @param {{top:number,left:number,bottom:number,right:number}?} padding
+ * @param {ImageBitmap} bitmap 已加载的图像
  */
-const parseImage = async (urlOrCanvas, padding = { top: 0, left: 0, bottom: 0, right: 0 }) => {
-    padding.top ??= 0;
-    padding.left ??= 0;
-    padding.bottom ??= 0;
-    padding.right ??= 0;
-    /** @type {HTMLImageElement} */
-    let img;
-    if (typeof urlOrCanvas === "string") {
-        img = await PNG.removeGAMA(urlOrCanvas);
-        // img = h.img({ src: urlOrCanvas });
-        // await img.decode();
-    } else img = urlOrCanvas;
-    const { width, height } = img;
-    const canvas = new OffscreenCanvas(width - padding.left - padding.right, height - padding.top - padding.bottom);
+const img2colors = (bitmap, { width, height } = bitmap) => {
+    const canvas = new OffscreenCanvas(width, height);
     const ctx = canvas.getContext("2d");
-    ctx.drawImage(img, padding.left, padding.top, canvas.width, canvas.height, 0, 0, canvas.width, canvas.height);
-    const { data } = ctx.getImageData(0, 0, canvas.width, canvas.height);
-
-    /** @type {Map<DOMPoint,`#${string}`>} */
-    const result = new Map();
-    let x = 0,
-        y = 0;
-    for (let i = 0; i < data.length; ) {
-        const r = data[i++].toString(16).padStart(2, 0);
-        const g = data[i++].toString(16).padStart(2, 0);
-        const b = data[i++].toString(16).padStart(2, 0);
-        const a = data[i++].toString(16).padStart(2, 0);
-        if (a !== "ff") console.warn("alpha!");
-        result.set(new DOMPoint(x, y), `#${r}${g}${b}`);
-        x++;
-        if (x === canvas.width) {
-            x = 0;
-            y++;
-        }
-    }
-    return Object.assign(result, { canvas: canvas });
+    ctx.drawImage(bitmap, 0, 0);
+    const dv = new DataView(ctx.getImageData(0, 0, width, height).data.buffer);
+    /**
+     * 获取指定坐标颜色
+     * @param {number} x
+     * @param {number} y
+     */
+    const fn = (x, y) => dv.getUint32(4 * (width * y + x), false);
+    return Object.assign(fn, { width, height });
 };
-
-/** 切割瓷砖 */
-const splitWangTiles = (() => {
+// /** 切割瓷砖 */
+const getWangTilesImgs = (() => {
     /**
-     * @param {string} url
+     * 获取所有空白行
+     * @param {ReturnType<typeof img2colors>} colors
      */
-    const trimWangTiles = async url => {
-        const colors = await parseImage(url);
-        /** @type {Array<Array<DOMPoint>>} */
+    const getBlankRows = colors => {
         const rows = [];
-        /** @type {Array<Array<DOMPoint>>} */
+        $: for (let y = 0; y < colors.height; y++) {
+            for (let x = 0; x < colors.width; x++) {
+                if (colors(x, y) !== 0xffffffff) continue $;
+            }
+            rows.push(y);
+        }
+        return rows;
+    };
+    /**
+     * 获取所有空白列
+     * @param {ReturnType<typeof img2colors>} colors
+     */
+    const getBlankCols = colors => {
         const cols = [];
-        for (const [point] of colors) {
-            rows[point.x] ??= [];
-            rows[point.x][point.y] = point;
-            cols[point.y] ??= [];
-            cols[point.y][point.x] = point;
-        }
-        // 行检测
-        {
-            const length = rows.length;
-            for (let i = 0; i < length; i++) {
-                const row = rows.at(i);
-                let isBlank = true;
-                for (const point of row) {
-                    if (colors.get(point) === "#ffffff") continue;
-                    isBlank = false;
-                    break;
-                }
-                if (isBlank) row.length = 0;
+        $: for (let x = 0; x < colors.width; x++) {
+            for (let y = 0; y < colors.height; y++) {
+                if (colors(x, y) !== 0xffffffff) continue $;
             }
-            for (let i = 0; i < length; i++) {
-                const row = rows.at(-i);
-                let isBlank = true;
-                for (const point of row) {
-                    if (colors.get(point) === "#ffffff") continue;
-                    isBlank = false;
-                    break;
-                }
-                if (isBlank) row.length = 0;
-            }
+            cols.push(x);
         }
-        // 列检测
-        {
-            const length = cols.length;
-            for (let i = 0; i < length; i++) {
-                const col = cols.at(i);
-                let isBlank = true;
-                for (const point of col) {
-                    if (colors.get(point) === "#ffffff") continue;
-                    isBlank = false;
-                    break;
-                }
-                if (isBlank) col.length = 0;
-            }
-            for (let i = 0; i < length; i++) {
-                const col = cols.at(-i);
-                let isBlank = true;
-                for (const point of col) {
-                    if (colors.get(point) === "#ffffff") continue;
-                    isBlank = false;
-                    break;
-                }
-                if (isBlank) col.length = 0;
-            }
-        }
-
-        /**
-         * 有效像素点
-         * @type {Set<DOMPoint>}
-         */
-        const points = new Set([...rows.flat(), ...cols.flat()]);
-
-        let width = 1;
-        let height = 1;
-        for (const { x, y } of points) {
-            if (x > width) width = x;
-            if (y > height) height = y;
-        }
-        width++;
-        height++;
-
-        const canvas = new OffscreenCanvas(width, height);
-        const ctx = canvas.getContext("2d");
-        for (const point of points) {
-            const color = colors.get(point);
-            ctx.fillStyle = color;
-            ctx.fillRect(point.x, point.y, 1, 1);
-        }
-        return canvas;
+        return cols;
     };
+
     /**
-     * @param {string} url
+     *
+     * @param {OffscreenCanvas} img
+     * @param {Array<number>} blankRows
+     * @param {Array<number>} blankCols
      */
-    const splitWangTilesCommon = async url => {
-        const colors = await parseImage(url);
-        /** @type {Array<number>} */
-        const blankRows = [];
-        /** @type {Array<number>} */
-        const blankCols = [];
-        {
-            /** @type {Array<Array<DOMPoint>>} */
-            const rows = [];
-            /** @type {Array<Array<DOMPoint>>} */
-            const cols = [];
-            for (const [point] of colors) {
-                rows[point.y] ??= [];
-                rows[point.y][point.x] = point;
-                cols[point.x] ??= [];
-                cols[point.x][point.y] = point;
+    const splitImg = img => {
+        const colors = img2colors(img);
+        const blankRows = getBlankRows(colors);
+        const blankCols = getBlankCols(colors);
+        /** @type {Array<HTMLCanvasElement>} */
+        const result = [];
+        blankRows.push(img.height);
+        blankCols.push(img.width);
+        let startY = 0;
+        for (const y of blankRows) {
+            const height = y - startY;
+            if (!height) {
+                if (startY) break;
+                else continue;
             }
+            let startX = 0;
+            for (const x of blankCols) {
+                const width = x - startX;
+                if (!width) break;
 
-            for (const row of rows) {
-                let isBlankRow = true;
-                for (const point of row) {
-                    if (colors.get(point) === "#ffffff") continue;
-                    isBlankRow = false;
-                    break;
-                }
-                if (isBlankRow) blankRows.push(rows.indexOf(row));
-            }
-            for (const col of cols) {
-                let isBlankCol = true;
-                for (const point of col) {
-                    if (colors.get(point) === "#ffffff") continue;
-                    isBlankCol = false;
-                    break;
-                }
-                if (isBlankCol) blankCols.push(cols.indexOf(col));
-            }
-        }
-        // split
-        {
-            /** @type {Array<DOMRect>} */
-            const rects = [];
-            blankRows.push(colors.canvas.height);
-            blankCols.push(colors.canvas.width);
-            let startY = 0;
-            for (const y of blankRows) {
-                const height = y - startY;
-                if (!height) {
-                    if (startY) break;
-                    else continue;
-                }
-                let startX = 0;
-                for (const x of blankCols) {
-                    const width = x - startX;
-                    if (!width) break;
-                    rects.push(new DOMRect(startX, startY, width, height));
-                    startX = x + 1;
-                }
-                startY = y + 1;
-            }
-            /** @type {Array<HTMLCanvasElement>} */
-            const result = [];
-            for (const { x, y, width, height } of rects) {
-                const canvas = h.canvas({ width: width - 2, height: height - 2 });
+                const canvas = document.createElement("canvas");
+                canvas.width = width - 2;
+                canvas.height = height - 2;
                 const ctx = canvas.getContext("2d");
-                ctx.drawImage(colors.canvas, x + 1, y + 1, width - 2, height - 2, 0, 0, width - 2, height - 2);
+                ctx.drawImage(img, startX + 1, startY + 1, width - 2, height - 2, 0, 0, width - 2, height - 2);
                 result.push(canvas);
+
+                startX = x + 1;
             }
-            return result;
+            startY = y + 1;
         }
+        return result;
     };
 
+    const getBitmapFromURL = url =>
+        new Promise((resolve, reject) => {
+            const img = new Image();
+            img.crossOrigin = "anonymous";
+            img.addEventListener("load", () => resolve(createImageBitmap(img)));
+            img.addEventListener("error", reject);
+            img.src = url;
+        });
+    /** @param {string} url */
     return async url => {
-        const colors = await parseImage(url, { top: 2, right: 1, bottom: 1 });
-        /** @type {Array<Array<DOMPoint>>} */
-        const rows = [];
-        for (const [point] of colors) {
-            rows[point.y] ??= [];
-            rows[point.y][point.x] = point;
-        }
-        /** @type {Array<number>} */
-        const blankRows = [];
-        for (const row of rows) {
-            let isBlankRow = true;
-            for (const point of row) {
-                if (colors.get(point) === "#ffffff") continue;
-                isBlankRow = false;
-                break;
-            }
-            if (isBlankRow) blankRows.push(rows.indexOf(row));
-        }
-        let splity1, splity2;
-
+        const bitmap = await getBitmapFromURL(url);
+        const blankRows = getBlankRows(img2colors(bitmap));
+        let part1 = null;
+        let part2 = null;
         for (let i = 0; i < blankRows.length - 2; i++) {
-            const r1 = blankRows[i];
-            const r2 = blankRows[i + 1];
-            const r3 = blankRows[i + 2];
-            // 连续三行空白判断
-            if (r1 + 1 === r2 && r2 + 1 === r3) {
-                splity1 = r1;
-                splity2 = r3;
-            }
+            const row1 = blankRows[i];
+            const row2 = blankRows[i + 1];
+            const row3 = blankRows[i + 2];
+            if (row1 + 1 !== row2 || row2 + 1 !== row3) continue;
+
+            part1 = new OffscreenCanvas(bitmap.width - 1, row1 - 2);
+            part2 = new OffscreenCanvas(bitmap.width - 1, bitmap.height - row3 - 2);
+            const ctx1 = part1.getContext("2d");
+            const ctx2 = part2.getContext("2d");
+            ctx1.drawImage(bitmap, 0, -2);
+            ctx2.drawImage(bitmap, 0, -row3 - 1);
+            break;
         }
-        const result = {
-            /** @type {Array<HTMLCanvasElement>} */
-            horizontal: null,
-            /** @type {Array<HTMLCanvasElement>} */
-            vertical: null,
-            /** @type {Array<HTMLCanvasElement>} */
-            single: null
-        };
-        if (splity1 === void 0 || splity2 === void 0) {
-            // throw new Error("图像无法分割:" + url);
-            // 这代表不是瓷砖拼图
-            result.single = await splitWangTilesCommon(url);
-            return result;
-        }
-        // 横向瓷砖
-        {
-            const { width, height } = colors.canvas;
-            const canvas = new OffscreenCanvas(width, splity1);
-            const ctx = canvas.getContext("2d");
-            ctx.drawImage(colors.canvas, 0, 0, width, splity1, 0, 0, width, splity1);
-            const newURL = URL.createObjectURL(await canvas.convertToBlob());
-            result.horizontal = await splitWangTilesCommon(newURL);
-        }
-        // 纵向瓷砖
-        {
-            const { width, height } = colors.canvas;
-            const canvas = new OffscreenCanvas(width, height - splity2 - 1);
-            const ctx = canvas.getContext("2d");
-            ctx.drawImage(colors.canvas, 0, splity2 + 1, width, canvas.height, 0, 0, width, canvas.height);
-            const newURL = URL.createObjectURL(await canvas.convertToBlob());
-            result.vertical = await splitWangTilesCommon(newURL);
+        const result = {};
+        if (part1 && part2) {
+            result.horizontal = splitImg(part1);
+            result.vertical = splitImg(part2);
+        } else {
+            const canvas = document.createElement("canvas");
+            const ctx = canvas.getContext("bitmaprenderer");
+            ctx.transferFromImageBitmap(bitmap);
+            result.single = canvas;
         }
         return result;
     };
@@ -745,13 +599,16 @@ const getMaterials = (() => {
     };
     /** @param {HTMLCanvasElement} canvas */
     return async canvas => {
-        const colors = await parseImage(canvas);
+        const color = img2colors(canvas);
         /** @type {Set<string>} */
         const result = new Set();
-        for (const [point, color] of colors) {
-            if (dataMap[color]) result.add(dataMap[color]);
+        for (let x = 0; x < color.width; x++) {
+            for (let y = 0; y < color.height; y++) {
+                const hex = "#" + color(x, y).toString(16).padStart(8, 0).slice(0, -2);
+                if (dataMap[hex]) result.add(dataMap[hex]);
+            }
         }
-        console.log(result);
+        // console.log(result);
 
         return result;
     };
@@ -785,19 +642,22 @@ const colorMap = {};
 
 {
     console.groupCollapsed("像素信息");
+    const color = img2colors(biomeMapImage);
+    for (let y = 0; y < color.height; y++) {
+        for (let x = 0; x < color.width; x++) {
+            const hex = "#" + color(x, y).toString(16).padStart(8, 0).slice(0, -2);
+            const data = colorMap[hex];
+            if (!data) throw new ReferenceError("颜色索引失败，不存在对应Biome");
+            console.log(`%c${hex}%c\t(${x},${y})`, `background:${hex};padding:3px;fontfamily:mono`, `background:none;padding:3px;`, data);
+            const block = h.div({ style: { background: hex }, title: data.biome_filename + "\n" + `(${x},${y})` });
 
-    for (const [{ x, y }, color] of await parseImage(biomeMapImage.src)) {
-        const data = colorMap[color];
-        if (!data) throw new ReferenceError("颜色索引失败，不存在对应Biome");
-        console.log(`%c${color}%c\t(${x},${y})`, `background:${color};padding:3px;fontfamily:mono`, `background:none;padding:3px;`, data);
-        const block = h.div({ style: { background: color }, title: data.biome_filename + "\n" + `(${x},${y})` });
+            if (data.biome_filename.startsWith("data/biome/gold")) block.append("金");
+            else if (data.biome_filename.startsWith("data/biome/orbrooms")) block.append("魔");
+            else if (data.biome_filename.startsWith("data/biome/essenceroom")) block.append("精");
+            else if (data.biome_filename.startsWith("data/biome/temple_altar")) block.append("圣");
 
-        if (data.biome_filename.startsWith("data/biome/gold")) block.append("金");
-        else if (data.biome_filename.startsWith("data/biome/orbrooms")) block.append("魔");
-        else if (data.biome_filename.startsWith("data/biome/essenceroom")) block.append("精");
-        else if (data.biome_filename.startsWith("data/biome/temple_altar")) block.append("圣");
-
-        biomeMap.append(block);
+            biomeMap.append(block);
+        }
     }
 
     console.groupEnd();
@@ -823,14 +683,14 @@ const colorMap = {};
             if (wang_template_file) {
                 if (set.has(wang_template_file)) return;
                 set.add(wang_template_file);
-                const tiles = await splitWangTiles("/" + wang_template_file);
+                const tiles = await getWangTilesImgs("/" + wang_template_file);
                 const colorInfo = h.code({ style: { color: "#000", background: color, borderRadius: "3px", padding: "3px" } }, color);
                 const summary = h.summary(colorInfo, " ", biome_filename);
                 const tilesInfo = h.p(wang_template_file);
                 const details = h.details({ open: true, style: { "--color": color } }, summary, tilesInfo);
                 if (tiles.single) {
                     tilesInfo.append(h.br(), h.code(`单片瓷砖`));
-                    details.append(...tiles.single);
+                    details.append(tiles.single);
                 } else {
                     const detailsH = h.details({ open: true }, h.summary(`横向瓷砖 ${tiles.horizontal.length}`), tiles.horizontal);
                     const detailsV = h.details({ open: true }, h.summary(`纵向瓷砖 ${tiles.vertical.length}`), tiles.vertical);
