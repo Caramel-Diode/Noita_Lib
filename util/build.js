@@ -256,7 +256,7 @@ fs.writeFileSync(`${path.dist}/noitaLib.sf.js`, index_sf.embedingData ?? index_s
     // 直播插件目录
     fs.writeFileSync(`D:/Project/Web/直播插件/noitaLib.js`, index_sf.embedingData ?? index_sf.embedingData_base64);
     // Noita for-obs mod目录
-    fs.writeFileSync(`D:/Program/Steam/steamapps/common/Noita/mods/for-obs/noitaLib.js`, index_sf.embedingData ?? index_sf.embedingData_base64);
+    fs.writeFileSync(`C:/SteamLibrary/steamapps/common/Noita/mods/4obs/noitaLib.js`, index_sf.embedingData ?? index_sf.embedingData_base64);
     // QQ-Bot目录
     fs.writeFileSync(`D:/Project/Electron/bot/noitaLib.js`, index_sf.embedingData ?? index_sf.embedingData_base64);
 }
