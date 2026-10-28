@@ -23,7 +23,7 @@
         "dist/*"
     ],
     "scripts": {
-        "build": "node ./util/build.js",
+        "build": "node --env-file-if-exists=.env ./util/build.js",
         "parser server": "node ./src/parseTools/serve.js"
     },
     "eslintConfig": {

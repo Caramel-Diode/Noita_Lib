@@ -1,5 +1,5 @@
 // const fs = require("fs");
-import fs from "fs";
+import fs from "node:fs";
 import $CSS from "./util.css.js";
 import $JS from "./util.javascript.js";
 import md5 from "./md5.js";
@@ -140,7 +140,8 @@ class File {
             if (matchState === 7) {
                 tempCache.push(char);
                 if (char !== "`") {
-                    if (char === "#") embeddingPoint.relativePath = true; //#开头表示相对路径
+                    if (char === "#")
+                        embeddingPoint.relativePath = true; //#开头表示相对路径
                     else embeddingPoint.srcChars.push(char);
                 } else matchState++;
             } else {
@@ -249,18 +250,6 @@ const index_sf = new File(`${path.src}/index.js`);
 await index_sf.embed();
 fs.writeFileSync(`${path.dist}/noitaLib.sf.js`, index_sf.embedingData ?? index_sf.embedingData_base64);
 
-// 其它目标
-{
-    // 施法教学文档目录
-    fs.writeFileSync(`D:/Project/Web/Noita 施法教学文档/noitaLib.js`, index_sf.embedingData ?? index_sf.embedingData_base64);
-    // 直播插件目录
-    fs.writeFileSync(`D:/Project/Web/直播插件/noitaLib.js`, index_sf.embedingData ?? index_sf.embedingData_base64);
-    // Noita for-obs mod目录
-    fs.writeFileSync(`C:/SteamLibrary/steamapps/common/Noita/mods/4obs/noitaLib.js`, index_sf.embedingData ?? index_sf.embedingData_base64);
-    // QQ-Bot目录
-    fs.writeFileSync(`D:/Project/Electron/bot/noitaLib.js`, index_sf.embedingData ?? index_sf.embedingData_base64);
-}
-
 const index_esm_sf = new File(`${path.src}/index.esm.js`);
 await index_esm_sf.embed();
 fs.writeFileSync(`${path.dist}/noitaLib.esm.sf.js`, index_esm_sf.embedingData ?? index_esm_sf.embedingData_base64);
@@ -272,3 +261,11 @@ fs.writeFileSync(`${path.dist}/noitaLib.js`, index_common.embedingData);
 const index_esm_common = new File(`${path.src}/index.esm.js`);
 await index_esm_common.embed(`${path.dist}`);
 fs.writeFileSync(`${path.dist}/noitaLib.esm.js`, index_esm_common.embedingData);
+
+// 其它目标
+if (process.env.OUTPUTS) {
+    for (const p of JSON.parse(process.env.OUTPUTS)) {
+        fs.writeFileSync(p, index_sf.embedingData ?? index_sf.embedingData_base64);
+        console.log("已输出到:", p);
+    }
+}
