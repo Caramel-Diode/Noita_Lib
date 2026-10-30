@@ -1,4 +1,3 @@
-// const fs = require("fs");
 import fs from "node:fs";
 import $CSS from "./util.css.js";
 import $JS from "./util.javascript.js";
