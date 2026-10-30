@@ -221,7 +221,7 @@ class Material {
     toString(spread = false, id_index_map) {
         const blank = Symbol("");
         let name = "";
-        if (this.name.length) name = zh_cn(this.name.slice(1));
+        if (this.name.length) name = zh_cn(this.name.slice(1)) ?? "";
         else name = this.id;
 
         const coldFreezesToMaterial = this.coldFreezesToMaterial ? this.coldFreezesToMaterial : blank;
@@ -244,28 +244,29 @@ class Material {
         const tags = new Bits(Material.sortedTags.map(tag => this.tags.includes(tag))).toBigInt().toString(36);
 
         const str = JSON5.stringify([
-            this.id, //============================================[0] id
-            name, //===============================================[1] 材料名
-            tags, //===============================================[2] 标签(使用36进制字符串按位记录)
-            parent, //=============================================[3] 父材料
-            bitsNumber, //=========================================[4] Bits Number
-            $value(this.density, 1), //======[5] 密度
-            Material.#typeMap[this.type], //=======================[6] 类型
-            $value(this.durability, 1), //===[7] 硬度
-            $value(this.hp, 100), //=========[8] 血量
-            $value(this.fireHp, 0), //=======[9] 燃烧血量
-            this.liquidGravity, //=================================[10] 液体重力
-            this.solidFriction, //=================================[11] 固体摩擦力
-            this.temperatureOfFire, //=============================[12] 火焰温度
-            this.autoignitionTemperature, //=======================[13] 自燃温度
-            this.color.toUpperCase(), //===========================[14] 容器中的颜色
-            this.statusEffects_ingestion, //=======================[15] 摄入效果
-            this.statusEffects_stains, //==========================[16] 沾染效果
-            coldFreezesToMaterial, //==============================[17] 冻结转化
-            warmthMeltsToMaterial, //==============================[18] 加热转化
-            solidBreakToType, //===================================[19] 碎裂转化
-            this.lifetime  //======================================[20] 存在时间
-            // this.name.slice(1) //===========================[21] 名称翻译键
+            // this.id,
+            // name,
+            `${this.id} ${name}`, //====================[0] id 材料名
+            tags, //===============================================[1] 标签(使用36进制字符串按位记录)
+            parent, //=============================================[2] 父材料
+            bitsNumber, //=========================================[3] Bits Number
+            $value(this.density, 1), //========[4] 密度
+            Material.#typeMap[this.type], //=======================[5] 类型
+            $value(this.durability, 1), //=====[6] 硬度
+            $value(this.hp, 100), //===========[7] 血量
+            $value(this.fireHp, 0), //=========[8] 燃烧血量
+            this.liquidGravity, //=================================[9] 液体重力
+            this.solidFriction, //=================================[10] 固体摩擦力
+            this.temperatureOfFire, //=============================[11] 火焰温度
+            this.autoignitionTemperature, //=======================[12] 自燃温度
+            this.color.toUpperCase(), //===========================[13] 容器中的颜色
+            this.statusEffects_ingestion, //=======================[14] 摄入效果
+            this.statusEffects_stains, //==========================[15] 沾染效果
+            coldFreezesToMaterial, //==============================[16] 冻结转化
+            warmthMeltsToMaterial, //==============================[17] 加热转化
+            solidBreakToType, //===================================[18] 碎裂转化
+            this.lifetime //======================================[19] 存在时间
+            // this.name.slice(1) //===========================[20] 名称翻译键
         ]);
 
         if (spread) return str.slice(1, -1);

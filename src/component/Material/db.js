@@ -459,9 +459,9 @@ class MaterialData {
     static data = {
         /** @type {Array<MaterialData>} */ all: [],
         /** @type {Array<MaterialData>} */ InheritReactions: [],
-        /** @type {Map<MaterialId,MaterialData>} */ id_map: new Map(),
-        /** @type {Map<MaterialTag,MaterialData.DataGroup>} */ tag_map: new Map(),
-        /** @type {Map<MaterialId,MaterialData.DataGroup>} */ inherit_map: new Map()
+        /** @type {Map<MaterialId,MaterialData>} */ idMap: new Map(),
+        /** @type {Map<MaterialTag,MaterialData.DataGroup>} */ tagMap: new Map(),
+        /** @type {Map<MaterialId,MaterialData.DataGroup>} */ inheritMap: new Map()
     };
     /** ⚪️ 空材料 @type {MaterialData} */ static $NULL;
 
@@ -471,6 +471,7 @@ class MaterialData {
     /** @param {Array} data @param {number} index */
     constructor(data, index) {
         this.#iconIndex = index;
+        [this.id, this.name] = data[0].split(" ");
         [
             this.inheritReactions, //=========[0] 继承反应
             this.burnable, //=================[1] 可燃性
@@ -480,37 +481,79 @@ class MaterialData {
             this.onFire, //===================[5] 始终燃烧
             this.requiresOxygen, //===========[6] 燃烧需氧
             this.platformType //==============[7] 平台类型
-        ] = new Bits(data[4]).toArray(8); //解析二进制位为Boolean值
+        ] = new Bits(data[3]).toArray(8); //解析二进制位为Boolean值
         //prettier-ignore
         [
-            this.id, //=======================[0] id
-            this.name, //=====================[1] 材料名
-            , //==============================[2] 标签 BitsString
-            , //==============================[3] 父材料 (等待后续创建引用)
-            , //==============================[4] BitsNumber
-            this.density = 1, //==============[5] 密度
-            , //==============================[6] 类型
-            this.durability = 1, //===========[7] 硬度
-            this.hp = 100, //=================[8] 血量
-            this.fireHp = 0, //===============[9] 燃烧血量
-            this.liquidGravity, //============[10] 液体重力
-            this.solidFriction, //============[11] 固体摩擦力
-            this.temperatureOfFire, //========[12] 火焰温度
-            this.autoignitionTemperature, //==[13] 自燃温度
-            this.color, //====================[14] 容器中的颜色
-            this.statusEffects_ingestion, //==[15] 摄入效果
-            this.statusEffects_stains, //=====[16] 沾染效果
-            , //==============================[17] 冻结转化 (等待后续创建引用)
-            , //==============================[18] 加热转化 (等待后续创建引用)
-            , //==============================[19] 碎裂转化 (等待后续创建引用)
-            this.lifetime = 0, //=============[20] 存在时间
-            // this.nameKey //===================[21] 名称翻译键
+            , //==============================[0] id name
+            , //==============================[1] 标签 BitsString
+            , //==============================[2] 父材料 (等待后续创建引用)
+            , //==============================[3] BitsNumber
+            this.density = 1, //==============[4] 密度
+            , //==============================[5] 类型
+            this.durability = 1, //===========[6] 硬度
+            this.hp = 100, //=================[7] 血量
+            this.fireHp = 0, //===============[8] 燃烧血量
+            this.liquidGravity, //============[9] 液体重力
+            this.solidFriction, //============[10] 固体摩擦力
+            this.temperatureOfFire, //========[11] 火焰温度
+            this.autoignitionTemperature, //==[12] 自燃温度
+            this.color, //====================[13] 容器中的颜色
+            this.statusEffects_ingestion, //==[14] 摄入效果
+            this.statusEffects_stains, //=====[15] 沾染效果
+            , //==============================[16] 冻结转化 (等待后续创建引用)
+            , //==============================[17] 加热转化 (等待后续创建引用)
+            , //==============================[18] 碎裂转化 (等待后续创建引用)
+            this.lifetime = 0, //=============[19] 存在时间
+            // this.nameKey //===================[20] 名称翻译键
         ] = data;
         this.tags = [];
-        new Bits(parseBigint(data[2], 36)).toArray(MaterialData.#tagMap.length).forEach((v, i) => !v || this.tags.push(MaterialData.#tagMap[i]));
+        new Bits(parseBigint(data[1], 36)).toArray(MaterialData.#tagMap.length).forEach((v, i) => !v || this.tags.push(MaterialData.#tagMap[i]));
         /** @type {Array<string>} */
         this.type = MaterialData.#typeList[data[6]];
     }
+    // constructor(data, index) {
+    //     this.#iconIndex = index;
+    //     // [this.id, this.name] = data[0].split(" ");
+    //     [
+    //         this.inheritReactions, //=========[0] 继承反应
+    //         this.burnable, //=================[1] 可燃性
+    //         this.electricalConductivity, //===[2] 导电性
+    //         this.generatesSmoke, //===========[3] 生成烟雾
+    //         this.liquidSand, //===============[4] 流沙
+    //         this.onFire, //===================[5] 始终燃烧
+    //         this.requiresOxygen, //===========[6] 燃烧需氧
+    //         this.platformType //==============[7] 平台类型
+    //     ] = new Bits(data[4]).toArray(8); //解析二进制位为Boolean值
+    //     //prettier-ignore
+    //     [
+    //         this.id, //=======================[0] id
+    //         this.name, //=====================[1] 材料名
+    //         , //==============================[2] 标签 BitsString
+    //         , //==============================[3] 父材料 (等待后续创建引用)
+    //         , //==============================[4] BitsNumber
+    //         this.density = 1, //==============[5] 密度
+    //         , //==============================[6] 类型
+    //         this.durability = 1, //===========[7] 硬度
+    //         this.hp = 100, //=================[8] 血量
+    //         this.fireHp = 0, //===============[9] 燃烧血量
+    //         this.liquidGravity, //============[10] 液体重力
+    //         this.solidFriction, //============[11] 固体摩擦力
+    //         this.temperatureOfFire, //========[12] 火焰温度
+    //         this.autoignitionTemperature, //==[13] 自燃温度
+    //         this.color, //====================[14] 容器中的颜色
+    //         this.statusEffects_ingestion, //==[15] 摄入效果
+    //         this.statusEffects_stains, //=====[16] 沾染效果
+    //         , //==============================[17] 冻结转化 (等待后续创建引用)
+    //         , //==============================[18] 加热转化 (等待后续创建引用)
+    //         , //==============================[19] 碎裂转化 (等待后续创建引用)
+    //         this.lifetime = 0, //=============[20] 存在时间
+    //         // this.nameKey //===================[21] 名称翻译键
+    //     ] = data;
+    //     this.tags = [];
+    //     new Bits(parseBigint(data[2], 36)).toArray(MaterialData.#tagMap.length).forEach((v, i) => !v || this.tags.push(MaterialData.#tagMap[i]));
+    //     /** @type {Array<string>} */
+    //     this.type = MaterialData.#typeList[data[6]];
+    // }
 
     get nameKey() {
         return "mat_" + this.id;
@@ -529,14 +572,14 @@ class MaterialData {
      * @param {string} id
      * @return {MaterialData}
      */
-    static queryById = id => this.data.id_map.get(id) ?? this.$NULL;
+    static queryById = id => this.data.idMap.get(id) ?? this.$NULL;
 
     /**
      * 通过标签获取材料数据
      * @param {MaterialTag_Enum} tag
      * @returns {MaterialData.DataGroup}
      */
-    static queryByTag = tag => this.data.tag_map.get(tag) ?? { tag: tag, list: [] };
+    static queryByTag = tag => this.data.tagMap.get(tag) ?? { tag: tag, list: [] };
 
     /**
      * 通继承获取材料数据
@@ -544,7 +587,7 @@ class MaterialData {
      * @returns {MaterialData.DataGroup}
      */
     static queryByInherit = (parentMaterialId, recursive = true, inheritReactions = true) => {
-        const queryResult = this.data.inherit_map.get(parentMaterialId);
+        const queryResult = this.data.inheritMap.get(parentMaterialId);
         if (!queryResult) return { parent: parentMaterialId, list: [this.queryById(parentMaterialId)] };
         const result = { parent: parentMaterialId, list: [...queryResult.list] };
         if (!recursive) return result;
@@ -561,20 +604,19 @@ class MaterialData {
     /** 初始化数据库 */
     static init() {
         const [rawDatas, tags] = [...embed(`#material.data.js`)];
-        // const datas = [...rawDatas.values().chunks(22)];
-        const datas = [...rawDatas.values().chunks(21)];
+        const datas = [...rawDatas.values().chunks(20)];
         this.#tagMap = tags.split(" ").map(e => `[${e}]`);
-        this.$NULL = Object.freeze(new this(["_NULL", "空白", , , 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, "000000FF", "", "", , , , -1, "mat_air"], 0));
+        this.$NULL = Object.freeze(new this(["_NULL 空白", , , 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, "000000FF", "", "", , , , -1, "mat_air"], 0));
 
         this.data.all = datas.map((v, i) => {
             /** @type {MaterialData} */
             const data = new this(v, i);
-            this.data.id_map.set(data.id, data);
+            this.data.idMap.set(data.id, data);
             for (let j = 0; j < data.tags.length; j++) {
                 const tag = data.tags[j];
-                const materialGroup = this.data.tag_map.get(tag);
+                const materialGroup = this.data.tagMap.get(tag);
                 if (materialGroup) materialGroup.list.push(data);
-                else this.data.tag_map.set(tag, { tag: tag, list: [data] });
+                else this.data.tagMap.set(tag, { tag: tag, list: [data] });
             }
             if (data.inheritReactions) this.data.InheritReactions.push(data);
             return data;
@@ -584,16 +626,16 @@ class MaterialData {
         datas.forEach((v, i) => {
             const target = this.data.all[i];
             // 父材料 值为索引
-            if (v[3] !== void 0) {
+            if (v[2] !== void 0) {
                 //prettier-ignore
-                const { id } = target.parent = this.data.all[v[3]];
-                const materialGroup = this.data.inherit_map.get(id);
+                const { id } = target.parent = this.data.all[v[2]];
+                const materialGroup = this.data.inheritMap.get(id);
                 if (materialGroup) materialGroup.list.push(target);
-                else this.data.inherit_map.set(id, { parent: id, list: [target.parent, target] });
+                else this.data.inheritMap.set(id, { parent: id, list: [target.parent, target] });
             }
-            if (v[17]) target.coldFreezesToMaterial = this.queryById(v[17]); //冻结转化
-            if (v[18]) target.warmthMeltsToMaterial = this.queryById(v[18]); //加热转化
-            if (v[19]) target.solidBreakToType = this.queryById(v[19]); //碎裂转化
+            if (v[16]) target.coldFreezesToMaterial = this.queryById(v[16]); //冻结转化
+            if (v[17]) target.warmthMeltsToMaterial = this.queryById(v[17]); //加热转化
+            if (v[18]) target.solidBreakToType = this.queryById(v[18]); //碎裂转化
             Object.freeze(target);
         });
 
