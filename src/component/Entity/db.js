@@ -526,9 +526,11 @@ class EntityData {
      */
     constructor(data, path) {
         // [0] 号位 基本信息
-        this.name = data[0][0];
-        this.path = path;
+        const [name, ...alias] = (data[0][0] ?? "").split(" ");
+        this.name = name;
+        this.alias = freeze(alias ?? []);
         if (!this.name) this.name = path;
+        this.path = path;
         this.tags = [];
         new Bits(parseBigint(data[0][1], 36)).toArray(EntityData.#tagMap.length).forEach((v, i) => !v || this.tags.push(EntityData.#tagMap[i]));
         this.#dropMoneyAble = !!data[0][2];
@@ -647,10 +649,11 @@ class EntityData {
         for (const [path, rawData] of flatted) {
             const entityData = new this(rawData, path);
             {
-                const array = this.datasNameMap.get(entityData.name) ?? [];
+                const array = this.datasNameMap.getOrInsert(entityData.name, []);
                 array.push(entityData);
                 this.datasNameMap.set(entityData.name, array);
                 this.datasNameMap.set(entityData.path, array);
+                for (const e of entityData.alias) this.datasNameMap.set(e, array);
             }
             this.datas.set(path, entityData);
             for (const tag of entityData.tags) tagSets[tag].add(entityData);
