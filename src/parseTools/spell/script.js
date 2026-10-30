@@ -258,7 +258,7 @@ class Spell {
         const bitsNum = new Bits([this.neverUnlimited, this.recursive, this.aiNeverUses, this.spawnManualUnlock]).toBigInt();
         const str = JSON5.stringify([
             //===============================[构造器数据索引]
-            `${this.id} ${this.name} ${this.alias}`, //=== [0] ID 名称 别名
+            `${this.id} ${this.name} ${this.alias}`.trim(), //=== [0] ID 名称 别名
             abbrList.abbr(this.desc), //====================[1] 描述
             this.type, //====================[2] 类型
             maxUse, //=======================[3] 最大使用次数
