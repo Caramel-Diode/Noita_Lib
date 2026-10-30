@@ -845,19 +845,27 @@ const NoitaEntity = (() => {
     /**
      * 动物行为组件
      * *`很蛋疼的是这个组件属性会囊括一些<AIAttackComponent>的属性, 我将会把它们重定向为<AIAttackComponent>组件`*
+     * * 当存在<AIAttackComponent>的时候 远程攻击应当忽略
      */
     class AnimalAIComponent extends Component {
         /**
          * @param {XMLObject} data
+         * @param {string} path
+         * @param {XMLObject} xmlObject
          */
-        constructor(data, path) {
+        constructor(data, path, xmlObject) {
             super(data);
+            this.xmlObject = xmlObject;
             const attr = this.data("attr");
             // console.log(path, attr);
             if (attr.attack_ranged_entity_file) attackRangedEntityFiles.add(attr.attack_ranged_entity_file);
         }
 
         get hasAttackRanged() {
+            if (this.xmlObject.AIAttackComponent?.length) {
+                console.warn("存在 AIAttackComponent 忽略远攻");
+                return false;
+            }
             return !!+this.data("attr").attack_ranged_enabled;
             const file = this.data("attr").attack_ranged_entity_file;
             if (!file) return false;
@@ -1571,6 +1579,8 @@ const NoitaEntity = (() => {
         }
     }
     return class NoitaEntity {
+        /** @type {CSVData} 别名表 */
+        static _aliasCSV;
         /** @type {{[key: string]: string}} */
         static tags = {};
 
@@ -1675,8 +1685,11 @@ const NoitaEntity = (() => {
             }
 
             if (nameKey === "projectile_default") this.name = blank;
-            else if (nameKey) this.name = zh_cn(nameKey);
-            else this.name = blank;
+            else if (nameKey) {
+                this.name = zh_cn(nameKey);
+                this.alias = NoitaEntity._aliasCSV.get(this.name, 1) ?? "";
+                console.log("别名: ", this.alias);
+            } else this.name = blank;
             const { component } = this;
             // /** @type {XMLObject} */
             const { xmlObject } = root;
@@ -1709,8 +1722,12 @@ const NoitaEntity = (() => {
                         }
                         break;
                     case "AnimalAIComponent":
-                        component.animalAI = new AnimalAIComponent(values[0], path);
-                        if (component.animalAI.hasAttackRanged) component.aIAttack.push(component.animalAI);
+                        component.animalAI = new AnimalAIComponent(values[0], path, xmlObject);
+                        if (component.animalAI.hasAttackRanged) {
+                            console.warn(this, xmlObject);
+
+                            component.aIAttack.push(component.animalAI);
+                        }
                         break;
 
                     case "LifetimeComponent":
@@ -1818,7 +1835,11 @@ const NoitaEntity = (() => {
 
             {
                 const tags = new Bits(NoitaEntity.sortedTags.map(tag => this.tags.includes(tag))).toBigInt().toString(36);
-                obj[0] = trim([this.name, tags, this.dropMoney ? 1 : blank]);
+                if (this.alias) {
+                    obj[0] = trim([`${this.name?.toString() ?? ""} ${this.alias}`.trim() || blank, tags, this.dropMoney ? 1 : blank]);
+                } else {
+                    obj[0] = trim([this.name, tags, this.dropMoney ? 1 : blank]);
+                }
             }
 
             if (_.projectile) obj[1] = _.projectile[compile]();
@@ -1889,6 +1910,7 @@ const NoitaEntity = (() => {
 
 (async () => {
     await langData.ready;
+    NoitaEntity._aliasCSV = await parseCSVFromUrl("alias.csv");
     NoitaEntity.lifetimeList = await parseCSVFromUrl("lifetimeList.csv");
     const { list } = await import("./entityList.js");
     //可读性极好的代码
