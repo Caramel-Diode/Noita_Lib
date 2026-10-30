@@ -258,21 +258,19 @@ class Spell {
         const bitsNum = new Bits([this.neverUnlimited, this.recursive, this.aiNeverUses, this.spawnManualUnlock]).toBigInt();
         const str = JSON5.stringify([
             //===============================[构造器数据索引]
-            this.id, //======================[0] id
-            this.name, //====================[1] 名称
-            alias, //========================[2] 别名
-            abbrList.abbr(this.desc), //====================[3] 描述
-            this.type, //====================[4] 类型
-            maxUse, //=======================[5] 最大使用次数
-            this.mana, //====================[6] 蓝耗
-            this.price, //===================[7] 售价
-            passive, //======================[8] 被动效果
-            abbrList.abbr(this.spawnProbs), //==============[9] 生成概率
-            spawnRequiresFlag, //============[10] 生成条件
-            draw, //=========================[11] 抽取数
-            projectiles, //==================[12] 提供投射物
-            modifierAction, //===============[13] 修正行为
-            this.action, //==================[14] 法术行为
+            `${this.id} ${this.name} ${this.alias}`, //=== [0] ID 名称 别名
+            abbrList.abbr(this.desc), //====================[1] 描述
+            this.type, //====================[2] 类型
+            maxUse, //=======================[3] 最大使用次数
+            this.mana, //====================[4] 蓝耗
+            this.price, //===================[5] 售价
+            passive, //======================[6] 被动效果
+            abbrList.abbr(this.spawnProbs), //==============[7] 生成概率
+            spawnRequiresFlag, //============[8] 生成条件
+            draw, //=========================[9] 抽取数
+            projectiles, //==================[10] 提供投射物
+            modifierAction, //===============[11] 修正行为
+            this.action, //==================[12] 法术行为
             bitsNum === 0n ? blank : bitsNum
         ]);
         if (spread) return str.slice(1, -1);
@@ -300,9 +298,6 @@ class Spell {
                     const spells_str = data.join(",\n    ");
                     const comment = getCommentText(`共${data.length}条法术数据`);
                     const fileContent = `${comment}\n((\n    ${abbrList.toString()}\n)=>[\n    ${spells_str}\n])()`;
-                    // console.log(abbrList);
-                    // console.log(fileContent);
-                    // download(fileContent, "spell.data.js");
                     fetch("?save-file=" + "Spell/data.js", {
                         method: "POST",
                         headers: {

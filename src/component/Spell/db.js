@@ -595,32 +595,32 @@ class SpellData {
      */
     constructor(data, index) {
         this.#iconIndex = index;
+        const [id, name, ...alias] = data[0].split(" ");
+        this.id = id;
+        this.name = name;
+        this.alias = freeze(alias);
         //prettier-ignore
         [
-            this.id, //====================[0] id
-            this.name, //==================[1] 名称
-            , //===========================[2] 别名
-            this.desc, //==================[3] 描述
-            , //===========================[4] 类型
-            this.maxUse = Infinity, //=====[5] 最大使用次数
-            this.mana, //==================[6] 蓝耗
-            , //===========================[7] 售价
-            this.passive = "", //==========[8] 被动效果
-            , //===========================[9] 生成概率
-            , //===========================[10] 生成条件
-            this.draw = 0, //==============[11] 抽取数
-            , //===========================[12] 提供投射物
-            , //===========================[13] 修正行为
-            this.action, //================[14] 法术行为
-            // this.nameKey = "", //==========[15] 名称键 用于csv翻译映射
-            // this.descKey = "" //===========[16] 描述键 用于csv翻译映射
+            ,//============================[0] ID 名称 别名
+            this.desc, //==================[1] 描述
+            , //===========================[2] 类型
+            this.maxUse = Infinity, //=====[3] 最大使用次数
+            this.mana, //==================[4] 蓝耗
+            , //===========================[5] 售价
+            this.passive = "", //==========[6] 被动效果
+            , //===========================[7] 生成概率
+            , //===========================[8] 生成条件
+            this.draw = 0, //==============[9] 抽取数
+            , //===========================[10] 提供投射物
+            , //===========================[11] 修正行为
+            this.action, //================[12] 法术行为
+            //=============================[13] bitsNum(neverUnlimited,recursive,aiNeverUses,spawnManualUnlock)
         ] = data;
-        this.alias = freeze(data[2] ? data[2].split(" ") : []);
-        this.type = SpellData.#typeList[data[4]];
-        this.price = new SpellData.Price(data[7]);
-
-        this.offeredProjectile = freeze(SpellData.ProjectileData.createDatas(data[12] ?? ""));
-        this.modifierAction = freeze(new SpellData.ModifierAction(data[13] ?? ""));
+        // this.alias = freeze(data[2] ? data[2].split(" ") : []);
+        this.type = SpellData.#typeList[data[2]];
+        this.price = new SpellData.Price(data[5]);
+        this.offeredProjectile = freeze(SpellData.ProjectileData.createDatas(data[10] ?? ""));
+        this.modifierAction = freeze(new SpellData.ModifierAction(data[11] ?? ""));
         let neverUnlimited = false,
             manualUnlock = false;
         [
@@ -630,7 +630,7 @@ class SpellData {
             manualUnlock //==========[3] 必须手动解锁
         ] = new Bits(data[15] ?? 0).toArray(4);
         this.unlimited = !neverUnlimited;
-        this.spawn = freeze(new SpellData.SpawningData(data[9], data[10] ?? "", manualUnlock));
+        this.spawn = freeze(new SpellData.SpawningData(data[7], data[8] ?? "", manualUnlock));
     }
 
     get nameKey() {
@@ -755,33 +755,33 @@ class SpellData {
     /** 初始化数据库 */
     static init() {
         /** ⚫ 空法术 @type {SpellData & {$projectile:SpellData,$staticProjectile:SpellData,$modifier:SpellData,$drawMany:SpellData,$material:SpellData,$other:SpellData,$utility:SpellData,$passive:SpellData}} */
-        this.$NULL = new this(["_NULL", "空白", "", "未能获得指定法术", 0, 0, 0, 0, "", {}, "", 0, "", "", ""]);
+        this.$NULL = new this(["_NULL 空白", "未能获得指定法术", 0, 0, 0, 0, "", {}, "", 0, "", "", ""]);
 
         /** 🔴 空法术`投射物` @type {SpellData} */
-        this.$NULL.$projectile = freeze(new this(["$projectile", "投射物法术", "", "占位符", 1, 0, 0, 0, "", {}, "", 0, "", "", ""]));
+        this.$NULL.$projectile = freeze(new this(["$projectile 投射物法术", "占位符", 1, 0, 0, 0, "", {}, "", 0, "", "", ""]));
 
         /** 🟠 空法术`静态投射物` @type {SpellData} */
-        this.$NULL.$staticProjectile = freeze(new this(["$staticProjectile", "静态投射物法术", "", "占位符", 2, 0, 0, 0, "", {}, "", 0, "", "", ""]));
+        this.$NULL.$staticProjectile = freeze(new this(["$staticProjectile 静态投射物法术", "占位符", 2, 0, 0, 0, "", {}, "", 0, "", "", ""]));
 
         /** 🔵 空法术`投射修正` @type {SpellData} */
-        this.$NULL.$modifier = freeze(new this(["$modifier", "投射修正法术", "", "占位符", 3, 0, 0, 0, "", {}, "", 0, "", "", ""]));
+        this.$NULL.$modifier = freeze(new this(["$modifier 投射修正法术", "占位符", 3, 0, 0, 0, "", {}, "", 0, "", "", ""]));
 
         /** ⚪ 空法术`多重施放` @type {SpellData} */
-        this.$NULL.$drawMany = freeze(new this(["$drawMany", "多重法术", "", "占位符", 4, 0, 0, 0, "", {}, "", 0, "", "", ""]));
+        this.$NULL.$drawMany = freeze(new this(["$drawMany 多重法术", "占位符", 4, 0, 0, 0, "", {}, "", 0, "", "", ""]));
 
         /** 🟢 空法术`材料` @type {SpellData} */
-        this.$NULL.$material = freeze(new this(["$material", "材料法术", "", "占位符", 5, 0, 0, 0, "", {}, "", 0, "", "", ""]));
+        this.$NULL.$material = freeze(new this(["$material 材料法术", "占位符", 5, 0, 0, 0, "", {}, "", 0, "", "", ""]));
 
         /** 🟡 空法术`其他` @type {SpellData} */
-        this.$NULL.$other = freeze(new this(["$other", "其他法术", "", "占位符", 6, 0, 0, 0, "", {}, "", 0, "", "", ""]));
+        this.$NULL.$other = freeze(new this(["$other 其他法术", "占位符", 6, 0, 0, 0, "", {}, "", 0, "", "", ""]));
 
         /** 🟣 空法术`实用` @type {SpellData} */
-        this.$NULL.$utility = freeze(new this(["$utility", "实用法术", "", "占位符", 7, 0, 0, 0, "", {}, "", 0, "", "", ""]));
+        this.$NULL.$utility = freeze(new this(["$utility 实用法术", "占位符", 7, 0, 0, 0, "", {}, "", 0, "", "", ""]));
 
         /** 🟤 空法术`被动` @type {SpellData} */
-        this.$NULL.$passive = freeze(new this(["$passive", "被动法术", "", "占位符", 8, 0, 0, 0, "", {}, "", 0, "", "", ""]));
+        this.$NULL.$passive = freeze(new this(["$passive 被动法术", "占位符", 8, 0, 0, 0, "", {}, "", 0, "", "", ""]));
 
-        this.$UNUSED = freeze(new this(["_UNUSED", "不被使用", "", "由于特殊原因此位置法术一般无法直接通过抽取进行预载", 0, 0, 0, 0, "", {}, "", 0, "", "", ""]));
+        this.$UNUSED = freeze(new this(["_UNUSED 不被使用", "由于特殊原因此位置法术一般无法直接通过抽取进行预载", 0, 0, 0, 0, "", {}, "", 0, "", "", ""]));
 
         freeze(this.$NULL);
 
@@ -821,7 +821,7 @@ class SpellData {
             }
         };
 
-        [...embed(`#data.js`).values().chunks(16)].forEach((v, i) => {
+        [...embed(`#data.js`).values().chunks(14)].forEach((v, i) => {
             const data = new this(v, i);
             //#region 向数据库中写入
             storage.all.add(data);
