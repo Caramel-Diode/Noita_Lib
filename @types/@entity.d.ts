@@ -1,20 +1,18 @@
 import { HTMLNoitaElement } from "./@panel";
 /** 实体数据 */
 export type EntityData = {
-    /** 实体id */
-    id: string;
-    /** 实体名称 */
-    name: string;
-    /** 标签 */
-    tags: Array<string>;
+    /** 实体路径 */ path: string;
+    /** 名称 */ name: string;
+    /** 别名 */ alias: Array<string>;
+    /** 标签 */ tags: Array<string>;
     projectileComponent: EntityData.Component.Projectile;
     damageModelComponent: EntityData.Component.DamageModel;
     animalAIComponent: EntityData.Component.AnimalAI;
-    variableStorageComponent: { [key: string]: EntityData.Component.VariableStorage };
+    variableStorageComponent: { [key: string]: EntityData.Component.VariableStorage; };
     aIAttackComponent: Array<EntityData.Component.AIAttack>;
     lifetimeComponent: EntityData.Component.Lifetime;
     genomeDataComponent: EntityData.Component.GenomeData;
-    loadEntitiesComponent: { [key: string]: EntityData.Component.LoadEntities };
+    loadEntitiesComponent: { [key: string]: EntityData.Component.LoadEntities; };
     areaDamageComponent: Array<EntityData.Component.AreaDamage>;
     explodeOnDamageComponent: EntityData.Component.ExplodeOnDamage;
     explosionComponent: EntityData.Component.Explosion;
@@ -185,7 +183,7 @@ export namespace EntityData {
             /**
              * 材料伤害表
              */
-            materialDamageData: { [key: string]: number };
+            materialDamageData: { [key: string]: number; };
             /**
              * 肺容量
              */
@@ -621,7 +619,7 @@ export namespace EntityData {
             /**
              * 转化表
              */
-            convertMap: { [key: string]: string };
+            convertMap: { [key: string]: string; };
         };
         /**
          * 材料吞噬组件
@@ -709,12 +707,12 @@ type HTMLNoitaEntityElement = HTMLNoitaElement & {
 /** ## [`🧨 实体`](https://noita.wiki.gg/zh/wiki) */
 export type Class = {
     prototype: HTMLElement;
-    new (param?: EntityData | string): HTMLNoitaEntityElement;
+    new(param?: EntityData | string): HTMLNoitaEntityElement;
     readonly datas: Array<EntityData>;
     query: (id: string) => EntityData;
     queryByName: (id: string) => Array<EntityData>;
     queryByTag: (tag: string) => Array<EntityData>;
     queryByPath: (queryByTag) => Array<EntityData>;
     queryByComponent: (...components: string[]) => Array<EntityData>;
-    getDataSection: (entityData: EntityData, extraData: { drawCount_Death: number; drawCount_Hit: number; drawCount_Timer: number }) => HTMLElement;
+    getDataSection: (entityData: EntityData, extraData: { drawCount_Death: number; drawCount_Hit: number; drawCount_Timer: number; }) => HTMLElement;
 };
