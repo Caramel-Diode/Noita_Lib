@@ -43,7 +43,7 @@ noitaLib("offscreen");
 - `src/component/*/index.js` 组件模块入口，包含自定义元素的定义。
 - `src/component/*/*.css` 组件不同模式下使用的css，会以字符串形式包含到构建结果中。
 - `src/component/*/*.png` 图像资源，会以dataurl字符串形式包含到构建结果中。
-- `src/parseTools/` 构建服务，为打包的各个模块提供从游戏代码中解析后的数据。
+- `src/parseTools/` 解析服务，为打包的各个模块提供从游戏代码中解析后的数据。
 - `src/public/` 一些通用的工具，部分会包含到构建结果中。
 - `src/luaForNodejs/` 为 nodejs 提供 lua54 原生运行时。
 - `build/` 构建脚本
