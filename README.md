@@ -1,9 +1,9 @@
-# NoitaLib
-
-<!-- ![](img/logo.webp) -->
-<img src="img/Logo.svg" height="128" width="160" alt="noitaLib logo"> 基于 [`Web Component`](https://developer.mozilla.org/zh-CN/docs/Web/API/Web_components) 技术构建的 [**Noita**](https://noitagame.com/) UI元素工具库。
-  
+<p align="center">
+  <img src="img/TitleImg.svg">
+<!-- <img src="img/Logo.svg" height="128" width="160" alt="noitaLib logo">  -->
+基于 [`Web Component`](https://developer.mozilla.org/zh-CN/docs/Web/API/Web_components) 技术构建的 [**Noita**](https://noitagame.com/) UI元素工具库。
 _旨在提供一种简单的方式在网页中提供Noita元素渲染或数据支持。构建结果以单文件存在，数据与资源全部内联。_
+</p>
 
 ![Version](https://img.shields.io/badge/version-1.0.0__beta-brightgreen) ![法术数据进度](https://img.shields.io/badge/Spell-422/422-ad71f2) ![天赋精粹数据进度](https://img.shields.io/badge/Perk-107+5/107+5-e4b53a) ![实体数据进度](https://img.shields.io/badge/Enyity-510/unknow-eeeeee) ![材料数据进度](https://img.shields.io/badge/Material-468/468-299B48) ![材料反应数据进度](https://img.shields.io/badge/MaterialReaction-325/325-2EC2DB)
 
