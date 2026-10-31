@@ -1,6 +1,5 @@
 <p align="center">
   <img src="img/TitleImg.svg">
-<!-- <img src="img/Logo.svg" height="128" width="160" alt="noitaLib logo">  -->
 </p>
 基于 [`Web Component`](https://developer.mozilla.org/zh-CN/docs/Web/API/Web_components) 技术构建的 [**Noita**](https://noitagame.com/) UI元素工具库。
 _旨在提供一种简单的方式在网页中提供Noita元素渲染或数据支持。构建结果以单文件存在，数据与资源全部内联。_
