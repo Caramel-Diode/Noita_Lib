@@ -1,5 +1,5 @@
 <p align="center">
-  <img src="img/TitleImg.svg">
+  <img src="img/题图.svg">
 </p>
 
 基于 [`Web Component`](https://developer.mozilla.org/zh-CN/docs/Web/API/Web_components) 技术构建的 [**Noita**](https://noitagame.com/) UI元素工具库。
